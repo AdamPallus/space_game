@@ -27,9 +27,11 @@ const debriefText = document.getElementById("debrief-text");
 const debriefTime = document.getElementById("debrief-time");
 const debriefKills = document.getElementById("debrief-kills");
 const debriefCredits = document.getElementById("debrief-credits");
-const mobileFireBtn = document.getElementById("mobile-fire");
 const mobileAltBtn = document.getElementById("mobile-alt");
+const mobileAltIcon = document.getElementById("mobile-alt-icon");
+const mobileAltLabel = document.getElementById("mobile-alt-label");
 const mobileEjectBtn = document.getElementById("mobile-eject");
+const mobileControls = document.getElementById("mobile-controls");
 
 const STORAGE_KEY = "mini-fighter-save";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
@@ -112,6 +114,12 @@ const touchState = {
   maxSpeed: 420,
 };
 let audioEnabled = false;
+
+const mobileAltIcons = {
+  rocket: "assets/SpaceShooterRedux/PNG/Power-ups/powerupRed_bolt.png",
+  arc: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_star.png",
+  cloak: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
+};
 
 const starfield = Array.from({ length: 120 }, () => ({
   x: Math.random(),
@@ -311,16 +319,6 @@ function bindMobileButton(button, onPress, onRelease) {
 }
 
 bindMobileButton(
-  mobileFireBtn,
-  () => {
-    pointerButtons.left = true;
-  },
-  () => {
-    pointerButtons.left = false;
-  }
-);
-
-bindMobileButton(
   mobileAltBtn,
   () => {
     pointerButtons.right = true;
@@ -336,6 +334,8 @@ bindMobileButton(mobileEjectBtn, () => {
   }
 }, () => {});
 
+updateMobileControls();
+
 launchBtn.addEventListener("click", () => {
   startMission();
 });
@@ -344,6 +344,7 @@ returnBtn.addEventListener("click", () => {
   debriefPanel.hidden = true;
   hangarPanel.hidden = false;
   overlay.hidden = false;
+  updateMobileControls();
   updateHangar();
 });
 
@@ -477,6 +478,7 @@ function startMission() {
   overlay.hidden = true;
   hangarPanel.hidden = true;
   debriefPanel.hidden = true;
+  updateMobileControls();
   hudMission.textContent = `Mission ${state.missionCount + 1}`;
 }
 
@@ -507,6 +509,7 @@ function endMission({ ejected = false } = {}) {
   overlay.hidden = false;
   debriefPanel.hidden = false;
   hangarPanel.hidden = true;
+  updateMobileControls();
   updateHangar();
 }
 
@@ -559,6 +562,7 @@ function updateHangar() {
   });
 
   renderRmbLoadout();
+  updateMobileControls();
 }
 
 const rmbWeapons = [
@@ -597,6 +601,7 @@ function renderRmbLoadout() {
       </div>
     `;
     rmbList.appendChild(locked);
+    updateMobileControls();
     return;
   }
 
@@ -624,6 +629,7 @@ function renderRmbLoadout() {
     item.appendChild(button);
     rmbList.appendChild(item);
   });
+  updateMobileControls();
 }
 
 function getPilotRank(credits) {
@@ -867,6 +873,10 @@ function update(delta) {
   player.fireCooldown -= delta;
   player.altCooldown -= delta;
   if (pointerButtons.left && player.fireCooldown <= 0) {
+    firePlayerBullet();
+    player.fireCooldown = player.fireRate;
+  }
+  if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
     firePlayerBullet();
     player.fireCooldown = player.fireRate;
   }
@@ -1214,6 +1224,28 @@ function playSfx(name, volume = 0.4) {
   const instance = base.cloneNode();
   instance.volume = volume;
   instance.play().catch(() => {});
+}
+
+function updateMobileControls() {
+  if (!mobileControls) return;
+  const inMission = mission && mission.active;
+  mobileControls.hidden = !inMission;
+  if (!inMission) return;
+
+  const hasAlt = state.upgrades.auxSlot > 0 && state.rmbWeapon !== "none";
+  if (mobileAltBtn) {
+    mobileAltBtn.hidden = !hasAlt;
+  }
+  if (hasAlt) {
+    const weapon = rmbWeapons.find((item) => item.id === state.rmbWeapon);
+    if (mobileAltLabel) {
+      mobileAltLabel.textContent = weapon ? weapon.name : "Alt";
+    }
+    if (mobileAltIcon) {
+      mobileAltIcon.src = mobileAltIcons[state.rmbWeapon] || "";
+      mobileAltIcon.alt = weapon ? weapon.name : "Alt";
+    }
+  }
 }
 
 function formatTime(seconds) {

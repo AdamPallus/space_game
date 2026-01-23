@@ -242,17 +242,15 @@ button:disabled {
   border: 1px solid rgba(125, 190, 255, 0.4);
   box-shadow: 0 12px 30px var(--shadow);
   backdrop-filter: blur(6px);
-}
-
-.mobile-btn.fire {
-  position: absolute;
-  right: 24px;
-  bottom: 120px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .mobile-btn.alt {
   position: absolute;
-  right: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 56px;
 }
 
@@ -260,6 +258,16 @@ button:disabled {
   position: absolute;
   left: 24px;
   bottom: 56px;
+}
+
+.mobile-icon {
+  width: 22px;
+  height: 22px;
+  image-rendering: crisp-edges;
+}
+
+.mobile-label {
+  font-size: 11px;
 }
 
 @media (pointer: coarse) {

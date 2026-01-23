@@ -85,7 +85,7 @@ body {
   position: absolute;
   inset: 0;
   display: grid;
-  place-items: center;
+  place-items: start center;
   padding: 32px;
   background: radial-gradient(circle at center, rgba(2, 6, 18, 0.85), rgba(2, 6, 18, 0.98));
   overflow-y: auto;
@@ -101,6 +101,20 @@ body {
   padding: 32px;
   box-shadow: 0 24px 70px var(--shadow);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@supports (height: 100svh) {
+  .panel {
+    max-height: calc(100svh - 64px);
+  }
+}
+
+.panel .actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: 12px;
+  background: var(--panel);
 }
 
 .panel h1 {

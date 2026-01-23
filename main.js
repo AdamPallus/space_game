@@ -31,6 +31,7 @@ const mobileAltBtn = document.getElementById("mobile-alt");
 const mobileAltIcon = document.getElementById("mobile-alt-icon");
 const mobileAltLabel = document.getElementById("mobile-alt-label");
 const mobileEjectBtn = document.getElementById("mobile-eject");
+const mobileLaunchBtn = document.getElementById("mobile-launch");
 const mobileControls = document.getElementById("mobile-controls");
 
 const STORAGE_KEY = "mini-fighter-save";
@@ -324,6 +325,12 @@ bindMobileButton(
 bindMobileButton(mobileEjectBtn, () => {
   if (mission && mission.active) {
     endMission({ ejected: true });
+  }
+}, () => {});
+
+bindMobileButton(mobileLaunchBtn, () => {
+  if (!mission || !mission.active) {
+    startMission();
   }
 }, () => {});
 
@@ -1204,12 +1211,23 @@ function playSfx(name, volume = 0.4) {
 function updateMobileControls() {
   if (!mobileControls) return;
   const inMission = mission && mission.active;
-  mobileControls.hidden = !inMission;
-  if (!inMission) return;
+  const inHangar = overlay && !overlay.hidden && hangarPanel && !hangarPanel.hidden;
+  mobileControls.hidden = !inMission && !inHangar;
+  if (mobileLaunchBtn) {
+    mobileLaunchBtn.hidden = !inHangar;
+  }
+  if (inHangar) {
+    if (mobileAltBtn) mobileAltBtn.hidden = true;
+    if (mobileEjectBtn) mobileEjectBtn.hidden = true;
+    return;
+  }
 
   const hasAlt = state.rmbWeapon !== "none";
   if (mobileAltBtn) {
     mobileAltBtn.hidden = !hasAlt;
+  }
+  if (mobileEjectBtn) {
+    mobileEjectBtn.hidden = false;
   }
   if (hasAlt) {
     const weapon = rmbWeapons.find((item) => item.id === state.rmbWeapon);

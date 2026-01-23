@@ -234,6 +234,10 @@ button:disabled {
   display: none;
 }
 
+#mobile-controls[hidden] {
+  display: none !important;
+}
+
 .mobile-btn {
   pointer-events: auto;
   border: none;
@@ -263,6 +267,16 @@ button:disabled {
   position: absolute;
   left: 24px;
   bottom: 56px;
+}
+
+.mobile-btn.launch {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 56px;
+  background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+  color: #021018;
+  border: none;
 }
 
 .mobile-icon {

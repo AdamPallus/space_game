@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini Fighter: Endless Mission</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game" width="1280" height="720" aria-label="Space shooter game"></canvas>
+
+      <div id="hud">
+        <div class="hud-left">
+          <div class="hud-row"><span>Hull</span><span id="hud-hull">0</span></div>
+          <div class="hud-row"><span>Shields</span><span id="hud-shield">0</span></div>
+        </div>
+        <div class="hud-center">
+          <div class="title">Mini Fighter Program</div>
+          <div class="subtitle" id="hud-mission">Mission 1</div>
+        </div>
+        <div class="hud-right">
+          <div class="hud-row"><span>Credits</span><span id="hud-credits">0</span></div>
+          <div class="hud-row"><span>Score</span><span id="hud-score">0</span></div>
+          <div class="hud-row"><span>Timer</span><span id="hud-time">00:00</span></div>
+        </div>
+      </div>
+
+      <div id="overlay">
+        <div class="panel" id="hangar">
+          <h1>Mothership Hangar</h1>
+          <p>
+            The mothership carries millions of mini fighters, but elite pilots earn the right to fly
+            advanced tech. Survive longer to earn credits and refit your ship.
+          </p>
+          <div class="stats-grid">
+            <div>
+              <div class="label">Pilot Rank</div>
+              <div id="pilot-rank">Rookie</div>
+            </div>
+            <div>
+              <div class="label">Available Credits</div>
+              <div id="available-credits">0</div>
+            </div>
+            <div>
+              <div class="label">Lifetime Credits</div>
+              <div id="lifetime-credits">0</div>
+            </div>
+            <div>
+              <div class="label">Last Mission</div>
+              <div id="last-mission">N/A</div>
+            </div>
+          </div>
+        <div class="loadout">
+          <h2>Upgrade Loadout</h2>
+          <div class="upgrade-list" id="upgrade-list"></div>
+        </div>
+        <div class="loadout">
+          <h2>RMB Weapon Slot</h2>
+          <div class="upgrade-list" id="rmb-list"></div>
+        </div>
+          <div class="actions">
+            <button id="launch-btn">Launch Mission</button>
+            <button id="reset-btn" class="ghost">Reset Progress</button>
+          </div>
+        </div>
+
+        <div class="panel" id="debrief" hidden>
+          <h1>Mission Debrief</h1>
+          <p id="debrief-text">Your ship was destroyed. Escape pod recovered.</p>
+          <div class="stats-grid">
+            <div>
+              <div class="label">Time Survived</div>
+              <div id="debrief-time">00:00</div>
+            </div>
+            <div>
+              <div class="label">Enemies Destroyed</div>
+              <div id="debrief-kills">0</div>
+            </div>
+            <div>
+              <div class="label">Credits Earned</div>
+              <div id="debrief-credits">0</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="return-btn">Return to Hangar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="controls">
+        <span>Move: Mouse</span>
+        <span>Fire: LMB</span>
+        <span>Alt: RMB</span>
+        <span>Eject: E</span>
+        <span>Pause: P</span>
+      </div>
+    </div>
+
+    <script src="main.js"></script>
+  </body>
+</html>

@@ -256,6 +256,10 @@ button:disabled {
   gap: 10px;
 }
 
+.mobile-btn[hidden] {
+  display: none !important;
+}
+
 .mobile-btn.alt {
   position: absolute;
   left: 50%;

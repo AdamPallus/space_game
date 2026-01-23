@@ -27,6 +27,9 @@ const debriefText = document.getElementById("debrief-text");
 const debriefTime = document.getElementById("debrief-time");
 const debriefKills = document.getElementById("debrief-kills");
 const debriefCredits = document.getElementById("debrief-credits");
+const mobileFireBtn = document.getElementById("mobile-fire");
+const mobileAltBtn = document.getElementById("mobile-alt");
+const mobileEjectBtn = document.getElementById("mobile-eject");
 
 const STORAGE_KEY = "mini-fighter-save";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
@@ -100,6 +103,13 @@ const pointer = {
 const pointerButtons = {
   left: false,
   right: false,
+};
+let inputMode = "mouse";
+const touchState = {
+  active: false,
+  x: 0,
+  y: 0,
+  maxSpeed: 420,
 };
 let audioEnabled = false;
 
@@ -243,24 +253,88 @@ function updatePointerFromEvent(event) {
   pointer.x = event.clientX - rect.left;
   pointer.y = event.clientY - rect.top;
   pointer.active = true;
+  if (event.pointerType === "touch") {
+    inputMode = "touch";
+    touchState.x = pointer.x;
+    touchState.y = pointer.y;
+  } else if (event.pointerType === "mouse") {
+    inputMode = "mouse";
+  }
 }
 
 canvas.addEventListener("pointermove", updatePointerFromEvent);
 canvas.addEventListener("pointerdown", (event) => {
   updatePointerFromEvent(event);
   audioEnabled = true;
+  if (event.pointerType === "touch") {
+    inputMode = "touch";
+    touchState.active = true;
+    touchState.x = pointer.x;
+    touchState.y = pointer.y;
+    return;
+  }
+  inputMode = "mouse";
   if (event.button === 0) pointerButtons.left = true;
   if (event.button === 2) pointerButtons.right = true;
 });
 canvas.addEventListener("pointerup", (event) => {
+  if (event.pointerType === "touch") {
+    touchState.active = false;
+    return;
+  }
   if (event.button === 0) pointerButtons.left = false;
   if (event.button === 2) pointerButtons.right = false;
 });
 canvas.addEventListener("pointerleave", () => {
   pointer.active = false;
+  touchState.active = false;
   pointerButtons.left = false;
   pointerButtons.right = false;
 });
+
+function bindMobileButton(button, onPress, onRelease) {
+  if (!button) return;
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    audioEnabled = true;
+    inputMode = "touch";
+    onPress();
+  });
+  button.addEventListener("pointerup", (event) => {
+    event.preventDefault();
+    onRelease();
+  });
+  button.addEventListener("pointerleave", (event) => {
+    event.preventDefault();
+    onRelease();
+  });
+}
+
+bindMobileButton(
+  mobileFireBtn,
+  () => {
+    pointerButtons.left = true;
+  },
+  () => {
+    pointerButtons.left = false;
+  }
+);
+
+bindMobileButton(
+  mobileAltBtn,
+  () => {
+    pointerButtons.right = true;
+  },
+  () => {
+    pointerButtons.right = false;
+  }
+);
+
+bindMobileButton(mobileEjectBtn, () => {
+  if (mission && mission.active) {
+    endMission({ ejected: true });
+  }
+}, () => {});
 
 launchBtn.addEventListener("click", () => {
   startMission();
@@ -775,7 +849,14 @@ function update(delta) {
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
 
-  if (pointer.active) {
+  if (inputMode === "touch" && touchState.active) {
+    const dx = touchState.x - player.x;
+    const dy = touchState.y - player.y;
+    const distanceToTarget = Math.hypot(dx, dy) || 1;
+    const step = Math.min(distanceToTarget, touchState.maxSpeed * delta);
+    player.x += (dx / distanceToTarget) * step;
+    player.y += (dy / distanceToTarget) * step;
+  } else if (pointer.active) {
     player.x = pointer.x;
     player.y = pointer.y;
   }

@@ -222,6 +222,56 @@ button:disabled {
   pointer-events: none;
 }
 
+#mobile-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+}
+
+.mobile-btn {
+  pointer-events: auto;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: rgba(4, 14, 30, 0.8);
+  color: var(--ink);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border: 1px solid rgba(125, 190, 255, 0.4);
+  box-shadow: 0 12px 30px var(--shadow);
+  backdrop-filter: blur(6px);
+}
+
+.mobile-btn.fire {
+  position: absolute;
+  right: 24px;
+  bottom: 120px;
+}
+
+.mobile-btn.alt {
+  position: absolute;
+  right: 24px;
+  bottom: 56px;
+}
+
+.mobile-btn.eject {
+  position: absolute;
+  left: 24px;
+  bottom: 56px;
+}
+
+@media (pointer: coarse) {
+  #controls {
+    display: none;
+  }
+
+  #mobile-controls {
+    display: block;
+  }
+}
+
 #overlay[hidden] {
   display: none;
 }

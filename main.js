@@ -69,13 +69,6 @@ const upgrades = [
     baseCost: 170,
   },
   {
-    id: "auxSlot",
-    name: "Aux Hardpoint",
-    desc: "Unlocks RMB weapon slot.",
-    baseCost: 220,
-    maxLevel: 1,
-  },
-  {
     id: "auxDamage",
     name: "Aux Warheads",
     desc: "+10% RMB weapon damage per level.",
@@ -368,12 +361,11 @@ function loadState() {
         damage: 0,
         fireRate: 0,
         spread: 0,
-        auxSlot: 0,
         auxDamage: 0,
         auxCooldown: 0,
         cloakDuration: 0,
       },
-      rmbWeapon: "none",
+      rmbWeapon: "cloak",
     };
   }
   try {
@@ -384,12 +376,13 @@ function loadState() {
       damage: parsed.upgrades?.damage ?? 0,
       fireRate: parsed.upgrades?.fireRate ?? 0,
       spread: parsed.upgrades?.spread ?? 0,
-      auxSlot: parsed.upgrades?.auxSlot ?? 0,
       auxDamage: parsed.upgrades?.auxDamage ?? 0,
       auxCooldown: parsed.upgrades?.auxCooldown ?? 0,
       cloakDuration: parsed.upgrades?.cloakDuration ?? 0,
     };
-    parsed.rmbWeapon = parsed.rmbWeapon ?? "none";
+    if (!parsed.rmbWeapon || parsed.rmbWeapon === "none") {
+      parsed.rmbWeapon = "cloak";
+    }
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
@@ -404,12 +397,11 @@ function loadState() {
         damage: 0,
         fireRate: 0,
         spread: 0,
-        auxSlot: 0,
         auxDamage: 0,
         auxCooldown: 0,
         cloakDuration: 0,
       },
-      rmbWeapon: "none",
+      rmbWeapon: "cloak",
     };
   }
 }
@@ -524,32 +516,35 @@ function updateHangar() {
   upgradeList.innerHTML = "";
 
   upgrades.forEach((upgrade) => {
-    const level = state.upgrades[upgrade.id];
-    const cost = upgradeCost(upgrade.id);
-    const item = document.createElement("div");
-    item.className = "upgrade-item";
+  const level = state.upgrades[upgrade.id];
+  const cost = upgradeCost(upgrade.id);
+  const item = document.createElement("div");
+  item.className = "upgrade-item";
 
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.innerHTML = `
-      <span class="name">${upgrade.name} (Lv ${level})</span>
-      <span class="desc">${upgrade.desc}</span>
-      <span class="cost">Cost: ${cost} credits</span>
-    `;
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.innerHTML = `
+    <span class="name">${upgrade.name} (Lv ${level})</span>
+    <span class="desc">${upgrade.desc}</span>
+    <span class="cost">Cost: ${cost}/${state.credits}</span>
+  `;
 
-    const button = document.createElement("button");
-    const maxLevel = upgrade.maxLevel ?? Infinity;
-    const canPurchase = level < maxLevel && state.credits >= cost;
-    if (level >= maxLevel) {
-      button.textContent = "Maxed";
-      button.disabled = true;
-    } else {
-      button.textContent = canPurchase ? "Purchase" : "Insufficient";
-      button.disabled = !canPurchase;
-    }
-    button.addEventListener("click", () => {
-      if (state.credits < cost) return;
-      if (level >= maxLevel) return;
+  const button = document.createElement("button");
+  const maxLevel = upgrade.maxLevel ?? Infinity;
+  const canPurchase = level < maxLevel && state.credits >= cost;
+  if (level >= maxLevel) {
+    button.textContent = "Maxed";
+    button.disabled = true;
+  } else {
+    button.textContent = `${cost}/${state.credits}`;
+    button.disabled = !canPurchase;
+  }
+  if (!canPurchase && level < maxLevel) {
+    item.classList.add("locked");
+  }
+  button.addEventListener("click", () => {
+    if (state.credits < cost) return;
+    if (level >= maxLevel) return;
       state.credits -= cost;
       state.upgrades[upgrade.id] += 1;
       saveState();
@@ -566,11 +561,6 @@ function updateHangar() {
 }
 
 const rmbWeapons = [
-  {
-    id: "none",
-    name: "Empty Slot",
-    desc: "No secondary weapon equipped.",
-  },
   {
     id: "rocket",
     name: "Seeker Rocket",
@@ -591,20 +581,6 @@ const rmbWeapons = [
 function renderRmbLoadout() {
   if (!rmbList) return;
   rmbList.innerHTML = "";
-  if (state.upgrades.auxSlot < 1) {
-    const locked = document.createElement("div");
-    locked.className = "upgrade-item";
-    locked.innerHTML = `
-      <div class="meta">
-        <span class="name">Locked</span>
-        <span class="desc">Purchase Aux Hardpoint to equip an RMB weapon.</span>
-      </div>
-    `;
-    rmbList.appendChild(locked);
-    updateMobileControls();
-    return;
-  }
-
   rmbWeapons.forEach((weapon) => {
     const item = document.createElement("div");
     item.className = "upgrade-item";
@@ -767,7 +743,6 @@ function firePlayerBullet() {
 }
 
 function fireAltWeapon() {
-  if (state.upgrades.auxSlot < 1) return;
   if (state.rmbWeapon === "none") return;
   if (state.rmbWeapon === "rocket") {
     playSfx("laserLarge", 0.35);
@@ -1232,7 +1207,7 @@ function updateMobileControls() {
   mobileControls.hidden = !inMission;
   if (!inMission) return;
 
-  const hasAlt = state.upgrades.auxSlot > 0 && state.rmbWeapon !== "none";
+  const hasAlt = state.rmbWeapon !== "none";
   if (mobileAltBtn) {
     mobileAltBtn.hidden = !hasAlt;
   }

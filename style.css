@@ -150,6 +150,11 @@ body {
   background: rgba(6, 15, 30, 0.7);
 }
 
+.upgrade-item.locked {
+  opacity: 0.6;
+  filter: grayscale(0.15);
+}
+
 .upgrade-item.active {
   border-color: rgba(45, 212, 191, 0.8);
   box-shadow: 0 0 18px rgba(45, 212, 191, 0.35);

@@ -1211,25 +1211,20 @@ function playSfx(name, volume = 0.4) {
 function updateMobileControls() {
   if (!mobileControls) return;
   const inMission = mission && mission.active;
-  const inHangar = overlay && !overlay.hidden && hangarPanel && !hangarPanel.hidden;
-  mobileControls.hidden = !inMission && !inHangar;
+  const inHangar = !inMission && overlay && !overlay.hidden && hangarPanel && !hangarPanel.hidden;
+  mobileControls.hidden = !(inMission || inHangar);
+
+  const hasAlt = state.rmbWeapon !== "none";
   if (mobileLaunchBtn) {
     mobileLaunchBtn.hidden = !inHangar;
   }
-  if (inHangar) {
-    if (mobileAltBtn) mobileAltBtn.hidden = true;
-    if (mobileEjectBtn) mobileEjectBtn.hidden = true;
-    return;
-  }
-
-  const hasAlt = state.rmbWeapon !== "none";
   if (mobileAltBtn) {
-    mobileAltBtn.hidden = !hasAlt;
+    mobileAltBtn.hidden = !inMission || !hasAlt;
   }
   if (mobileEjectBtn) {
-    mobileEjectBtn.hidden = false;
+    mobileEjectBtn.hidden = !inMission;
   }
-  if (hasAlt) {
+  if (inMission && hasAlt) {
     const weapon = rmbWeapons.find((item) => item.id === state.rmbWeapon);
     if (mobileAltLabel) {
       mobileAltLabel.textContent = weapon ? weapon.name : "Alt";

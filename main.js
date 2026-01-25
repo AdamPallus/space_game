@@ -270,6 +270,7 @@ const levelFallback = {
 let currentLevel = null;
 let levelLoadPromise = null;
 let selectedLevelId = "level1";
+let lastLoadedLevelId = null;
 
 const sfx = {
   laserSmall: new Audio("assets/audio/sci-fi_sounds/Audio/laserSmall_000.ogg"),
@@ -303,17 +304,21 @@ async function loadLevel(levelName) {
   try {
     const response = await fetch(`levels/${levelName}.json`, { cache: "no-store" });
     if (!response.ok) throw new Error("level load failed");
-    return await response.json();
+    const data = await response.json();
+    data.id = data.id || levelName;
+    return data;
   } catch (error) {
     console.warn("Using fallback level data.");
-    return levelFallback;
+    return { ...levelFallback, id: levelName };
   }
 }
 
 async function ensureLevelLoaded() {
-  if (currentLevel && currentLevel.id === selectedLevelId) return currentLevel;
+  if (currentLevel && lastLoadedLevelId === selectedLevelId) return currentLevel;
   levelLoadPromise = loadLevel(selectedLevelId);
-  currentLevel = await levelLoadPromise;
+  const level = await levelLoadPromise;
+  currentLevel = level;
+  lastLoadedLevelId = selectedLevelId;
   return currentLevel;
 }
 

@@ -11,6 +11,7 @@ const hudMission = document.getElementById("hud-mission");
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
 const debriefPanel = document.getElementById("debrief");
+const levelSelectPanel = document.getElementById("level-select");
 
 const pilotRank = document.getElementById("pilot-rank");
 const availableCreditsEl = document.getElementById("available-credits");
@@ -22,6 +23,7 @@ const rmbList = document.getElementById("rmb-list");
 const launchBtn = document.getElementById("launch-btn");
 const resetBtn = document.getElementById("reset-btn");
 const returnBtn = document.getElementById("return-btn");
+const levelBackBtn = document.getElementById("level-back-btn");
 
 const debriefText = document.getElementById("debrief-text");
 const debriefTime = document.getElementById("debrief-time");
@@ -33,6 +35,7 @@ const mobileAltLabel = document.getElementById("mobile-alt-label");
 const mobileEjectBtn = document.getElementById("mobile-eject");
 const mobileLaunchBtn = document.getElementById("mobile-launch");
 const mobileControls = document.getElementById("mobile-controls");
+const levelList = document.getElementById("level-list");
 
 const STORAGE_KEY = "mini-fighter-save";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
@@ -156,6 +159,12 @@ let backgroundScroll = 0;
 
 const assets = {
   background: loadImage(`${BG_ROOT}/blue.png`),
+  backgrounds: {
+    blue: loadImage(`${BG_ROOT}/blue.png`),
+    purple: loadImage(`${BG_ROOT}/purple.png`),
+    darkPurple: loadImage(`${BG_ROOT}/darkPurple.png`),
+    black: loadImage(`${BG_ROOT}/black.png`),
+  },
   player: loadImage(`${ASSET_ROOT}/playerShip2_blue.png`),
   playerBullet: loadImage(`${ASSET_ROOT}/Lasers/laserBlue02.png`),
   spreadBullet: loadImage(`${ASSET_ROOT}/Lasers/laserGreen02.png`),
@@ -184,8 +193,18 @@ const enemySpriteMap = {
   ufoRed: assets.enemies.boss,
 };
 
+const availableLevels = [
+  { id: "level1", label: "Mission 1" },
+  { id: "level2", label: "Mission 2" },
+  { id: "level3", label: "Mission 3" },
+  { id: "level4", label: "Mission 4" },
+  { id: "level5", label: "Mission 5" },
+];
+
 const levelFallback = {
+  id: "level1",
   name: "First Contact",
+  background: "blue",
   completeOnBoss: true,
   enemyTypes: {
     scout: {
@@ -250,6 +269,7 @@ const levelFallback = {
 
 let currentLevel = null;
 let levelLoadPromise = null;
+let selectedLevelId = "level1";
 
 const sfx = {
   laserSmall: new Audio("assets/audio/sci-fi_sounds/Audio/laserSmall_000.ogg"),
@@ -291,10 +311,8 @@ async function loadLevel(levelName) {
 }
 
 async function ensureLevelLoaded() {
-  if (currentLevel) return currentLevel;
-  if (!levelLoadPromise) {
-    levelLoadPromise = loadLevel("level1");
-  }
+  if (currentLevel && currentLevel.id === selectedLevelId) return currentLevel;
+  levelLoadPromise = loadLevel(selectedLevelId);
   currentLevel = await levelLoadPromise;
   return currentLevel;
 }
@@ -427,23 +445,33 @@ bindMobileButton(mobileEjectBtn, () => {
 
 bindMobileButton(mobileLaunchBtn, () => {
   if (!mission || !mission.active) {
-    startMission();
+    openLevelSelect();
   }
 }, () => {});
 
 updateMobileControls();
 
 launchBtn.addEventListener("click", () => {
-  startMission();
+  openLevelSelect();
 });
 
 returnBtn.addEventListener("click", () => {
   debriefPanel.hidden = true;
   hangarPanel.hidden = false;
   overlay.hidden = false;
+  if (levelSelectPanel) levelSelectPanel.hidden = true;
   updateMobileControls();
   updateHangar();
 });
+
+if (levelBackBtn) {
+  levelBackBtn.addEventListener("click", () => {
+    if (levelSelectPanel) levelSelectPanel.hidden = true;
+    hangarPanel.hidden = false;
+    overlay.hidden = false;
+    updateMobileControls();
+  });
+}
 
 resetBtn.addEventListener("click", () => {
   if (!confirm("Reset all pilot progress?")) return;
@@ -579,6 +607,7 @@ async function startMission() {
   overlay.hidden = true;
   hangarPanel.hidden = true;
   debriefPanel.hidden = true;
+  if (levelSelectPanel) levelSelectPanel.hidden = true;
   updateMobileControls();
   hudMission.textContent = level?.name
     ? `Mission ${state.missionCount + 1}: ${level.name}`
@@ -614,6 +643,7 @@ function endMission({ ejected = false, completed = false } = {}) {
   overlay.hidden = false;
   debriefPanel.hidden = false;
   hangarPanel.hidden = true;
+  if (levelSelectPanel) levelSelectPanel.hidden = true;
   updateMobileControls();
   updateHangar();
 }
@@ -671,6 +701,48 @@ function updateHangar() {
 
   renderRmbLoadout();
   updateMobileControls();
+}
+
+function openLevelSelect() {
+  if (!levelSelectPanel) {
+    startMission();
+    return;
+  }
+  hangarPanel.hidden = true;
+  debriefPanel.hidden = true;
+  levelSelectPanel.hidden = false;
+  overlay.hidden = false;
+  renderLevelSelect();
+  updateMobileControls();
+}
+
+function renderLevelSelect() {
+  if (!levelList) return;
+  levelList.innerHTML = "";
+  availableLevels.forEach((level) => {
+    const item = document.createElement("div");
+    item.className = "upgrade-item";
+    if (level.id === selectedLevelId) {
+      item.classList.add("active");
+    }
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `
+      <span class="name">${level.label}</span>
+      <span class="desc">${level.id.toUpperCase()}</span>
+    `;
+    const button = document.createElement("button");
+    button.textContent = level.id === selectedLevelId ? "Selected" : "Launch";
+    button.disabled = level.id === selectedLevelId;
+    button.addEventListener("click", async () => {
+      selectedLevelId = level.id;
+      currentLevel = null;
+      await startMission();
+    });
+    item.appendChild(meta);
+    item.appendChild(button);
+    levelList.appendChild(item);
+  });
 }
 
 const rmbWeapons = [
@@ -1182,8 +1254,13 @@ function drawBackground(width, height) {
   ctx.fillStyle = "#02030d";
   ctx.fillRect(0, 0, width, height);
 
-  if (assets.background && assets.background.loaded) {
-    const img = assets.background.img;
+  const background =
+    (mission && mission.level && assets.backgrounds[mission.level.background]) ||
+    assets.backgrounds.blue ||
+    assets.background;
+
+  if (background && background.loaded) {
+    const img = background.img;
     const scale = width / img.naturalWidth;
     const drawHeight = img.naturalHeight * scale;
     const offset = backgroundScroll % drawHeight;

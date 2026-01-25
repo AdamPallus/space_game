@@ -336,3 +336,9 @@ button:disabled {
     padding: 24px;
   }
 }
+.upgrade-item .badge {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #7dd3fc;
+}

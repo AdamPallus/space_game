@@ -2,6 +2,8 @@
   "id": "level3",
   "name": "Nebula Run",
   "background": "darkPurple",
+  "difficulty": "Hard",
+  "description": "Rapid strike group with heavy sentries.",
   "completeOnBoss": true,
   "enemyTypes": {
     "scout": {
@@ -41,7 +43,11 @@
       "baseCredit": 34,
       "radius": 20,
       "pattern": "spiral",
-      "patternParams": { "amplitude": 140, "frequency": 3.9 }
+      "patternParams": { "amplitude": 140, "frequency": 3.9 },
+      "fireRate": 1.4,
+      "fireMode": "spread",
+      "fireCount": 6,
+      "fireSpread": 1.0
     },
     "warden": {
       "sprite": "enemyBlack5",
@@ -50,7 +56,22 @@
       "score": 320,
       "baseCredit": 46,
       "radius": 24,
-      "pattern": "strafe"
+      "pattern": "strafe",
+      "fireRate": 1.5,
+      "fireMode": "spread",
+      "fireCount": 7,
+      "fireSpread": 1.1
+    },
+    "lurker": {
+      "sprite": "enemyGreen4",
+      "hp": 34,
+      "speed": 82,
+      "score": 190,
+      "baseCredit": 26,
+      "radius": 18,
+      "ai": "stalker",
+      "aggroRadius": 240,
+      "fireRate": 1.9
     },
     "hunter": {
       "sprite": "enemyGreen4",
@@ -78,7 +99,11 @@
       "baseCredit": 320,
       "radius": 52,
       "pattern": "bossSweep",
-      "isBoss": true
+      "isBoss": true,
+      "fireRate": 1.0,
+      "fireMode": "radial",
+      "fireCount": 18,
+      "bulletSpeed": 180
     }
   },
   "events": [
@@ -89,6 +114,7 @@
     { "time": 16, "type": "marauder", "count": 3, "interval": 1.0 },
     { "time": 18, "type": "hunter", "count": 4, "interval": 1.0 },
     { "time": 22, "type": "warden", "count": 2, "interval": 1.4 },
+    { "time": 26, "type": "lurker", "count": 3, "interval": 1.1 },
     { "time": 24, "type": "transport", "count": 2, "interval": 1.2 },
     { "time": 30, "type": "fighter", "count": 10, "interval": 0.5 },
     { "time": 38, "type": "hunter", "count": 3, "interval": 1.3 },

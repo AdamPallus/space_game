@@ -2,6 +2,8 @@
   "id": "level2",
   "name": "Orion Drift",
   "background": "purple",
+  "difficulty": "Medium",
+  "description": "Aggressive raiders with sweeping attack runs.",
   "completeOnBoss": true,
   "enemyTypes": {
     "scout": {
@@ -41,7 +43,22 @@
       "baseCredit": 26,
       "radius": 20,
       "pattern": "spiral",
-      "patternParams": { "amplitude": 120, "frequency": 3.6 }
+      "patternParams": { "amplitude": 120, "frequency": 3.6 },
+      "fireRate": 1.6,
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9
+    },
+    "lurker": {
+      "sprite": "enemyGreen4",
+      "hp": 28,
+      "speed": 75,
+      "score": 170,
+      "baseCredit": 22,
+      "radius": 18,
+      "ai": "stalker",
+      "aggroRadius": 220,
+      "fireRate": 2.1
     },
     "hunter": {
       "sprite": "enemyGreen4",
@@ -52,15 +69,6 @@
       "radius": 20,
       "ai": "hunter"
     },
-    "transport": {
-      "sprite": "ufoBlue",
-      "hp": 120,
-      "speed": 40,
-      "score": 420,
-      "baseCredit": 70,
-      "radius": 30,
-      "ai": "transport"
-    },
     "boss": {
       "sprite": "ufoRed",
       "hp": 520,
@@ -69,7 +77,11 @@
       "baseCredit": 240,
       "radius": 46,
       "pattern": "bossSweep",
-      "isBoss": true
+      "isBoss": true,
+      "fireRate": 1.2,
+      "fireMode": "radial",
+      "fireCount": 16,
+      "bulletSpeed": 170
     }
   },
   "events": [
@@ -78,8 +90,8 @@
     { "time": 10, "type": "sentinel", "count": 3, "interval": 0.9 },
     { "time": 12, "type": "scout", "count": 10, "interval": 0.3 },
     { "time": 16, "type": "marauder", "count": 2, "interval": 1.1 },
+    { "time": 20, "type": "lurker", "count": 2, "interval": 1.2 },
     { "time": 18, "type": "hunter", "count": 3, "interval": 1.1 },
-    { "time": 24, "type": "transport", "count": 2, "interval": 1.6 },
     { "time": 32, "type": "fighter", "count": 8, "interval": 0.55 },
     { "time": 40, "type": "hunter", "count": 2, "interval": 1.4 },
     { "time": 48, "type": "boss", "count": 1 }

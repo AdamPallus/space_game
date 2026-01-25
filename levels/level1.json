@@ -2,6 +2,8 @@
   "id": "level1",
   "name": "First Contact",
   "background": "blue",
+  "difficulty": "Easy",
+  "description": "Low-threat patrol wing with a single ace squad.",
   "completeOnBoss": true,
   "enemyTypes": {
     "scout": {
@@ -31,7 +33,19 @@
       "score": 140,
       "baseCredit": 18,
       "radius": 18,
-      "pattern": "strafe"
+      "pattern": "strafe",
+      "fireRate": 2.2
+    },
+    "lurker": {
+      "sprite": "enemyGreen4",
+      "hp": 24,
+      "speed": 68,
+      "score": 150,
+      "baseCredit": 20,
+      "radius": 18,
+      "ai": "stalker",
+      "aggroRadius": 200,
+      "fireRate": 2.4
     },
     "hunter": {
       "sprite": "enemyGreen4",
@@ -59,7 +73,11 @@
       "baseCredit": 180,
       "radius": 42,
       "pattern": "bossSweep",
-      "isBoss": true
+      "isBoss": true,
+      "fireRate": 1.4,
+      "fireMode": "radial",
+      "fireCount": 12,
+      "bulletSpeed": 160
     }
   },
   "events": [
@@ -67,6 +85,7 @@
     { "time": 6, "type": "fighter", "count": 4, "interval": 0.8 },
     { "time": 9, "type": "sentinel", "count": 2, "interval": 1.0 },
     { "time": 12, "type": "scout", "count": 8, "interval": 0.35 },
+    { "time": 16, "type": "lurker", "count": 2, "interval": 1.2 },
     { "time": 18, "type": "hunter", "count": 2, "interval": 1.2 },
     { "time": 24, "type": "transport", "count": 1 },
     { "time": 32, "type": "fighter", "count": 6, "interval": 0.6 },

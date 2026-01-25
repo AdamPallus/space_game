@@ -285,6 +285,7 @@ let currentLevel = null;
 let levelLoadPromise = null;
 let selectedLevelId = "level1";
 let lastLoadedLevelId = null;
+const levelMetaCache = new Map();
 
 const sfx = {
   laserSmall: new Audio("assets/audio/sci-fi_sounds/Audio/laserSmall_000.ogg"),
@@ -325,6 +326,13 @@ async function loadLevel(levelName) {
     console.warn("Using fallback level data.");
     return { ...levelFallback, id: levelName };
   }
+}
+
+async function loadLevelMeta(levelName) {
+  if (levelMetaCache.has(levelName)) return levelMetaCache.get(levelName);
+  const data = await loadLevel(levelName);
+  levelMetaCache.set(levelName, data);
+  return data;
 }
 
 async function ensureLevelLoaded() {
@@ -506,6 +514,7 @@ function loadState() {
       lifetimeCredits: 0,
       missionCount: 0,
       lastMissionSummary: "N/A",
+      unlockedLevels: 1,
       upgrades: {
         hull: 0,
         shield: 0,
@@ -534,6 +543,7 @@ function loadState() {
     if (!parsed.rmbWeapon || parsed.rmbWeapon === "none") {
       parsed.rmbWeapon = "cloak";
     }
+    parsed.unlockedLevels = parsed.unlockedLevels ?? 1;
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
@@ -542,6 +552,7 @@ function loadState() {
       lifetimeCredits: 0,
       missionCount: 0,
       lastMissionSummary: "N/A",
+      unlockedLevels: 1,
       upgrades: {
         hull: 0,
         shield: 0,
@@ -646,6 +657,12 @@ function endMission({ ejected = false, completed = false } = {}) {
   state.lifetimeCredits += finalReward;
   state.missionCount += 1;
   state.lastMissionSummary = `${formatTime(mission.elapsed)} | ${mission.kills} kills`;
+  if (completed && mission.level?.id) {
+    const currentIndex = availableLevels.findIndex((level) => level.id === mission.level.id);
+    if (currentIndex !== -1 && state.unlockedLevels <= currentIndex + 1) {
+      state.unlockedLevels = Math.min(availableLevels.length, currentIndex + 2);
+    }
+  }
   saveState();
 
   if (completed) {
@@ -737,24 +754,35 @@ function openLevelSelect() {
 }
 
 function renderLevelSelect() {
+  renderLevelSelectAsync();
+}
+
+async function renderLevelSelectAsync() {
   if (!levelList) return;
   levelList.innerHTML = "";
-  availableLevels.forEach((level) => {
+  for (const level of availableLevels) {
+    const metaData = await loadLevelMeta(level.id);
+    const isUnlocked = isLevelUnlocked(level.id);
     const item = document.createElement("div");
     item.className = "upgrade-item";
     if (level.id === selectedLevelId) {
       item.classList.add("active");
     }
+    if (!isUnlocked) {
+      item.classList.add("locked");
+    }
     const meta = document.createElement("div");
     meta.className = "meta";
     meta.innerHTML = `
-      <span class="name">${level.label}</span>
-      <span class="desc">${level.id.toUpperCase()}</span>
+      <span class="name">${metaData.name || level.label}</span>
+      <span class="desc">${metaData.description || level.id.toUpperCase()}</span>
+      <span class="badge">${metaData.difficulty || "Unknown"}</span>
     `;
     const button = document.createElement("button");
-    button.textContent = level.id === selectedLevelId ? "Selected" : "Launch";
-    button.disabled = level.id === selectedLevelId;
+    button.textContent = isUnlocked ? "Launch" : "Locked";
+    button.disabled = !isUnlocked;
     button.addEventListener("click", async () => {
+      if (!isUnlocked) return;
       selectedLevelId = level.id;
       currentLevel = null;
       await startMission();
@@ -762,7 +790,7 @@ function renderLevelSelect() {
     item.appendChild(meta);
     item.appendChild(button);
     levelList.appendChild(item);
-  });
+  }
 }
 
 const rmbWeapons = [
@@ -821,6 +849,12 @@ function getPilotRank(credits) {
   return "Legend";
 }
 
+function isLevelUnlocked(levelId) {
+  const index = availableLevels.findIndex((level) => level.id === levelId);
+  if (index === -1) return false;
+  return index < state.unlockedLevels;
+}
+
 function spawnEnemyFromSpec(spec) {
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
@@ -839,6 +873,11 @@ function spawnEnemyFromSpec(spec) {
     spawnTime: mission.elapsed,
     isBoss: !!spec.isBoss,
     strafeDir: Math.random() < 0.5 ? -1 : 1,
+    fireRate: spec.fireRate ?? 2.2,
+    fireCooldown: Math.random() * (spec.fireRate ?? 2.2),
+    fireMode: spec.fireMode || "aim",
+    bulletSpeed: spec.bulletSpeed,
+    aggroRadius: spec.aggroRadius,
   };
 
   if (enemy.pattern === "swoop") {
@@ -996,9 +1035,11 @@ function fireAltWeapon() {
   }
 }
 
-function fireEnemyBullet(enemy) {
-  const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-  const speed = 200 + mission.difficulty * 15;
+function fireEnemyBullet(enemy, angleOverride, speedOverride) {
+  const angle =
+    angleOverride ?? Math.atan2(player.y - enemy.y, player.x - enemy.x);
+  const speed =
+    speedOverride ?? enemy.bulletSpeed ?? 200 + mission.difficulty * 15;
   enemyBullets.push({
     x: enemy.x,
     y: enemy.y,
@@ -1010,6 +1051,26 @@ function fireEnemyBullet(enemy) {
     height: 32,
     rotation: angle + Math.PI / 2,
   });
+}
+
+function fireEnemySpread(enemy, count = 5, spread = 0.6) {
+  const base = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+  const start = base - spread / 2;
+  const step = spread / Math.max(1, count - 1);
+  for (let i = 0; i < count; i += 1) {
+    const angle = start + step * i;
+    fireEnemyBullet(enemy, angle);
+  }
+}
+
+function fireEnemyRadial(enemy, count = 16) {
+  const step = (Math.PI * 2) / count;
+  for (let i = 0; i < count; i += 1) {
+    const angle = i * step;
+    const speed =
+      (enemy.bulletSpeed ?? 160) * (0.8 + Math.random() * 0.6);
+    fireEnemyBullet(enemy, angle, speed);
+  }
 }
 
 function update(delta) {
@@ -1047,14 +1108,21 @@ function update(delta) {
     }
   }
 
-  if (mission.enemyFireTimer <= 0) {
-    const shooters = enemies.filter((enemy) => enemy.y > 40 && enemy.y < canvas.height / 2);
-    if (shooters.length) {
-      const shooter = shooters[Math.floor(Math.random() * shooters.length)];
-      fireEnemyBullet(shooter);
+  enemies.forEach((enemy) => {
+    enemy.fireCooldown -= delta;
+    if (enemy.fireCooldown > 0) return;
+    if (enemy.y < 40) return;
+    if (enemy.isBoss || enemy.y < canvas.height * 0.75) {
+      if (enemy.fireMode === "spread") {
+        fireEnemySpread(enemy, enemy.fireCount || 5, enemy.fireSpread || 0.8);
+      } else if (enemy.fireMode === "radial") {
+        fireEnemyRadial(enemy, enemy.fireCount || 18);
+      } else {
+        fireEnemyBullet(enemy);
+      }
+      enemy.fireCooldown = Math.max(0.4, enemy.fireRate * 0.95);
     }
-    mission.enemyFireTimer = Math.max(0.8, 2.2 - mission.difficulty * 0.08);
-  }
+  });
 
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
@@ -1156,7 +1224,22 @@ function update(delta) {
       }
       return;
     }
-    if (enemy.ai === "hunter") {
+    if (enemy.ai === "stalker") {
+      const dx = player.x - enemy.x;
+      const dy = player.y - enemy.y;
+      const distanceToPlayer = Math.hypot(dx, dy);
+      const aggro = enemy.aggroRadius ?? 220;
+      if (distanceToPlayer < aggro && player.cloakTimer <= 0) {
+        const chaseSpeed = enemy.speed * 1.05;
+        const targetVx = (dx / (distanceToPlayer || 1)) * chaseSpeed;
+        const targetVy = (dy / (distanceToPlayer || 1)) * chaseSpeed;
+        enemy.vx += (targetVx - enemy.vx) * 0.08;
+        enemy.vy += (targetVy - enemy.vy) * 0.08;
+      } else {
+        enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.05;
+        enemy.vy += (enemy.speed * 0.8 - enemy.vy) * 0.05;
+      }
+    } else if (enemy.ai === "hunter") {
       if (player.cloakTimer > 0) {
         enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.06;
         enemy.vy += (enemy.speed * 0.9 - enemy.vy) * 0.05;

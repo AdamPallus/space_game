@@ -1,0 +1,63 @@
+{
+  "name": "First Contact",
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "scout": {
+      "sprite": "enemyBlue2",
+      "hp": 18,
+      "speed": 85,
+      "score": 90,
+      "baseCredit": 12,
+      "radius": 16,
+      "pattern": "zigzag",
+      "patternParams": { "amplitude": 90, "frequency": 3.2 }
+    },
+    "fighter": {
+      "sprite": "enemyRed3",
+      "hp": 26,
+      "speed": 70,
+      "score": 130,
+      "baseCredit": 16,
+      "radius": 20,
+      "pattern": "swoop",
+      "patternParams": { "amplitude": 60, "frequency": 2.6 }
+    },
+    "hunter": {
+      "sprite": "enemyGreen4",
+      "hp": 30,
+      "speed": 80,
+      "score": 180,
+      "baseCredit": 28,
+      "radius": 20,
+      "ai": "hunter"
+    },
+    "transport": {
+      "sprite": "ufoBlue",
+      "hp": 90,
+      "speed": 36,
+      "score": 360,
+      "baseCredit": 60,
+      "radius": 28,
+      "ai": "transport"
+    },
+    "boss": {
+      "sprite": "ufoRed",
+      "hp": 380,
+      "speed": 70,
+      "score": 900,
+      "baseCredit": 180,
+      "radius": 42,
+      "pattern": "bossSweep",
+      "isBoss": true
+    }
+  },
+  "events": [
+    { "time": 1, "type": "scout", "count": 6, "interval": 0.45 },
+    { "time": 6, "type": "fighter", "count": 4, "interval": 0.8 },
+    { "time": 12, "type": "scout", "count": 8, "interval": 0.35 },
+    { "time": 18, "type": "hunter", "count": 2, "interval": 1.2 },
+    { "time": 24, "type": "transport", "count": 1 },
+    { "time": 32, "type": "fighter", "count": 6, "interval": 0.6 },
+    { "time": 42, "type": "boss", "count": 1 }
+  ]
+}

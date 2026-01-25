@@ -171,8 +171,85 @@ const assets = {
     bruiser: loadImage(`${ASSET_ROOT}/Enemies/enemyBlack4.png`),
     hunter: loadImage(`${ASSET_ROOT}/Enemies/enemyGreen4.png`),
     transport: loadImage(`${ASSET_ROOT}/ufoBlue.png`),
+    boss: loadImage(`${ASSET_ROOT}/ufoRed.png`),
   },
 };
+
+const enemySpriteMap = {
+  enemyBlue2: assets.enemies.scout,
+  enemyRed3: assets.enemies.fighter,
+  enemyBlack4: assets.enemies.bruiser,
+  enemyGreen4: assets.enemies.hunter,
+  ufoBlue: assets.enemies.transport,
+  ufoRed: assets.enemies.boss,
+};
+
+const levelFallback = {
+  name: "First Contact",
+  completeOnBoss: true,
+  enemyTypes: {
+    scout: {
+      sprite: "enemyBlue2",
+      hp: 18,
+      speed: 85,
+      score: 90,
+      baseCredit: 12,
+      radius: 16,
+      pattern: "zigzag",
+      patternParams: { amplitude: 90, frequency: 3.2 },
+    },
+    fighter: {
+      sprite: "enemyRed3",
+      hp: 26,
+      speed: 70,
+      score: 130,
+      baseCredit: 16,
+      radius: 20,
+      pattern: "swoop",
+      patternParams: { amplitude: 60, frequency: 2.6 },
+    },
+    hunter: {
+      sprite: "enemyGreen4",
+      hp: 30,
+      speed: 80,
+      score: 180,
+      baseCredit: 28,
+      radius: 20,
+      ai: "hunter",
+    },
+    transport: {
+      sprite: "ufoBlue",
+      hp: 90,
+      speed: 36,
+      score: 360,
+      baseCredit: 60,
+      radius: 28,
+      ai: "transport",
+    },
+    boss: {
+      sprite: "ufoRed",
+      hp: 380,
+      speed: 70,
+      score: 900,
+      baseCredit: 180,
+      radius: 42,
+      pattern: "bossSweep",
+      isBoss: true,
+    },
+  },
+  events: [
+    { time: 1, type: "scout", count: 6, interval: 0.45 },
+    { time: 6, type: "fighter", count: 4, interval: 0.8 },
+    { time: 12, type: "scout", count: 8, interval: 0.35 },
+    { time: 18, type: "hunter", count: 2, interval: 1.2 },
+    { time: 24, type: "transport", count: 1 },
+    { time: 32, type: "fighter", count: 6, interval: 0.6 },
+    { time: 42, type: "boss", count: 1 },
+  ],
+};
+
+let currentLevel = null;
+let levelLoadPromise = null;
 
 const sfx = {
   laserSmall: new Audio("assets/audio/sci-fi_sounds/Audio/laserSmall_000.ogg"),
@@ -200,6 +277,26 @@ function loadImage(src) {
   };
   img.src = src;
   return record;
+}
+
+async function loadLevel(levelName) {
+  try {
+    const response = await fetch(`levels/${levelName}.json`, { cache: "no-store" });
+    if (!response.ok) throw new Error("level load failed");
+    return await response.json();
+  } catch (error) {
+    console.warn("Using fallback level data.");
+    return levelFallback;
+  }
+}
+
+async function ensureLevelLoaded() {
+  if (currentLevel) return currentLevel;
+  if (!levelLoadPromise) {
+    levelLoadPromise = loadLevel("level1");
+  }
+  currentLevel = await levelLoadPromise;
+  return currentLevel;
 }
 
 function drawSpriteCentered(record, x, y, scale = 1) {
@@ -446,7 +543,8 @@ function applyUpgrades() {
   player.cloakCooldownTime = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel));
 }
 
-function startMission() {
+async function startMission() {
+  const level = await ensureLevelLoaded();
   applyUpgrades();
   mission = {
     active: true,
@@ -458,6 +556,10 @@ function startMission() {
     spawnTimer: 0,
     enemyFireTimer: 0,
     difficulty: 1 + state.missionCount * 0.15,
+    level,
+    eventIndex: 0,
+    spawnQueue: [],
+    bossAlive: false,
   };
   bullets.length = 0;
   enemyBullets.length = 0;
@@ -478,15 +580,17 @@ function startMission() {
   hangarPanel.hidden = true;
   debriefPanel.hidden = true;
   updateMobileControls();
-  hudMission.textContent = `Mission ${state.missionCount + 1}`;
+  hudMission.textContent = level?.name
+    ? `Mission ${state.missionCount + 1}: ${level.name}`
+    : `Mission ${state.missionCount + 1}`;
 }
 
-function endMission({ ejected = false } = {}) {
+function endMission({ ejected = false, completed = false } = {}) {
   if (!mission || !mission.active) return;
   mission.active = false;
 
   const creditReward = creditRewardFor(mission);
-  const penaltyRate = ejected ? 0 : 0.1 + Math.random() * 0.4;
+  const penaltyRate = completed || ejected ? 0 : 0.1 + Math.random() * 0.4;
   const finalReward = Math.round(creditReward * (1 - penaltyRate));
 
   state.credits += finalReward;
@@ -495,7 +599,9 @@ function endMission({ ejected = false } = {}) {
   state.lastMissionSummary = `${formatTime(mission.elapsed)} | ${mission.kills} kills`;
   saveState();
 
-  if (ejected) {
+  if (completed) {
+    debriefText.textContent = "Mission complete. Mothership retrieves your fighter.";
+  } else if (ejected) {
     debriefText.textContent = "Ejection successful. Full credits secured.";
     playSfx("eject", 0.5);
   } else {
@@ -623,78 +729,84 @@ function getPilotRank(credits) {
   return "Legend";
 }
 
-function spawnEnemy() {
+function spawnEnemyFromSpec(spec) {
   const width = canvas.width / window.devicePixelRatio;
-  const difficulty = mission.difficulty + mission.elapsed / 25;
-  const roll = Math.random();
+  const height = canvas.height / window.devicePixelRatio;
+  const enemy = {
+    type: spec.type || "fighter",
+    radius: spec.radius ?? 20,
+    speed: spec.speed ?? 70,
+    hp: spec.hp ?? 20,
+    score: spec.score ?? 120,
+    baseCredit: spec.baseCredit ?? 14,
+    color: spec.color || "#fb7185",
+    spriteScale: spec.spriteScale ?? 0.7,
+    ai: spec.ai,
+    pattern: spec.pattern || "drift",
+    patternParams: spec.patternParams || {},
+    spawnTime: mission.elapsed,
+    isBoss: !!spec.isBoss,
+    strafeDir: Math.random() < 0.5 ? -1 : 1,
+  };
 
-  let enemy;
-  if (roll < Math.min(0.2 + difficulty * 0.02, 0.55)) {
-    enemy = {
-      type: "scout",
-      radius: 16,
-      speed: 80 + difficulty * 12,
-      hp: 14 + difficulty * 3,
-      score: 80,
-      baseCredit: 10,
-      color: "#7dd3fc",
-      spriteScale: 0.6,
-    };
-  } else if (roll < 0.72) {
-    enemy = {
-      type: "fighter",
-      radius: 20,
-      speed: 60 + difficulty * 10,
-      hp: 20 + difficulty * 4,
-      score: 120,
-      baseCredit: 14,
-      color: "#fb7185",
-      spriteScale: 0.68,
-    };
-  } else if (roll < 0.86) {
-    enemy = {
-      type: "hunter",
-      radius: 20,
-      speed: 70 + difficulty * 11,
-      hp: 22 + difficulty * 4,
-      score: 160,
-      baseCredit: 24,
-      color: "#a855f7",
-      spriteScale: 0.72,
-      ai: "hunter",
-      strafeDir: Math.random() < 0.5 ? -1 : 1,
-    };
-  } else if (roll < 0.94) {
-    enemy = {
-      type: "transport",
-      radius: 28,
-      speed: 28 + difficulty * 4,
-      hp: 70 + difficulty * 7,
-      score: 320,
-      baseCredit: 46,
-      color: "#60a5fa",
-      spriteScale: 0.9,
-      ai: "transport",
-    };
+  if (enemy.pattern === "swoop") {
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    enemy.x = dir === 1 ? -60 : width + 60;
+    enemy.y = 60 + Math.random() * height * 0.2;
+    enemy.vx = dir * enemy.speed;
+    enemy.vy = enemy.speed * 0.2;
+    enemy.swoopDir = dir;
   } else {
-    enemy = {
-      type: "bruiser",
-      radius: 24,
-      speed: 40 + difficulty * 6,
-      hp: 38 + difficulty * 5,
-      score: 200,
-      baseCredit: 18,
-      color: "#fbbf24",
-      spriteScale: 0.78,
-    };
+    enemy.x = Math.random() * (width - 80) + 40;
+    enemy.y = -40;
+    enemy.vx = (Math.random() - 0.5) * 40;
+    enemy.vy = enemy.speed;
   }
 
-  enemy.x = Math.random() * (width - 80) + 40;
-  enemy.y = -40;
-  enemy.vx = (Math.random() - 0.5) * 40;
-  enemy.vy = enemy.speed;
-  enemy.sprite = assets.enemies[enemy.type] || assets.enemies.fighter;
+  if (enemy.pattern === "bossSweep") {
+    enemy.x = width / 2;
+    enemy.y = -80;
+    enemy.vx = enemy.speed;
+    enemy.vy = enemy.speed * 0.6;
+    enemy.sweepDir = Math.random() < 0.5 ? -1 : 1;
+    enemy.targetY = 130;
+  }
+
+  const spriteKey = spec.sprite;
+  enemy.sprite = enemySpriteMap[spriteKey] || assets.enemies[enemy.type] || assets.enemies.fighter;
   enemies.push(enemy);
+  if (enemy.isBoss) {
+    mission.bossAlive = true;
+  }
+}
+
+function scheduleLevelSpawns() {
+  const level = mission.level;
+  if (!level || !level.events) return;
+  while (mission.eventIndex < level.events.length) {
+    const event = level.events[mission.eventIndex];
+    if (mission.elapsed < event.time) break;
+    const count = event.count ?? 1;
+    const interval = event.interval ?? 0;
+    for (let i = 0; i < count; i += 1) {
+      mission.spawnQueue.push({
+        spawnTime: event.time + i * interval,
+        type: event.type,
+        overrides: event.overrides || {},
+      });
+    }
+    mission.eventIndex += 1;
+  }
+}
+
+function resolveEnemySpec(type, overrides = {}) {
+  const level = mission.level;
+  const base = level?.enemyTypes?.[type] || {};
+  return {
+    type,
+    ...base,
+    ...overrides,
+  };
 }
 
 function spawnPlayerBullet({ x, y, vx, vy, damage, image }) {
@@ -819,10 +931,23 @@ function update(delta) {
     player.cloakTimer = Math.max(0, player.cloakTimer - delta);
   }
 
-  const spawnInterval = Math.max(0.3, 1.2 - mission.difficulty * 0.05);
-  if (mission.spawnTimer <= 0) {
-    spawnEnemy();
-    mission.spawnTimer = spawnInterval;
+  if (mission.level) {
+    scheduleLevelSpawns();
+    for (let i = mission.spawnQueue.length - 1; i >= 0; i -= 1) {
+      const entry = mission.spawnQueue[i];
+      if (mission.elapsed >= entry.spawnTime) {
+        const spec = resolveEnemySpec(entry.type, entry.overrides);
+        spawnEnemyFromSpec(spec);
+        mission.spawnQueue.splice(i, 1);
+      }
+    }
+  } else {
+    const spawnInterval = Math.max(0.3, 1.2 - mission.difficulty * 0.05);
+    if (mission.spawnTimer <= 0) {
+      // fallback random spawning
+      spawnEnemyFromSpec({ type: "fighter" });
+      mission.spawnTimer = spawnInterval;
+    }
   }
 
   if (mission.enemyFireTimer <= 0) {
@@ -884,6 +1009,36 @@ function update(delta) {
   });
 
   enemies.forEach((enemy) => {
+    if (enemy.pattern === "zigzag") {
+      const amplitude = enemy.patternParams.amplitude ?? 90;
+      const frequency = enemy.patternParams.frequency ?? 3;
+      const t = mission.elapsed - enemy.spawnTime;
+      enemy.vx = Math.sin(t * frequency) * amplitude;
+      enemy.vy = enemy.speed;
+      enemy.x += enemy.vx * delta;
+      enemy.y += enemy.vy * delta;
+      return;
+    }
+    if (enemy.pattern === "swoop") {
+      const amplitude = enemy.patternParams.amplitude ?? 60;
+      const frequency = enemy.patternParams.frequency ?? 2.5;
+      const t = mission.elapsed - enemy.spawnTime;
+      enemy.x += enemy.vx * delta;
+      enemy.y += (Math.sin(t * frequency) * amplitude + enemy.speed * 0.3) * delta;
+      return;
+    }
+    if (enemy.pattern === "bossSweep") {
+      if (enemy.y < enemy.targetY) {
+        enemy.y += enemy.vy * delta;
+      } else {
+        const width = canvas.width / window.devicePixelRatio;
+        enemy.x += enemy.sweepDir * enemy.speed * delta;
+        if (enemy.x < 80 || enemy.x > width - 80) {
+          enemy.sweepDir *= -1;
+        }
+      }
+      return;
+    }
     if (enemy.ai === "hunter") {
       if (player.cloakTimer > 0) {
         enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.06;
@@ -957,6 +1112,9 @@ function handleCollisions() {
           spawnCreditPopup(enemy.x, enemy.y, creditEarned);
           spawnExplosion(enemy.x, enemy.y, enemy.radius);
           playSfx("explosion", 0.135);
+          if (enemy.isBoss && mission.level?.completeOnBoss) {
+            endMission({ completed: true });
+          }
         }
         continue bulletsLoop;
       }

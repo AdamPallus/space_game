@@ -20,6 +20,7 @@ const availableCreditsEl = document.getElementById("available-credits");
 const lifetimeCreditsEl = document.getElementById("lifetime-credits");
 const lastMissionEl = document.getElementById("last-mission");
 const upgradeList = document.getElementById("upgrade-list");
+const debugUnlock = document.getElementById("debug-unlock");
 const rmbList = document.getElementById("rmb-list");
 
 const launchBtn = document.getElementById("launch-btn");
@@ -506,6 +507,15 @@ resetBtn.addEventListener("click", () => {
   window.location.reload();
 });
 
+if (debugUnlock) {
+  debugUnlock.addEventListener("change", () => {
+    state.debugUnlock = debugUnlock.checked;
+    saveState();
+    updateHangar();
+    renderLevelSelect();
+  });
+}
+
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
@@ -515,6 +525,7 @@ function loadState() {
       missionCount: 0,
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
+      debugUnlock: false,
       upgrades: {
         hull: 0,
         shield: 0,
@@ -544,6 +555,7 @@ function loadState() {
       parsed.rmbWeapon = "cloak";
     }
     parsed.unlockedLevels = parsed.unlockedLevels ?? 1;
+    parsed.debugUnlock = parsed.debugUnlock ?? false;
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
@@ -553,6 +565,7 @@ function loadState() {
       missionCount: 0,
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
+      debugUnlock: false,
       upgrades: {
         hull: 0,
         shield: 0,
@@ -692,6 +705,9 @@ function updateHangar() {
   }
   lifetimeCreditsEl.textContent = state.lifetimeCredits.toString();
   lastMissionEl.textContent = state.lastMissionSummary;
+  if (debugUnlock) {
+    debugUnlock.checked = !!state.debugUnlock;
+  }
 
   upgradeList.innerHTML = "";
 
@@ -850,6 +866,7 @@ function getPilotRank(credits) {
 }
 
 function isLevelUnlocked(levelId) {
+  if (state.debugUnlock) return true;
   const index = availableLevels.findIndex((level) => level.id === levelId);
   if (index === -1) return false;
   return index < state.unlockedLevels;
@@ -878,6 +895,7 @@ function spawnEnemyFromSpec(spec) {
     fireMode: spec.fireMode || "aim",
     bulletSpeed: spec.bulletSpeed,
     aggroRadius: spec.aggroRadius,
+    bulletStyle: spec.bulletStyle,
   };
 
   if (enemy.pattern === "swoop") {
@@ -1036,25 +1054,48 @@ function fireAltWeapon() {
 }
 
 function fireEnemyBullet(enemy, angleOverride, speedOverride) {
+  const cloaked = player.cloakTimer > 0;
+  const fallbackAngle = Math.random() * Math.PI * 2;
   const angle =
-    angleOverride ?? Math.atan2(player.y - enemy.y, player.x - enemy.x);
+    angleOverride ??
+    (cloaked && enemy.fireMode === "aim"
+      ? fallbackAngle
+      : Math.atan2(player.y - enemy.y, player.x - enemy.x));
   const speed =
     speedOverride ?? enemy.bulletSpeed ?? 200 + mission.difficulty * 15;
+
+  const style = enemy.bulletStyle || getEnemyBulletStyle(enemy);
+  if (style.shape === "orb") {
+    enemyBullets.push({
+      x: enemy.x,
+      y: enemy.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      radius: style.radius || 6,
+      color: style.color || "#fb7185",
+      shape: "orb",
+    });
+    return;
+  }
+
   enemyBullets.push({
     x: enemy.x,
     y: enemy.y,
     vx: Math.cos(angle) * speed,
     vy: Math.sin(angle) * speed,
     radius: 4,
-    image: assets.enemyBullet,
-    width: 10,
-    height: 32,
+    image: style.image || assets.enemyBullet,
+    width: style.width || 10,
+    height: style.height || 32,
     rotation: angle + Math.PI / 2,
   });
 }
 
 function fireEnemySpread(enemy, count = 5, spread = 0.6) {
-  const base = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+  const cloaked = player.cloakTimer > 0;
+  const base = cloaked
+    ? Math.random() * Math.PI * 2
+    : Math.atan2(player.y - enemy.y, player.x - enemy.x);
   const start = base - spread / 2;
   const step = spread / Math.max(1, count - 1);
   for (let i = 0; i < count; i += 1) {
@@ -1071,6 +1112,22 @@ function fireEnemyRadial(enemy, count = 16) {
       (enemy.bulletSpeed ?? 160) * (0.8 + Math.random() * 0.6);
     fireEnemyBullet(enemy, angle, speed);
   }
+}
+
+function getEnemyBulletStyle(enemy) {
+  if (enemy.fireMode === "radial") {
+    return { shape: "orb", color: "#f97316", radius: 6 };
+  }
+  if (enemy.fireMode === "spread") {
+    return { image: assets.altArc, width: 12, height: 30 };
+  }
+  if (enemy.ai === "stalker") {
+    return { shape: "orb", color: "#a855f7", radius: 5 };
+  }
+  if (enemy.ai === "hunter") {
+    return { image: assets.enemyBullet, width: 10, height: 32 };
+  }
+  return { image: assets.enemyBullet, width: 10, height: 32 };
 }
 
 function update(delta) {
@@ -1489,6 +1546,15 @@ function drawRmbIndicator() {
 }
 
 function drawBullet(bullet, color = "#e0f2fe") {
+  if (bullet.shape === "orb") {
+    ctx.save();
+    ctx.fillStyle = bullet.color || color;
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, bullet.radius || 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
   if (bullet.image && bullet.image.loaded) {
     const width = bullet.width || 10;
     const height = bullet.height || 28;

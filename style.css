@@ -171,6 +171,20 @@ body {
   margin-bottom: 6px;
 }
 
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #cfe4ff;
+}
+
+.toggle input {
+  accent-color: #22d3ee;
+  width: 16px;
+  height: 16px;
+}
+
 .loadout {
   margin-top: 8px;
 }

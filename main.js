@@ -7,6 +7,8 @@ const hudCredits = document.getElementById("hud-credits");
 const hudScore = document.getElementById("hud-score");
 const hudTime = document.getElementById("hud-time");
 const hudMission = document.getElementById("hud-mission");
+const bossLabel = document.getElementById("boss-label");
+const bossProgressFill = document.getElementById("boss-progress-fill");
 
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
@@ -181,6 +183,12 @@ const assets = {
     hunter: loadImage(`${ASSET_ROOT}/Enemies/enemyGreen4.png`),
     transport: loadImage(`${ASSET_ROOT}/ufoBlue.png`),
     boss: loadImage(`${ASSET_ROOT}/ufoRed.png`),
+    aceBlue: loadImage(`${ASSET_ROOT}/Enemies/enemyBlue5.png`),
+    aceRed: loadImage(`${ASSET_ROOT}/Enemies/enemyRed5.png`),
+    aceGreen: loadImage(`${ASSET_ROOT}/Enemies/enemyGreen5.png`),
+    aceBlack: loadImage(`${ASSET_ROOT}/Enemies/enemyBlack5.png`),
+    ufoGreen: loadImage(`${ASSET_ROOT}/ufoGreen.png`),
+    ufoYellow: loadImage(`${ASSET_ROOT}/ufoYellow.png`),
   },
 };
 
@@ -191,6 +199,12 @@ const enemySpriteMap = {
   enemyGreen4: assets.enemies.hunter,
   ufoBlue: assets.enemies.transport,
   ufoRed: assets.enemies.boss,
+  enemyBlue5: assets.enemies.aceBlue,
+  enemyRed5: assets.enemies.aceRed,
+  enemyGreen5: assets.enemies.aceGreen,
+  enemyBlack5: assets.enemies.aceBlack,
+  ufoGreen: assets.enemies.ufoGreen,
+  ufoYellow: assets.enemies.ufoYellow,
 };
 
 const availableLevels = [
@@ -593,6 +607,7 @@ async function startMission() {
     eventIndex: 0,
     spawnQueue: [],
     bossAlive: false,
+    bossSpawnTime: getBossSpawnTime(level),
   };
   bullets.length = 0;
   enemyBullets.length = 0;
@@ -838,6 +853,11 @@ function spawnEnemyFromSpec(spec) {
     enemy.y = -40;
     enemy.vx = (Math.random() - 0.5) * 40;
     enemy.vy = enemy.speed;
+  }
+
+  if (enemy.pattern === "spiral") {
+    enemy.spawnX = enemy.x;
+    enemy.spawnY = enemy.y;
   }
 
   if (enemy.pattern === "bossSweep") {
@@ -1102,6 +1122,26 @@ function update(delta) {
       const t = mission.elapsed - enemy.spawnTime;
       enemy.x += enemy.vx * delta;
       enemy.y += (Math.sin(t * frequency) * amplitude + enemy.speed * 0.3) * delta;
+      return;
+    }
+    if (enemy.pattern === "strafe") {
+      const width = canvas.width / window.devicePixelRatio;
+      if (!enemy.strafeDir) enemy.strafeDir = Math.random() < 0.5 ? -1 : 1;
+      enemy.y += enemy.speed * 0.25 * delta;
+      enemy.x += enemy.strafeDir * enemy.speed * delta;
+      if (enemy.x < 60 || enemy.x > width - 60) {
+        enemy.strafeDir *= -1;
+      }
+      return;
+    }
+    if (enemy.pattern === "spiral") {
+      const amplitude = enemy.patternParams.amplitude ?? 120;
+      const frequency = enemy.patternParams.frequency ?? 4;
+      const t = mission.elapsed - enemy.spawnTime;
+      const cx = enemy.spawnX ?? enemy.x;
+      const cy = enemy.spawnY ?? enemy.y;
+      enemy.x = cx + Math.cos(t * frequency) * amplitude;
+      enemy.y = cy + t * enemy.speed * 0.4;
       return;
     }
     if (enemy.pattern === "bossSweep") {
@@ -1429,6 +1469,8 @@ function updateHud() {
     hudScore.textContent = "0";
     hudTime.textContent = "00:00";
     hudCredits.textContent = state.credits.toString();
+    if (bossProgressFill) bossProgressFill.style.width = "0%";
+    if (bossLabel) bossLabel.textContent = "Boss ETA";
   } else {
     const runCredits = creditRewardFor(mission);
     hudHull.textContent = `${Math.max(0, Math.round(player.hull))}/${Math.round(player.maxHull)}`;
@@ -1436,6 +1478,7 @@ function updateHud() {
     hudScore.textContent = Math.round(mission.score).toString();
     hudTime.textContent = formatTime(mission.elapsed);
     hudCredits.textContent = `${state.credits} (+${runCredits})`;
+    updateBossProgress();
   }
 }
 
@@ -1576,6 +1619,38 @@ function creditForEnemy(enemy) {
 function creditRewardFor(missionState) {
   const timeMinutes = missionState.elapsed / 60;
   return Math.round(missionState.killCredits + missionState.score * 0.02 + timeMinutes * 40);
+}
+
+function getBossSpawnTime(level) {
+  if (!level?.events || !level.enemyTypes) return null;
+  let earliest = null;
+  level.events.forEach((event) => {
+    const def = level.enemyTypes[event.type];
+    if (def && def.isBoss) {
+      if (earliest === null || event.time < earliest) {
+        earliest = event.time;
+      }
+    }
+  });
+  return earliest;
+}
+
+function updateBossProgress() {
+  if (!bossProgressFill || !bossLabel || !mission) return;
+  const bossTime = mission.bossSpawnTime;
+  if (!bossTime) {
+    bossLabel.textContent = "No Boss";
+    bossProgressFill.style.width = "0%";
+    return;
+  }
+  if (mission.bossAlive) {
+    bossLabel.textContent = "Boss Engaged";
+    bossProgressFill.style.width = "100%";
+    return;
+  }
+  const progress = Math.min(1, mission.elapsed / bossTime);
+  bossLabel.textContent = `Boss ETA ${formatTime(Math.max(0, bossTime - mission.elapsed))}`;
+  bossProgressFill.style.width = `${Math.round(progress * 100)}%`;
 }
 
 let lastTime = performance.now();

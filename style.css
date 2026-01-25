@@ -81,6 +81,34 @@ body {
   margin-top: 6px;
 }
 
+.boss-progress {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8fb3dd;
+}
+
+.boss-bar {
+  width: 180px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(125, 190, 255, 0.2);
+  overflow: hidden;
+  border: 1px solid rgba(125, 190, 255, 0.35);
+}
+
+#boss-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(120deg, #7dd3fc, #22d3ee);
+  transition: width 0.15s ease;
+}
+
 #overlay {
   position: absolute;
   inset: 0;

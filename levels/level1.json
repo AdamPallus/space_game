@@ -24,6 +24,15 @@
       "pattern": "swoop",
       "patternParams": { "amplitude": 60, "frequency": 2.6 }
     },
+    "sentinel": {
+      "sprite": "enemyBlue5",
+      "hp": 24,
+      "speed": 70,
+      "score": 140,
+      "baseCredit": 18,
+      "radius": 18,
+      "pattern": "strafe"
+    },
     "hunter": {
       "sprite": "enemyGreen4",
       "hp": 30,
@@ -56,6 +65,7 @@
   "events": [
     { "time": 1, "type": "scout", "count": 6, "interval": 0.45 },
     { "time": 6, "type": "fighter", "count": 4, "interval": 0.8 },
+    { "time": 9, "type": "sentinel", "count": 2, "interval": 1.0 },
     { "time": 12, "type": "scout", "count": 8, "interval": 0.35 },
     { "time": 18, "type": "hunter", "count": 2, "interval": 1.2 },
     { "time": 24, "type": "transport", "count": 1 },

@@ -24,6 +24,34 @@
       "pattern": "swoop",
       "patternParams": { "amplitude": 80, "frequency": 3.3 }
     },
+    "sentinel": {
+      "sprite": "enemyBlue5",
+      "hp": 34,
+      "speed": 90,
+      "score": 210,
+      "baseCredit": 30,
+      "radius": 18,
+      "pattern": "strafe"
+    },
+    "marauder": {
+      "sprite": "enemyRed5",
+      "hp": 44,
+      "speed": 100,
+      "score": 240,
+      "baseCredit": 34,
+      "radius": 20,
+      "pattern": "spiral",
+      "patternParams": { "amplitude": 140, "frequency": 3.9 }
+    },
+    "warden": {
+      "sprite": "enemyBlack5",
+      "hp": 60,
+      "speed": 80,
+      "score": 320,
+      "baseCredit": 46,
+      "radius": 24,
+      "pattern": "strafe"
+    },
     "hunter": {
       "sprite": "enemyGreen4",
       "hp": 48,
@@ -56,8 +84,11 @@
   "events": [
     { "time": 1, "type": "scout", "count": 10, "interval": 0.35 },
     { "time": 7, "type": "fighter", "count": 8, "interval": 0.6 },
+    { "time": 11, "type": "sentinel", "count": 4, "interval": 0.8 },
     { "time": 12, "type": "scout", "count": 12, "interval": 0.28 },
+    { "time": 16, "type": "marauder", "count": 3, "interval": 1.0 },
     { "time": 18, "type": "hunter", "count": 4, "interval": 1.0 },
+    { "time": 22, "type": "warden", "count": 2, "interval": 1.4 },
     { "time": 24, "type": "transport", "count": 2, "interval": 1.2 },
     { "time": 30, "type": "fighter", "count": 10, "interval": 0.5 },
     { "time": 38, "type": "hunter", "count": 3, "interval": 1.3 },

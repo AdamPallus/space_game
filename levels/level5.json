@@ -24,6 +24,54 @@
       "pattern": "swoop",
       "patternParams": { "amplitude": 110, "frequency": 4.2 }
     },
+    "sentinel": {
+      "sprite": "enemyBlue5",
+      "hp": 46,
+      "speed": 112,
+      "score": 280,
+      "baseCredit": 44,
+      "radius": 18,
+      "pattern": "strafe"
+    },
+    "marauder": {
+      "sprite": "enemyRed5",
+      "hp": 64,
+      "speed": 126,
+      "score": 320,
+      "baseCredit": 50,
+      "radius": 20,
+      "pattern": "spiral",
+      "patternParams": { "amplitude": 200, "frequency": 4.8 }
+    },
+    "warden": {
+      "sprite": "enemyBlack5",
+      "hp": 96,
+      "speed": 95,
+      "score": 520,
+      "baseCredit": 74,
+      "radius": 26,
+      "pattern": "strafe"
+    },
+    "phantom": {
+      "sprite": "enemyGreen5",
+      "hp": 88,
+      "speed": 140,
+      "score": 560,
+      "baseCredit": 86,
+      "radius": 22,
+      "pattern": "spiral",
+      "patternParams": { "amplitude": 220, "frequency": 5.2 }
+    },
+    "harvester": {
+      "sprite": "ufoGreen",
+      "hp": 220,
+      "speed": 60,
+      "score": 760,
+      "baseCredit": 140,
+      "radius": 34,
+      "pattern": "swoop",
+      "patternParams": { "amplitude": 80, "frequency": 2.8 }
+    },
     "hunter": {
       "sprite": "enemyGreen4",
       "hp": 78,
@@ -56,8 +104,13 @@
   "events": [
     { "time": 1, "type": "scout", "count": 14, "interval": 0.28 },
     { "time": 6, "type": "fighter", "count": 12, "interval": 0.5 },
+    { "time": 10, "type": "sentinel", "count": 5, "interval": 0.7 },
     { "time": 12, "type": "hunter", "count": 6, "interval": 0.9 },
+    { "time": 16, "type": "marauder", "count": 4, "interval": 0.9 },
     { "time": 18, "type": "scout", "count": 16, "interval": 0.24 },
+    { "time": 22, "type": "warden", "count": 3, "interval": 1.2 },
+    { "time": 28, "type": "phantom", "count": 3, "interval": 1.1 },
+    { "time": 34, "type": "harvester", "count": 2, "interval": 1.6 },
     { "time": 26, "type": "transport", "count": 3, "interval": 1.1 },
     { "time": 34, "type": "fighter", "count": 14, "interval": 0.4 },
     { "time": 42, "type": "hunter", "count": 5, "interval": 1.0 },

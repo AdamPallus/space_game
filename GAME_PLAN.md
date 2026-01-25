@@ -187,6 +187,30 @@ The current Kenney pack has limited boss options. Consider:
 
 ---
 
+---
+
+## 🚨 Immediate Fixes (from Adam's playtest)
+
+### Mobile UX (do first)
+- [ ] Add **pause button** for mobile
+- [ ] Collapsible/minimal HUD option — maybe just show hull bar, hide the rest until tapped
+
+### Difficulty & Pacing
+- [ ] **Longer levels** — more waves before boss
+- [ ] **Steeper difficulty curve** — missions 1-3 should still challenge, force some replays
+- [ ] **Harder bosses** — more HP, faster patterns, more bullet density
+
+### Cloaking Device Rework
+Current problem: hiding for 2.5s doesn't matter in a swarm.
+
+Options to consider:
+1. **Cloak + Damage Burst** — uncloak deals AoE damage
+2. **Extended Duration** — 4-5s instead of 2.5s
+3. **Cloak Resets Position** — enemies lose aggro AND you get brief invuln frames
+4. **Cloak = Bullet Time** — slow enemies while cloaked, you still move full speed
+
+---
+
 ## 🛠 Implementation Order (Suggested)
 
 ### Phase 1: Core Feel (1-2 sessions)
@@ -232,3 +256,69 @@ The current Kenney pack has limited boss options. Consider:
 - What's the token budget for Codex sessions? (Affects how much we tackle per session)
 - Any monetization plans? (Affects progression pacing)
 - Target platform: Web only? Or also native mobile later?
+
+---
+
+## 🧠 Notes from Codex (my thoughts)
+
+Below are my additions and reactions after reading Sonja’s draft. I kept them separate so it’s clear what is new.
+
+### ✅ High‑value ideas to prioritize
+- **Ability overhaul** is the best ROI. Cloak already proves the point: effects that change *how* you play are more fun than +damage. I’d keep Cloak and add 1–2 more ability types before building full trees.
+- **Story framing with neural‑linked drones** is clean and mechanically useful (explains eject/penalty). It also gives you a UI narrative hook for “recovery bonus.”
+- **Boss differentiation** will dramatically improve perceived content even if levels are short. If we do nothing else, give each boss a signature attack + unique sprite color.
+
+### 🔧 Adjustments I’d suggest
+- **Level selection should show a “Recommended” tag** for the next unlocked level so new players don’t feel stuck deciding.
+- **Upgrade system: add just 3–4 meaningful choices first** (ex: shield regen vs hull regen vs damage vs cloak cooldown). Then, if it feels good, expand to trees. This reduces risk of overdesigning too early.
+- **Mobile: avoid two ability buttons at first**. It’s easy to add later. We can start with one ability slot and test if users feel overloaded.
+
+### 🔁 Gameplay loop + progression tweaks
+- **Recovery bonus for mission completion** feels important and should be visible. Example: “+15% recovery bonus” in debrief.
+- **Credits should be per‑mission and per‑kill** (you already have kill credit popups). That can evolve into “bonus payouts” later.
+- **Unlock abilities via pilot rank** (as Sonja suggests) but keep the first new unlock very early (ex: at 250 lifetime credits) so players feel progression quickly.
+
+### 👾 Boss improvements that are cheap but effective
+- **Telegraphing**: slight glow or scaling before a radial blast.
+- **Phases**: even 2 phases are enough (e.g., sweep → stationary turret).
+- **Weak point**: make a hitbox on the core for +25% damage, even if it’s just a circle overlay.
+
+### 🎨 Visual variety with current assets
+We can get more mileage without new art by:
+- **Palette swaps** (enemyBlue/Red/Green/Black variants already exist).
+- **Composite ships** from `PNG/Parts/` to create mini‑bosses.
+- **Different bullets per enemy class** (already started): orbs, spread, slow blobs, fast needles.
+
+### ✅ Proposed next 2‑step plan (if we want to keep it lean)
+1) **Abilities**: replace Rocket/Arc with EMP + Afterburner, add cooldown upgrade, add recovery bonus.
+2) **Boss**: 2‑phase pattern per level + boss health bar.
+
+### ⚠️ Risks / watch‑outs
+- **Power creep** from too many systems too soon (abilities + trees + bosses). We should lock one system per sprint.
+- **Mobile UI** can get cluttered fast. I’d keep one ability slot until we see usage data.
+
+---
+
+## 📝 Notes from Adam
+
+### Playtest Feedback (Jan 25, mobile)
+
+**Progression:**
+- Levels too short
+- Difficulty ramps too slowly — beat missions 1-4 without grinding
+- Only mission 5 required retries and upgrades (shields/armor)
+- Bosses are too easy
+
+**Cloaking Device:**
+- Not impactful with current enemy density
+- A few seconds of hiding doesn't matter when there are swarms
+- Needs rethink: longer duration? damage bonus after? enemy clear on activation?
+
+**Mobile UX:**
+- HUD takes up too much screen space — consider hiding/minimizing it
+- **Need a pause button** on mobile (critical!)
+
+**Positive:**
+- Game is actually playable on mobile now! ✅
+- New enemy variety is slightly interesting
+- Laser graphics variety was a big improvement

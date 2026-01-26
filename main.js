@@ -76,21 +76,15 @@ const upgrades = [
     baseCost: 170,
   },
   {
-    id: "auxDamage",
-    name: "Aux Warheads",
-    desc: "+10% RMB weapon damage per level.",
-    baseCost: 190,
-  },
-  {
     id: "auxCooldown",
-    name: "Aux Cooling",
-    desc: "-8% RMB cooldown per level.",
+    name: "Ability Cooldown",
+    desc: "-8% ability cooldown per level.",
     baseCost: 180,
   },
   {
     id: "cloakDuration",
-    name: "Cloak Field",
-    desc: "+12% cloak duration per level.",
+    name: "Ability Duration",
+    desc: "+12% ability duration per level.",
     baseCost: 200,
   },
 ];
@@ -116,8 +110,8 @@ const touchState = {
 let audioEnabled = false;
 
 const mobileAltIcons = {
-  rocket: "assets/SpaceShooterRedux/PNG/Power-ups/powerupRed_bolt.png",
-  arc: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_star.png",
+  emp: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
+  afterburner: "assets/SpaceShooterRedux/PNG/Power-ups/powerupYellow_bolt.png",
   cloak: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
 };
 
@@ -151,6 +145,11 @@ const player = {
   cloakCooldownTime: 10,
   cloakDuration: 2.5,
   hitTimer: 0,
+  afterburnerTimer: 0,
+  empCooldownTime: 8,
+  empDuration: 1.6,
+  afterburnerDuration: 1.0,
+  invulnerableTimer: 0,
 };
 
 const bullets = [];
@@ -295,6 +294,8 @@ const sfx = {
   hit: new Audio("assets/audio/sci-fi_sounds/Audio/impactMetal_002.ogg"),
   hullHit: new Audio("assets/audio/sci-fi_sounds/Audio/impactMetal_004.ogg"),
   cloak: new Audio("assets/audio/sci-fi_sounds/Audio/forceField_002.ogg"),
+  emp: new Audio("assets/audio/sci-fi_sounds/Audio/forceField_004.ogg"),
+  boost: new Audio("assets/audio/sci-fi_sounds/Audio/thrusterFire_001.ogg"),
   eject: new Audio("assets/audio/sci-fi_sounds/Audio/thrusterFire_003.ogg"),
 };
 
@@ -597,7 +598,6 @@ function applyUpgrades() {
   const damageLevel = state.upgrades.damage;
   const fireRateLevel = state.upgrades.fireRate;
   const spreadLevel = state.upgrades.spread;
-  const auxDamageLevel = state.upgrades.auxDamage;
   const auxCooldownLevel = state.upgrades.auxCooldown;
   const cloakDurationLevel = state.upgrades.cloakDuration;
 
@@ -608,10 +608,12 @@ function applyUpgrades() {
   player.damage = 8 * (1 + damageLevel * 0.1);
   player.fireRate = Math.max(0.12, 0.28 * Math.pow(0.93, fireRateLevel));
   player.spreadLevel = spreadLevel;
-  player.altDamageMult = 1 + auxDamageLevel * 0.1;
   player.altCooldownTime = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel));
   player.cloakDuration = 2.5 * (1 + cloakDurationLevel * 0.12);
+  player.empDuration = 1.6 * (1 + cloakDurationLevel * 0.12);
+  player.afterburnerDuration = 1.0 * (1 + cloakDurationLevel * 0.12);
   player.cloakCooldownTime = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel));
+  player.empCooldownTime = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel));
 }
 
 async function startMission() {
@@ -632,6 +634,7 @@ async function startMission() {
     spawnQueue: [],
     bossAlive: false,
     bossSpawnTime: getBossSpawnTime(level),
+    empTimer: 0,
   };
   bullets.length = 0;
   enemyBullets.length = 0;
@@ -646,6 +649,9 @@ async function startMission() {
   player.fireCooldown = 0;
   player.altCooldown = 0;
   player.shieldCooldown = 0;
+  player.empCooldown = 0;
+  player.afterburnerTimer = 0;
+  player.invulnerableTimer = 0;
   paused = false;
 
   overlay.hidden = true;
@@ -663,8 +669,9 @@ function endMission({ ejected = false, completed = false } = {}) {
   mission.active = false;
 
   const creditReward = creditRewardFor(mission);
+  const completionBonus = completed ? 0.1 + Math.random() * 0.15 : 0;
   const penaltyRate = completed || ejected ? 0 : 0.1 + Math.random() * 0.4;
-  const finalReward = Math.round(creditReward * (1 - penaltyRate));
+  const finalReward = Math.round(creditReward * (1 - penaltyRate) * (1 + completionBonus));
 
   state.credits += finalReward;
   state.lifetimeCredits += finalReward;
@@ -679,7 +686,9 @@ function endMission({ ejected = false, completed = false } = {}) {
   saveState();
 
   if (completed) {
-    debriefText.textContent = "Mission complete. Mothership retrieves your fighter.";
+    debriefText.textContent = `Mission complete. Recovery bonus: ${Math.round(
+      completionBonus * 100
+    )}%.`;
   } else if (ejected) {
     debriefText.textContent = "Ejection successful. Full credits secured.";
     playSfx("eject", 0.5);
@@ -811,19 +820,19 @@ async function renderLevelSelectAsync() {
 
 const rmbWeapons = [
   {
-    id: "rocket",
-    name: "Seeker Rocket",
-    desc: "Slow, heavy shot with high damage.",
-  },
-  {
-    id: "arc",
-    name: "Arc Shot",
-    desc: "Fan of 3 plasma shards.",
-  },
-  {
     id: "cloak",
     name: "Cloaking Device",
-    desc: "Hide from hunters for a short time.",
+    desc: "Break enemy lock-on and reposition.",
+  },
+  {
+    id: "emp",
+    name: "EMP Burst",
+    desc: "Disable enemy fire and slow ships briefly.",
+  },
+  {
+    id: "afterburner",
+    name: "Afterburner",
+    desc: "Burst of speed + brief invulnerability.",
   },
 ];
 
@@ -1017,39 +1026,24 @@ function firePlayerBullet() {
 
 function fireAltWeapon() {
   if (state.rmbWeapon === "none") return;
-  if (state.rmbWeapon === "rocket") {
-    playSfx("laserLarge", 0.35);
-    const speed = 320;
-    spawnPlayerBullet({
-      x: player.x,
-      y: player.y - player.radius,
-      vx: 0,
-      vy: -speed,
-      damage: player.damage * 1.9 * player.altDamageMult,
-      image: assets.altRocket,
-    });
-    bullets[bullets.length - 1].radius = 8;
-    bullets[bullets.length - 1].width = 16;
-    bullets[bullets.length - 1].height = 48;
-  } else if (state.rmbWeapon === "arc") {
-    playSfx("laserLarge", 0.32);
-    const speed = 420;
-    const angles = [-0.35, 0, 0.35];
-    angles.forEach((angle) => {
-      const vx = Math.sin(angle) * speed;
-      const vy = -Math.cos(angle) * speed;
-      spawnPlayerBullet({
-        x: player.x,
-        y: player.y - player.radius,
-        vx,
-        vy,
-        damage: player.damage * 0.95 * player.altDamageMult,
-        image: assets.altArc,
-      });
-    });
-  } else if (state.rmbWeapon === "cloak") {
+  if (state.rmbWeapon === "cloak") {
     playSfx("cloak", 0.35);
     player.cloakTimer = player.cloakDuration;
+  } else if (state.rmbWeapon === "emp") {
+    playSfx("emp", 0.4);
+    mission.empTimer = player.empDuration;
+  } else if (state.rmbWeapon === "afterburner") {
+    playSfx("boost", 0.45);
+    player.afterburnerTimer = player.afterburnerDuration;
+    player.invulnerableTimer = Math.max(player.invulnerableTimer, player.afterburnerDuration * 0.9);
+    if (pointer.active) {
+      const dx = pointer.x - player.x;
+      const dy = pointer.y - player.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const dash = Math.min(180, distance);
+      player.x += (dx / distance) * dash;
+      player.y += (dy / distance) * dash;
+    }
   }
 }
 
@@ -1139,6 +1133,15 @@ function update(delta) {
   mission.spawnTimer -= delta;
   mission.enemyFireTimer -= delta;
   mission.difficulty = 1 + state.missionCount * 0.15 + mission.elapsed / 22;
+  if (player.invulnerableTimer > 0) {
+    player.invulnerableTimer = Math.max(0, player.invulnerableTimer - delta);
+  }
+  if (player.afterburnerTimer > 0) {
+    player.afterburnerTimer = Math.max(0, player.afterburnerTimer - delta);
+  }
+  if (mission.empTimer > 0) {
+    mission.empTimer = Math.max(0, mission.empTimer - delta);
+  }
   if (player.hitTimer > 0) {
     player.hitTimer = Math.max(0, player.hitTimer - delta);
   }
@@ -1165,21 +1168,23 @@ function update(delta) {
     }
   }
 
-  enemies.forEach((enemy) => {
-    enemy.fireCooldown -= delta;
-    if (enemy.fireCooldown > 0) return;
-    if (enemy.y < 40) return;
-    if (enemy.isBoss || enemy.y < canvas.height * 0.75) {
-      if (enemy.fireMode === "spread") {
-        fireEnemySpread(enemy, enemy.fireCount || 5, enemy.fireSpread || 0.8);
-      } else if (enemy.fireMode === "radial") {
-        fireEnemyRadial(enemy, enemy.fireCount || 18);
-      } else {
-        fireEnemyBullet(enemy);
+  if (mission.empTimer <= 0) {
+    enemies.forEach((enemy) => {
+      enemy.fireCooldown -= delta;
+      if (enemy.fireCooldown > 0) return;
+      if (enemy.y < 40) return;
+      if (enemy.isBoss || enemy.y < canvas.height * 0.75) {
+        if (enemy.fireMode === "spread") {
+          fireEnemySpread(enemy, enemy.fireCount || 5, enemy.fireSpread || 0.8);
+        } else if (enemy.fireMode === "radial") {
+          fireEnemyRadial(enemy, enemy.fireCount || 18);
+        } else {
+          fireEnemyBullet(enemy);
+        }
+        enemy.fireCooldown = Math.max(0.4, enemy.fireRate * 0.95);
       }
-      enemy.fireCooldown = Math.max(0.4, enemy.fireRate * 0.95);
-    }
-  });
+    });
+  }
 
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
@@ -1188,7 +1193,8 @@ function update(delta) {
     const dx = touchState.x - player.x;
     const dy = touchState.y - player.y;
     const distanceToTarget = Math.hypot(dx, dy) || 1;
-    const step = Math.min(distanceToTarget, touchState.maxSpeed * delta);
+    const speedBoost = player.afterburnerTimer > 0 ? 1.8 : 1;
+    const step = Math.min(distanceToTarget, touchState.maxSpeed * speedBoost * delta);
     player.x += (dx / distanceToTarget) * step;
     player.y += (dy / distanceToTarget) * step;
   } else if (pointer.active) {
@@ -1211,8 +1217,13 @@ function update(delta) {
   }
   if (pointerButtons.right && player.altCooldown <= 0) {
     fireAltWeapon();
-    player.altCooldown =
-      state.rmbWeapon === "cloak" ? player.cloakCooldownTime : player.altCooldownTime;
+    if (state.rmbWeapon === "cloak") {
+      player.altCooldown = player.cloakCooldownTime;
+    } else if (state.rmbWeapon === "emp") {
+      player.altCooldown = player.empCooldownTime;
+    } else {
+      player.altCooldown = player.altCooldownTime;
+    }
   }
 
   if (player.shieldCooldown > 0) {
@@ -1230,13 +1241,14 @@ function update(delta) {
     bullet.y += bullet.vy * delta;
   });
 
+  const empFactor = mission.empTimer > 0 ? 0.55 : 1;
   enemies.forEach((enemy) => {
     if (enemy.pattern === "zigzag") {
       const amplitude = enemy.patternParams.amplitude ?? 90;
       const frequency = enemy.patternParams.frequency ?? 3;
       const t = mission.elapsed - enemy.spawnTime;
-      enemy.vx = Math.sin(t * frequency) * amplitude;
-      enemy.vy = enemy.speed;
+      enemy.vx = Math.sin(t * frequency) * amplitude * empFactor;
+      enemy.vy = enemy.speed * empFactor;
       enemy.x += enemy.vx * delta;
       enemy.y += enemy.vy * delta;
       return;
@@ -1245,15 +1257,15 @@ function update(delta) {
       const amplitude = enemy.patternParams.amplitude ?? 60;
       const frequency = enemy.patternParams.frequency ?? 2.5;
       const t = mission.elapsed - enemy.spawnTime;
-      enemy.x += enemy.vx * delta;
-      enemy.y += (Math.sin(t * frequency) * amplitude + enemy.speed * 0.3) * delta;
+      enemy.x += enemy.vx * empFactor * delta;
+      enemy.y += (Math.sin(t * frequency) * amplitude + enemy.speed * 0.3) * empFactor * delta;
       return;
     }
     if (enemy.pattern === "strafe") {
       const width = canvas.width / window.devicePixelRatio;
       if (!enemy.strafeDir) enemy.strafeDir = Math.random() < 0.5 ? -1 : 1;
-      enemy.y += enemy.speed * 0.25 * delta;
-      enemy.x += enemy.strafeDir * enemy.speed * delta;
+      enemy.y += enemy.speed * 0.25 * empFactor * delta;
+      enemy.x += enemy.strafeDir * enemy.speed * empFactor * delta;
       if (enemy.x < 60 || enemy.x > width - 60) {
         enemy.strafeDir *= -1;
       }
@@ -1266,15 +1278,15 @@ function update(delta) {
       const cx = enemy.spawnX ?? enemy.x;
       const cy = enemy.spawnY ?? enemy.y;
       enemy.x = cx + Math.cos(t * frequency) * amplitude;
-      enemy.y = cy + t * enemy.speed * 0.4;
+      enemy.y = cy + t * enemy.speed * 0.4 * empFactor;
       return;
     }
     if (enemy.pattern === "bossSweep") {
       if (enemy.y < enemy.targetY) {
-        enemy.y += enemy.vy * delta;
+        enemy.y += enemy.vy * empFactor * delta;
       } else {
         const width = canvas.width / window.devicePixelRatio;
-        enemy.x += enemy.sweepDir * enemy.speed * delta;
+        enemy.x += enemy.sweepDir * enemy.speed * empFactor * delta;
         if (enemy.x < 80 || enemy.x > width - 80) {
           enemy.sweepDir *= -1;
         }
@@ -1287,25 +1299,25 @@ function update(delta) {
       const distanceToPlayer = Math.hypot(dx, dy);
       const aggro = enemy.aggroRadius ?? 220;
       if (distanceToPlayer < aggro && player.cloakTimer <= 0) {
-        const chaseSpeed = enemy.speed * 1.05;
+        const chaseSpeed = enemy.speed * 1.05 * empFactor;
         const targetVx = (dx / (distanceToPlayer || 1)) * chaseSpeed;
         const targetVy = (dy / (distanceToPlayer || 1)) * chaseSpeed;
         enemy.vx += (targetVx - enemy.vx) * 0.08;
         enemy.vy += (targetVy - enemy.vy) * 0.08;
       } else {
         enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.05;
-        enemy.vy += (enemy.speed * 0.8 - enemy.vy) * 0.05;
+        enemy.vy += (enemy.speed * 0.8 * empFactor - enemy.vy) * 0.05;
       }
     } else if (enemy.ai === "hunter") {
       if (player.cloakTimer > 0) {
         enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.06;
-        enemy.vy += (enemy.speed * 0.9 - enemy.vy) * 0.05;
+        enemy.vy += (enemy.speed * 0.9 * empFactor - enemy.vy) * 0.05;
       } else {
         const aggression = 1 + mission.elapsed / 30 + mission.difficulty * 0.14;
         const dx = player.x - enemy.x;
         const dy = player.y - enemy.y;
         const distanceToPlayer = Math.hypot(dx, dy) || 1;
-        const chaseSpeed = enemy.speed * aggression;
+        const chaseSpeed = enemy.speed * aggression * empFactor;
         const targetVx = (dx / distanceToPlayer) * chaseSpeed;
         const targetVy = (dy / distanceToPlayer) * chaseSpeed;
         const strafe = enemy.strafeDir * 90 * Math.sin(mission.elapsed * 1.7) * aggression * 0.4;
@@ -1314,13 +1326,13 @@ function update(delta) {
       }
     } else if (enemy.ai === "transport") {
       enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.03;
-      enemy.vy += (enemy.speed - enemy.vy) * 0.04;
+      enemy.vy += (enemy.speed * empFactor - enemy.vy) * 0.04;
     } else {
       enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.05;
     }
 
-    enemy.x += enemy.vx * delta;
-    enemy.y += enemy.vy * delta;
+    enemy.x += enemy.vx * empFactor * delta;
+    enemy.y += enemy.vy * empFactor * delta;
   });
 
   floatingTexts.forEach((text) => {
@@ -1397,6 +1409,7 @@ function handleCollisions() {
 }
 
 function applyDamage(amount) {
+  if (player.invulnerableTimer > 0) return;
   player.shieldCooldown = 2.5;
   player.hitTimer = 0.25;
   let shieldHit = false;
@@ -1530,7 +1543,11 @@ function drawRmbIndicator() {
 
   if (player.altCooldown > 0) {
     const cooldownTime =
-      state.rmbWeapon === "cloak" ? player.cloakCooldownTime : player.altCooldownTime;
+      state.rmbWeapon === "cloak"
+        ? player.cloakCooldownTime
+        : state.rmbWeapon === "emp"
+          ? player.empCooldownTime
+          : player.altCooldownTime;
     const progress = Math.min(1, player.altCooldown / cooldownTime);
     ctx.strokeStyle = "rgba(251, 191, 36, 0.85)";
     ctx.beginPath();

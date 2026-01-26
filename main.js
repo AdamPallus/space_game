@@ -22,6 +22,11 @@ const lastMissionEl = document.getElementById("last-mission");
 const upgradeList = document.getElementById("upgrade-list");
 const debugUnlock = document.getElementById("debug-unlock");
 const debugInvincible = document.getElementById("debug-invincible");
+const weaponBarrel = document.getElementById("weapon-barrel");
+const weaponTrigger = document.getElementById("weapon-trigger");
+const weaponPayload = document.getElementById("weapon-payload");
+const weaponModifier = document.getElementById("weapon-modifier");
+const weaponSummary = document.getElementById("weapon-summary");
 const rmbList = document.getElementById("rmb-list");
 
 // Investment UI elements
@@ -215,6 +220,8 @@ const player = {
   bulwarkDuration: 1.2,
   bulwarkShield: 0,
   bulwarkShieldBonus: 200,
+  burstCount: 0,
+  burstTimer: 0,
 };
 
 const bullets = [];
@@ -599,6 +606,20 @@ if (debugInvincible) {
   });
 }
 
+function bindWeaponSelect(selectEl, key) {
+  if (!selectEl) return;
+  selectEl.addEventListener("change", () => {
+    state.weapon[key] = selectEl.value;
+    saveState();
+    renderWeaponBuilder();
+  });
+}
+
+bindWeaponSelect(weaponBarrel, "barrel");
+bindWeaponSelect(weaponTrigger, "trigger");
+bindWeaponSelect(weaponPayload, "payload");
+bindWeaponSelect(weaponModifier, "modifier");
+
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
@@ -610,6 +631,12 @@ function loadState() {
       unlockedLevels: 1,
       debugUnlock: false,
       debugInvincible: false,
+      weapon: {
+        barrel: "focused",
+        trigger: "rapid",
+        payload: "kinetic",
+        modifier: "none",
+      },
       upgrades: {
         hull: 0,
         shield: 0,
@@ -651,6 +678,12 @@ function loadState() {
     parsed.unlockedLevels = parsed.unlockedLevels ?? 1;
     parsed.debugUnlock = parsed.debugUnlock ?? false;
     parsed.debugInvincible = parsed.debugInvincible ?? false;
+    parsed.weapon = parsed.weapon || {
+      barrel: "focused",
+      trigger: "rapid",
+      payload: "kinetic",
+      modifier: "none",
+    };
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
@@ -662,6 +695,12 @@ function loadState() {
       unlockedLevels: 1,
       debugUnlock: false,
       debugInvincible: false,
+      weapon: {
+        barrel: "focused",
+        trigger: "rapid",
+        payload: "kinetic",
+        modifier: "none",
+      },
       upgrades: {
         hull: 0,
         shield: 0,
@@ -878,6 +917,7 @@ function updateHangar() {
 
   renderRmbLoadout();
   renderInvestments();
+  renderWeaponBuilder();
   updateMobileControls();
 }
 
@@ -1047,6 +1087,32 @@ const rmbWeapons = [
   },
 ];
 
+const weaponComponents = {
+  barrel: [
+    { id: "focused", name: "Focused", unlockAt: 0 },
+    { id: "spread", name: "Spread", unlockAt: 250 },
+    { id: "rear", name: "Rear-fire", unlockAt: 500 },
+    { id: "orbit", name: "Orbiting", unlockAt: 900 },
+  ],
+  trigger: [
+    { id: "rapid", name: "Rapid", unlockAt: 0 },
+    { id: "burst", name: "Burst", unlockAt: 300 },
+    { id: "charged", name: "Charged", unlockAt: 650 },
+    { id: "rhythmic", name: "Rhythmic", unlockAt: 1000 },
+  ],
+  payload: [
+    { id: "kinetic", name: "Kinetic", unlockAt: 0 },
+    { id: "plasma", name: "Plasma", unlockAt: 400 },
+    { id: "emp", name: "EMP", unlockAt: 900 },
+  ],
+  modifier: [
+    { id: "none", name: "None", unlockAt: 0 },
+    { id: "pierce", name: "Pierce", unlockAt: 350 },
+    { id: "homing", name: "Homing", unlockAt: 800 },
+    { id: "vampiric", name: "Vampiric", unlockAt: 1200 },
+  ],
+};
+
 function renderRmbLoadout() {
   if (!rmbList) return;
   rmbList.innerHTML = "";
@@ -1075,6 +1141,40 @@ function renderRmbLoadout() {
     rmbList.appendChild(item);
   });
   updateMobileControls();
+}
+
+function renderWeaponBuilder() {
+  if (!weaponBarrel || !weaponTrigger || !weaponPayload || !weaponModifier) return;
+  const credits = state.lifetimeCredits;
+  const fillSelect = (selectEl, options, current) => {
+    selectEl.innerHTML = "";
+    options.forEach((option) => {
+      const opt = document.createElement("option");
+      const locked = credits < option.unlockAt && !state.debugUnlock;
+      opt.value = option.id;
+      opt.textContent = locked
+        ? `${option.name} (Locked @ ${option.unlockAt})`
+        : option.name;
+      opt.disabled = locked;
+      if (option.id === current) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+  };
+
+  fillSelect(weaponBarrel, weaponComponents.barrel, state.weapon.barrel);
+  fillSelect(weaponTrigger, weaponComponents.trigger, state.weapon.trigger);
+  fillSelect(weaponPayload, weaponComponents.payload, state.weapon.payload);
+  fillSelect(weaponModifier, weaponComponents.modifier, state.weapon.modifier);
+
+  if (weaponSummary) {
+    weaponSummary.textContent = `${formatComponentName(state.weapon.barrel)} + ${formatComponentName(
+      state.weapon.trigger
+    )} + ${formatComponentName(state.weapon.payload)} + ${formatComponentName(state.weapon.modifier)}`;
+  }
+}
+
+function formatComponentName(id) {
+  return id.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
 function getPilotRank(credits) {
@@ -1117,6 +1217,9 @@ function spawnEnemyFromSpec(spec) {
     aggroRadius: spec.aggroRadius,
     bulletStyle: spec.bulletStyle,
     patternTime: 0,
+    dotTimer: 0,
+    dotDps: 0,
+    empHitTimer: 0,
   };
 
   if (enemy.pattern === "swoop") {
@@ -1200,39 +1303,114 @@ function spawnPlayerBullet({ x, y, vx, vy, damage, image }) {
   });
 }
 
-function firePlayerBullet() {
-  const baseSpeed = 560;
-  playSfx("laserSmall", 0.25);
-  spawnPlayerBullet({
-    x: player.x,
-    y: player.y - player.radius,
-    vx: 0,
-    vy: -baseSpeed,
-    damage: player.damage,
-    image: assets.playerBullet,
-  });
+function getWeaponConfig() {
+  const barrel = state.weapon.barrel;
+  const trigger = state.weapon.trigger;
+  const payload = state.weapon.payload;
+  const modifier = state.weapon.modifier;
 
-  if (player.spreadLevel > 0) {
-    const angle = 0.2;
-    const vx = Math.sin(angle) * baseSpeed * 0.85;
-    const vy = -Math.cos(angle) * baseSpeed * 0.85;
-    const spreadDamage = player.damage * (0.45 * (1 + player.spreadLevel * 0.08));
-    spawnPlayerBullet({
-      x: player.x,
-      y: player.y - player.radius,
-      vx: -vx,
-      vy,
-      damage: spreadDamage,
-      image: assets.spreadBullet,
-    });
-    spawnPlayerBullet({
+  let fireRate = player.fireRate;
+  let damageMult = 1;
+  if (trigger === "rapid") {
+    fireRate *= 0.8;
+    damageMult *= 0.85;
+  } else if (trigger === "charged") {
+    fireRate *= 1.6;
+    damageMult *= 1.6;
+  } else if (trigger === "burst") {
+    fireRate *= 1.2;
+    damageMult *= 0.9;
+  } else if (trigger === "rhythmic") {
+    fireRate = 0.55;
+    damageMult *= 1.15;
+  }
+
+  let modifierData = {};
+  if (modifier === "pierce") {
+    modifierData.pierce = 1;
+  } else if (modifier === "homing") {
+    modifierData.homing = true;
+  } else if (modifier === "vampiric") {
+    modifierData.vampiric = 2;
+  }
+
+  return {
+    barrel,
+    trigger,
+    payload,
+    fireRate,
+    damageMult,
+    modifierData,
+  };
+}
+
+function firePlayerBullet() {
+  const config = getWeaponConfig();
+  const baseSpeed = 560;
+  const baseDamage = player.damage * config.damageMult;
+  playSfx("laserSmall", 0.25);
+
+  const resolveBulletImage = (payload) => {
+    if (payload === "plasma") return assets.spreadBullet;
+    if (payload === "emp") return assets.altArc;
+    return assets.playerBullet;
+  };
+
+  const spawnBullet = (vx, vy, image = resolveBulletImage(config.payload), extra = {}) => {
+    const bullet = {
       x: player.x,
       y: player.y - player.radius,
       vx,
       vy,
-      damage: spreadDamage,
-      image: assets.spreadBullet,
+      radius: 4,
+      damage: baseDamage,
+      image,
+      width: 10,
+      height: 32,
+      rotation: Math.atan2(vy, vx) + Math.PI / 2,
+      payload: config.payload,
+      ...config.modifierData,
+      ...extra,
+    };
+    bullets.push(bullet);
+  };
+
+  if (config.barrel === "spread") {
+    const angles = [-0.2, 0, 0.2];
+    angles.forEach((angle) => {
+      const vx = Math.sin(angle) * baseSpeed;
+      const vy = -Math.cos(angle) * baseSpeed;
+      spawnBullet(vx, vy, assets.spreadBullet);
     });
+  } else if (config.barrel === "rear") {
+    spawnBullet(0, -baseSpeed);
+    spawnBullet(0, baseSpeed);
+  } else if (config.barrel === "orbit") {
+    for (let i = 0; i < 4; i += 1) {
+      bullets.push({
+        x: player.x,
+        y: player.y,
+        vx: 0,
+        vy: 0,
+        radius: 5,
+        damage: baseDamage * 0.6,
+        image: assets.spreadBullet,
+        orbiting: true,
+        orbitAngle: (Math.PI / 2) * i,
+        orbitRadius: 34,
+        orbitSpeed: 3,
+        orbitLife: 1.4,
+        payload: config.payload,
+        ...config.modifierData,
+      });
+    }
+  } else {
+    spawnBullet(0, -baseSpeed);
+  }
+
+  if (config.trigger === "burst") {
+    player.burstCount = 2;
+    player.burstTimer = 0.08;
   }
 }
 
@@ -1374,6 +1552,7 @@ function update(delta) {
 
   if (mission.empTimer <= 0) {
     enemies.forEach((enemy) => {
+      if (enemy.empHitTimer > 0) return;
       enemy.fireCooldown -= delta;
       if (enemy.fireCooldown > 0) return;
       if (enemy.y < 40) return;
@@ -1408,15 +1587,24 @@ function update(delta) {
   player.x = Math.max(40, Math.min(width - 40, player.x));
   player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
 
+  const weaponConfig = getWeaponConfig();
   player.fireCooldown -= delta;
   player.altCooldown -= delta;
   if (pointerButtons.left && player.fireCooldown <= 0) {
     firePlayerBullet();
-    player.fireCooldown = player.fireRate;
+    player.fireCooldown = weaponConfig.fireRate;
   }
   if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
     firePlayerBullet();
-    player.fireCooldown = player.fireRate;
+    player.fireCooldown = weaponConfig.fireRate;
+  }
+  if (player.burstCount > 0) {
+    player.burstTimer -= delta;
+    if (player.burstTimer <= 0) {
+      firePlayerBullet();
+      player.burstCount -= 1;
+      player.burstTimer = 0.08;
+    }
   }
   if (pointerButtons.right && player.altCooldown <= 0) {
     fireAltWeapon();
@@ -1436,6 +1624,30 @@ function update(delta) {
   }
 
   bullets.forEach((bullet) => {
+    if (bullet.orbiting) {
+      bullet.orbitAngle += bullet.orbitSpeed * delta;
+      bullet.orbitLife -= delta;
+      bullet.x = player.x + Math.cos(bullet.orbitAngle) * bullet.orbitRadius;
+      bullet.y = player.y + Math.sin(bullet.orbitAngle) * bullet.orbitRadius;
+      return;
+    }
+    if (bullet.homing && enemies.length) {
+      let closest = null;
+      let best = Infinity;
+      enemies.forEach((enemy) => {
+        const d = distance(bullet.x, bullet.y, enemy.x, enemy.y);
+        if (d < best) {
+          best = d;
+          closest = enemy;
+        }
+      });
+      if (closest) {
+        const angle = Math.atan2(closest.y - bullet.y, closest.x - bullet.x);
+        const speed = Math.hypot(bullet.vx, bullet.vy);
+        bullet.vx += (Math.cos(angle) * speed - bullet.vx) * 0.05;
+        bullet.vy += (Math.sin(angle) * speed - bullet.vy) * 0.05;
+      }
+    }
     bullet.x += bullet.vx * delta;
     bullet.y += bullet.vy * delta;
   });
@@ -1444,8 +1656,16 @@ function update(delta) {
     bullet.y += bullet.vy * delta;
   });
 
-  const empFactor = mission.empTimer > 0 ? 0.55 : 1;
+  const globalEmp = mission.empTimer > 0;
   enemies.forEach((enemy) => {
+    if (enemy.dotTimer > 0) {
+      enemy.dotTimer -= delta;
+      enemy.hp -= enemy.dotDps * delta;
+    }
+    if (enemy.empHitTimer > 0) {
+      enemy.empHitTimer = Math.max(0, enemy.empHitTimer - delta);
+    }
+    const empFactor = globalEmp || enemy.empHitTimer > 0 ? 0.55 : 1;
     enemy.patternTime += delta * empFactor;
     if (enemy.pattern === "zigzag") {
       const amplitude = enemy.patternParams.amplitude ?? 90;
@@ -1539,6 +1759,14 @@ function update(delta) {
     enemy.y += enemy.vy * empFactor * delta;
   });
 
+  for (let i = enemies.length - 1; i >= 0; i -= 1) {
+    const enemy = enemies[i];
+    if (enemy.hp <= 0) {
+      handleEnemyDestroyed(enemy, null);
+      enemies.splice(i, 1);
+    }
+  }
+
   floatingTexts.forEach((text) => {
     text.y -= text.vy * delta;
     text.life -= delta;
@@ -1548,7 +1776,7 @@ function update(delta) {
     boom.rotation += boom.spin * delta;
   });
 
-  cleanArrays(bullets, (bullet) => bullet.y < -20);
+  cleanArrays(bullets, (bullet) => bullet.y < -20 || bullet.orbitLife <= 0);
   cleanArrays(enemyBullets, (bullet) => bullet.y > height + 20 || bullet.x < -40 || bullet.x > width + 40);
   cleanArrays(enemies, (enemy) => enemy.y > height + 60);
   cleanArrays(floatingTexts, (text) => text.life <= 0);
@@ -1575,19 +1803,20 @@ function handleCollisions() {
       const enemy = enemies[j];
       if (distance(bullet.x, bullet.y, enemy.x, enemy.y) < bullet.radius + enemy.radius) {
         enemy.hp -= bullet.damage;
-        bullets.splice(i, 1);
+        if (bullet.payload === "plasma") {
+          enemy.dotTimer = Math.max(enemy.dotTimer, 2.2);
+          enemy.dotDps = Math.max(enemy.dotDps, bullet.damage * 0.25);
+        } else if (bullet.payload === "emp") {
+          enemy.empHitTimer = Math.max(enemy.empHitTimer, 1.2);
+        }
+        if (bullet.pierce && bullet.pierce > 0) {
+          bullet.pierce -= 1;
+        } else {
+          bullets.splice(i, 1);
+        }
         if (enemy.hp <= 0) {
+          handleEnemyDestroyed(enemy, bullet);
           enemies.splice(j, 1);
-          mission.kills += 1;
-          mission.score += enemy.score;
-          const creditEarned = creditForEnemy(enemy);
-          mission.killCredits += creditEarned;
-          spawnCreditPopup(enemy.x, enemy.y, creditEarned);
-          spawnExplosion(enemy.x, enemy.y, enemy.radius);
-          playSfx("explosion", 0.135);
-          if (enemy.isBoss && mission.level?.completeOnBoss) {
-            endMission({ completed: true });
-          }
         }
         continue bulletsLoop;
       }
@@ -1609,6 +1838,22 @@ function handleCollisions() {
       enemyBullets.splice(i, 1);
       applyDamage(14 + mission.difficulty * 1.3);
     }
+  }
+}
+
+function handleEnemyDestroyed(enemy, bullet) {
+  mission.kills += 1;
+  mission.score += enemy.score;
+  const creditEarned = creditForEnemy(enemy);
+  mission.killCredits += creditEarned;
+  spawnCreditPopup(enemy.x, enemy.y, creditEarned);
+  spawnExplosion(enemy.x, enemy.y, enemy.radius);
+  playSfx("explosion", 0.135);
+  if (enemy.isBoss && mission.level?.completeOnBoss) {
+    endMission({ completed: true });
+  }
+  if (bullet && bullet.vampiric) {
+    player.hull = Math.min(player.maxHull, player.hull + bullet.vampiric);
   }
 }
 

@@ -296,7 +296,7 @@ const sfx = {
   hullHit: new Audio("assets/audio/sci-fi_sounds/Audio/impactMetal_004.ogg"),
   cloak: new Audio("assets/audio/sci-fi_sounds/Audio/forceField_002.ogg"),
   emp: new Audio("assets/audio/sci-fi_sounds/Audio/forceField_004.ogg"),
-  boost: new Audio("assets/audio/sci-fi_sounds/Audio/thrusterFire_001.ogg"),
+  boost: new Audio("assets/audio/sci-fi_sounds/Audio/forceField_000.ogg"),
   eject: new Audio("assets/audio/sci-fi_sounds/Audio/thrusterFire_003.ogg"),
 };
 

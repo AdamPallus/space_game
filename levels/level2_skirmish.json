@@ -1,0 +1,91 @@
+{
+  "id": "level2_skirmish",
+  "name": "Orion Drift: Skirmish",
+  "background": "purple",
+  "difficulty": "Medium",
+  "variant": "skirmish",
+  "baseLevel": "level2",
+  "description": "Quick strike mission. Higher enemy density, faster pace, +25% credits.",
+  "creditMultiplier": 1.25,
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "scout": {
+      "sprite": "enemyBlue2",
+      "hp": 22,
+      "speed": 100,
+      "score": 115,
+      "baseCredit": 18,
+      "radius": 16,
+      "pattern": "zigzag",
+      "patternParams": { "amplitude": 115, "frequency": 3.8 }
+    },
+    "fighter": {
+      "sprite": "enemyRed3",
+      "hp": 32,
+      "speed": 90,
+      "score": 160,
+      "baseCredit": 25,
+      "radius": 20,
+      "pattern": "swoop",
+      "patternParams": { "amplitude": 75, "frequency": 3.1 }
+    },
+    "sentinel": {
+      "sprite": "enemyBlue5",
+      "hp": 30,
+      "speed": 82,
+      "score": 180,
+      "baseCredit": 28,
+      "radius": 18,
+      "pattern": "strafe",
+      "fireRate": 1.9
+    },
+    "marauder": {
+      "sprite": "enemyRed5",
+      "hp": 36,
+      "speed": 95,
+      "score": 210,
+      "baseCredit": 33,
+      "radius": 20,
+      "pattern": "spiral",
+      "patternParams": { "amplitude": 125, "frequency": 3.8 },
+      "fireRate": 1.5,
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9
+    },
+    "hunter": {
+      "sprite": "enemyGreen4",
+      "hp": 38,
+      "speed": 96,
+      "score": 240,
+      "baseCredit": 43,
+      "radius": 20,
+      "ai": "hunter"
+    },
+    "boss": {
+      "sprite": "ufoRed",
+      "hp": 480,
+      "speed": 85,
+      "score": 1300,
+      "baseCredit": 300,
+      "radius": 46,
+      "pattern": "bossSweep",
+      "isBoss": true,
+      "fireRate": 1.1,
+      "fireMode": "radial",
+      "fireCount": 16,
+      "bulletSpeed": 175
+    }
+  },
+  "events": [
+    { "time": 1, "type": "scout", "count": 10, "interval": 0.3, "comment": "Fast start" },
+    { "time": 4, "type": "fighter", "count": 8, "interval": 0.5 },
+    { "time": 8, "type": "sentinel", "count": 4, "interval": 0.65 },
+    { "time": 11, "type": "marauder", "count": 3, "interval": 0.8 },
+    { "time": 14, "type": "hunter", "count": 4, "interval": 0.75 },
+    { "time": 17, "type": "scout", "count": 12, "interval": 0.25 },
+    { "time": 20, "type": "fighter", "count": 6, "interval": 0.45 },
+    { "time": 24, "type": "hunter", "count": 3, "interval": 0.7 },
+    { "time": 28, "type": "boss", "count": 1 }
+  ]
+}

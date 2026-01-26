@@ -214,6 +214,12 @@ const availableLevels = [
   { id: "level3", label: "Mission 3" },
   { id: "level4", label: "Mission 4" },
   { id: "level5", label: "Mission 5" },
+  { id: "level6", label: "Mission 6" },
+  { id: "level7", label: "Mission 7" },
+  { id: "level8", label: "Mission 8" },
+  // Variant missions (Operations Center unlocks - not yet integrated)
+  // { id: "level1_patrol", label: "Mission 1: Patrol Alpha" },
+  // { id: "level2_skirmish", label: "Mission 2: Skirmish" },
 ];
 
 const levelFallback = {

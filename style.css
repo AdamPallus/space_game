@@ -222,9 +222,22 @@ body {
   letter-spacing: 0.14em;
   font-size: 11px;
   margin: 4px 0 12px;
+  position: relative;
+}
+
+.tree-core::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2px);
+  width: 2px;
+  height: 12px;
+  background: rgba(125, 190, 255, 0.25);
+  transform: translateX(-50%);
 }
 
 .tree-grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
@@ -232,9 +245,21 @@ body {
 }
 
 .tree-column {
+  position: relative;
+  padding-left: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.tree-column::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 22px;
+  bottom: 6px;
+  width: 2px;
+  background: rgba(125, 190, 255, 0.18);
 }
 
 .tree-label {
@@ -251,6 +276,7 @@ body {
 }
 
 .tree-node {
+  position: relative;
   width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
@@ -265,6 +291,17 @@ body {
   flex-direction: column;
   gap: 4px;
   box-shadow: none;
+}
+
+.tree-node::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 12px;
+  height: 2px;
+  background: rgba(125, 190, 255, 0.35);
+  transform: translateY(-50%);
 }
 
 .tree-node .node-meta {

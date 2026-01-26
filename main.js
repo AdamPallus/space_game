@@ -643,6 +643,13 @@ function loadState() {
         payload: "kinetic",
         modifier: "none",
       },
+      unlocked: {
+        barrel: { focused: true },
+        trigger: { rapid: true },
+        payload: { kinetic: true },
+        modifier: { none: true },
+        aux: { cloak: true },
+      },
       upgrades: {
         hull: 0,
         shield: 0,
@@ -690,6 +697,17 @@ function loadState() {
       payload: "kinetic",
       modifier: "none",
     };
+    parsed.unlocked = parsed.unlocked || {};
+    parsed.unlocked.barrel = parsed.unlocked.barrel || { focused: true };
+    parsed.unlocked.trigger = parsed.unlocked.trigger || { rapid: true };
+    parsed.unlocked.payload = parsed.unlocked.payload || { kinetic: true };
+    parsed.unlocked.modifier = parsed.unlocked.modifier || { none: true };
+    parsed.unlocked.aux = parsed.unlocked.aux || { cloak: true };
+    if (parsed.weapon?.barrel) parsed.unlocked.barrel[parsed.weapon.barrel] = true;
+    if (parsed.weapon?.trigger) parsed.unlocked.trigger[parsed.weapon.trigger] = true;
+    if (parsed.weapon?.payload) parsed.unlocked.payload[parsed.weapon.payload] = true;
+    if (parsed.weapon?.modifier) parsed.unlocked.modifier[parsed.weapon.modifier] = true;
+    if (parsed.rmbWeapon) parsed.unlocked.aux[parsed.rmbWeapon] = true;
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
@@ -706,6 +724,13 @@ function loadState() {
         trigger: "rapid",
         payload: "kinetic",
         modifier: "none",
+      },
+      unlocked: {
+        barrel: { focused: true },
+        trigger: { rapid: true },
+        payload: { kinetic: true },
+        modifier: { none: true },
+        aux: { cloak: true },
       },
       upgrades: {
         hull: 0,
@@ -1041,39 +1066,45 @@ const rmbWeapons = [
     id: "cloak",
     name: "Cloaking Device",
     desc: "Break enemy lock-on and reposition.",
+    unlockAt: 0,
+    cost: 0,
   },
   {
     id: "emp",
     name: "EMP Burst",
     desc: "Disable enemy fire and slow ships briefly.",
+    unlockAt: 350,
+    cost: 250,
   },
   {
     id: "bulwark",
     name: "Bulwark Field",
     desc: "Temporary super-shield buffer.",
+    unlockAt: 650,
+    cost: 400,
   },
 ];
 
 const weaponComponents = {
   barrel: [
-    { id: "focused", name: "Focused", unlockAt: 0 },
-    { id: "spread", name: "Spread", unlockAt: 250 },
-    { id: "rear", name: "Rear-fire", unlockAt: 500 },
+    { id: "focused", name: "Focused", unlockAt: 0, cost: 0 },
+    { id: "spread", name: "Spread", unlockAt: 250, cost: 180 },
+    { id: "rear", name: "Rear-fire", unlockAt: 500, cost: 260 },
   ],
   trigger: [
-    { id: "rapid", name: "Rapid", unlockAt: 0 },
-    { id: "burst", name: "Burst", unlockAt: 300 },
+    { id: "rapid", name: "Rapid", unlockAt: 0, cost: 0 },
+    { id: "burst", name: "Burst", unlockAt: 300, cost: 220 },
   ],
   payload: [
-    { id: "kinetic", name: "Kinetic", unlockAt: 0 },
-    { id: "plasma", name: "Plasma", unlockAt: 400 },
-    { id: "emp", name: "EMP", unlockAt: 900 },
+    { id: "kinetic", name: "Kinetic", unlockAt: 0, cost: 0 },
+    { id: "plasma", name: "Plasma", unlockAt: 400, cost: 260 },
+    { id: "emp", name: "EMP", unlockAt: 900, cost: 480 },
   ],
   modifier: [
-    { id: "none", name: "None", unlockAt: 0 },
-    { id: "pierce", name: "Pierce", unlockAt: 350 },
-    { id: "homing", name: "Homing", unlockAt: 800 },
-    { id: "vampiric", name: "Vampiric", unlockAt: 1200 },
+    { id: "none", name: "None", unlockAt: 0, cost: 0 },
+    { id: "pierce", name: "Pierce", unlockAt: 350, cost: 240 },
+    { id: "homing", name: "Homing", unlockAt: 800, cost: 520 },
+    { id: "vampiric", name: "Vampiric", unlockAt: 1200, cost: 720 },
   ],
 };
 
@@ -1094,28 +1125,43 @@ function renderComponentNodes(container, options, current, key) {
   if (!container) return;
   container.innerHTML = "";
   const credits = state.lifetimeCredits;
+  const unlocked = state.unlocked?.[key] || {};
   options.forEach((option) => {
-    const locked = credits < option.unlockAt && !state.debugUnlock;
+    const rankLocked = credits < option.unlockAt && !state.debugUnlock;
+    const isUnlocked = state.debugUnlock || unlocked[option.id];
+    const cost = option.cost ?? 0;
+    const canPurchase = !rankLocked && !isUnlocked && state.credits >= cost;
     const button = document.createElement("button");
     button.className = "tree-node";
-    button.title = upgrade.desc;
     if (option.id === current) {
       button.classList.add("active");
     }
-    if (locked) {
+    if (rankLocked || (!isUnlocked && !canPurchase)) {
       button.classList.add("locked");
     }
-    button.disabled = locked;
-    const metaText = locked
-      ? `Locked @ ${option.unlockAt}`
-      : option.id === current
-        ? "Equipped"
-        : "Equip";
+    button.disabled = rankLocked || (!isUnlocked && !canPurchase);
+    let metaText = "Equip";
+    if (rankLocked) {
+      metaText = `Locked @ ${option.unlockAt}`;
+    } else if (!isUnlocked) {
+      metaText = `Unlock ${cost}/${state.credits}`;
+    } else if (option.id === current) {
+      metaText = "Equipped";
+    } else {
+      metaText = "Unlocked";
+    }
     button.innerHTML = `
       <span class="node-title">${option.name}</span>
       <span class="node-meta">${metaText}</span>
     `;
     button.addEventListener("click", () => {
+      if (rankLocked) return;
+      if (!isUnlocked) {
+        if (cost > 0 && state.credits < cost) return;
+        state.credits -= cost;
+        if (!state.unlocked[key]) state.unlocked[key] = {};
+        state.unlocked[key][option.id] = true;
+      }
       state.weapon[key] = option.id;
       saveState();
       updateHangar();
@@ -1128,13 +1174,35 @@ function ensureComponentSelection(key, options) {
   const credits = state.lifetimeCredits;
   const current = state.weapon[key];
   const currentOption = options.find((option) => option.id === current);
-  const isUnlocked = currentOption && (credits >= currentOption.unlockAt || state.debugUnlock);
+  const unlocked = state.unlocked?.[key] || {};
+  const isUnlocked =
+    currentOption && (state.debugUnlock || unlocked[currentOption.id]);
   if (isUnlocked) return;
-  const firstUnlocked = options.find(
-    (option) => credits >= option.unlockAt || state.debugUnlock
-  );
+  const firstUnlocked = options.find((option) => {
+    const rankOk = credits >= option.unlockAt || state.debugUnlock;
+    return rankOk && (state.debugUnlock || unlocked[option.id]);
+  });
   if (firstUnlocked) {
     state.weapon[key] = firstUnlocked.id;
+    saveState();
+  }
+}
+
+function ensureAuxSelection() {
+  const credits = state.lifetimeCredits;
+  const unlockedAux = state.unlocked?.aux || {};
+  const current = rmbWeapons.find((weapon) => weapon.id === state.rmbWeapon);
+  const isUnlocked =
+    current &&
+    (state.debugUnlock ||
+      (unlockedAux[current.id] && credits >= (current.unlockAt ?? 0)));
+  if (isUnlocked) return;
+  const firstUnlocked = rmbWeapons.find((weapon) => {
+    const rankOk = credits >= (weapon.unlockAt ?? 0) || state.debugUnlock;
+    return rankOk && (state.debugUnlock || unlockedAux[weapon.id]);
+  });
+  if (firstUnlocked) {
+    state.rmbWeapon = firstUnlocked.id;
     saveState();
   }
 }
@@ -1197,18 +1265,44 @@ function renderWeaponTree() {
 
 function renderAuxTree() {
   if (!treeAuxSelect) return;
+  ensureAuxSelection();
   treeAuxSelect.innerHTML = "";
+  const credits = state.lifetimeCredits;
+  const unlockedAux = state.unlocked?.aux || {};
   rmbWeapons.forEach((weapon) => {
+    const rankLocked = credits < (weapon.unlockAt ?? 0) && !state.debugUnlock;
+    const isUnlocked = state.debugUnlock || unlockedAux[weapon.id];
+    const cost = weapon.cost ?? 0;
+    const canPurchase = !rankLocked && !isUnlocked && state.credits >= cost;
     const button = document.createElement("button");
     button.className = "tree-node";
     if (state.rmbWeapon === weapon.id) {
       button.classList.add("active");
     }
+    if (rankLocked || (!isUnlocked && !canPurchase)) {
+      button.classList.add("locked");
+    }
+    button.disabled = rankLocked || (!isUnlocked && !canPurchase);
+    let metaText = weapon.desc;
+    if (rankLocked) {
+      metaText = `Locked @ ${weapon.unlockAt ?? 0}`;
+    } else if (!isUnlocked) {
+      metaText = `Unlock ${cost}/${state.credits}`;
+    } else if (state.rmbWeapon === weapon.id) {
+      metaText = "Equipped";
+    }
     button.innerHTML = `
       <span class="node-title">${weapon.name}</span>
-      <span class="node-meta">${state.rmbWeapon === weapon.id ? "Equipped" : weapon.desc}</span>
+      <span class="node-meta">${metaText}</span>
     `;
     button.addEventListener("click", () => {
+      if (rankLocked) return;
+      if (!isUnlocked) {
+        if (cost > 0 && state.credits < cost) return;
+        state.credits -= cost;
+        if (!state.unlocked.aux) state.unlocked.aux = {};
+        state.unlocked.aux[weapon.id] = true;
+      }
       state.rmbWeapon = weapon.id;
       saveState();
       updateHangar();

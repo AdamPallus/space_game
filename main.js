@@ -13,21 +13,23 @@ const bossProgressFill = document.getElementById("boss-progress-fill");
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
 const debriefPanel = document.getElementById("debrief");
-const levelSelectPanel = document.getElementById("level-select");
 
 const pilotRank = document.getElementById("pilot-rank");
 const availableCreditsEl = document.getElementById("available-credits");
 const lifetimeCreditsEl = document.getElementById("lifetime-credits");
 const lastMissionEl = document.getElementById("last-mission");
-const upgradeList = document.getElementById("upgrade-list");
 const debugUnlock = document.getElementById("debug-unlock");
 const debugInvincible = document.getElementById("debug-invincible");
-const weaponBarrel = document.getElementById("weapon-barrel");
-const weaponTrigger = document.getElementById("weapon-trigger");
-const weaponPayload = document.getElementById("weapon-payload");
-const weaponModifier = document.getElementById("weapon-modifier");
-const weaponSummary = document.getElementById("weapon-summary");
-const rmbList = document.getElementById("rmb-list");
+const treeBarrel = document.getElementById("tree-barrel");
+const treeTrigger = document.getElementById("tree-trigger");
+const treePayload = document.getElementById("tree-payload");
+const treeModifier = document.getElementById("tree-modifier");
+const treePrimaryUpgrades = document.getElementById("tree-primary-upgrades");
+const treeAuxSelect = document.getElementById("tree-aux-select");
+const treeAuxUpgrades = document.getElementById("tree-aux-upgrades");
+const treeShipUpgrades = document.getElementById("tree-ship-upgrades");
+const hangarTabButtons = document.querySelectorAll(".tab-btn");
+const hangarTabPanels = document.querySelectorAll(".tab-panel");
 
 // Investment UI elements
 const engineeringTier = document.getElementById("engineering-tier");
@@ -46,7 +48,6 @@ const sharesCost = document.getElementById("shares-cost");
 const launchBtn = document.getElementById("launch-btn");
 const resetBtn = document.getElementById("reset-btn");
 const returnBtn = document.getElementById("return-btn");
-const levelBackBtn = document.getElementById("level-back-btn");
 
 const debriefText = document.getElementById("debrief-text");
 const debriefTime = document.getElementById("debrief-time");
@@ -92,7 +93,7 @@ const upgrades = [
   {
     id: "spread",
     name: "Plasma Spread",
-    desc: "Unlocks spread shot, +8% spread damage per level.",
+    desc: "Boosts spread shot damage by 8% per level.",
     baseCost: 170,
   },
   {
@@ -365,6 +366,7 @@ let currentLevel = null;
 let levelLoadPromise = null;
 let selectedLevelId = "level1";
 let lastLoadedLevelId = null;
+let activeHangarTab = "loadout";
 const levelMetaCache = new Map();
 
 const sfx = {
@@ -554,33 +556,53 @@ bindMobileButton(mobileEjectBtn, () => {
 
 bindMobileButton(mobileLaunchBtn, () => {
   if (!mission || !mission.active) {
-    openLevelSelect();
+    launchSelectedMission();
   }
 }, () => {});
 
 updateMobileControls();
 
-launchBtn.addEventListener("click", () => {
-  openLevelSelect();
+function setHangarTab(tabId, { renderLevels = true } = {}) {
+  activeHangarTab = tabId;
+  hangarTabButtons.forEach((button) => {
+    const isActive = button.dataset.tab === tabId;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+  hangarTabPanels.forEach((panel) => {
+    panel.hidden = panel.dataset.tabPanel !== tabId;
+  });
+  if (renderLevels && tabId === "mission") {
+    renderLevelSelect();
+  }
+  updateMobileControls();
+}
+
+hangarTabButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    setHangarTab(button.dataset.tab);
+  });
+});
+
+setHangarTab(activeHangarTab, { renderLevels: false });
+
+async function launchSelectedMission() {
+  if (!isLevelUnlocked(selectedLevelId)) return;
+  await startMission();
+}
+
+launchBtn.addEventListener("click", async () => {
+  await launchSelectedMission();
 });
 
 returnBtn.addEventListener("click", () => {
   debriefPanel.hidden = true;
   hangarPanel.hidden = false;
   overlay.hidden = false;
-  if (levelSelectPanel) levelSelectPanel.hidden = true;
+  setHangarTab("loadout");
   updateMobileControls();
   updateHangar();
 });
-
-if (levelBackBtn) {
-  levelBackBtn.addEventListener("click", () => {
-    if (levelSelectPanel) levelSelectPanel.hidden = true;
-    hangarPanel.hidden = false;
-    overlay.hidden = false;
-    updateMobileControls();
-  });
-}
 
 resetBtn.addEventListener("click", () => {
   if (!confirm("Reset all pilot progress?")) return;
@@ -603,20 +625,6 @@ if (debugInvincible) {
     saveState();
   });
 }
-
-function bindWeaponSelect(selectEl, key) {
-  if (!selectEl) return;
-  selectEl.addEventListener("change", () => {
-    state.weapon[key] = selectEl.value;
-    saveState();
-    renderWeaponBuilder();
-  });
-}
-
-bindWeaponSelect(weaponBarrel, "barrel");
-bindWeaponSelect(weaponTrigger, "trigger");
-bindWeaponSelect(weaponPayload, "payload");
-bindWeaponSelect(weaponModifier, "modifier");
 
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -795,7 +803,6 @@ async function startMission() {
   overlay.hidden = true;
   hangarPanel.hidden = true;
   debriefPanel.hidden = true;
-  if (levelSelectPanel) levelSelectPanel.hidden = true;
   updateMobileControls();
   hudMission.textContent = level?.name
     ? `Mission ${state.missionCount + 1}: ${level.name}`
@@ -851,7 +858,6 @@ function endMission({ ejected = false, completed = false } = {}) {
   overlay.hidden = false;
   debriefPanel.hidden = false;
   hangarPanel.hidden = true;
-  if (levelSelectPanel) levelSelectPanel.hidden = true;
   updateMobileControls();
   updateHangar();
 }
@@ -870,52 +876,13 @@ function updateHangar() {
     debugInvincible.checked = !!state.debugInvincible;
   }
 
-  upgradeList.innerHTML = "";
-
-  upgrades.forEach((upgrade) => {
-  const level = state.upgrades[upgrade.id];
-  const cost = upgradeCost(upgrade.id);
-  const item = document.createElement("div");
-  item.className = "upgrade-item";
-
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  meta.innerHTML = `
-    <span class="name">${upgrade.name} (Lv ${level})</span>
-    <span class="desc">${upgrade.desc}</span>
-    <span class="cost">Cost: ${cost}/${state.credits}</span>
-  `;
-
-  const button = document.createElement("button");
-  const maxLevel = upgrade.maxLevel ?? Infinity;
-  const canPurchase = level < maxLevel && state.credits >= cost;
-  if (level >= maxLevel) {
-    button.textContent = "Maxed";
-    button.disabled = true;
-  } else {
-    button.textContent = `${cost}/${state.credits}`;
-    button.disabled = !canPurchase;
-  }
-  if (!canPurchase && level < maxLevel) {
-    item.classList.add("locked");
-  }
-  button.addEventListener("click", () => {
-    if (state.credits < cost) return;
-    if (level >= maxLevel) return;
-      state.credits -= cost;
-      state.upgrades[upgrade.id] += 1;
-      saveState();
-      updateHangar();
-    });
-
-    item.appendChild(meta);
-    item.appendChild(button);
-    upgradeList.appendChild(item);
-  });
-
-  renderRmbLoadout();
+  renderWeaponTree();
+  renderAuxTree();
+  renderUpgradeTrees();
   renderInvestments();
-  renderWeaponBuilder();
+  if (activeHangarTab === "mission") {
+    renderLevelSelect();
+  }
   updateMobileControls();
 }
 
@@ -1014,19 +981,6 @@ if (sharesInvest) {
   sharesInvest.addEventListener("click", () => handleInvestment("shares"));
 }
 
-function openLevelSelect() {
-  if (!levelSelectPanel) {
-    startMission();
-    return;
-  }
-  hangarPanel.hidden = true;
-  debriefPanel.hidden = true;
-  levelSelectPanel.hidden = false;
-  overlay.hidden = false;
-  renderLevelSelect();
-  updateMobileControls();
-}
-
 function renderLevelSelect() {
   renderLevelSelectAsync();
 }
@@ -1034,6 +988,17 @@ function renderLevelSelect() {
 async function renderLevelSelectAsync() {
   if (!levelList) return;
   levelList.innerHTML = "";
+  if (!isLevelUnlocked(selectedLevelId)) {
+    const firstUnlocked = availableLevels.find((level) => isLevelUnlocked(level.id));
+    if (firstUnlocked) {
+      selectedLevelId = firstUnlocked.id;
+    }
+  }
+  if (launchBtn) {
+    const canLaunch = isLevelUnlocked(selectedLevelId);
+    launchBtn.disabled = !canLaunch;
+    launchBtn.textContent = canLaunch ? "Launch Mission" : "Locked";
+  }
   for (const level of availableLevels) {
     const metaData = await loadLevelMeta(level.id);
     const isUnlocked = isLevelUnlocked(level.id);
@@ -1053,13 +1018,17 @@ async function renderLevelSelectAsync() {
       <span class="badge">${metaData.difficulty || "Unknown"}</span>
     `;
     const button = document.createElement("button");
-    button.textContent = isUnlocked ? "Launch" : "Locked";
+    button.textContent = !isUnlocked
+      ? "Locked"
+      : level.id === selectedLevelId
+        ? "Selected"
+        : "Select";
     button.disabled = !isUnlocked;
-    button.addEventListener("click", async () => {
+    button.addEventListener("click", () => {
       if (!isUnlocked) return;
       selectedLevelId = level.id;
       currentLevel = null;
-      await startMission();
+      renderLevelSelect();
     });
     item.appendChild(meta);
     item.appendChild(button);
@@ -1081,7 +1050,7 @@ const rmbWeapons = [
   {
     id: "bulwark",
     name: "Bulwark Field",
-    desc: "Temporary super-shield (invulnerable).",
+    desc: "Temporary super-shield buffer.",
   },
 ];
 
@@ -1108,89 +1077,150 @@ const weaponComponents = {
   ],
 };
 
-function renderRmbLoadout() {
-  if (!rmbList) return;
-  rmbList.innerHTML = "";
-  rmbWeapons.forEach((weapon) => {
-    const item = document.createElement("div");
-    item.className = "upgrade-item";
-    if (state.rmbWeapon === weapon.id) {
-      item.classList.add("active");
-    }
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.innerHTML = `
-      <span class="name">${weapon.name}</span>
-      <span class="desc">${weapon.desc}</span>
-    `;
+const upgradeCategories = {
+  primary: ["damage", "fireRate", "spread"],
+  aux: ["auxCooldown", "cloakDuration"],
+  ship: ["hull", "shield"],
+};
+
+const upgradeRequirements = {
+  spread: {
+    label: "Requires Spread Barrel",
+    test: () => state.weapon.barrel === "spread",
+  },
+};
+
+function renderComponentNodes(container, options, current, key) {
+  if (!container) return;
+  container.innerHTML = "";
+  const credits = state.lifetimeCredits;
+  options.forEach((option) => {
+    const locked = credits < option.unlockAt && !state.debugUnlock;
     const button = document.createElement("button");
-    button.textContent = state.rmbWeapon === weapon.id ? "Equipped" : "Equip";
-    button.disabled = state.rmbWeapon === weapon.id;
+    button.className = "tree-node";
+    button.title = upgrade.desc;
+    if (option.id === current) {
+      button.classList.add("active");
+    }
+    if (locked) {
+      button.classList.add("locked");
+    }
+    button.disabled = locked;
+    const metaText = locked
+      ? `Locked @ ${option.unlockAt}`
+      : option.id === current
+        ? "Equipped"
+        : "Equip";
+    button.innerHTML = `
+      <span class="node-title">${option.name}</span>
+      <span class="node-meta">${metaText}</span>
+    `;
+    button.addEventListener("click", () => {
+      state.weapon[key] = option.id;
+      saveState();
+      updateHangar();
+    });
+    container.appendChild(button);
+  });
+}
+
+function ensureComponentSelection(key, options) {
+  const credits = state.lifetimeCredits;
+  const current = state.weapon[key];
+  const currentOption = options.find((option) => option.id === current);
+  const isUnlocked = currentOption && (credits >= currentOption.unlockAt || state.debugUnlock);
+  if (isUnlocked) return;
+  const firstUnlocked = options.find(
+    (option) => credits >= option.unlockAt || state.debugUnlock
+  );
+  if (firstUnlocked) {
+    state.weapon[key] = firstUnlocked.id;
+    saveState();
+  }
+}
+
+function renderUpgradeNodes(container, upgradeIds) {
+  if (!container) return;
+  container.innerHTML = "";
+  upgradeIds.forEach((upgradeId) => {
+    const upgrade = upgrades.find((item) => item.id === upgradeId);
+    if (!upgrade) return;
+    const level = state.upgrades[upgradeId];
+    const cost = upgradeCost(upgradeId);
+    const maxLevel = upgrade.maxLevel ?? Infinity;
+    const requirement = upgradeRequirements[upgradeId];
+    const meetsRequirement = requirement ? requirement.test() : true;
+    const canPurchase = meetsRequirement && level < maxLevel && state.credits >= cost;
+
+    const button = document.createElement("button");
+    button.className = "tree-node";
+    if (!canPurchase || !meetsRequirement) {
+      button.classList.add("locked");
+    }
+
+    let metaText = `Cost: ${cost}/${state.credits}`;
+    if (level >= maxLevel) {
+      metaText = "Maxed";
+      button.disabled = true;
+    } else if (!meetsRequirement) {
+      metaText = requirement?.label || "Locked";
+      button.disabled = true;
+    } else {
+      button.disabled = !canPurchase;
+    }
+
+    button.innerHTML = `
+      <span class="node-title">${upgrade.name} (Lv ${level})</span>
+      <span class="node-meta">${metaText}</span>
+    `;
+    button.addEventListener("click", () => {
+      if (!canPurchase) return;
+      state.credits -= cost;
+      state.upgrades[upgradeId] += 1;
+      saveState();
+      updateHangar();
+    });
+    container.appendChild(button);
+  });
+}
+
+function renderWeaponTree() {
+  ensureComponentSelection("barrel", weaponComponents.barrel);
+  ensureComponentSelection("trigger", weaponComponents.trigger);
+  ensureComponentSelection("payload", weaponComponents.payload);
+  ensureComponentSelection("modifier", weaponComponents.modifier);
+  renderComponentNodes(treeBarrel, weaponComponents.barrel, state.weapon.barrel, "barrel");
+  renderComponentNodes(treeTrigger, weaponComponents.trigger, state.weapon.trigger, "trigger");
+  renderComponentNodes(treePayload, weaponComponents.payload, state.weapon.payload, "payload");
+  renderComponentNodes(treeModifier, weaponComponents.modifier, state.weapon.modifier, "modifier");
+}
+
+function renderAuxTree() {
+  if (!treeAuxSelect) return;
+  treeAuxSelect.innerHTML = "";
+  rmbWeapons.forEach((weapon) => {
+    const button = document.createElement("button");
+    button.className = "tree-node";
+    if (state.rmbWeapon === weapon.id) {
+      button.classList.add("active");
+    }
+    button.innerHTML = `
+      <span class="node-title">${weapon.name}</span>
+      <span class="node-meta">${state.rmbWeapon === weapon.id ? "Equipped" : weapon.desc}</span>
+    `;
     button.addEventListener("click", () => {
       state.rmbWeapon = weapon.id;
       saveState();
       updateHangar();
     });
-    item.appendChild(meta);
-    item.appendChild(button);
-    rmbList.appendChild(item);
+    treeAuxSelect.appendChild(button);
   });
-  updateMobileControls();
 }
 
-function renderWeaponBuilder() {
-  if (!weaponBarrel || !weaponTrigger || !weaponPayload || !weaponModifier) return;
-  const credits = state.lifetimeCredits;
-  const fillSelect = (selectEl, options, current) => {
-    selectEl.innerHTML = "";
-    let hasSelected = false;
-    let firstAvailable = null;
-    options.forEach((option) => {
-      const opt = document.createElement("option");
-      const locked = credits < option.unlockAt && !state.debugUnlock;
-      opt.value = option.id;
-      opt.textContent = locked
-        ? `${option.name} (Locked @ ${option.unlockAt})`
-        : option.name;
-      opt.disabled = locked;
-      if (!locked && !firstAvailable) firstAvailable = option.id;
-      if (option.id === current && !locked) {
-        opt.selected = true;
-        hasSelected = true;
-      }
-      selectEl.appendChild(opt);
-    });
-    if (!hasSelected && firstAvailable) {
-      selectEl.value = firstAvailable;
-      return firstAvailable;
-    }
-    return current;
-  };
-
-  const barrel = fillSelect(weaponBarrel, weaponComponents.barrel, state.weapon.barrel);
-  const trigger = fillSelect(weaponTrigger, weaponComponents.trigger, state.weapon.trigger);
-  const payload = fillSelect(weaponPayload, weaponComponents.payload, state.weapon.payload);
-  const modifier = fillSelect(weaponModifier, weaponComponents.modifier, state.weapon.modifier);
-
-  if (
-    barrel !== state.weapon.barrel ||
-    trigger !== state.weapon.trigger ||
-    payload !== state.weapon.payload ||
-    modifier !== state.weapon.modifier
-  ) {
-    state.weapon = { barrel, trigger, payload, modifier };
-    saveState();
-  }
-
-  if (weaponSummary) {
-    weaponSummary.textContent = `${formatComponentName(state.weapon.barrel)} + ${formatComponentName(
-      state.weapon.trigger
-    )} + ${formatComponentName(state.weapon.payload)} + ${formatComponentName(state.weapon.modifier)}`;
-  }
-}
-
-function formatComponentName(id) {
-  return id.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+function renderUpgradeTrees() {
+  renderUpgradeNodes(treePrimaryUpgrades, upgradeCategories.primary);
+  renderUpgradeNodes(treeAuxUpgrades, upgradeCategories.aux);
+  renderUpgradeNodes(treeShipUpgrades, upgradeCategories.ship);
 }
 
 function getPilotRank(credits) {
@@ -1357,7 +1387,8 @@ function getWeaponConfig() {
 function firePlayerBullet() {
   const config = getWeaponConfig();
   const baseSpeed = 560;
-  const baseDamage = player.damage * config.damageMult;
+  const spreadBonus = config.barrel === "spread" ? 1 + player.spreadLevel * 0.08 : 1;
+  const baseDamage = player.damage * config.damageMult * spreadBonus;
   playSfx("laserSmall", 0.25);
 
   const resolveBulletImage = (payload) => {
@@ -2180,11 +2211,13 @@ function updateMobileControls() {
   if (!mobileControls) return;
   const inMission = mission && mission.active;
   const inHangar = !inMission && overlay && !overlay.hidden && hangarPanel && !hangarPanel.hidden;
+  const inMissionTab = activeHangarTab === "mission";
   mobileControls.hidden = !(inMission || inHangar);
 
   const hasAlt = state.rmbWeapon !== "none";
   if (mobileLaunchBtn) {
-    mobileLaunchBtn.hidden = !inHangar;
+    mobileLaunchBtn.hidden = !inHangar || !inMissionTab;
+    mobileLaunchBtn.disabled = !isLevelUnlocked(selectedLevelId);
   }
   if (mobileAltBtn) {
     mobileAltBtn.hidden = !inMission || !hasAlt;

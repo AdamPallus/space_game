@@ -39,15 +39,6 @@
       </div>
 
       <div id="overlay">
-        <div class="panel" id="level-select" hidden>
-          <h1>Mission Briefing</h1>
-          <p>Select a mission profile. Each sortie increases in difficulty.</p>
-          <div class="upgrade-list" id="level-list"></div>
-          <div class="actions">
-            <button id="level-back-btn" class="ghost">Back to Hangar</button>
-          </div>
-        </div>
-
         <div class="panel" id="hangar">
           <h1>Mothership Hangar</h1>
           <p>
@@ -83,84 +74,127 @@
               </label>
             </div>
           </div>
-        <div class="loadout">
-          <h2>Aux Weapon</h2>
-          <div class="upgrade-list" id="rmb-list"></div>
-        </div>
-        <div class="loadout">
-          <h2>Armory: Primary Weapon Build</h2>
-          <div class="weapon-grid">
-            <label>
-              <span class="label">Barrel</span>
-              <select id="weapon-barrel"></select>
-            </label>
-            <label>
-              <span class="label">Trigger</span>
-              <select id="weapon-trigger"></select>
-            </label>
-            <label>
-              <span class="label">Payload</span>
-              <select id="weapon-payload"></select>
-            </label>
-            <label>
-              <span class="label">Modifier</span>
-              <select id="weapon-modifier"></select>
-            </label>
+          <div class="tab-bar" role="tablist" aria-label="Hangar tabs">
+            <button class="tab-btn active" data-tab="loadout" role="tab" aria-selected="true">
+              Ship Loadout
+            </button>
+            <button class="tab-btn" data-tab="economy" role="tab" aria-selected="false">
+              Economy
+            </button>
+            <button class="tab-btn" data-tab="mission" role="tab" aria-selected="false">
+              Mission Select
+            </button>
           </div>
-          <div class="weapon-summary" id="weapon-summary"></div>
-        </div>
-        <div class="loadout">
-          <h2>Upgrades</h2>
-          <div class="upgrade-list" id="upgrade-list"></div>
-        </div>
-        <div class="loadout investments-section">
-          <h2>Fleet Investments</h2>
-          <p class="investments-desc">Invest in mothership infrastructure for long-term benefits. Returns compound over time.</p>
-          <div class="investment-categories">
-            <div class="investment-category" id="engineering-bay">
-              <div class="category-header">
-                <span class="category-icon">🔧</span>
-                <span class="category-name">Engineering Bay</span>
-                <span class="category-tier" id="engineering-tier">Tier 0/5</span>
+
+          <div class="tab-panel" id="tab-loadout" data-tab-panel="loadout">
+            <div class="loadout">
+              <h2>Primary Weapon Tree</h2>
+              <div class="tree-core">Main Weapon Core</div>
+              <div class="tree-grid">
+                <div class="tree-column">
+                  <div class="tree-label">Barrel</div>
+                  <div class="tree-nodes" id="tree-barrel"></div>
+                </div>
+                <div class="tree-column">
+                  <div class="tree-label">Trigger</div>
+                  <div class="tree-nodes" id="tree-trigger"></div>
+                </div>
+                <div class="tree-column">
+                  <div class="tree-label">Payload</div>
+                  <div class="tree-nodes" id="tree-payload"></div>
+                </div>
+                <div class="tree-column">
+                  <div class="tree-label">Modifier</div>
+                  <div class="tree-nodes" id="tree-modifier"></div>
+                </div>
+                <div class="tree-column">
+                  <div class="tree-label">Primary Upgrades</div>
+                  <div class="tree-nodes" id="tree-primary-upgrades"></div>
+                </div>
               </div>
-              <p class="category-desc">Unlock consumables and reduce repair costs.</p>
-              <div class="category-benefits" id="engineering-benefits"></div>
-              <button class="invest-btn" id="engineering-invest" disabled>
-                <span class="invest-label">Invest</span>
-                <span class="invest-cost" id="engineering-cost">200</span>
-              </button>
             </div>
-            <div class="investment-category" id="operations-center">
-              <div class="category-header">
-                <span class="category-icon">📡</span>
-                <span class="category-name">Operations Center</span>
-                <span class="category-tier" id="operations-tier">Tier 0/5</span>
+
+            <div class="loadout">
+              <h2>Aux Systems Tree</h2>
+              <div class="tree-core">Aux Hardpoint</div>
+              <div class="tree-grid">
+                <div class="tree-column">
+                  <div class="tree-label">Aux Slot</div>
+                  <div class="tree-nodes" id="tree-aux-select"></div>
+                </div>
+                <div class="tree-column">
+                  <div class="tree-label">Aux Upgrades</div>
+                  <div class="tree-nodes" id="tree-aux-upgrades"></div>
+                </div>
+                <div class="tree-column">
+                  <div class="tree-label">Ship Systems</div>
+                  <div class="tree-nodes" id="tree-ship-upgrades"></div>
+                </div>
               </div>
-              <p class="category-desc">Unlock mission variants and bonus objectives.</p>
-              <div class="category-benefits" id="operations-benefits"></div>
-              <button class="invest-btn" id="operations-invest" disabled>
-                <span class="invest-label">Invest</span>
-                <span class="invest-cost" id="operations-cost">200</span>
-              </button>
             </div>
-            <div class="investment-category" id="fleet-shares">
-              <div class="category-header">
-                <span class="category-icon">💰</span>
-                <span class="category-name">Fleet Shares</span>
-                <span class="category-tier" id="shares-tier">Tier 0/5</span>
-              </div>
-              <p class="category-desc">Earn passive dividends from fleet operations.</p>
-              <div class="category-benefits" id="shares-benefits"></div>
-              <button class="invest-btn" id="shares-invest" disabled>
-                <span class="invest-label">Invest</span>
-                <span class="invest-cost" id="shares-cost">300</span>
-              </button>
+
+            <div class="actions">
+              <button id="reset-btn" class="ghost">Reset Progress</button>
             </div>
           </div>
-        </div>
-          <div class="actions">
-            <button id="launch-btn">Launch Mission</button>
-            <button id="reset-btn" class="ghost">Reset Progress</button>
+
+          <div class="tab-panel" id="tab-economy" data-tab-panel="economy" hidden>
+            <div class="loadout investments-section">
+              <h2>Fleet Investments</h2>
+              <p class="investments-desc">
+                Invest in mothership infrastructure for long-term benefits. Returns compound over time.
+              </p>
+              <div class="investment-categories">
+                <div class="investment-category" id="engineering-bay">
+                  <div class="category-header">
+                    <span class="category-icon">🔧</span>
+                    <span class="category-name">Engineering Bay</span>
+                    <span class="category-tier" id="engineering-tier">Tier 0/5</span>
+                  </div>
+                  <p class="category-desc">Unlock consumables and reduce repair costs.</p>
+                  <div class="category-benefits" id="engineering-benefits"></div>
+                  <button class="invest-btn" id="engineering-invest" disabled>
+                    <span class="invest-label">Invest</span>
+                    <span class="invest-cost" id="engineering-cost">200</span>
+                  </button>
+                </div>
+                <div class="investment-category" id="operations-center">
+                  <div class="category-header">
+                    <span class="category-icon">📡</span>
+                    <span class="category-name">Operations Center</span>
+                    <span class="category-tier" id="operations-tier">Tier 0/5</span>
+                  </div>
+                  <p class="category-desc">Unlock mission variants and bonus objectives.</p>
+                  <div class="category-benefits" id="operations-benefits"></div>
+                  <button class="invest-btn" id="operations-invest" disabled>
+                    <span class="invest-label">Invest</span>
+                    <span class="invest-cost" id="operations-cost">200</span>
+                  </button>
+                </div>
+                <div class="investment-category" id="fleet-shares">
+                  <div class="category-header">
+                    <span class="category-icon">💰</span>
+                    <span class="category-name">Fleet Shares</span>
+                    <span class="category-tier" id="shares-tier">Tier 0/5</span>
+                  </div>
+                  <p class="category-desc">Earn passive dividends from fleet operations.</p>
+                  <div class="category-benefits" id="shares-benefits"></div>
+                  <button class="invest-btn" id="shares-invest" disabled>
+                    <span class="invest-label">Invest</span>
+                    <span class="invest-cost" id="shares-cost">300</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-mission" data-tab-panel="mission" hidden>
+            <h2>Mission Briefing</h2>
+            <p>Select a mission profile. Each sortie increases in difficulty.</p>
+            <div class="upgrade-list" id="level-list"></div>
+            <div class="actions">
+              <button id="launch-btn">Launch Mission</button>
+            </div>
           </div>
         </div>
 

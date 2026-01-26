@@ -21,6 +21,7 @@ const lifetimeCreditsEl = document.getElementById("lifetime-credits");
 const lastMissionEl = document.getElementById("last-mission");
 const upgradeList = document.getElementById("upgrade-list");
 const debugUnlock = document.getElementById("debug-unlock");
+const debugInvincible = document.getElementById("debug-invincible");
 const rmbList = document.getElementById("rmb-list");
 
 const launchBtn = document.getElementById("launch-btn");
@@ -528,6 +529,13 @@ if (debugUnlock) {
   });
 }
 
+if (debugInvincible) {
+  debugInvincible.addEventListener("change", () => {
+    state.debugInvincible = debugInvincible.checked;
+    saveState();
+  });
+}
+
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
@@ -538,6 +546,7 @@ function loadState() {
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
       debugUnlock: false,
+      debugInvincible: false,
       upgrades: {
         hull: 0,
         shield: 0,
@@ -568,6 +577,7 @@ function loadState() {
     }
     parsed.unlockedLevels = parsed.unlockedLevels ?? 1;
     parsed.debugUnlock = parsed.debugUnlock ?? false;
+    parsed.debugInvincible = parsed.debugInvincible ?? false;
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
@@ -578,6 +588,7 @@ function loadState() {
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
       debugUnlock: false,
+      debugInvincible: false,
       upgrades: {
         hull: 0,
         shield: 0,
@@ -728,6 +739,9 @@ function updateHangar() {
   lastMissionEl.textContent = state.lastMissionSummary;
   if (debugUnlock) {
     debugUnlock.checked = !!state.debugUnlock;
+  }
+  if (debugInvincible) {
+    debugInvincible.checked = !!state.debugInvincible;
   }
 
   upgradeList.innerHTML = "";
@@ -1414,6 +1428,7 @@ function handleCollisions() {
 }
 
 function applyDamage(amount) {
+  if (state.debugInvincible) return;
   player.shieldCooldown = 2.5;
   player.hitTimer = 0.25;
   let shieldHit = false;

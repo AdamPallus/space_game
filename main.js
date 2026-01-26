@@ -220,7 +220,6 @@ const player = {
   bulwarkDuration: 1.2,
   bulwarkShield: 0,
   bulwarkShieldBonus: 200,
-  rhythmFlip: false,
 };
 
 const bullets = [];
@@ -1091,13 +1090,10 @@ const weaponComponents = {
     { id: "focused", name: "Focused", unlockAt: 0 },
     { id: "spread", name: "Spread", unlockAt: 250 },
     { id: "rear", name: "Rear-fire", unlockAt: 500 },
-    { id: "orbit", name: "Orbiting", unlockAt: 900 },
   ],
   trigger: [
     { id: "rapid", name: "Rapid", unlockAt: 0 },
     { id: "burst", name: "Burst", unlockAt: 300 },
-    { id: "charged", name: "Charged", unlockAt: 650 },
-    { id: "rhythmic", name: "Rhythmic", unlockAt: 1000 },
   ],
   payload: [
     { id: "kinetic", name: "Kinetic", unlockAt: 0 },
@@ -1147,6 +1143,8 @@ function renderWeaponBuilder() {
   const credits = state.lifetimeCredits;
   const fillSelect = (selectEl, options, current) => {
     selectEl.innerHTML = "";
+    let hasSelected = false;
+    let firstAvailable = null;
     options.forEach((option) => {
       const opt = document.createElement("option");
       const locked = credits < option.unlockAt && !state.debugUnlock;
@@ -1155,15 +1153,34 @@ function renderWeaponBuilder() {
         ? `${option.name} (Locked @ ${option.unlockAt})`
         : option.name;
       opt.disabled = locked;
-      if (option.id === current) opt.selected = true;
+      if (!locked && !firstAvailable) firstAvailable = option.id;
+      if (option.id === current && !locked) {
+        opt.selected = true;
+        hasSelected = true;
+      }
       selectEl.appendChild(opt);
     });
+    if (!hasSelected && firstAvailable) {
+      selectEl.value = firstAvailable;
+      return firstAvailable;
+    }
+    return current;
   };
 
-  fillSelect(weaponBarrel, weaponComponents.barrel, state.weapon.barrel);
-  fillSelect(weaponTrigger, weaponComponents.trigger, state.weapon.trigger);
-  fillSelect(weaponPayload, weaponComponents.payload, state.weapon.payload);
-  fillSelect(weaponModifier, weaponComponents.modifier, state.weapon.modifier);
+  const barrel = fillSelect(weaponBarrel, weaponComponents.barrel, state.weapon.barrel);
+  const trigger = fillSelect(weaponTrigger, weaponComponents.trigger, state.weapon.trigger);
+  const payload = fillSelect(weaponPayload, weaponComponents.payload, state.weapon.payload);
+  const modifier = fillSelect(weaponModifier, weaponComponents.modifier, state.weapon.modifier);
+
+  if (
+    barrel !== state.weapon.barrel ||
+    trigger !== state.weapon.trigger ||
+    payload !== state.weapon.payload ||
+    modifier !== state.weapon.modifier
+  ) {
+    state.weapon = { barrel, trigger, payload, modifier };
+    saveState();
+  }
 
   if (weaponSummary) {
     weaponSummary.textContent = `${formatComponentName(state.weapon.barrel)} + ${formatComponentName(
@@ -1313,15 +1330,9 @@ function getWeaponConfig() {
   if (trigger === "rapid") {
     fireRate *= 0.8;
     damageMult *= 0.85;
-  } else if (trigger === "charged") {
-    fireRate *= 1.6;
-    damageMult *= 1.6;
   } else if (trigger === "burst") {
-    fireRate *= 1.25;
-    damageMult *= 0.75;
-  } else if (trigger === "rhythmic") {
-    fireRate = 0.35;
-    damageMult *= 1.1;
+    fireRate *= 1.8;
+    damageMult *= 0.9;
   }
 
   let modifierData = {};
@@ -1367,6 +1378,7 @@ function firePlayerBullet() {
       width: 10,
       height: 32,
       rotation: Math.atan2(vy, vx) + Math.PI / 2,
+      baseSpeed: Math.hypot(vx, vy),
       payload: config.payload,
       ...config.modifierData,
       ...extra,
@@ -1374,59 +1386,31 @@ function firePlayerBullet() {
     bullets.push(bullet);
   };
 
-  const spawnShotgun = (direction = -1) => {
-    const angles = [-0.35, -0.18, 0, 0.18, 0.35];
+  const getAngles = (barrel, trigger) => {
+    if (barrel === "spread") {
+      return trigger === "burst" ? [-0.4, -0.2, 0, 0.2, 0.4] : [-0.2, 0, 0.2];
+    }
+    if (trigger === "burst") {
+      return [-0.2, -0.1, 0, 0.1, 0.2];
+    }
+    return [0];
+  };
+
+  const spawnBarrelShots = (direction = -1) => {
+    const angles = getAngles(config.barrel, config.trigger);
     angles.forEach((angle) => {
-      const vx = Math.sin(angle) * baseSpeed * 0.85;
-      const vy = -Math.cos(angle) * baseSpeed * 0.85 * direction;
-      spawnBullet(vx, vy, assets.spreadBullet, { damage: baseDamage * 0.6 });
+      const vx = Math.sin(angle) * baseSpeed;
+      const vy = -Math.cos(angle) * baseSpeed * direction;
+      const damageScale = config.trigger === "burst" ? 0.8 : 1;
+      spawnBullet(vx, vy, resolveBulletImage(config.payload), { damage: baseDamage * damageScale });
     });
   };
 
-  if (config.barrel === "orbit") {
-    for (let i = 0; i < 4; i += 1) {
-      bullets.push({
-        x: player.x,
-        y: player.y,
-        vx: 0,
-        vy: 0,
-        radius: 7,
-        damage: baseDamage * 0.6,
-        image: assets.spreadBullet,
-        orbiting: true,
-        orbitAngle: (Math.PI / 2) * i,
-        orbitRadius: 90,
-        orbitSpeed: 2.5,
-        orbitLife: 2.6,
-        payload: config.payload,
-        ...config.modifierData,
-      });
-    }
-    return;
-  }
-
-  if (config.trigger === "burst") {
-    if (config.barrel === "rear") {
-      spawnShotgun(-1);
-      spawnShotgun(1);
-    } else {
-      spawnShotgun(-1);
-    }
-    return;
-  }
-
-  if (config.barrel === "spread") {
-    const angles = [-0.2, 0, 0.2];
-    angles.forEach((angle) => {
-      const vx = Math.sin(angle) * baseSpeed;
-      const vy = -Math.cos(angle) * baseSpeed;
-      spawnBullet(vx, vy, assets.spreadBullet);
-    });
-  } else if (config.barrel === "rear") {
-    spawnBullet(0, -baseSpeed);
-    spawnBullet(0, baseSpeed);
+  if (config.barrel === "rear") {
+    spawnBarrelShots(-1);
+    spawnBarrelShots(1);
   } else {
-    spawnBullet(0, -baseSpeed);
+    spawnBarrelShots(-1);
   }
 }
 
@@ -1608,21 +1592,11 @@ function update(delta) {
   player.altCooldown -= delta;
   if (pointerButtons.left && player.fireCooldown <= 0) {
     firePlayerBullet();
-    if (weaponConfig.trigger === "rhythmic") {
-      player.fireCooldown = player.rhythmFlip ? 0.75 : 0.25;
-      player.rhythmFlip = !player.rhythmFlip;
-    } else {
-      player.fireCooldown = weaponConfig.fireRate;
-    }
+  player.fireCooldown = weaponConfig.fireRate;
   }
   if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
     firePlayerBullet();
-    if (weaponConfig.trigger === "rhythmic") {
-      player.fireCooldown = player.rhythmFlip ? 0.75 : 0.25;
-      player.rhythmFlip = !player.rhythmFlip;
-    } else {
-      player.fireCooldown = weaponConfig.fireRate;
-    }
+    player.fireCooldown = weaponConfig.fireRate;
   }
   if (pointerButtons.right && player.altCooldown <= 0) {
     fireAltWeapon();
@@ -1660,10 +1634,20 @@ function update(delta) {
         }
       });
       if (closest) {
-        const angle = Math.atan2(closest.y - bullet.y, closest.x - bullet.x);
-        const speed = Math.hypot(bullet.vx, bullet.vy);
-        bullet.vx += (Math.cos(angle) * speed - bullet.vx) * 0.05;
-        bullet.vy += (Math.sin(angle) * speed - bullet.vy) * 0.05;
+        const dx = closest.x - bullet.x;
+        const dy = closest.y - bullet.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const speed = bullet.baseSpeed || Math.hypot(bullet.vx, bullet.vy) || 400;
+        const vxNorm = bullet.vx / speed;
+        const vyNorm = bullet.vy / speed;
+        const dot = (vxNorm * dx + vyNorm * dy) / dist;
+        if (dot > 0.15) {
+          const angle = Math.atan2(dy, dx);
+          const targetVx = Math.cos(angle) * speed;
+          const targetVy = Math.sin(angle) * speed;
+          bullet.vx += (targetVx - bullet.vx) * 0.05;
+          bullet.vy += (targetVy - bullet.vy) * 0.05;
+        }
       }
     }
     bullet.x += bullet.vx * delta;
@@ -1830,8 +1814,8 @@ function handleCollisions() {
       if (distance(bullet.x, bullet.y, enemy.x, enemy.y) < bullet.radius + enemy.radius) {
         enemy.hp -= bullet.damage;
         if (bullet.payload === "plasma") {
-          enemy.dotTimer = Math.max(enemy.dotTimer, 2.2);
-          enemy.dotDps = Math.max(enemy.dotDps, bullet.damage * 0.25);
+          enemy.dotTimer = Math.max(enemy.dotTimer, 3.0);
+          enemy.dotDps = Math.max(enemy.dotDps, bullet.damage * 0.45);
         } else if (bullet.payload === "emp") {
           enemy.empHitTimer = Math.max(enemy.empHitTimer, 1.2);
         }
@@ -2123,6 +2107,14 @@ function drawEnemy(enemy) {
       );
       ctx.stroke();
     }
+  }
+  if (enemy.dotTimer > 0) {
+    const alpha = Math.min(1, enemy.dotTimer / 3);
+    ctx.strokeStyle = `rgba(34, 197, 94, ${0.2 + alpha * 0.4})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, enemy.radius + 10, 0, Math.PI * 2);
+    ctx.stroke();
   }
   ctx.restore();
 }

@@ -1386,23 +1386,23 @@ function firePlayerBullet() {
     bullets.push(bullet);
   };
 
-  const getAngles = (barrel, trigger) => {
+  const getAngles = (barrel) => {
     if (barrel === "spread") {
-      return trigger === "burst" ? [-0.4, -0.2, 0, 0.2, 0.4] : [-0.2, 0, 0.2];
-    }
-    if (trigger === "burst") {
-      return [-0.2, -0.1, 0, 0.1, 0.2];
+      return [-0.2, 0, 0.2];
     }
     return [0];
   };
 
   const spawnBarrelShots = (direction = 1) => {
-    const angles = getAngles(config.barrel, config.trigger);
+    const angles = getAngles(config.barrel);
+    const burstCount = config.trigger === "burst" ? 5 : 1;
+    const damageScale = config.trigger === "burst" ? 0.7 : 1;
     angles.forEach((angle) => {
       const vx = Math.sin(angle) * baseSpeed;
       const vy = -Math.cos(angle) * baseSpeed * direction;
-      const damageScale = config.trigger === "burst" ? 0.8 : 1;
-      spawnBullet(vx, vy, resolveBulletImage(config.payload), { damage: baseDamage * damageScale });
+      for (let i = 0; i < burstCount; i += 1) {
+        spawnBullet(vx, vy, resolveBulletImage(config.payload), { damage: baseDamage * damageScale });
+      }
     });
   };
 

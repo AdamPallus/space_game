@@ -149,7 +149,8 @@ const player = {
   empCooldownTime: 8,
   empDuration: 1.6,
   bulwarkDuration: 1.2,
-  invulnerableTimer: 0,
+  bulwarkShield: 0,
+  bulwarkShieldBonus: 200,
 };
 
 const bullets = [];
@@ -612,6 +613,7 @@ function applyUpgrades() {
   player.cloakDuration = 2.5 * (1 + cloakDurationLevel * 0.12);
   player.empDuration = 1.6 * (1 + cloakDurationLevel * 0.12);
   player.bulwarkDuration = 1.2 * (1 + cloakDurationLevel * 0.12);
+  player.bulwarkShieldBonus = 200 * (1 + cloakDurationLevel * 0.1);
   player.cloakCooldownTime = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel));
   player.empCooldownTime = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel));
 }
@@ -651,7 +653,7 @@ async function startMission() {
   player.shieldCooldown = 0;
   player.empCooldown = 0;
   player.bulwarkTimer = 0;
-  player.invulnerableTimer = 0;
+  player.bulwarkShield = 0;
   paused = false;
 
   overlay.hidden = true;
@@ -905,6 +907,7 @@ function spawnEnemyFromSpec(spec) {
     bulletSpeed: spec.bulletSpeed,
     aggroRadius: spec.aggroRadius,
     bulletStyle: spec.bulletStyle,
+    patternTime: 0,
   };
 
   if (enemy.pattern === "swoop") {
@@ -1035,7 +1038,7 @@ function fireAltWeapon() {
   } else if (state.rmbWeapon === "bulwark") {
     playSfx("boost", 0.45);
     player.bulwarkTimer = player.bulwarkDuration;
-    player.invulnerableTimer = Math.max(player.invulnerableTimer, player.bulwarkDuration);
+    player.bulwarkShield = player.bulwarkShieldBonus;
   }
 }
 
@@ -1125,11 +1128,11 @@ function update(delta) {
   mission.spawnTimer -= delta;
   mission.enemyFireTimer -= delta;
   mission.difficulty = 1 + state.missionCount * 0.15 + mission.elapsed / 22;
-  if (player.invulnerableTimer > 0) {
-    player.invulnerableTimer = Math.max(0, player.invulnerableTimer - delta);
-  }
   if (player.bulwarkTimer > 0) {
     player.bulwarkTimer = Math.max(0, player.bulwarkTimer - delta);
+    if (player.bulwarkTimer === 0) {
+      player.bulwarkShield = 0;
+    }
   }
   if (mission.empTimer > 0) {
     mission.empTimer = Math.max(0, mission.empTimer - delta);
@@ -1209,11 +1212,11 @@ function update(delta) {
   if (pointerButtons.right && player.altCooldown <= 0) {
     fireAltWeapon();
     if (state.rmbWeapon === "cloak") {
-      player.altCooldown = player.cloakCooldownTime;
+      player.altCooldown = player.cloakCooldownTime + player.cloakDuration;
     } else if (state.rmbWeapon === "emp") {
-      player.altCooldown = player.empCooldownTime;
+      player.altCooldown = player.empCooldownTime + player.empDuration;
     } else {
-      player.altCooldown = player.altCooldownTime;
+      player.altCooldown = player.altCooldownTime + player.bulwarkDuration;
     }
   }
 
@@ -1234,10 +1237,11 @@ function update(delta) {
 
   const empFactor = mission.empTimer > 0 ? 0.55 : 1;
   enemies.forEach((enemy) => {
+    enemy.patternTime += delta * empFactor;
     if (enemy.pattern === "zigzag") {
       const amplitude = enemy.patternParams.amplitude ?? 90;
       const frequency = enemy.patternParams.frequency ?? 3;
-      const t = mission.elapsed - enemy.spawnTime;
+      const t = enemy.patternTime;
       enemy.vx = Math.sin(t * frequency) * amplitude * empFactor;
       enemy.vy = enemy.speed * empFactor;
       enemy.x += enemy.vx * delta;
@@ -1247,7 +1251,7 @@ function update(delta) {
     if (enemy.pattern === "swoop") {
       const amplitude = enemy.patternParams.amplitude ?? 60;
       const frequency = enemy.patternParams.frequency ?? 2.5;
-      const t = mission.elapsed - enemy.spawnTime;
+      const t = enemy.patternTime;
       enemy.x += enemy.vx * empFactor * delta;
       enemy.y += (Math.sin(t * frequency) * amplitude + enemy.speed * 0.3) * empFactor * delta;
       return;
@@ -1265,7 +1269,7 @@ function update(delta) {
     if (enemy.pattern === "spiral") {
       const amplitude = enemy.patternParams.amplitude ?? 120;
       const frequency = enemy.patternParams.frequency ?? 4;
-      const t = mission.elapsed - enemy.spawnTime;
+      const t = enemy.patternTime;
       const cx = enemy.spawnX ?? enemy.x;
       const cy = enemy.spawnY ?? enemy.y;
       enemy.x = cx + Math.cos(t * frequency) * amplitude;
@@ -1400,10 +1404,14 @@ function handleCollisions() {
 }
 
 function applyDamage(amount) {
-  if (player.invulnerableTimer > 0) return;
   player.shieldCooldown = 2.5;
   player.hitTimer = 0.25;
   let shieldHit = false;
+  if (player.bulwarkShield > 0) {
+    const absorbed = Math.min(player.bulwarkShield, amount);
+    player.bulwarkShield -= absorbed;
+    amount -= absorbed;
+  }
   if (player.shield > 0) {
     const absorbed = Math.min(player.shield, amount);
     player.shield -= absorbed;
@@ -1525,6 +1533,10 @@ function drawPlayer() {
     ctx.beginPath();
     ctx.arc(player.x, player.y, player.radius + 18, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.fillStyle = `rgba(34, 197, 94, ${0.08 + alpha * 0.08})`;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   drawRmbIndicator();

@@ -1397,11 +1397,20 @@ function firePlayerBullet() {
     const angles = getAngles(config.barrel);
     const burstCount = config.trigger === "burst" ? 5 : 1;
     const damageScale = config.trigger === "burst" ? 0.7 : 1;
+    const sizeScale = config.trigger === "burst" ? 0.8 : 1;
+    const jitterRange = config.trigger === "burst" ? 0.08 : 0;
     angles.forEach((angle) => {
-      const vx = Math.sin(angle) * baseSpeed;
-      const vy = -Math.cos(angle) * baseSpeed * direction;
       for (let i = 0; i < burstCount; i += 1) {
-        spawnBullet(vx, vy, resolveBulletImage(config.payload), { damage: baseDamage * damageScale });
+        const jitter = jitterRange > 0 ? (Math.random() * 2 - 1) * jitterRange : 0;
+        const shotAngle = angle + jitter;
+        const vx = Math.sin(shotAngle) * baseSpeed;
+        const vy = -Math.cos(shotAngle) * baseSpeed * direction;
+        spawnBullet(vx, vy, resolveBulletImage(config.payload), {
+          damage: baseDamage * damageScale,
+          width: 10 * sizeScale,
+          height: 32 * sizeScale,
+          radius: 4 * sizeScale,
+        });
       }
     });
   };

@@ -24,6 +24,20 @@ const debugUnlock = document.getElementById("debug-unlock");
 const debugInvincible = document.getElementById("debug-invincible");
 const rmbList = document.getElementById("rmb-list");
 
+// Investment UI elements
+const engineeringTier = document.getElementById("engineering-tier");
+const engineeringBenefits = document.getElementById("engineering-benefits");
+const engineeringInvest = document.getElementById("engineering-invest");
+const engineeringCost = document.getElementById("engineering-cost");
+const operationsTier = document.getElementById("operations-tier");
+const operationsBenefits = document.getElementById("operations-benefits");
+const operationsInvest = document.getElementById("operations-invest");
+const operationsCost = document.getElementById("operations-cost");
+const sharesTier = document.getElementById("shares-tier");
+const sharesBenefits = document.getElementById("shares-benefits");
+const sharesInvest = document.getElementById("shares-invest");
+const sharesCost = document.getElementById("shares-cost");
+
 const launchBtn = document.getElementById("launch-btn");
 const resetBtn = document.getElementById("reset-btn");
 const returnBtn = document.getElementById("return-btn");
@@ -89,6 +103,55 @@ const upgrades = [
     baseCost: 200,
   },
 ];
+
+// Fleet Investment System
+const investments = {
+  engineering: {
+    name: "Engineering Bay",
+    tiers: [
+      { cost: 200, benefit: "Unlock basic consumables (bombs)" },
+      { cost: 500, benefit: "Reduce repair costs by 25%" },
+      { cost: 1000, benefit: "Unlock advanced consumables" },
+      { cost: 2000, benefit: "Consumables regenerate between missions" },
+      { cost: 4000, benefit: "Prototype gear each mission" },
+    ],
+  },
+  operations: {
+    name: "Operations Center",
+    tiers: [
+      { cost: 200, benefit: "Unlock Patrol mission variants" },
+      { cost: 500, benefit: "Unlock Bonus Objectives (+credits)" },
+      { cost: 1000, benefit: "Unlock Skirmish variants" },
+      { cost: 2000, benefit: "Unlock Siege variants" },
+      { cost: 4000, benefit: "Unlock Elite modifier (2x diff, 3x credits)" },
+    ],
+  },
+  shares: {
+    name: "Fleet Shares",
+    tiers: [
+      { cost: 300, benefit: "+5% passive credits per mission", dividend: 0.05 },
+      { cost: 800, benefit: "+10% passive credits", dividend: 0.10 },
+      { cost: 1500, benefit: "+10% + Fleet events (bonus payouts)", dividend: 0.10 },
+      { cost: 3000, benefit: "+15% + Fleet Contracts access", dividend: 0.15 },
+      { cost: 6000, benefit: "+20% + Boss bounty shares", dividend: 0.20 },
+    ],
+  },
+};
+
+function getSharesDividendRate() {
+  const tier = state.investments?.shares ?? 0;
+  if (tier === 0) return 0;
+  let total = 0;
+  for (let i = 0; i < tier; i++) {
+    total += investments.shares.tiers[i].dividend;
+  }
+  return total;
+}
+
+function calculateDividends(baseCredits) {
+  const rate = getSharesDividendRate();
+  return Math.round(baseCredits * rate);
+}
 
 const keyState = new Set();
 let paused = false;
@@ -557,6 +620,11 @@ function loadState() {
         auxCooldown: 0,
         cloakDuration: 0,
       },
+      investments: {
+        engineering: 0,
+        operations: 0,
+        shares: 0,
+      },
       rmbWeapon: "cloak",
     };
   }
@@ -571,6 +639,11 @@ function loadState() {
       auxDamage: parsed.upgrades?.auxDamage ?? 0,
       auxCooldown: parsed.upgrades?.auxCooldown ?? 0,
       cloakDuration: parsed.upgrades?.cloakDuration ?? 0,
+    };
+    parsed.investments = {
+      engineering: parsed.investments?.engineering ?? 0,
+      operations: parsed.investments?.operations ?? 0,
+      shares: parsed.investments?.shares ?? 0,
     };
     if (!parsed.rmbWeapon || parsed.rmbWeapon === "none") {
       parsed.rmbWeapon = "cloak";
@@ -598,6 +671,11 @@ function loadState() {
         auxDamage: 0,
         auxCooldown: 0,
         cloakDuration: 0,
+      },
+      investments: {
+        engineering: 0,
+        operations: 0,
+        shares: 0,
       },
       rmbWeapon: "cloak",
     };
@@ -694,7 +772,11 @@ function endMission({ ejected = false, completed = false } = {}) {
   const creditReward = creditRewardFor(mission);
   const completionBonus = completed ? 0.1 + Math.random() * 0.15 : 0;
   const penaltyRate = completed || ejected ? 0 : 0.1 + Math.random() * 0.4;
-  const finalReward = Math.round(creditReward * (1 - penaltyRate) * (1 + completionBonus));
+  const baseReward = Math.round(creditReward * (1 - penaltyRate) * (1 + completionBonus));
+  
+  // Calculate fleet share dividends
+  const dividends = calculateDividends(baseReward);
+  const finalReward = baseReward + dividends;
 
   state.credits += finalReward;
   state.lifetimeCredits += finalReward;
@@ -708,16 +790,23 @@ function endMission({ ejected = false, completed = false } = {}) {
   }
   saveState();
 
+  // Build debrief message with breakdown
+  let debriefMsg = "";
   if (completed) {
-    debriefText.textContent = `Mission complete. Recovery bonus: ${Math.round(
-      completionBonus * 100
-    )}%.`;
+    debriefMsg = `Mission complete! Recovery bonus: +${Math.round(completionBonus * 100)}%`;
   } else if (ejected) {
-    debriefText.textContent = "Ejection successful. Full credits secured.";
+    debriefMsg = "Ejection successful. Full credits secured.";
     playSfx("eject", 0.5);
   } else {
-    debriefText.textContent = `Ship destroyed. Credit loss: ${Math.round(penaltyRate * 100)}%.`;
+    debriefMsg = `Ship destroyed. Credit loss: -${Math.round(penaltyRate * 100)}%`;
   }
+  
+  // Add dividend info if player has fleet shares
+  if (dividends > 0) {
+    debriefMsg += ` | Fleet dividends: +${dividends}`;
+  }
+  
+  debriefText.textContent = debriefMsg;
   debriefTime.textContent = formatTime(mission.elapsed);
   debriefKills.textContent = mission.kills.toString();
   debriefCredits.textContent = finalReward.toString();
@@ -788,7 +877,103 @@ function updateHangar() {
   });
 
   renderRmbLoadout();
+  renderInvestments();
   updateMobileControls();
+}
+
+function renderInvestments() {
+  if (!engineeringTier) return; // UI elements not present
+
+  const renderCategory = (key, tierEl, benefitsEl, investBtn, costEl, categoryEl) => {
+    const tier = state.investments[key];
+    const data = investments[key];
+    const maxTier = data.tiers.length;
+    const isMaxed = tier >= maxTier;
+
+    tierEl.textContent = `Tier ${tier}/${maxTier}`;
+    
+    // Render benefits list
+    benefitsEl.innerHTML = "";
+    data.tiers.forEach((t, i) => {
+      const item = document.createElement("div");
+      item.className = "benefit-item";
+      if (i < tier) {
+        item.classList.add("active");
+        item.innerHTML = `<span class="benefit-check">✓</span> ${t.benefit}`;
+      } else if (i === tier) {
+        item.innerHTML = `<span class="benefit-check">→</span> ${t.benefit}`;
+      } else {
+        item.classList.add("locked");
+        item.innerHTML = `<span class="benefit-check">○</span> ${t.benefit}`;
+      }
+      benefitsEl.appendChild(item);
+    });
+
+    // Update button state
+    if (isMaxed) {
+      investBtn.disabled = true;
+      investBtn.classList.add("maxed");
+      investBtn.innerHTML = `<span class="invest-label">Maxed</span>`;
+      categoryEl?.classList.add("maxed");
+    } else {
+      const cost = data.tiers[tier].cost;
+      const canAfford = state.credits >= cost;
+      investBtn.disabled = !canAfford;
+      investBtn.classList.remove("maxed");
+      investBtn.innerHTML = `<span class="invest-label">Invest</span><span class="invest-cost">${cost}</span>`;
+      categoryEl?.classList.remove("maxed");
+    }
+  };
+
+  renderCategory(
+    "engineering",
+    engineeringTier,
+    engineeringBenefits,
+    engineeringInvest,
+    engineeringCost,
+    document.getElementById("engineering-bay")
+  );
+  renderCategory(
+    "operations",
+    operationsTier,
+    operationsBenefits,
+    operationsInvest,
+    operationsCost,
+    document.getElementById("operations-center")
+  );
+  renderCategory(
+    "shares",
+    sharesTier,
+    sharesBenefits,
+    sharesInvest,
+    sharesCost,
+    document.getElementById("fleet-shares")
+  );
+}
+
+function handleInvestment(key) {
+  const tier = state.investments[key];
+  const data = investments[key];
+  if (tier >= data.tiers.length) return;
+  
+  const cost = data.tiers[tier].cost;
+  if (state.credits < cost) return;
+  
+  state.credits -= cost;
+  state.investments[key] += 1;
+  saveState();
+  updateHangar();
+}
+
+// Wire up investment buttons
+if (engineeringInvest) {
+  engineeringInvest.addEventListener("click", () => handleInvestment("engineering"));
+}
+if (operationsInvest) {
+  operationsInvest.addEventListener("click", () => handleInvestment("operations"));
+}
+if (sharesInvest) {
+  sharesInvest.addEventListener("click", () => handleInvestment("shares"));
 }
 
 function openLevelSelect() {

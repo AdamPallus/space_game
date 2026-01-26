@@ -384,3 +384,156 @@ button:disabled {
   letter-spacing: 0.12em;
   color: #7dd3fc;
 }
+
+/* Fleet Investments Section */
+.investments-section {
+  margin-top: 24px;
+}
+
+.investments-desc {
+  font-size: 13px;
+  color: #9bb9dd;
+  margin-bottom: 16px;
+}
+
+.investment-categories {
+  display: grid;
+  gap: 16px;
+}
+
+.investment-category {
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(90, 140, 200, 0.3);
+  background: rgba(6, 15, 30, 0.7);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.investment-category:hover {
+  border-color: rgba(125, 190, 255, 0.5);
+}
+
+.investment-category.maxed {
+  border-color: rgba(45, 212, 191, 0.6);
+  background: rgba(6, 25, 35, 0.7);
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.category-icon {
+  font-size: 20px;
+}
+
+.category-name {
+  font-weight: 700;
+  flex: 1;
+}
+
+.category-tier {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #7dd3fc;
+  background: rgba(125, 211, 252, 0.15);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.category-desc {
+  font-size: 12px;
+  color: #8fb3dd;
+  margin-bottom: 10px;
+}
+
+.category-benefits {
+  margin-bottom: 12px;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 0;
+  color: #c6dbf7;
+}
+
+.benefit-item.locked {
+  color: #6b8aad;
+}
+
+.benefit-item.active {
+  color: #2dd4bf;
+}
+
+.benefit-check {
+  width: 16px;
+  text-align: center;
+}
+
+.invest-btn {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: linear-gradient(120deg, #0d9488, #0891b2);
+  color: #021018;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.invest-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.invest-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(90, 140, 200, 0.3);
+  color: #8fb3dd;
+}
+
+.invest-btn.maxed {
+  background: rgba(45, 212, 191, 0.2);
+  color: #2dd4bf;
+}
+
+.invest-cost::before {
+  content: "⬡ ";
+}
+
+.dividend-display {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(45, 212, 191, 0.1);
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  text-align: center;
+}
+
+.dividend-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8fb3dd;
+  margin-bottom: 4px;
+}
+
+.dividend-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2dd4bf;
+}

@@ -403,6 +403,27 @@ Branch: `sonja/new-levels` — PR pending review
 
 ## 📌 Current Focus (Next Steps)
 
+### Economy System UI (2026-01-26, Sonja)
+
+Branch: `sonja/economy-tab` — PR pending
+
+**Implemented:**
+- Fleet Investments section in hangar UI
+- Three investment categories: Engineering Bay, Operations Center, Fleet Shares
+- 5-tier progression for each category with increasing costs
+- Visual tier display with unlocked/locked/next benefit indicators
+- Fleet Shares dividend calculation integrated into mission debrief
+- Dividends shown in debrief message and added to total credits
+
+**Not yet implemented:**
+- Actual consumables (Engineering Bay unlocks)
+- Mission variants (Operations Center unlocks) 
+- Fleet events and contracts (higher Fleet Shares tiers)
+
+These are UI/economy scaffolding — the mechanical effects will need separate implementation.
+
+---
+
 ### Phase 1: Step 2 (Depth Lite)
 - **Ability balance pass** (cooldowns/durations, bulwark shield size).
 - **Visual polish**: EMP ring pulse, bulwark shield meter/flash.

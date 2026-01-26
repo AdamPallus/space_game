@@ -91,6 +91,51 @@
           <h2>Upgrades</h2>
           <div class="upgrade-list" id="upgrade-list"></div>
         </div>
+        <div class="loadout investments-section">
+          <h2>Fleet Investments</h2>
+          <p class="investments-desc">Invest in mothership infrastructure for long-term benefits. Returns compound over time.</p>
+          <div class="investment-categories">
+            <div class="investment-category" id="engineering-bay">
+              <div class="category-header">
+                <span class="category-icon">🔧</span>
+                <span class="category-name">Engineering Bay</span>
+                <span class="category-tier" id="engineering-tier">Tier 0/5</span>
+              </div>
+              <p class="category-desc">Unlock consumables and reduce repair costs.</p>
+              <div class="category-benefits" id="engineering-benefits"></div>
+              <button class="invest-btn" id="engineering-invest" disabled>
+                <span class="invest-label">Invest</span>
+                <span class="invest-cost" id="engineering-cost">200</span>
+              </button>
+            </div>
+            <div class="investment-category" id="operations-center">
+              <div class="category-header">
+                <span class="category-icon">📡</span>
+                <span class="category-name">Operations Center</span>
+                <span class="category-tier" id="operations-tier">Tier 0/5</span>
+              </div>
+              <p class="category-desc">Unlock mission variants and bonus objectives.</p>
+              <div class="category-benefits" id="operations-benefits"></div>
+              <button class="invest-btn" id="operations-invest" disabled>
+                <span class="invest-label">Invest</span>
+                <span class="invest-cost" id="operations-cost">200</span>
+              </button>
+            </div>
+            <div class="investment-category" id="fleet-shares">
+              <div class="category-header">
+                <span class="category-icon">💰</span>
+                <span class="category-name">Fleet Shares</span>
+                <span class="category-tier" id="shares-tier">Tier 0/5</span>
+              </div>
+              <p class="category-desc">Earn passive dividends from fleet operations.</p>
+              <div class="category-benefits" id="shares-benefits"></div>
+              <button class="invest-btn" id="shares-invest" disabled>
+                <span class="invest-label">Invest</span>
+                <span class="invest-cost" id="shares-cost">300</span>
+              </button>
+            </div>
+          </div>
+        </div>
           <div class="actions">
             <button id="launch-btn">Launch Mission</button>
             <button id="reset-btn" class="ghost">Reset Progress</button>

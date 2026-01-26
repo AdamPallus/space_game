@@ -184,6 +184,8 @@ const assets = {
     hunter: loadImage(`${ASSET_ROOT}/Enemies/enemyGreen4.png`),
     transport: loadImage(`${ASSET_ROOT}/ufoBlue.png`),
     boss: loadImage(`${ASSET_ROOT}/ufoRed.png`),
+    red2: loadImage(`${ASSET_ROOT}/Enemies/enemyRed2.png`),
+    black3: loadImage(`${ASSET_ROOT}/Enemies/enemyBlack3.png`),
     aceBlue: loadImage(`${ASSET_ROOT}/Enemies/enemyBlue5.png`),
     aceRed: loadImage(`${ASSET_ROOT}/Enemies/enemyRed5.png`),
     aceGreen: loadImage(`${ASSET_ROOT}/Enemies/enemyGreen5.png`),
@@ -195,7 +197,9 @@ const assets = {
 
 const enemySpriteMap = {
   enemyBlue2: assets.enemies.scout,
+  enemyRed2: assets.enemies.red2,
   enemyRed3: assets.enemies.fighter,
+  enemyBlack3: assets.enemies.black3,
   enemyBlack4: assets.enemies.bruiser,
   enemyGreen4: assets.enemies.hunter,
   ufoBlue: assets.enemies.transport,

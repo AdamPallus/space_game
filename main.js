@@ -1396,7 +1396,7 @@ function firePlayerBullet() {
     return [0];
   };
 
-  const spawnBarrelShots = (direction = -1) => {
+  const spawnBarrelShots = (direction = 1) => {
     const angles = getAngles(config.barrel, config.trigger);
     angles.forEach((angle) => {
       const vx = Math.sin(angle) * baseSpeed;
@@ -1407,10 +1407,10 @@ function firePlayerBullet() {
   };
 
   if (config.barrel === "rear") {
-    spawnBarrelShots(-1);
     spawnBarrelShots(1);
-  } else {
     spawnBarrelShots(-1);
+  } else {
+    spawnBarrelShots(1);
   }
 }
 

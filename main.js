@@ -220,8 +220,7 @@ const player = {
   bulwarkDuration: 1.2,
   bulwarkShield: 0,
   bulwarkShieldBonus: 200,
-  burstCount: 0,
-  burstTimer: 0,
+  rhythmFlip: false,
 };
 
 const bullets = [];
@@ -1318,11 +1317,11 @@ function getWeaponConfig() {
     fireRate *= 1.6;
     damageMult *= 1.6;
   } else if (trigger === "burst") {
-    fireRate *= 1.2;
-    damageMult *= 0.9;
+    fireRate *= 1.25;
+    damageMult *= 0.75;
   } else if (trigger === "rhythmic") {
-    fireRate = 0.55;
-    damageMult *= 1.15;
+    fireRate = 0.35;
+    damageMult *= 1.1;
   }
 
   let modifierData = {};
@@ -1375,6 +1374,47 @@ function firePlayerBullet() {
     bullets.push(bullet);
   };
 
+  const spawnShotgun = (direction = -1) => {
+    const angles = [-0.35, -0.18, 0, 0.18, 0.35];
+    angles.forEach((angle) => {
+      const vx = Math.sin(angle) * baseSpeed * 0.85;
+      const vy = -Math.cos(angle) * baseSpeed * 0.85 * direction;
+      spawnBullet(vx, vy, assets.spreadBullet, { damage: baseDamage * 0.6 });
+    });
+  };
+
+  if (config.barrel === "orbit") {
+    for (let i = 0; i < 4; i += 1) {
+      bullets.push({
+        x: player.x,
+        y: player.y,
+        vx: 0,
+        vy: 0,
+        radius: 7,
+        damage: baseDamage * 0.6,
+        image: assets.spreadBullet,
+        orbiting: true,
+        orbitAngle: (Math.PI / 2) * i,
+        orbitRadius: 90,
+        orbitSpeed: 2.5,
+        orbitLife: 2.6,
+        payload: config.payload,
+        ...config.modifierData,
+      });
+    }
+    return;
+  }
+
+  if (config.trigger === "burst") {
+    if (config.barrel === "rear") {
+      spawnShotgun(-1);
+      spawnShotgun(1);
+    } else {
+      spawnShotgun(-1);
+    }
+    return;
+  }
+
   if (config.barrel === "spread") {
     const angles = [-0.2, 0, 0.2];
     angles.forEach((angle) => {
@@ -1385,32 +1425,8 @@ function firePlayerBullet() {
   } else if (config.barrel === "rear") {
     spawnBullet(0, -baseSpeed);
     spawnBullet(0, baseSpeed);
-  } else if (config.barrel === "orbit") {
-    for (let i = 0; i < 4; i += 1) {
-      bullets.push({
-        x: player.x,
-        y: player.y,
-        vx: 0,
-        vy: 0,
-        radius: 5,
-        damage: baseDamage * 0.6,
-        image: assets.spreadBullet,
-        orbiting: true,
-        orbitAngle: (Math.PI / 2) * i,
-        orbitRadius: 34,
-        orbitSpeed: 3,
-        orbitLife: 1.4,
-        payload: config.payload,
-        ...config.modifierData,
-      });
-    }
   } else {
     spawnBullet(0, -baseSpeed);
-  }
-
-  if (config.trigger === "burst") {
-    player.burstCount = 2;
-    player.burstTimer = 0.08;
   }
 }
 
@@ -1592,18 +1608,20 @@ function update(delta) {
   player.altCooldown -= delta;
   if (pointerButtons.left && player.fireCooldown <= 0) {
     firePlayerBullet();
-    player.fireCooldown = weaponConfig.fireRate;
+    if (weaponConfig.trigger === "rhythmic") {
+      player.fireCooldown = player.rhythmFlip ? 0.75 : 0.25;
+      player.rhythmFlip = !player.rhythmFlip;
+    } else {
+      player.fireCooldown = weaponConfig.fireRate;
+    }
   }
   if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
     firePlayerBullet();
-    player.fireCooldown = weaponConfig.fireRate;
-  }
-  if (player.burstCount > 0) {
-    player.burstTimer -= delta;
-    if (player.burstTimer <= 0) {
-      firePlayerBullet();
-      player.burstCount -= 1;
-      player.burstTimer = 0.08;
+    if (weaponConfig.trigger === "rhythmic") {
+      player.fireCooldown = player.rhythmFlip ? 0.75 : 0.25;
+      player.rhythmFlip = !player.rhythmFlip;
+    } else {
+      player.fireCooldown = weaponConfig.fireRate;
     }
   }
   if (pointerButtons.right && player.altCooldown <= 0) {
@@ -1776,7 +1794,15 @@ function update(delta) {
     boom.rotation += boom.spin * delta;
   });
 
-  cleanArrays(bullets, (bullet) => bullet.y < -20 || bullet.orbitLife <= 0);
+  cleanArrays(
+    bullets,
+    (bullet) =>
+      bullet.orbitLife <= 0 ||
+      bullet.y < -20 ||
+      bullet.y > height + 20 ||
+      bullet.x < -40 ||
+      bullet.x > width + 40
+  );
   cleanArrays(enemyBullets, (bullet) => bullet.y > height + 20 || bullet.x < -40 || bullet.x > width + 40);
   cleanArrays(enemies, (enemy) => enemy.y > height + 60);
   cleanArrays(floatingTexts, (text) => text.life <= 0);

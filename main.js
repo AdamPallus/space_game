@@ -111,7 +111,7 @@ let audioEnabled = false;
 
 const mobileAltIcons = {
   emp: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
-  afterburner: "assets/SpaceShooterRedux/PNG/Power-ups/powerupYellow_bolt.png",
+  bulwark: "assets/SpaceShooterRedux/PNG/Power-ups/powerupYellow_shield.png",
   cloak: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
 };
 
@@ -145,10 +145,10 @@ const player = {
   cloakCooldownTime: 10,
   cloakDuration: 2.5,
   hitTimer: 0,
-  afterburnerTimer: 0,
+  bulwarkTimer: 0,
   empCooldownTime: 8,
   empDuration: 1.6,
-  afterburnerDuration: 1.0,
+  bulwarkDuration: 1.2,
   invulnerableTimer: 0,
 };
 
@@ -611,7 +611,7 @@ function applyUpgrades() {
   player.altCooldownTime = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel));
   player.cloakDuration = 2.5 * (1 + cloakDurationLevel * 0.12);
   player.empDuration = 1.6 * (1 + cloakDurationLevel * 0.12);
-  player.afterburnerDuration = 1.0 * (1 + cloakDurationLevel * 0.12);
+  player.bulwarkDuration = 1.2 * (1 + cloakDurationLevel * 0.12);
   player.cloakCooldownTime = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel));
   player.empCooldownTime = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel));
 }
@@ -650,7 +650,7 @@ async function startMission() {
   player.altCooldown = 0;
   player.shieldCooldown = 0;
   player.empCooldown = 0;
-  player.afterburnerTimer = 0;
+  player.bulwarkTimer = 0;
   player.invulnerableTimer = 0;
   paused = false;
 
@@ -830,9 +830,9 @@ const rmbWeapons = [
     desc: "Disable enemy fire and slow ships briefly.",
   },
   {
-    id: "afterburner",
-    name: "Afterburner",
-    desc: "Burst of speed + brief invulnerability.",
+    id: "bulwark",
+    name: "Bulwark Field",
+    desc: "Temporary super-shield (invulnerable).",
   },
 ];
 
@@ -1032,18 +1032,10 @@ function fireAltWeapon() {
   } else if (state.rmbWeapon === "emp") {
     playSfx("emp", 0.4);
     mission.empTimer = player.empDuration;
-  } else if (state.rmbWeapon === "afterburner") {
+  } else if (state.rmbWeapon === "bulwark") {
     playSfx("boost", 0.45);
-    player.afterburnerTimer = player.afterburnerDuration;
-    player.invulnerableTimer = Math.max(player.invulnerableTimer, player.afterburnerDuration * 0.9);
-    if (pointer.active) {
-      const dx = pointer.x - player.x;
-      const dy = pointer.y - player.y;
-      const distance = Math.hypot(dx, dy) || 1;
-      const dash = Math.min(180, distance);
-      player.x += (dx / distance) * dash;
-      player.y += (dy / distance) * dash;
-    }
+    player.bulwarkTimer = player.bulwarkDuration;
+    player.invulnerableTimer = Math.max(player.invulnerableTimer, player.bulwarkDuration);
   }
 }
 
@@ -1136,8 +1128,8 @@ function update(delta) {
   if (player.invulnerableTimer > 0) {
     player.invulnerableTimer = Math.max(0, player.invulnerableTimer - delta);
   }
-  if (player.afterburnerTimer > 0) {
-    player.afterburnerTimer = Math.max(0, player.afterburnerTimer - delta);
+  if (player.bulwarkTimer > 0) {
+    player.bulwarkTimer = Math.max(0, player.bulwarkTimer - delta);
   }
   if (mission.empTimer > 0) {
     mission.empTimer = Math.max(0, mission.empTimer - delta);
@@ -1193,8 +1185,7 @@ function update(delta) {
     const dx = touchState.x - player.x;
     const dy = touchState.y - player.y;
     const distanceToTarget = Math.hypot(dx, dy) || 1;
-    const speedBoost = player.afterburnerTimer > 0 ? 1.8 : 1;
-    const step = Math.min(distanceToTarget, touchState.maxSpeed * speedBoost * delta);
+    const step = Math.min(distanceToTarget, touchState.maxSpeed * delta);
     player.x += (dx / distanceToTarget) * step;
     player.y += (dy / distanceToTarget) * step;
   } else if (pointer.active) {
@@ -1522,6 +1513,20 @@ function drawPlayer() {
     }
   }
 
+  if (player.bulwarkTimer > 0) {
+    const alpha = Math.min(1, player.bulwarkTimer / player.bulwarkDuration);
+    ctx.strokeStyle = `rgba(34, 197, 94, ${0.4 + alpha * 0.4})`;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.radius + 12, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(134, 239, 172, ${0.25 + alpha * 0.3})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.radius + 18, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   drawRmbIndicator();
   ctx.restore();
 }
@@ -1606,6 +1611,26 @@ function drawEnemy(enemy) {
   ctx.beginPath();
   ctx.arc(enemy.x, enemy.y, enemy.radius + 6, 0, Math.PI * 2);
   ctx.fill();
+
+  if (mission && mission.empTimer > 0) {
+    const alpha = Math.min(1, mission.empTimer / player.empDuration);
+    ctx.strokeStyle = `rgba(125, 211, 252, ${0.2 + alpha * 0.4})`;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i += 1) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = enemy.radius + 6 + Math.random() * 8;
+      ctx.beginPath();
+      ctx.moveTo(
+        enemy.x + Math.cos(angle) * radius,
+        enemy.y + Math.sin(angle) * radius
+      );
+      ctx.lineTo(
+        enemy.x + Math.cos(angle + 0.4) * (radius + 6),
+        enemy.y + Math.sin(angle + 0.4) * (radius + 6)
+      );
+      ctx.stroke();
+    }
+  }
   ctx.restore();
 }
 

@@ -655,9 +655,11 @@ async function launchSelectedMission() {
   await startMission();
 }
 
-launchBtn.addEventListener("click", async () => {
-  await launchSelectedMission();
-});
+if (launchBtn) {
+  launchBtn.addEventListener("click", async () => {
+    await launchSelectedMission();
+  });
+}
 
 if (selectMissionBtn) {
   selectMissionBtn.addEventListener("click", () => {
@@ -665,26 +667,30 @@ if (selectMissionBtn) {
   });
 }
 
-returnBtn.addEventListener("click", () => {
-  debriefPanel.hidden = true;
-  hangarPanel.hidden = false;
-  overlay.hidden = false;
-  setHangarTab("loadout");
-  updateMobileControls();
-  updateHangar();
-});
+if (returnBtn) {
+  returnBtn.addEventListener("click", () => {
+    debriefPanel.hidden = true;
+    hangarPanel.hidden = false;
+    overlay.hidden = false;
+    setHangarTab("loadout");
+    updateMobileControls();
+    safeUpdateHangar();
+  });
+}
 
-resetBtn.addEventListener("click", () => {
-  if (!confirm("Reset all pilot progress?")) return;
-  localStorage.removeItem(STORAGE_KEY);
-  window.location.reload();
-});
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    if (!confirm("Reset all pilot progress?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.reload();
+  });
+}
 
 if (debugUnlock) {
   debugUnlock.addEventListener("change", () => {
     state.debugUnlock = debugUnlock.checked;
     saveState();
-    updateHangar();
+    safeUpdateHangar();
     renderLevelSelect();
   });
 }
@@ -956,16 +962,22 @@ function endMission({ ejected = false, completed = false } = {}) {
   debriefPanel.hidden = false;
   hangarPanel.hidden = true;
   updateMobileControls();
-  updateHangar();
+  safeUpdateHangar();
 }
 
 function updateHangar() {
-  pilotRank.textContent = getPilotRank(state.lifetimeCredits);
+  if (pilotRank) {
+    pilotRank.textContent = getPilotRank(state.lifetimeCredits);
+  }
   if (availableCreditsEl) {
     availableCreditsEl.textContent = state.credits.toString();
   }
-  lifetimeCreditsEl.textContent = state.lifetimeCredits.toString();
-  lastMissionEl.textContent = state.lastMissionSummary;
+  if (lifetimeCreditsEl) {
+    lifetimeCreditsEl.textContent = state.lifetimeCredits.toString();
+  }
+  if (lastMissionEl) {
+    lastMissionEl.textContent = state.lastMissionSummary;
+  }
   if (debugUnlock) {
     debugUnlock.checked = !!state.debugUnlock;
   }
@@ -984,6 +996,14 @@ function updateHangar() {
     setHangarMusic();
   }
   updateMobileControls();
+}
+
+function safeUpdateHangar() {
+  try {
+    updateHangar();
+  } catch (error) {
+    console.error("Hangar render failed:", error);
+  }
 }
 
 function renderInvestments() {
@@ -1067,7 +1087,7 @@ function handleInvestment(key) {
   state.credits -= cost;
   state.investments[key] += 1;
   saveState();
-  updateHangar();
+  safeUpdateHangar();
 }
 
 // Wire up investment buttons
@@ -1235,7 +1255,7 @@ function renderComponentNodes(container, options, current, key) {
       }
       state.weapon[key] = option.id;
       saveState();
-      updateHangar();
+      safeUpdateHangar();
     });
     container.appendChild(button);
   });
@@ -1345,7 +1365,7 @@ function renderUpgradeNodes(container, upgradeIds) {
       state.credits -= cost;
       state.upgrades[upgradeId] += 1;
       saveState();
-      updateHangar();
+      safeUpdateHangar();
     });
 
     popover.appendChild(desc);
@@ -1412,7 +1432,7 @@ function renderAuxTree() {
       }
       state.rmbWeapon = weapon.id;
       saveState();
-      updateHangar();
+      safeUpdateHangar();
     });
     treeAuxSelect.appendChild(button);
   });
@@ -2627,5 +2647,5 @@ function gameLoop(now) {
   requestAnimationFrame(gameLoop);
 }
 
-updateHangar();
+safeUpdateHangar();
 requestAnimationFrame(gameLoop);

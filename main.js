@@ -178,6 +178,7 @@ let activeMusicSrc = null;
 let activeMusic = null;
 const musicLibrary = new Map();
 const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
+let openUpgradeId = null;
 
 const mobileAltIcons = {
   emp: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
@@ -685,6 +686,15 @@ if (resetBtn) {
     window.location.reload();
   });
 }
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".upgrade-node")) {
+    if (openUpgradeId !== null) {
+      openUpgradeId = null;
+      safeUpdateHangar();
+    }
+  }
+});
 
 if (debugUnlock) {
   debugUnlock.addEventListener("change", () => {
@@ -1313,6 +1323,9 @@ function renderUpgradeNodes(container, upgradeIds) {
     const node = document.createElement("div");
     node.className = "tree-node upgrade-node";
     node.tabIndex = 0;
+    if (openUpgradeId === upgradeId) {
+      node.classList.add("open");
+    }
     if (!canPurchase || !meetsRequirement) {
       node.classList.add("locked");
     }
@@ -1374,6 +1387,13 @@ function renderUpgradeNodes(container, upgradeIds) {
     node.appendChild(title);
     node.appendChild(meta);
     node.appendChild(popover);
+    node.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (openUpgradeId !== upgradeId) {
+        openUpgradeId = upgradeId;
+        safeUpdateHangar();
+      }
+    });
     container.appendChild(node);
   });
 }

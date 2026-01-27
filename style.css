@@ -316,8 +316,18 @@ body {
 }
 
 .tree-node.locked {
-  opacity: 0.55;
+  opacity: 0.65;
   filter: grayscale(0.2);
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(20, 12, 18, 0.7);
+}
+
+.tree-node.locked .node-title {
+  color: #94a3b8;
+}
+
+.tree-node.locked .node-meta {
+  color: #fca5a5;
 }
 
 .stats-grid .label {
@@ -442,6 +452,12 @@ button.ghost {
   background: transparent;
   border: 1px solid var(--panel-border);
   color: var(--ink);
+}
+
+button.small {
+  padding: 8px 14px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
 }
 
 button:disabled {

@@ -46,6 +46,7 @@ const sharesInvest = document.getElementById("shares-invest");
 const sharesCost = document.getElementById("shares-cost");
 
 const launchBtn = document.getElementById("launch-btn");
+const selectMissionBtn = document.getElementById("select-mission-btn");
 const resetBtn = document.getElementById("reset-btn");
 const returnBtn = document.getElementById("return-btn");
 
@@ -89,12 +90,6 @@ const upgrades = [
     name: "Fire Control",
     desc: "-7% primary cooldown per level.",
     baseCost: 150,
-  },
-  {
-    id: "spread",
-    name: "Plasma Spread",
-    desc: "Boosts spread shot damage by 8% per level.",
-    baseCost: 170,
   },
   {
     id: "auxCooldown",
@@ -182,6 +177,7 @@ let desiredMusicSrc = null;
 let activeMusicSrc = null;
 let activeMusic = null;
 const musicLibrary = new Map();
+const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
 
 const mobileAltIcons = {
   emp: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
@@ -382,7 +378,7 @@ const sfx = {
   cloak: new Audio("assets/audio/sci-fi_sounds/Audio/forceField_002.ogg"),
   emp: new Audio("assets/audio/sci-fi_sounds/Audio/forceField_004.ogg"),
   boost: new Audio("assets/audio/sci-fi_sounds/Audio/forceField_000.ogg"),
-  eject: new Audio("assets/audio/sci-fi_sounds/Audio/thrusterFire_003.ogg"),
+  eject: new Audio("assets/audio/sci-fi_sounds/Audio/thrusterFire_000.ogg"),
 };
 
 Object.values(sfx).forEach((audio) => {
@@ -439,6 +435,11 @@ function setDesiredMusic(level) {
   desiredMusicSrc = level.music.startsWith("assets/")
     ? level.music
     : `assets/music/${level.music}`;
+  updateMusicPlayback();
+}
+
+function setHangarMusic() {
+  desiredMusicSrc = HANGAR_MUSIC;
   updateMusicPlayback();
 }
 
@@ -658,6 +659,12 @@ launchBtn.addEventListener("click", async () => {
   await launchSelectedMission();
 });
 
+if (selectMissionBtn) {
+  selectMissionBtn.addEventListener("click", () => {
+    setHangarTab("mission");
+  });
+}
+
 returnBtn.addEventListener("click", () => {
   debriefPanel.hidden = true;
   hangarPanel.hidden = false;
@@ -830,7 +837,6 @@ function applyUpgrades() {
   const shieldLevel = state.upgrades.shield;
   const damageLevel = state.upgrades.damage;
   const fireRateLevel = state.upgrades.fireRate;
-  const spreadLevel = state.upgrades.spread;
   const auxCooldownLevel = state.upgrades.auxCooldown;
   const cloakDurationLevel = state.upgrades.cloakDuration;
 
@@ -840,7 +846,7 @@ function applyUpgrades() {
   player.shield = player.maxShield;
   player.damage = 8 * (1 + damageLevel * 0.1);
   player.fireRate = Math.max(0.12, 0.28 * Math.pow(0.93, fireRateLevel));
-  player.spreadLevel = spreadLevel;
+  player.spreadLevel = 0;
   player.altCooldownTime = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel));
   player.cloakDuration = 2.5 * (1 + cloakDurationLevel * 0.12);
   player.empDuration = 1.6 * (1 + cloakDurationLevel * 0.12);
@@ -901,7 +907,8 @@ async function startMission() {
 function endMission({ ejected = false, completed = false } = {}) {
   if (!mission || !mission.active) return;
   mission.active = false;
-  setDesiredMusic(null);
+  setHangarMusic();
+  setHangarTab("loadout", { renderLevels: false });
 
   const creditReward = creditRewardFor(mission);
   const completionBonus = completed ? 0.1 + Math.random() * 0.15 : 0;
@@ -972,6 +979,9 @@ function updateHangar() {
   renderInvestments();
   if (activeHangarTab === "mission") {
     renderLevelSelect();
+  }
+  if (!mission || !mission.active) {
+    setHangarMusic();
   }
   updateMobileControls();
 }
@@ -1174,17 +1184,12 @@ const weaponComponents = {
 };
 
 const upgradeCategories = {
-  primary: ["damage", "fireRate", "spread"],
+  primary: ["damage", "fireRate"],
   aux: ["auxCooldown", "cloakDuration"],
   ship: ["hull", "shield"],
 };
 
-const upgradeRequirements = {
-  spread: {
-    label: "Requires Spread Barrel",
-    test: () => state.weapon.barrel === "spread",
-  },
-};
+const upgradeRequirements = {};
 
 function renderComponentNodes(container, options, current, key) {
   if (!container) return;
@@ -1198,6 +1203,7 @@ function renderComponentNodes(container, options, current, key) {
     const canPurchase = !rankLocked && !isUnlocked && state.credits >= cost;
     const button = document.createElement("button");
     button.className = "tree-node";
+    button.title = upgrade.desc;
     if (option.id === current) {
       button.classList.add("active");
     }
@@ -1427,6 +1433,27 @@ function spawnEnemyFromSpec(spec) {
     empHitTimer: 0,
   };
 
+  if (enemy.isBoss) {
+    const levelIndex = Math.max(
+      0,
+      availableLevels.findIndex((level) => level.id === mission?.level?.id)
+    );
+    const bossScale = 1 + levelIndex * 0.22;
+    enemy.hp = Math.round(enemy.hp * bossScale);
+    enemy.score = Math.round(enemy.score * bossScale);
+    enemy.baseCredit = Math.round(enemy.baseCredit * bossScale);
+    if (enemy.fireRate) {
+      enemy.fireRate = Math.max(0.5, enemy.fireRate * (1 - levelIndex * 0.05));
+      enemy.fireCooldown = Math.random() * enemy.fireRate;
+    }
+    if (enemy.fireCount) {
+      enemy.fireCount = Math.round(enemy.fireCount * (1 + levelIndex * 0.12));
+    }
+    if (enemy.bulletSpeed) {
+      enemy.bulletSpeed = enemy.bulletSpeed * (1 + levelIndex * 0.05);
+    }
+  }
+
   if (enemy.pattern === "swoop") {
     const dir = Math.random() < 0.5 ? -1 : 1;
     enemy.x = dir === 1 ? -60 : width + 60;
@@ -1546,8 +1573,7 @@ function getWeaponConfig() {
 function firePlayerBullet() {
   const config = getWeaponConfig();
   const baseSpeed = 560;
-  const spreadBonus = config.barrel === "spread" ? 1 + player.spreadLevel * 0.08 : 1;
-  const baseDamage = player.damage * config.damageMult * spreadBonus;
+  const baseDamage = player.damage * config.damageMult;
   playSfx("laserSmall", 0.25);
 
   const resolveBulletImage = (payload) => {
@@ -1569,6 +1595,8 @@ function firePlayerBullet() {
       height: 32,
       rotation: Math.atan2(vy, vx) + Math.PI / 2,
       baseSpeed: Math.hypot(vx, vy),
+      originAngle: Math.atan2(vy, vx),
+      homingMaxOffset: 0.6,
       payload: config.payload,
       ...config.modifierData,
       ...extra,
@@ -1840,10 +1868,14 @@ function update(delta) {
         const vxNorm = bullet.vx / speed;
         const vyNorm = bullet.vy / speed;
         const dot = (vxNorm * dx + vyNorm * dy) / dist;
-        if (dot > 0.15) {
-          const angle = Math.atan2(dy, dx);
-          const targetVx = Math.cos(angle) * speed;
-          const targetVy = Math.sin(angle) * speed;
+        const originAngle = bullet.originAngle ?? Math.atan2(bullet.vy, bullet.vx);
+        const desiredAngle = Math.atan2(dy, dx);
+        const maxOffset = bullet.homingMaxOffset ?? 0.6;
+        const offset = wrapAngle(desiredAngle - originAngle);
+        if (dot > 0.15 && Math.abs(offset) <= maxOffset) {
+          const limitedAngle = originAngle + Math.max(-maxOffset, Math.min(maxOffset, offset));
+          const targetVx = Math.cos(limitedAngle) * speed;
+          const targetVy = Math.sin(limitedAngle) * speed;
           bullet.vx += (targetVx - bullet.vx) * 0.05;
           bullet.vy += (targetVy - bullet.vy) * 0.05;
         }
@@ -2426,6 +2458,13 @@ function drawFloatingText(text) {
 
 function distance(x1, y1, x2, y2) {
   return Math.hypot(x1 - x2, y1 - y2);
+}
+
+function wrapAngle(angle) {
+  let wrapped = angle;
+  while (wrapped > Math.PI) wrapped -= Math.PI * 2;
+  while (wrapped < -Math.PI) wrapped += Math.PI * 2;
+  return wrapped;
 }
 
 function updateStarfield(delta) {

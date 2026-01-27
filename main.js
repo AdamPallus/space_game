@@ -1223,7 +1223,6 @@ function renderComponentNodes(container, options, current, key) {
     const canPurchase = !rankLocked && !isUnlocked && state.credits >= cost;
     const button = document.createElement("button");
     button.className = "tree-node";
-    button.title = upgrade.desc;
     if (option.id === current) {
       button.classList.add("active");
     }

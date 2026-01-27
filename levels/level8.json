@@ -2,6 +2,7 @@
   "id": "level8",
   "name": "Last Light",
   "background": "purple",
+  "music": "space_boss_battle_bpm175.ogg",
   "difficulty": "Ultimate",
   "description": "The enemy flagship and its elite guard. Everything you've learned comes down to this.",
   "completeOnBoss": true,

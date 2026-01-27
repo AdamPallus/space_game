@@ -2,6 +2,7 @@
   "id": "level1",
   "name": "First Contact",
   "background": "blue",
+  "music": "01_lift_off_b.ogg",
   "difficulty": "Easy",
   "description": "Low-threat patrol wing with a single ace squad.",
   "completeOnBoss": true,

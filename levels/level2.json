@@ -2,6 +2,7 @@
   "id": "level2",
   "name": "Orion Drift",
   "background": "purple",
+  "music": "02_stillness_of_space.ogg",
   "difficulty": "Medium",
   "description": "Aggressive raiders with sweeping attack runs.",
   "completeOnBoss": true,

@@ -178,6 +178,10 @@ const touchState = {
   maxSpeed: 420,
 };
 let audioEnabled = false;
+let desiredMusicSrc = null;
+let activeMusicSrc = null;
+let activeMusic = null;
+const musicLibrary = new Map();
 
 const mobileAltIcons = {
   emp: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
@@ -386,6 +390,65 @@ Object.values(sfx).forEach((audio) => {
   audio.volume = 0.4;
 });
 
+function getMusicTrack(src) {
+  if (!src) return null;
+  if (musicLibrary.has(src)) return musicLibrary.get(src);
+  const audio = new Audio(src);
+  audio.preload = "auto";
+  audio.loop = true;
+  audio.volume = 0.22;
+  musicLibrary.set(src, audio);
+  return audio;
+}
+
+function stopMusic() {
+  if (!activeMusic) return;
+  activeMusic.pause();
+  activeMusic.currentTime = 0;
+  activeMusic = null;
+  activeMusicSrc = null;
+}
+
+function updateMusicPlayback() {
+  if (!audioEnabled) return;
+  if (!desiredMusicSrc) {
+    stopMusic();
+    return;
+  }
+  if (activeMusicSrc === desiredMusicSrc && activeMusic) {
+    if (activeMusic.paused) {
+      activeMusic.play().catch(() => {});
+    }
+    return;
+  }
+  stopMusic();
+  activeMusicSrc = desiredMusicSrc;
+  activeMusic = getMusicTrack(desiredMusicSrc);
+  if (activeMusic) {
+    activeMusic.currentTime = 0;
+    activeMusic.play().catch(() => {});
+  }
+}
+
+function setDesiredMusic(level) {
+  if (!level?.music) {
+    desiredMusicSrc = null;
+    updateMusicPlayback();
+    return;
+  }
+  desiredMusicSrc = level.music.startsWith("assets/")
+    ? level.music
+    : `assets/music/${level.music}`;
+  updateMusicPlayback();
+}
+
+function enableAudio() {
+  if (!audioEnabled) {
+    audioEnabled = true;
+    updateMusicPlayback();
+  }
+}
+
 function loadImage(src) {
   const img = new Image();
   const record = { img, loaded: false };
@@ -462,7 +525,7 @@ canvas.style.touchAction = "none";
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
 window.addEventListener("keydown", (event) => {
-  if (!audioEnabled) audioEnabled = true;
+  enableAudio();
   keyState.add(event.key.toLowerCase());
   if (event.key.toLowerCase() === "p") {
     paused = !paused;
@@ -493,7 +556,7 @@ function updatePointerFromEvent(event) {
 canvas.addEventListener("pointermove", updatePointerFromEvent);
 canvas.addEventListener("pointerdown", (event) => {
   updatePointerFromEvent(event);
-  audioEnabled = true;
+  enableAudio();
   if (event.pointerType === "touch") {
     inputMode = "touch";
     touchState.active = true;
@@ -524,7 +587,7 @@ function bindMobileButton(button, onPress, onRelease) {
   if (!button) return;
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
-    audioEnabled = true;
+    enableAudio();
     inputMode = "touch";
     onPress();
   });
@@ -807,6 +870,7 @@ async function startMission() {
     bossSpawnTime: getBossSpawnTime(level),
     empTimer: 0,
   };
+  setDesiredMusic(level);
   bullets.length = 0;
   enemyBullets.length = 0;
   enemies.length = 0;
@@ -837,6 +901,7 @@ async function startMission() {
 function endMission({ ejected = false, completed = false } = {}) {
   if (!mission || !mission.active) return;
   mission.active = false;
+  setDesiredMusic(null);
 
   const creditReward = creditRewardFor(mission);
   const completionBonus = completed ? 0.1 + Math.random() * 0.15 : 0;

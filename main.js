@@ -1291,35 +1291,71 @@ function renderUpgradeNodes(container, upgradeIds) {
     const meetsRequirement = requirement ? requirement.test() : true;
     const canPurchase = meetsRequirement && level < maxLevel && state.credits >= cost;
 
-    const button = document.createElement("button");
-    button.className = "tree-node";
+    const node = document.createElement("div");
+    node.className = "tree-node upgrade-node";
+    node.tabIndex = 0;
     if (!canPurchase || !meetsRequirement) {
-      button.classList.add("locked");
+      node.classList.add("locked");
     }
 
-    let metaText = `Cost: ${cost}/${state.credits}`;
+    const title = document.createElement("span");
+    title.className = "node-title";
+    title.textContent = `${upgrade.name} (Lv ${level})`;
+
+    const meta = document.createElement("span");
+    meta.className = "node-meta";
     if (level >= maxLevel) {
-      metaText = "Maxed";
-      button.disabled = true;
-    } else if (!meetsRequirement) {
-      metaText = requirement?.label || "Locked";
-      button.disabled = true;
+      meta.textContent = "Maxed";
     } else {
-      button.disabled = !canPurchase;
+      meta.textContent = meetsRequirement ? "Upgrade available" : requirement?.label || "Locked";
     }
 
-    button.innerHTML = `
-      <span class="node-title">${upgrade.name} (Lv ${level})</span>
-      <span class="node-meta">${metaText}</span>
-    `;
-    button.addEventListener("click", () => {
+    const popover = document.createElement("div");
+    popover.className = "node-popover";
+
+    const desc = document.createElement("div");
+    desc.className = "node-desc";
+    desc.textContent = upgrade.desc;
+
+    const costRow = document.createElement("div");
+    costRow.className = "node-cost";
+    if (level >= maxLevel) {
+      costRow.textContent = "Maximum level reached";
+    } else if (!meetsRequirement) {
+      costRow.textContent = requirement?.label || "Locked";
+    } else {
+      costRow.textContent = `Cost: ${cost}/${state.credits}`;
+    }
+
+    const action = document.createElement("button");
+    action.className = "node-action";
+    if (level >= maxLevel) {
+      action.textContent = "Maxed";
+      action.disabled = true;
+    } else if (!meetsRequirement) {
+      action.textContent = "Locked";
+      action.disabled = true;
+    } else {
+      action.textContent = "Upgrade";
+      action.disabled = !canPurchase;
+    }
+    action.addEventListener("click", (event) => {
+      event.stopPropagation();
       if (!canPurchase) return;
       state.credits -= cost;
       state.upgrades[upgradeId] += 1;
       saveState();
       updateHangar();
     });
-    container.appendChild(button);
+
+    popover.appendChild(desc);
+    popover.appendChild(costRow);
+    popover.appendChild(action);
+
+    node.appendChild(title);
+    node.appendChild(meta);
+    node.appendChild(popover);
+    container.appendChild(node);
   });
 }
 

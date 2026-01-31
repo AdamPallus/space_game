@@ -167,7 +167,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: visible;
 }
 
 .tab-bar {
@@ -201,8 +202,7 @@ body {
 .tab-panel {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: visible;
+  overflow: visible;
   padding-right: 6px;
 }
 
@@ -380,24 +380,6 @@ body {
 .node-cost {
   font-size: 12px;
   color: #7dd3fc;
-}
-
-.node-action {
-  border: none;
-  border-radius: 999px;
-  padding: 8px 12px;
-  background: linear-gradient(120deg, #22d3ee, #38bdf8);
-  color: #021018;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.node-action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .stats-grid .label {

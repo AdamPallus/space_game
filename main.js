@@ -22,6 +22,7 @@ const debugUnlock = document.getElementById("debug-unlock");
 const debugInvincible = document.getElementById("debug-invincible");
 const treeBarrel = document.getElementById("tree-barrel");
 const treeTrigger = document.getElementById("tree-trigger");
+const treeMount = document.getElementById("tree-mount");
 const treePayload = document.getElementById("tree-payload");
 const treeModifier = document.getElementById("tree-modifier");
 const treePrimaryUpgrades = document.getElementById("tree-primary-upgrades");
@@ -179,6 +180,7 @@ let activeMusic = null;
 const musicLibrary = new Map();
 const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
 let openUpgradeId = null;
+let enemyIdCounter = 1;
 
 const mobileAltIcons = {
   emp: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
@@ -726,12 +728,14 @@ function loadState() {
       weapon: {
         barrel: "focused",
         trigger: "rapid",
+        mount: "front",
         payload: "kinetic",
         modifier: "none",
       },
       unlocked: {
         barrel: { focused: true },
         trigger: { rapid: true },
+        mount: { front: true },
         payload: { kinetic: true },
         modifier: { none: true },
         aux: { cloak: true },
@@ -780,17 +784,21 @@ function loadState() {
     parsed.weapon = parsed.weapon || {
       barrel: "focused",
       trigger: "rapid",
+      mount: "front",
       payload: "kinetic",
       modifier: "none",
     };
+    parsed.weapon.mount = parsed.weapon.mount || "front";
     parsed.unlocked = parsed.unlocked || {};
     parsed.unlocked.barrel = parsed.unlocked.barrel || { focused: true };
     parsed.unlocked.trigger = parsed.unlocked.trigger || { rapid: true };
+    parsed.unlocked.mount = parsed.unlocked.mount || { front: true };
     parsed.unlocked.payload = parsed.unlocked.payload || { kinetic: true };
     parsed.unlocked.modifier = parsed.unlocked.modifier || { none: true };
     parsed.unlocked.aux = parsed.unlocked.aux || { cloak: true };
     if (parsed.weapon?.barrel) parsed.unlocked.barrel[parsed.weapon.barrel] = true;
     if (parsed.weapon?.trigger) parsed.unlocked.trigger[parsed.weapon.trigger] = true;
+    if (parsed.weapon?.mount) parsed.unlocked.mount[parsed.weapon.mount] = true;
     if (parsed.weapon?.payload) parsed.unlocked.payload[parsed.weapon.payload] = true;
     if (parsed.weapon?.modifier) parsed.unlocked.modifier[parsed.weapon.modifier] = true;
     if (parsed.rmbWeapon) parsed.unlocked.aux[parsed.rmbWeapon] = true;
@@ -808,12 +816,14 @@ function loadState() {
       weapon: {
         barrel: "focused",
         trigger: "rapid",
+        mount: "front",
         payload: "kinetic",
         modifier: "none",
       },
       unlocked: {
         barrel: { focused: true },
         trigger: { rapid: true },
+        mount: { front: true },
         payload: { kinetic: true },
         modifier: { none: true },
         aux: { cloak: true },
@@ -1002,7 +1012,7 @@ function updateHangar() {
   if (activeHangarTab === "mission") {
     renderLevelSelect();
   }
-  if (!mission || !mission.active) {
+  if ((!mission || !mission.active) && hangarPanel && !hangarPanel.hidden) {
     setHangarMusic();
   }
   updateMobileControls();
@@ -1194,11 +1204,14 @@ const weaponComponents = {
   barrel: [
     { id: "focused", name: "Focused", unlockAt: 0, cost: 0 },
     { id: "spread", name: "Spread", unlockAt: 250, cost: 180 },
-    { id: "rear", name: "Rear-fire", unlockAt: 500, cost: 260 },
   ],
   trigger: [
     { id: "rapid", name: "Rapid", unlockAt: 0, cost: 0 },
     { id: "burst", name: "Burst", unlockAt: 300, cost: 220 },
+  ],
+  mount: [
+    { id: "front", name: "Front Mount", unlockAt: 0, cost: 0 },
+    { id: "rear", name: "Rear Mount", unlockAt: 500, cost: 260 },
   ],
   payload: [
     { id: "kinetic", name: "Kinetic", unlockAt: 0, cost: 0 },
@@ -1359,40 +1372,21 @@ function renderUpgradeNodes(container, upgradeIds) {
       costRow.textContent = `Cost: ${cost}/${state.credits}`;
     }
 
-    const action = document.createElement("button");
-    action.className = "node-action";
-    if (level >= maxLevel) {
-      action.textContent = "Maxed";
-      action.disabled = true;
-    } else if (!meetsRequirement) {
-      action.textContent = "Locked";
-      action.disabled = true;
-    } else {
-      action.textContent = "Upgrade";
-      action.disabled = !canPurchase;
-    }
-    action.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (!canPurchase) return;
-      state.credits -= cost;
-      state.upgrades[upgradeId] += 1;
-      saveState();
-      safeUpdateHangar();
-    });
-
     popover.appendChild(desc);
     popover.appendChild(costRow);
-    popover.appendChild(action);
 
     node.appendChild(title);
     node.appendChild(meta);
     node.appendChild(popover);
     node.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (openUpgradeId !== upgradeId) {
-        openUpgradeId = upgradeId;
-        safeUpdateHangar();
+      openUpgradeId = upgradeId;
+      if (canPurchase) {
+        state.credits -= cost;
+        state.upgrades[upgradeId] += 1;
+        saveState();
       }
+      safeUpdateHangar();
     });
     container.appendChild(node);
   });
@@ -1401,10 +1395,12 @@ function renderUpgradeNodes(container, upgradeIds) {
 function renderWeaponTree() {
   ensureComponentSelection("barrel", weaponComponents.barrel);
   ensureComponentSelection("trigger", weaponComponents.trigger);
+  ensureComponentSelection("mount", weaponComponents.mount);
   ensureComponentSelection("payload", weaponComponents.payload);
   ensureComponentSelection("modifier", weaponComponents.modifier);
   renderComponentNodes(treeBarrel, weaponComponents.barrel, state.weapon.barrel, "barrel");
   renderComponentNodes(treeTrigger, weaponComponents.trigger, state.weapon.trigger, "trigger");
+  renderComponentNodes(treeMount, weaponComponents.mount, state.weapon.mount, "mount");
   renderComponentNodes(treePayload, weaponComponents.payload, state.weapon.payload, "payload");
   renderComponentNodes(treeModifier, weaponComponents.modifier, state.weapon.modifier, "modifier");
 }
@@ -1482,6 +1478,7 @@ function spawnEnemyFromSpec(spec) {
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
   const enemy = {
+    id: enemyIdCounter++,
     type: spec.type || "fighter",
     radius: spec.radius ?? 20,
     speed: spec.speed ?? 70,
@@ -1490,6 +1487,7 @@ function spawnEnemyFromSpec(spec) {
     baseCredit: spec.baseCredit ?? 14,
     color: spec.color || "#fb7185",
     spriteScale: spec.spriteScale ?? 0.7,
+    empImmune: spec.empImmune ?? !!spec.isBoss,
     ai: spec.ai,
     pattern: spec.pattern || "drift",
     patternParams: spec.patternParams || {},
@@ -1613,6 +1611,7 @@ function spawnPlayerBullet({ x, y, vx, vy, damage, image }) {
 function getWeaponConfig() {
   const barrel = state.weapon.barrel;
   const trigger = state.weapon.trigger;
+  const mount = state.weapon.mount;
   const payload = state.weapon.payload;
   const modifier = state.weapon.modifier;
 
@@ -1638,6 +1637,7 @@ function getWeaponConfig() {
   return {
     barrel,
     trigger,
+    mount,
     payload,
     fireRate,
     damageMult,
@@ -1676,6 +1676,9 @@ function firePlayerBullet() {
       ...config.modifierData,
       ...extra,
     };
+    if (bullet.pierce && !bullet.hitIds) {
+      bullet.hitIds = new Set();
+    }
     bullets.push(bullet);
   };
 
@@ -1708,12 +1711,8 @@ function firePlayerBullet() {
     });
   };
 
-  if (config.barrel === "rear") {
-    spawnBarrelShots(1);
-    spawnBarrelShots(-1);
-  } else {
-    spawnBarrelShots(1);
-  }
+  const direction = config.mount === "rear" ? -1 : 1;
+  spawnBarrelShots(direction);
 }
 
 function fireAltWeapon() {
@@ -1852,24 +1851,23 @@ function update(delta) {
     }
   }
 
-  if (mission.empTimer <= 0) {
-    enemies.forEach((enemy) => {
-      if (enemy.empHitTimer > 0) return;
-      enemy.fireCooldown -= delta;
-      if (enemy.fireCooldown > 0) return;
-      if (enemy.y < 40) return;
-      if (enemy.isBoss || enemy.y < canvas.height * 0.75) {
-        if (enemy.fireMode === "spread") {
-          fireEnemySpread(enemy, enemy.fireCount || 5, enemy.fireSpread || 0.8);
-        } else if (enemy.fireMode === "radial") {
-          fireEnemyRadial(enemy, enemy.fireCount || 18);
-        } else {
-          fireEnemyBullet(enemy);
-        }
-        enemy.fireCooldown = Math.max(0.4, enemy.fireRate * 0.95);
+  const globalEmp = mission.empTimer > 0;
+  enemies.forEach((enemy) => {
+    if (!enemy.empImmune && (globalEmp || enemy.empHitTimer > 0)) return;
+    enemy.fireCooldown -= delta;
+    if (enemy.fireCooldown > 0) return;
+    if (enemy.y < 40) return;
+    if (enemy.isBoss || enemy.y < canvas.height * 0.75) {
+      if (enemy.fireMode === "spread") {
+        fireEnemySpread(enemy, enemy.fireCount || 5, enemy.fireSpread || 0.8);
+      } else if (enemy.fireMode === "radial") {
+        fireEnemyRadial(enemy, enemy.fireCount || 18);
+      } else {
+        fireEnemyBullet(enemy);
       }
-    });
-  }
+      enemy.fireCooldown = Math.max(0.4, enemy.fireRate * 0.95);
+    }
+  });
 
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
@@ -1964,7 +1962,6 @@ function update(delta) {
     bullet.y += bullet.vy * delta;
   });
 
-  const globalEmp = mission.empTimer > 0;
   enemies.forEach((enemy) => {
     if (enemy.dotTimer > 0) {
       enemy.dotTimer -= delta;
@@ -1973,16 +1970,19 @@ function update(delta) {
     if (enemy.empHitTimer > 0) {
       enemy.empHitTimer = Math.max(0, enemy.empHitTimer - delta);
     }
-    const empFactor = globalEmp || enemy.empHitTimer > 0 ? 0.55 : 1;
+    const empActive = !enemy.empImmune && (globalEmp || enemy.empHitTimer > 0);
+    const empFactor = empActive ? 0.55 : 1;
     enemy.patternTime += delta * empFactor;
     if (enemy.pattern === "zigzag") {
       const amplitude = enemy.patternParams.amplitude ?? 90;
       const frequency = enemy.patternParams.frequency ?? 3;
       const t = enemy.patternTime;
-      enemy.vx = Math.sin(t * frequency) * amplitude * empFactor;
-      enemy.vy = enemy.speed * empFactor;
-      enemy.x += enemy.vx * delta;
-      enemy.y += enemy.vy * delta;
+      if (enemy.spawnX === undefined) {
+        enemy.spawnX = enemy.x;
+        enemy.spawnY = enemy.y;
+      }
+      enemy.x = enemy.spawnX + Math.sin(t * frequency) * amplitude;
+      enemy.y = enemy.spawnY + t * enemy.speed;
       return;
     }
     if (enemy.pattern === "swoop") {
@@ -2117,13 +2117,19 @@ function handleCollisions() {
     const bullet = bullets[i];
     for (let j = enemies.length - 1; j >= 0; j -= 1) {
       const enemy = enemies[j];
+      if (bullet.hitIds && bullet.hitIds.has(enemy.id)) continue;
       if (distance(bullet.x, bullet.y, enemy.x, enemy.y) < bullet.radius + enemy.radius) {
         enemy.hp -= bullet.damage;
         if (bullet.payload === "plasma") {
           enemy.dotTimer = Math.max(enemy.dotTimer, 3.0);
           enemy.dotDps = Math.max(enemy.dotDps, bullet.damage * 0.45);
         } else if (bullet.payload === "emp") {
-          enemy.empHitTimer = Math.max(enemy.empHitTimer, 1.2);
+          if (!enemy.empImmune) {
+            enemy.empHitTimer = Math.max(enemy.empHitTimer, 1.2);
+          }
+        }
+        if (bullet.hitIds) {
+          bullet.hitIds.add(enemy.id);
         }
         if (bullet.pierce && bullet.pierce > 0) {
           bullet.pierce -= 1;
@@ -2204,6 +2210,9 @@ function render() {
 
   drawBackground(width, height);
 
+  const showDebrief = debriefPanel && !debriefPanel.hidden;
+  const showHangar = hangarPanel && !hangarPanel.hidden;
+
   if (mission && mission.active) {
     drawPlayer();
     bullets.forEach(drawBullet);
@@ -2211,7 +2220,7 @@ function render() {
     enemies.forEach(drawEnemy);
     explosions.forEach(drawExplosion);
     floatingTexts.forEach(drawFloatingText);
-  } else {
+  } else if (showHangar && !showDebrief) {
     drawHangarScene(width, height);
   }
 

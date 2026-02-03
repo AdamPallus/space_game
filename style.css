@@ -181,6 +181,11 @@ body {
   overflow-x: visible;
 }
 
+#hangar[hidden],
+#debrief[hidden] {
+  display: none;
+}
+
 .tab-bar {
   display: flex;
   flex-wrap: wrap;

@@ -11,6 +11,16 @@ const bossLabel = document.getElementById("boss-label");
 const bossProgressFill = document.getElementById("boss-progress-fill");
 const hudItem1 = document.getElementById("hud-item-1");
 const hudItem2 = document.getElementById("hud-item-2");
+const shipGunValue = document.getElementById("ship-gun-value");
+const shipFlowValue = document.getElementById("ship-flow-value");
+const shipAmmoValue = document.getElementById("ship-ammo-value");
+const shipEffectsValue = document.getElementById("ship-effects-value");
+const shipDefensesValue = document.getElementById("ship-defenses-value");
+const shipModal = document.getElementById("ship-modal");
+const shipModalTitle = document.getElementById("ship-modal-title");
+const shipModalBody = document.getElementById("ship-modal-body");
+const shipModalClose = document.getElementById("ship-modal-close");
+const shipNodeButtons = document.querySelectorAll("[data-ship-node]");
 
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
@@ -115,6 +125,26 @@ const upgrades = [
     baseCost: 200,
   },
 ];
+
+function createDefaultShipBuild() {
+  return {
+    gunDiameter: "medium", // small | medium | large
+    spread: "focused", // focused | burst | wide
+    flowRateLevel: 0,
+    flowVelocityLevel: 0,
+    ammo: "kinetic", // kinetic | plasma
+    effect: "none", // none | homing | explosive | pierce
+    effectUpgrades: {
+      homing: 0,
+      explosive: 0,
+      pierce: 0,
+    },
+    defenseSlots: ["shield", "none"], // shield | armor | none
+    shieldMaxLevel: 0,
+    shieldRegenLevel: 0,
+    armorClass: 0, // placeholder for Part 2+
+  };
+}
 
 const consumables = [
   {
@@ -242,6 +272,8 @@ const starfield = Array.from({ length: 120 }, () => ({
 }));
 
 const state = loadState();
+syncShipBuildToLegacy();
+saveState();
 let mission = null;
 
 const player = {
@@ -419,6 +451,7 @@ let selectedLevelId = "level1";
 let lastLoadedLevelId = null;
 let activeHangarTab = "loadout";
 let hangarNeedsRefresh = false;
+let openShipNodeId = null;
 const levelMetaCache = new Map();
 
 const sfx = {
@@ -755,6 +788,41 @@ if (resetBtn) {
   });
 }
 
+function closeShipModal() {
+  openShipNodeId = null;
+  if (shipModal) shipModal.hidden = true;
+}
+
+if (shipModalClose) {
+  shipModalClose.addEventListener("click", () => {
+    closeShipModal();
+  });
+}
+
+if (shipModal) {
+  shipModal.addEventListener("click", (event) => {
+    if (event.target === shipModal) closeShipModal();
+  });
+}
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && openShipNodeId) {
+    closeShipModal();
+  }
+});
+
+if (shipNodeButtons && shipNodeButtons.length) {
+  shipNodeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const nodeId = button.dataset.shipNode;
+      if (!nodeId) return;
+      openShipNodeId = nodeId;
+      if (shipModal) shipModal.hidden = false;
+      safeUpdateHangar();
+    });
+  });
+}
+
 if (hudItem1) {
   hudItem1.addEventListener("click", () => {
     useConsumable(0);
@@ -819,6 +887,7 @@ function loadState() {
       unlockedLevels: 1,
       debugUnlock: false,
       debugInvincible: false,
+      shipBuild: createDefaultShipBuild(),
       weapon: {
         barrel: "focused",
         trigger: "rapid",
@@ -881,6 +950,44 @@ function loadState() {
     parsed.unlockedLevels = parsed.unlockedLevels ?? 1;
     parsed.debugUnlock = parsed.debugUnlock ?? false;
     parsed.debugInvincible = parsed.debugInvincible ?? false;
+    const hadShipBuild = !!parsed.shipBuild;
+    parsed.shipBuild = parsed.shipBuild || createDefaultShipBuild();
+    if (!hadShipBuild) {
+      const spreadFromLegacy =
+        parsed.weapon?.trigger === "burst"
+          ? "burst"
+          : parsed.weapon?.barrel === "spread"
+            ? "wide"
+            : "focused";
+      parsed.shipBuild.spread = spreadFromLegacy;
+      parsed.shipBuild.ammo = parsed.weapon?.payload || parsed.shipBuild.ammo;
+      const effectFromLegacy =
+        parsed.weapon?.modifier === "homing"
+          ? "homing"
+          : parsed.weapon?.modifier === "pierce"
+            ? "pierce"
+            : parsed.weapon?.modifier === "explosive"
+              ? "explosive"
+              : "none";
+      parsed.shipBuild.effect = effectFromLegacy;
+    }
+    parsed.shipBuild.gunDiameter = parsed.shipBuild.gunDiameter || "medium";
+    parsed.shipBuild.spread = parsed.shipBuild.spread || "focused";
+    parsed.shipBuild.flowRateLevel = parsed.shipBuild.flowRateLevel ?? 0;
+    parsed.shipBuild.flowVelocityLevel = parsed.shipBuild.flowVelocityLevel ?? 0;
+    parsed.shipBuild.ammo = parsed.shipBuild.ammo || parsed.weapon?.payload || "kinetic";
+    parsed.shipBuild.effect = parsed.shipBuild.effect || "none";
+    parsed.shipBuild.effectUpgrades = parsed.shipBuild.effectUpgrades || {};
+    parsed.shipBuild.effectUpgrades.homing = parsed.shipBuild.effectUpgrades.homing ?? 0;
+    parsed.shipBuild.effectUpgrades.explosive = parsed.shipBuild.effectUpgrades.explosive ?? 0;
+    parsed.shipBuild.effectUpgrades.pierce = parsed.shipBuild.effectUpgrades.pierce ?? 0;
+    parsed.shipBuild.defenseSlots = Array.isArray(parsed.shipBuild.defenseSlots)
+      ? parsed.shipBuild.defenseSlots.slice(0, 2)
+      : ["shield", "none"];
+    while (parsed.shipBuild.defenseSlots.length < 2) parsed.shipBuild.defenseSlots.push("none");
+    parsed.shipBuild.shieldMaxLevel = parsed.shipBuild.shieldMaxLevel ?? 0;
+    parsed.shipBuild.shieldRegenLevel = parsed.shipBuild.shieldRegenLevel ?? 0;
+    parsed.shipBuild.armorClass = parsed.shipBuild.armorClass ?? 0;
     parsed.weapon = parsed.weapon || {
       barrel: "focused",
       trigger: "rapid",
@@ -921,6 +1028,7 @@ function loadState() {
       unlockedLevels: 1,
       debugUnlock: false,
       debugInvincible: false,
+      shipBuild: createDefaultShipBuild(),
       weapon: {
         barrel: "focused",
         trigger: "rapid",
@@ -964,6 +1072,49 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getShipBuild() {
+  if (!state.shipBuild) {
+    state.shipBuild = createDefaultShipBuild();
+  }
+  if (!state.shipBuild.effectUpgrades) {
+    state.shipBuild.effectUpgrades = { homing: 0, explosive: 0, pierce: 0 };
+  }
+  return state.shipBuild;
+}
+
+function syncShipBuildToLegacy() {
+  const build = getShipBuild();
+  // Keep the existing combat system usable while we overhaul the UI/logic.
+  // This mapping is intentionally lossy; later steps will fully switch to shipBuild.
+  const spread = build.spread || "focused";
+  if (spread === "focused") {
+    state.weapon.barrel = "focused";
+    state.weapon.trigger = "rapid";
+  } else if (spread === "burst") {
+    state.weapon.barrel = "focused";
+    state.weapon.trigger = "burst";
+  } else if (spread === "wide") {
+    state.weapon.barrel = "spread";
+    state.weapon.trigger = "rapid";
+  }
+
+  const ammo = build.ammo || "kinetic";
+  state.weapon.payload = ammo === "plasma" ? "plasma" : "kinetic";
+
+  const effect = build.effect || "none";
+  if (effect === "homing") state.weapon.modifier = "homing";
+  else if (effect === "pierce") state.weapon.modifier = "pierce";
+  else if (effect === "explosive") state.weapon.modifier = "explosive";
+  else state.weapon.modifier = "none";
+
+  // Ensure these are considered unlocked in old state for internal consistency.
+  state.unlocked = state.unlocked || {};
+  state.unlocked.payload = state.unlocked.payload || { kinetic: true };
+  state.unlocked.modifier = state.unlocked.modifier || { none: true };
+  state.unlocked.payload[state.weapon.payload] = true;
+  state.unlocked.modifier[state.weapon.modifier] = true;
 }
 
 function upgradeCost(upgradeId) {
@@ -1016,6 +1167,7 @@ function initConsumablesForMission() {
 }
 
 async function startMission() {
+  closeShipModal();
   const level = await ensureLevelLoaded();
   applyUpgrades();
   const consumablesState = initConsumablesForMission();
@@ -1072,6 +1224,7 @@ async function startMission() {
 function endMission({ ejected = false, completed = false } = {}) {
   if (!mission || !mission.active) return;
   mission.active = false;
+  closeShipModal();
   setHangarMusic();
   setHangarTab("loadout", { renderLevels: false });
 
@@ -1144,9 +1297,8 @@ function updateHangar() {
     debugInvincible.checked = !!state.debugInvincible;
   }
 
-  renderWeaponTree();
   renderAuxTree();
-  renderUpgradeTrees();
+  renderShipUpgradesPanel();
   renderConsumableLoadout();
   renderConsumableStore();
   renderInvestments();
@@ -1600,6 +1752,369 @@ function renderUpgradeTrees() {
   renderUpgradeNodes(treeShipUpgrades, upgradeCategories.ship);
 }
 
+function shipPanelUpgradeCost(baseCost, level) {
+  return Math.round(baseCost * Math.pow(1.45, level));
+}
+
+function renderShipUpgradesPanel() {
+  const build = getShipBuild();
+  if (shipGunValue) {
+    const diameter = build.gunDiameter ? capitalize(build.gunDiameter) : "Medium";
+    const spread = build.spread ? capitalize(build.spread) : "Focused";
+    shipGunValue.textContent = `${diameter} / ${spread}`;
+  }
+  if (shipFlowValue) {
+    shipFlowValue.textContent = `Rate Lv ${build.flowRateLevel} / Vel Lv ${build.flowVelocityLevel}`;
+  }
+  if (shipAmmoValue) {
+    shipAmmoValue.textContent = build.ammo ? capitalize(build.ammo) : "Kinetic";
+  }
+  if (shipEffectsValue) {
+    const effect = build.effect || "none";
+    if (effect === "none") {
+      shipEffectsValue.textContent = "None";
+    } else {
+      const level = build.effectUpgrades?.[effect] ?? 0;
+      shipEffectsValue.textContent = `${capitalize(effect)} Lv ${level}`;
+    }
+  }
+  if (shipDefensesValue) {
+    const slotA = build.defenseSlots?.[0] || "none";
+    const slotB = build.defenseSlots?.[1] || "none";
+    shipDefensesValue.textContent = `${capitalize(slotA)} / ${capitalize(slotB)}`;
+  }
+
+  if (!openShipNodeId || !shipModalBody || !shipModalTitle) return;
+  if (shipModal) shipModal.hidden = false;
+
+  const clear = () => {
+    shipModalBody.innerHTML = "";
+  };
+
+  const addSection = (titleText) => {
+    const section = document.createElement("div");
+    section.className = "modal-section";
+    const title = document.createElement("div");
+    title.className = "tree-label";
+    title.textContent = titleText;
+    section.appendChild(title);
+    shipModalBody.appendChild(section);
+    return section;
+  };
+
+  const addOptionRow = ({ name, desc, right, onClick, disabled = false, active = false }) => {
+    const row = document.createElement("div");
+    row.className = "upgrade-item";
+    if (active) row.classList.add("active");
+    if (disabled) row.classList.add("locked");
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `
+      <span class="name">${name}</span>
+      <span class="desc">${desc}</span>
+    `;
+
+    const button = document.createElement("button");
+    button.textContent = right;
+    button.disabled = disabled;
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (disabled) return;
+      onClick();
+    });
+
+    row.appendChild(meta);
+    row.appendChild(button);
+    shipModalBody.appendChild(row);
+  };
+
+  const spend = (cost) => {
+    if (state.credits < cost) return false;
+    state.credits -= cost;
+    return true;
+  };
+
+  const renderGun = () => {
+    shipModalTitle.textContent = "Gun";
+    clear();
+
+    addSection("Gun Diameter");
+    [
+      { id: "small", label: "Small", desc: "Smaller projectiles, higher velocity (later).", cost: 120 },
+      { id: "medium", label: "Medium", desc: "Standard issue. Balanced.", cost: 0 },
+      { id: "large", label: "Large", desc: "Bigger projectiles, lower velocity (later).", cost: 180 },
+    ].forEach((opt) => {
+      const active = build.gunDiameter === opt.id;
+      const canAfford = state.credits >= opt.cost;
+      addOptionRow({
+        name: opt.label,
+        desc: opt.desc,
+        right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+        active,
+        disabled: !active && opt.cost > 0 && !canAfford,
+        onClick: () => {
+          if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+          build.gunDiameter = opt.id;
+          state.shipBuild = build;
+          syncShipBuildToLegacy();
+          saveState();
+          safeUpdateHangar();
+        },
+      });
+    });
+
+    addSection("Spread Pattern");
+    [
+      { id: "focused", label: "Focused", desc: "1 shot, straight ahead.", cost: 0 },
+      { id: "burst", label: "Burst", desc: "5 micro-shots with jitter; longer cooldown.", cost: 220 },
+      { id: "wide", label: "Wide", desc: "5 micro-shots with fixed angles.", cost: 220 },
+    ].forEach((opt) => {
+      const active = build.spread === opt.id;
+      const canAfford = state.credits >= opt.cost;
+      addOptionRow({
+        name: opt.label,
+        desc: opt.desc,
+        right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+        active,
+        disabled: !active && opt.cost > 0 && !canAfford,
+        onClick: () => {
+          if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+          build.spread = opt.id;
+          state.shipBuild = build;
+          syncShipBuildToLegacy();
+          saveState();
+          safeUpdateHangar();
+        },
+      });
+    });
+  };
+
+  const renderFlow = () => {
+    shipModalTitle.textContent = "Flow Controller";
+    clear();
+    addSection("Flow Upgrades");
+
+    const rateCost = shipPanelUpgradeCost(180, build.flowRateLevel);
+    addOptionRow({
+      name: `Fire Rate (Lv ${build.flowRateLevel})`,
+      desc: "Reduce primary cooldown (later wiring).",
+      right: `Upgrade ${rateCost}/${state.credits}`,
+      disabled: state.credits < rateCost,
+      onClick: () => {
+        if (!spend(rateCost)) return;
+        build.flowRateLevel += 1;
+        state.shipBuild = build;
+        saveState();
+        safeUpdateHangar();
+      },
+    });
+
+    const velCost = shipPanelUpgradeCost(180, build.flowVelocityLevel);
+    addOptionRow({
+      name: `Projectile Velocity (Lv ${build.flowVelocityLevel})`,
+      desc: "Increase bullet speed (later wiring).",
+      right: `Upgrade ${velCost}/${state.credits}`,
+      disabled: state.credits < velCost,
+      onClick: () => {
+        if (!spend(velCost)) return;
+        build.flowVelocityLevel += 1;
+        state.shipBuild = build;
+        saveState();
+        safeUpdateHangar();
+      },
+    });
+  };
+
+  const renderAmmo = () => {
+    shipModalTitle.textContent = "Ammo Source";
+    clear();
+    addSection("Ammo Type");
+    [
+      { id: "kinetic", label: "Kinetic", desc: "Damage scales with velocity (Part 3).", cost: 0 },
+      { id: "plasma", label: "Plasma", desc: "Damage scales with projectile size (Part 3).", cost: 120 },
+    ].forEach((opt) => {
+      const active = build.ammo === opt.id;
+      const canAfford = state.credits >= opt.cost;
+      addOptionRow({
+        name: opt.label,
+        desc: opt.desc,
+        right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+        active,
+        disabled: !active && opt.cost > 0 && !canAfford,
+        onClick: () => {
+          if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+          build.ammo = opt.id;
+          state.shipBuild = build;
+          syncShipBuildToLegacy();
+          saveState();
+          safeUpdateHangar();
+        },
+      });
+    });
+  };
+
+  const renderEffects = () => {
+    shipModalTitle.textContent = "Special Effects";
+    clear();
+    addSection("Effect Module");
+    [
+      { id: "none", label: "None", desc: "No special effect.", cost: 0 },
+      { id: "homing", label: "Homing", desc: "Projectiles curve toward targets.", cost: 320 },
+      { id: "explosive", label: "Explosive", desc: "Impact creates an AOE blast.", cost: 360 },
+      { id: "pierce", label: "Piercing", desc: "Projectiles travel through ships.", cost: 320 },
+    ].forEach((opt) => {
+      const active = build.effect === opt.id;
+      const canAfford = state.credits >= opt.cost;
+      addOptionRow({
+        name: opt.label,
+        desc: opt.desc,
+        right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+        active,
+        disabled: !active && opt.cost > 0 && !canAfford,
+        onClick: () => {
+          if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+          build.effect = opt.id;
+          state.shipBuild = build;
+          syncShipBuildToLegacy();
+          saveState();
+          safeUpdateHangar();
+        },
+      });
+    });
+
+    if (build.effect && build.effect !== "none") {
+      const effectKey = build.effect;
+      const level = build.effectUpgrades?.[effectKey] ?? 0;
+      const cost = shipPanelUpgradeCost(220, level);
+      addSection("Effect Upgrades");
+      addOptionRow({
+        name: `${capitalize(effectKey)} Tuning (Lv ${level})`,
+        desc: "Improve the selected effect (later wiring).",
+        right: `Upgrade ${cost}/${state.credits}`,
+        disabled: state.credits < cost,
+        onClick: () => {
+          if (!spend(cost)) return;
+          if (!build.effectUpgrades) build.effectUpgrades = {};
+          build.effectUpgrades[effectKey] = level + 1;
+          state.shipBuild = build;
+          saveState();
+          safeUpdateHangar();
+        },
+      });
+    }
+  };
+
+  const renderDefenses = () => {
+    shipModalTitle.textContent = "Defenses";
+    clear();
+    addSection("Defense Slots");
+
+    const slotChoices = [
+      { id: "none", label: "Empty", desc: "No module installed.", cost: 0 },
+      { id: "shield", label: "Shields", desc: "Recharge after taking damage.", cost: 260 },
+      { id: "armor", label: "Armor", desc: "Damage reduction vs hull (Part 2).", cost: 320 },
+    ];
+
+    const setSlot = (index, value, cost) => {
+      if (cost > 0 && !spend(cost)) return;
+      build.defenseSlots[index] = value;
+      state.shipBuild = build;
+      saveState();
+      safeUpdateHangar();
+    };
+
+    for (let i = 0; i < 2; i += 1) {
+      const activeId = build.defenseSlots?.[i] || "none";
+      slotChoices.forEach((choice) => {
+        const active = activeId === choice.id;
+        const canAfford = state.credits >= choice.cost;
+        addOptionRow({
+          name: `Slot ${i + 1}: ${choice.label}`,
+          desc: choice.desc,
+          right: active ? "Equipped" : choice.cost ? `Equip ${choice.cost}/${state.credits}` : "Equip",
+          active,
+          disabled: !active && choice.cost > 0 && !canAfford,
+          onClick: () => setSlot(i, choice.id, choice.cost),
+        });
+      });
+    }
+
+    const hasShield =
+      (build.defenseSlots?.[0] === "shield" || build.defenseSlots?.[1] === "shield");
+    if (hasShield) {
+      addSection("Shield Upgrades");
+      const maxCost = shipPanelUpgradeCost(200, build.shieldMaxLevel);
+      addOptionRow({
+        name: `Max Shield (Lv ${build.shieldMaxLevel})`,
+        desc: "Increase shield HP.",
+        right: `Upgrade ${maxCost}/${state.credits}`,
+        disabled: state.credits < maxCost,
+        onClick: () => {
+          if (!spend(maxCost)) return;
+          build.shieldMaxLevel += 1;
+          state.shipBuild = build;
+          saveState();
+          safeUpdateHangar();
+        },
+      });
+
+      const regenCost = shipPanelUpgradeCost(180, build.shieldRegenLevel);
+      addOptionRow({
+        name: `Shield Recharge (Lv ${build.shieldRegenLevel})`,
+        desc: "Increase recharge rate.",
+        right: `Upgrade ${regenCost}/${state.credits}`,
+        disabled: state.credits < regenCost,
+        onClick: () => {
+          if (!spend(regenCost)) return;
+          build.shieldRegenLevel += 1;
+          state.shipBuild = build;
+          saveState();
+          safeUpdateHangar();
+        },
+      });
+    }
+
+    const hasArmor =
+      (build.defenseSlots?.[0] === "armor" || build.defenseSlots?.[1] === "armor");
+    if (hasArmor) {
+      addSection("Armor Class");
+      [
+        { value: 5, label: "Light Armor", desc: "Armor class 5 (Part 2).", cost: 0 },
+        { value: 10, label: "Medium Armor", desc: "Armor class 10 (Part 2).", cost: 120 },
+        { value: 15, label: "Heavy Armor", desc: "Armor class 15 (Part 2).", cost: 220 },
+      ].forEach((opt) => {
+        const active = build.armorClass === opt.value;
+        const canAfford = state.credits >= opt.cost;
+        addOptionRow({
+          name: opt.label,
+          desc: opt.desc,
+          right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+          active,
+          disabled: !active && opt.cost > 0 && !canAfford,
+          onClick: () => {
+            if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+            build.armorClass = opt.value;
+            state.shipBuild = build;
+            saveState();
+            safeUpdateHangar();
+          },
+        });
+      });
+    }
+  };
+
+  if (openShipNodeId === "gun") renderGun();
+  else if (openShipNodeId === "flow") renderFlow();
+  else if (openShipNodeId === "ammo") renderAmmo();
+  else if (openShipNodeId === "effects") renderEffects();
+  else if (openShipNodeId === "defenses") renderDefenses();
+  else {
+    shipModalTitle.textContent = "Ship Module";
+    clear();
+  }
+}
+
 function getConsumableLabel(item) {
   return item?.hudLabel || item?.name || "Item";
 }
@@ -1906,6 +2421,8 @@ function getWeaponConfig() {
     modifierData.pierce = 1;
   } else if (modifier === "homing") {
     modifierData.homing = true;
+  } else if (modifier === "explosive") {
+    modifierData.explosive = true;
   } else if (modifier === "vampiric") {
     modifierData.vampiric = 2;
   }
@@ -1948,6 +2465,7 @@ function firePlayerBullet() {
       baseSpeed: Math.hypot(vx, vy),
       originAngle: Math.atan2(vy, vx),
       homingMaxOffset: 0.6,
+      homingStrength: 0.05,
       payload: config.payload,
       ...config.modifierData,
       ...extra,
@@ -1955,12 +2473,30 @@ function firePlayerBullet() {
     if (bullet.pierce && !bullet.hitIds) {
       bullet.hitIds = new Set();
     }
+    if (bullet.homing) {
+      const build = getShipBuild();
+      const tune = build.effectUpgrades?.homing ?? 0;
+      bullet.homingMaxOffset = 0.6 + tune * 0.14;
+      bullet.homingStrength = 0.05 + tune * 0.018;
+    }
+    if (bullet.pierce) {
+      const build = getShipBuild();
+      const tune = build.effectUpgrades?.pierce ?? 0;
+      bullet.pierce = Math.max(1, bullet.pierce) + tune;
+    }
+    if (bullet.explosive) {
+      const build = getShipBuild();
+      const tune = build.effectUpgrades?.explosive ?? 0;
+      bullet.explosiveRadius = 70 * (bullet.radius / 4) * (1 + tune * 0.18);
+      bullet.explosiveDamageMult = 0.7;
+      bullet.exploded = false;
+    }
     bullets.push(bullet);
   };
 
   const getAngles = (barrel) => {
     if (barrel === "spread") {
-      return [-0.2, 0, 0.2];
+      return [-0.35, -0.175, 0, 0.175, 0.35];
     }
     return [0];
   };
@@ -2283,8 +2819,9 @@ function update(delta) {
           const limitedAngle = originAngle + Math.max(-maxOffset, Math.min(maxOffset, offset));
           const targetVx = Math.cos(limitedAngle) * speed;
           const targetVy = Math.sin(limitedAngle) * speed;
-          bullet.vx += (targetVx - bullet.vx) * 0.05;
-          bullet.vy += (targetVy - bullet.vy) * 0.05;
+          const strength = bullet.homingStrength ?? 0.05;
+          bullet.vx += (targetVx - bullet.vx) * strength;
+          bullet.vy += (targetVy - bullet.vy) * strength;
         }
       }
     }
@@ -2461,6 +2998,18 @@ function handleCollisions() {
           if (!enemy.empImmune) {
             enemy.empHitTimer = Math.max(enemy.empHitTimer, 1.2);
           }
+        }
+        if (bullet.explosive && !bullet.exploded) {
+          bullet.exploded = true;
+          const radius = bullet.explosiveRadius ?? 90;
+          spawnExplosion(enemy.x, enemy.y, radius * 0.42);
+          enemies.forEach((other) => {
+            if (other === enemy) return;
+            const d = distance(enemy.x, enemy.y, other.x, other.y);
+            if (d > radius) return;
+            const scale = 1 - d / radius;
+            other.hp -= bullet.damage * (bullet.explosiveDamageMult ?? 0.7) * scale;
+          });
         }
         if (bullet.hitIds) {
           bullet.hitIds.add(enemy.id);
@@ -2911,6 +3460,13 @@ function formatTime(seconds) {
   const minutes = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+}
+
+function capitalize(value) {
+  if (value === undefined || value === null) return "";
+  const str = String(value);
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function spawnCreditPopup(x, y, amount) {

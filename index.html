@@ -91,53 +91,46 @@
 
           <div class="tab-panel" id="tab-loadout" data-tab-panel="loadout">
             <div class="loadout">
-              <h2>Primary Weapon Tree</h2>
-              <div class="tree-core">Main Weapon Core</div>
-              <div class="tree-grid">
-                <div class="tree-column">
-                  <div class="tree-label">Barrel</div>
-                  <div class="tree-nodes" id="tree-barrel"></div>
-                </div>
-                <div class="tree-column">
-                  <div class="tree-label">Trigger</div>
-                  <div class="tree-nodes" id="tree-trigger"></div>
-                </div>
-                <div class="tree-column">
-                  <div class="tree-label">Mount</div>
-                  <div class="tree-nodes" id="tree-mount"></div>
-                </div>
-                <div class="tree-column">
-                  <div class="tree-label">Payload</div>
-                  <div class="tree-nodes" id="tree-payload"></div>
-                </div>
-                <div class="tree-column">
-                  <div class="tree-label">Modifier</div>
-                  <div class="tree-nodes" id="tree-modifier"></div>
-                </div>
-                <div class="tree-column">
-                  <div class="tree-label">Primary Upgrades</div>
-                  <div class="tree-nodes" id="tree-primary-upgrades"></div>
+              <h2>Ship Upgrades</h2>
+              <p class="investments-desc">
+                Click a module to configure your ship. (Combat wiring comes in later overhaul steps.)
+              </p>
+              <div class="ship-upgrades" id="ship-upgrades-panel">
+                <div class="ship-canvas" aria-label="Ship upgrade layout">
+                  <img
+                    class="ship-bg"
+                    src="assets/SpaceShooterRedux/PNG/playerShip2_blue.png"
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <button class="ship-node gun" type="button" data-ship-node="gun">
+                    <span class="ship-node-title">Gun</span>
+                    <span class="ship-node-value" id="ship-gun-value">-</span>
+                  </button>
+                  <button class="ship-node flow" type="button" data-ship-node="flow">
+                    <span class="ship-node-title">Flow</span>
+                    <span class="ship-node-value" id="ship-flow-value">-</span>
+                  </button>
+                  <button class="ship-node ammo" type="button" data-ship-node="ammo">
+                    <span class="ship-node-title">Ammo</span>
+                    <span class="ship-node-value" id="ship-ammo-value">-</span>
+                  </button>
+                  <button class="ship-node effects" type="button" data-ship-node="effects">
+                    <span class="ship-node-title">Effects</span>
+                    <span class="ship-node-value" id="ship-effects-value">-</span>
+                  </button>
+                  <button class="ship-node defenses" type="button" data-ship-node="defenses">
+                    <span class="ship-node-title">Defenses</span>
+                    <span class="ship-node-value" id="ship-defenses-value">-</span>
+                  </button>
                 </div>
               </div>
             </div>
 
             <div class="loadout">
-              <h2>Aux Systems Tree</h2>
-              <div class="tree-core">Aux Hardpoint</div>
-              <div class="tree-grid">
-                <div class="tree-column">
-                  <div class="tree-label">Aux Slot</div>
-                  <div class="tree-nodes" id="tree-aux-select"></div>
-                </div>
-                <div class="tree-column">
-                  <div class="tree-label">Aux Upgrades</div>
-                  <div class="tree-nodes" id="tree-aux-upgrades"></div>
-                </div>
-                <div class="tree-column">
-                  <div class="tree-label">Ship Systems</div>
-                  <div class="tree-nodes" id="tree-ship-upgrades"></div>
-                </div>
-              </div>
+              <h2>Ability Slot</h2>
+              <p class="investments-desc">Choose your mission ability (RMB / ALT button).</p>
+              <div class="tree-nodes" id="tree-aux-select"></div>
             </div>
 
             <div class="loadout">
@@ -268,6 +261,16 @@
         </button>
         <button class="mobile-btn eject" id="mobile-eject">Eject</button>
         <button class="mobile-btn launch" id="mobile-launch">Launch</button>
+      </div>
+
+      <div class="modal" id="ship-modal" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ship-modal-title">
+          <div class="modal-header">
+            <h3 id="ship-modal-title">Ship Module</h3>
+            <button class="ghost small" id="ship-modal-close" type="button">Close</button>
+          </div>
+          <div class="modal-body" id="ship-modal-body"></div>
+        </div>
       </div>
     </div>
 

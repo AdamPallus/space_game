@@ -374,6 +374,7 @@ const availableLevels = [
   { id: "level6", label: "Mission 6" },
   { id: "level7", label: "Mission 7" },
   { id: "level8", label: "Mission 8" },
+  { id: "overhaul_demo", label: "Overhaul Demo", test: true },
   // Variant missions (Operations Center unlocks - not yet integrated)
   // { id: "level1_patrol", label: "Mission 1: Patrol Alpha" },
   // { id: "level2_skirmish", label: "Mission 2: Skirmish" },
@@ -1242,9 +1243,12 @@ function endMission({ ejected = false, completed = false } = {}) {
   state.missionCount += 1;
   state.lastMissionSummary = `${formatTime(mission.elapsed)} | ${mission.kills} kills`;
   if (completed && mission.level?.id) {
-    const currentIndex = availableLevels.findIndex((level) => level.id === mission.level.id);
-    if (currentIndex !== -1 && state.unlockedLevels <= currentIndex + 1) {
-      state.unlockedLevels = Math.min(availableLevels.length, currentIndex + 2);
+    const entry = availableLevels.find((level) => level.id === mission.level.id);
+    if (!entry?.test) {
+      const currentIndex = availableLevels.findIndex((level) => level.id === mission.level.id);
+      if (currentIndex !== -1 && state.unlockedLevels <= currentIndex + 1) {
+        state.unlockedLevels = Math.min(availableLevels.length, currentIndex + 2);
+      }
     }
   }
   saveState();
@@ -2260,20 +2264,35 @@ function getPilotRank(credits) {
 
 function isLevelUnlocked(levelId) {
   if (state.debugUnlock) return true;
+  const entry = availableLevels.find((level) => level.id === levelId);
+  if (!entry) return false;
+  if (entry.test) return true;
   const index = availableLevels.findIndex((level) => level.id === levelId);
-  if (index === -1) return false;
-  return index < state.unlockedLevels;
+  return index >= 0 && index < state.unlockedLevels;
 }
 
 function spawnEnemyFromSpec(spec) {
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
+  const hull = spec.hull ?? spec.hp ?? 20;
+  const armor = spec.armor ?? 0;
+  const shield = spec.shield ?? 0;
+  const armorClass = spec.armorClass ?? 0;
   const enemy = {
     id: enemyIdCounter++,
     type: spec.type || "fighter",
     radius: spec.radius ?? 20,
     speed: spec.speed ?? 70,
-    hp: spec.hp ?? 20,
+    hull,
+    maxHull: hull,
+    armor,
+    maxArmor: armor,
+    armorClass: armor > 0 ? armorClass : 0,
+    shield,
+    maxShield: shield,
+    shieldCooldown: 0,
+    shieldRegen: spec.shieldRegen ?? 10,
+    healthBarTimer: 0,
     score: spec.score ?? 120,
     baseCredit: spec.baseCredit ?? 14,
     color: spec.color || "#fb7185",
@@ -2303,7 +2322,12 @@ function spawnEnemyFromSpec(spec) {
       availableLevels.findIndex((level) => level.id === mission?.level?.id)
     );
     const bossScale = 1 + levelIndex * 0.22;
-    enemy.hp = Math.round(enemy.hp * bossScale);
+    enemy.hull = Math.round(enemy.hull * bossScale);
+    enemy.maxHull = enemy.hull;
+    enemy.armor = Math.round(enemy.armor * bossScale);
+    enemy.maxArmor = enemy.armor;
+    enemy.shield = Math.round(enemy.shield * bossScale);
+    enemy.maxShield = enemy.shield;
     enemy.score = Math.round(enemy.score * bossScale);
     enemy.baseCredit = Math.round(enemy.baseCredit * bossScale);
     if (enemy.fireRate) {
@@ -2572,7 +2596,8 @@ function useConsumable(slotIndex) {
       const d = distance(player.x, player.y, enemy.x, enemy.y);
       if (d > blastRadius) return;
       const scale = 1 - d / blastRadius;
-      enemy.hp -= blastDamage * scale;
+      revealEnemyHealth(enemy);
+      applyDamageToEnemy(enemy, blastDamage * scale);
     });
   } else if (slotId === "shieldBoost") {
     const shieldGain = player.maxShield * 0.65;
@@ -2834,9 +2859,13 @@ function update(delta) {
   });
 
   enemies.forEach((enemy) => {
+    if (enemy.healthBarTimer > 0) {
+      enemy.healthBarTimer = Math.max(0, enemy.healthBarTimer - delta);
+    }
     if (enemy.dotTimer > 0) {
       enemy.dotTimer -= delta;
-      enemy.hp -= enemy.dotDps * delta;
+      revealEnemyHealth(enemy);
+      applyDamageToEnemy(enemy, enemy.dotDps * delta);
     }
     if (enemy.empHitTimer > 0) {
       enemy.empHitTimer = Math.max(0, enemy.empHitTimer - delta);
@@ -2844,6 +2873,13 @@ function update(delta) {
     const empActive = !enemy.empImmune && (globalEmp || enemy.empHitTimer > 0);
     const empFactor = empActive ? 0.55 : 1;
     enemy.patternTime += delta * empFactor;
+    if (enemy.maxShield > 0) {
+      if (enemy.shieldCooldown > 0) {
+        enemy.shieldCooldown = Math.max(0, enemy.shieldCooldown - delta);
+      } else if (enemy.shield < enemy.maxShield) {
+        enemy.shield = Math.min(enemy.maxShield, enemy.shield + enemy.shieldRegen * delta);
+      }
+    }
     if (enemy.pattern === "zigzag") {
       const amplitude = enemy.patternParams.amplitude ?? 90;
       const frequency = enemy.patternParams.frequency ?? 3;
@@ -2940,7 +2976,7 @@ function update(delta) {
 
   for (let i = enemies.length - 1; i >= 0; i -= 1) {
     const enemy = enemies[i];
-    if (enemy.hp <= 0) {
+    if (enemy.hull <= 0) {
       handleEnemyDestroyed(enemy, null);
       enemies.splice(i, 1);
     }
@@ -2990,7 +3026,8 @@ function handleCollisions() {
       const enemy = enemies[j];
       if (bullet.hitIds && bullet.hitIds.has(enemy.id)) continue;
       if (distance(bullet.x, bullet.y, enemy.x, enemy.y) < bullet.radius + enemy.radius) {
-        enemy.hp -= bullet.damage;
+        revealEnemyHealth(enemy);
+        applyDamageToEnemy(enemy, bullet.damage);
         if (bullet.payload === "plasma") {
           enemy.dotTimer = Math.max(enemy.dotTimer, 3.0);
           enemy.dotDps = Math.max(enemy.dotDps, bullet.damage * 0.45);
@@ -3008,7 +3045,8 @@ function handleCollisions() {
             const d = distance(enemy.x, enemy.y, other.x, other.y);
             if (d > radius) return;
             const scale = 1 - d / radius;
-            other.hp -= bullet.damage * (bullet.explosiveDamageMult ?? 0.7) * scale;
+            revealEnemyHealth(other);
+            applyDamageToEnemy(other, bullet.damage * (bullet.explosiveDamageMult ?? 0.7) * scale);
           });
         }
         if (bullet.hitIds) {
@@ -3019,7 +3057,7 @@ function handleCollisions() {
         } else {
           bullets.splice(i, 1);
         }
-        if (enemy.hp <= 0) {
+        if (enemy.hull <= 0) {
           handleEnemyDestroyed(enemy, bullet);
           enemies.splice(j, 1);
         }
@@ -3314,6 +3352,60 @@ function drawEnemy(enemy) {
     ctx.arc(enemy.x, enemy.y, enemy.radius + 10, 0, Math.PI * 2);
     ctx.stroke();
   }
+
+  if (enemy.healthBarTimer > 0) {
+    drawEnemyHealth(enemy);
+  }
+  ctx.restore();
+}
+
+function drawEnemyHealth(enemy) {
+  const maxShield = enemy.maxShield || 0;
+  const maxArmor = enemy.maxArmor || 0;
+  const maxHull = enemy.maxHull || 0;
+  const totalMax = maxShield + maxArmor + maxHull;
+  if (totalMax <= 0) return;
+
+  const width = 84;
+  const height = 8;
+  const x = enemy.x - width / 2;
+  const y = enemy.y - enemy.radius - 18;
+  const alpha = Math.min(1, enemy.healthBarTimer / 1.35);
+
+  const shield = Math.max(0, enemy.shield || 0);
+  const armor = Math.max(0, enemy.armor || 0);
+  const hull = Math.max(0, enemy.hull || 0);
+
+  ctx.save();
+  ctx.globalAlpha = 0.9 * alpha;
+  ctx.fillStyle = "rgba(2, 6, 16, 0.7)";
+  ctx.strokeStyle = "rgba(125, 190, 255, 0.25)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(x - 2, y - 2, width + 4, height + 4, 6);
+  } else {
+    ctx.rect(x - 2, y - 2, width + 4, height + 4);
+  }
+  ctx.fill();
+  ctx.stroke();
+
+  const segment = (value, maxValue, color, offset) => {
+    if (maxValue <= 0) return 0;
+    const fraction = Math.max(0, Math.min(1, value / maxValue));
+    const segW = (width * maxValue) / totalMax;
+    const fillW = segW * fraction;
+    if (fillW > 0) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x + offset, y, fillW, height);
+    }
+    return segW;
+  };
+
+  let offset = 0;
+  offset += segment(shield, maxShield, "#7dd3fc", offset); // shields: light blue
+  offset += segment(armor, maxArmor, "#334155", offset); // armor: dark gray
+  segment(hull, maxHull, "#fb7185", offset); // hull: red
   ctx.restore();
 }
 
@@ -3493,6 +3585,42 @@ function drawFloatingText(text) {
 
 function distance(x1, y1, x2, y2) {
   return Math.hypot(x1 - x2, y1 - y2);
+}
+
+function revealEnemyHealth(enemy) {
+  enemy.healthBarTimer = Math.max(enemy.healthBarTimer || 0, 1.35);
+}
+
+function applyDamageToEnemy(enemy, damage) {
+  // Shields absorb full damage; armor reduces per-hit damage by armorClass.
+  // Returns the total applied to any pool (for analytics/feel), but callers
+  // should still treat "interaction" as happening even if applied is 0.
+  let remaining = Math.max(0, damage);
+  let applied = 0;
+  if (enemy.maxShield > 0 && enemy.shield > 0 && remaining > 0) {
+    const absorbed = Math.min(enemy.shield, remaining);
+    enemy.shield -= absorbed;
+    remaining -= absorbed;
+    applied += absorbed;
+    enemy.shieldCooldown = 2.0;
+  }
+  if (remaining <= 0) return applied;
+  if (enemy.maxArmor > 0 && enemy.armor > 0) {
+    const effective = Math.max(0, remaining - (enemy.armorClass || 0));
+    if (effective <= 0) return applied;
+    const toArmor = Math.min(enemy.armor, effective);
+    enemy.armor -= toArmor;
+    applied += toArmor;
+    const overflow = effective - toArmor;
+    if (overflow > 0) {
+      enemy.hull -= overflow;
+      applied += overflow;
+    }
+    return applied;
+  }
+  enemy.hull -= remaining;
+  applied += remaining;
+  return applied;
 }
 
 function wrapAngle(angle) {

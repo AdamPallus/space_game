@@ -1,0 +1,96 @@
+{
+  "id": "overhaul_demo",
+  "name": "Overhaul Test Range",
+  "description": "Prototype enemies with Shields/Armor/Hull and armor class damage reduction.",
+  "difficulty": "Test",
+  "background": "black",
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "drone": {
+      "sprite": "enemyBlue2",
+      "hull": 28,
+      "shield": 22,
+      "armor": 0,
+      "speed": 72,
+      "score": 90,
+      "baseCredit": 10,
+      "radius": 16,
+      "pattern": "zigzag",
+      "patternParams": { "amplitude": 80, "frequency": 3.1 },
+      "shieldRegen": 10
+    },
+    "shieldkite": {
+      "sprite": "enemyGreen5",
+      "hull": 22,
+      "shield": 70,
+      "armor": 0,
+      "speed": 62,
+      "score": 150,
+      "baseCredit": 16,
+      "radius": 18,
+      "pattern": "strafe",
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.8,
+      "fireRate": 2.4,
+      "shieldRegen": 14
+    },
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 26,
+      "shield": 0,
+      "armor": 70,
+      "armorClass": 10,
+      "speed": 42,
+      "score": 190,
+      "baseCredit": 22,
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.8
+    },
+    "tank": {
+      "sprite": "ufoYellow",
+      "hull": 45,
+      "shield": 0,
+      "armor": 120,
+      "armorClass": 12,
+      "speed": 26,
+      "score": 320,
+      "baseCredit": 40,
+      "radius": 30,
+      "ai": "transport",
+      "fireMode": "aim",
+      "fireRate": 3.2
+    },
+    "boss": {
+      "sprite": "ufoRed",
+      "hull": 160,
+      "shield": 120,
+      "armor": 120,
+      "armorClass": 8,
+      "speed": 68,
+      "score": 900,
+      "baseCredit": 220,
+      "radius": 46,
+      "pattern": "bossSweep",
+      "isBoss": true,
+      "empImmune": true,
+      "fireMode": "radial",
+      "fireCount": 22,
+      "fireRate": 1.8,
+      "bulletSpeed": 180,
+      "shieldRegen": 12
+    }
+  },
+  "events": [
+    { "time": 1, "type": "drone", "count": 5, "interval": 0.5 },
+    { "time": 5, "type": "plated", "count": 2, "interval": 1.2 },
+    { "time": 9, "type": "shieldkite", "count": 2, "interval": 1.4 },
+    { "time": 13, "type": "drone", "count": 8, "interval": 0.35 },
+    { "time": 18, "type": "tank", "count": 1 },
+    { "time": 22, "type": "plated", "count": 3, "interval": 1.1 },
+    { "time": 28, "type": "shieldkite", "count": 3, "interval": 1.1 },
+    { "time": 36, "type": "boss", "count": 1 }
+  ]
+}
+

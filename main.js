@@ -22,6 +22,7 @@ const shipModalTitle = document.getElementById("ship-modal-title");
 const shipModalBody = document.getElementById("ship-modal-body");
 const shipModalClose = document.getElementById("ship-modal-close");
 const shipNodeButtons = document.querySelectorAll("[data-ship-node]");
+const shipStats = document.getElementById("ship-stats");
 
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
@@ -133,6 +134,7 @@ function createDefaultShipBuild() {
     spread: "focused", // focused | burst | wide
     flowRateLevel: 0,
     flowVelocityLevel: 0,
+    flowSizeLevel: 0,
     ammo: "kinetic", // kinetic | plasma
     effect: "none", // none | homing | explosive | pierce
     effectUpgrades: {
@@ -985,6 +987,7 @@ function loadState() {
     parsed.shipBuild.spread = parsed.shipBuild.spread || "focused";
     parsed.shipBuild.flowRateLevel = parsed.shipBuild.flowRateLevel ?? 0;
     parsed.shipBuild.flowVelocityLevel = parsed.shipBuild.flowVelocityLevel ?? 0;
+    parsed.shipBuild.flowSizeLevel = parsed.shipBuild.flowSizeLevel ?? 0;
     parsed.shipBuild.ammo = parsed.shipBuild.ammo || parsed.weapon?.payload || "kinetic";
     parsed.shipBuild.effect = parsed.shipBuild.effect || "none";
     parsed.shipBuild.effectUpgrades = parsed.shipBuild.effectUpgrades || {};
@@ -1782,15 +1785,106 @@ function shipPanelUpgradeCost(baseCost, level) {
   return Math.round(baseCost * Math.pow(1.45, level));
 }
 
+function formatNumber(value, decimals = 1) {
+  if (!Number.isFinite(value)) return "-";
+  return value.toFixed(decimals);
+}
+
+function renderShipStatsPanel() {
+  if (!shipStats) return;
+  const build = getShipBuild();
+  const cfg = getPrimaryFireConfig();
+
+  const shotsPerTrigger = cfg.spread === "focused" ? 1 : 5;
+  const mount = state.weapon.mount || "front";
+  const mountShots = mount === "rear" ? 2 : 1;
+  const totalProjectiles = shotsPerTrigger * mountShots;
+
+  const sampleDamage = computePrimaryDamage({
+    ammo: cfg.ammo,
+    speed: cfg.bulletSpeed,
+    radius: cfg.projectileRadius,
+  });
+  const dotDps = cfg.ammo === "plasma" ? sampleDamage * 0.45 : 0;
+  const dotDuration = cfg.ammo === "plasma" ? 3 : 0;
+
+  const explosive =
+    cfg.effect === "explosive"
+      ? {
+          radius: 70 * (cfg.projectileRadius / 4) * (1 + (cfg.effectTune ?? 0) * 0.18),
+          mult: 0.7,
+        }
+      : null;
+
+  const pierce =
+    cfg.effect === "pierce"
+      ? { hits: 2 + (cfg.effectTune ?? 0) } // pierce N means total hits = N+1; baseline pierce=1
+      : null;
+
+  const homing =
+    cfg.effect === "homing"
+      ? {
+          strength: 0.05 + (cfg.effectTune ?? 0) * 0.018,
+          maxAngleDeg: ((0.6 + (cfg.effectTune ?? 0) * 0.14) * 180) / Math.PI,
+        }
+      : null;
+
+  const hullLevel = state.upgrades?.hull ?? 0;
+  const maxHull = Math.round(100 * (1 + hullLevel * 0.08));
+  const defenseSlots = Array.isArray(build.defenseSlots) ? build.defenseSlots : ["shield", "none"];
+  const shieldSlots = defenseSlots.filter((slot) => slot === "shield").length;
+  const armorSlots = defenseSlots.filter((slot) => slot === "armor").length;
+  const maxShield = shieldSlots > 0 ? player.maxShield : 0;
+  const shieldRegen = shieldSlots > 0 ? player.shieldRegen : 0;
+  const maxArmor = armorSlots > 0 ? player.maxArmor : 0;
+  const armorClass = armorSlots > 0 ? player.armorClass : 0;
+
+  const formula =
+    cfg.ammo === "plasma"
+      ? `Plasma dmg = 12 * (radius/4)`
+      : `Kinetic dmg = 14 * (radius/4) * (speed/560)`;
+
+  const rateNote =
+    armorSlots > 0
+      ? `Armor penalty: cooldown x${formatNumber(cfg.armorPenalty, 2)}`
+      : "No armor penalty";
+
+  shipStats.innerHTML = `
+    <h3>Ship Stats</h3>
+    <div class="stat-grid">
+      <div class="stat"><div class="k">Ammo</div><div class="v">${capitalize(cfg.ammo)}</div></div>
+      <div class="stat"><div class="k">Pattern</div><div class="v">${capitalize(cfg.spread)} (${totalProjectiles} proj)</div></div>
+      <div class="stat"><div class="k">Cooldown</div><div class="v">${formatNumber(cfg.cooldown, 2)}s</div></div>
+      <div class="stat"><div class="k">Speed</div><div class="v">${Math.round(cfg.bulletSpeed)} px/s</div></div>
+      <div class="stat"><div class="k">Radius</div><div class="v">${formatNumber(cfg.projectileRadius, 1)} px</div></div>
+      <div class="stat"><div class="k">Hit Dmg</div><div class="v">${formatNumber(sampleDamage, 1)}</div></div>
+      <div class="stat"><div class="k">DoT DPS</div><div class="v">${dotDps ? formatNumber(dotDps, 1) : "-"}</div></div>
+      <div class="stat"><div class="k">DoT Dur</div><div class="v">${dotDuration ? `${dotDuration}s` : "-"}</div></div>
+      <div class="stat"><div class="k">Explosive</div><div class="v">${explosive ? `${Math.round(explosive.radius)}px @ ${Math.round(explosive.mult * 100)}%` : "-"}</div></div>
+      <div class="stat"><div class="k">Pierce</div><div class="v">${pierce ? `${pierce.hits} hits` : "-"}</div></div>
+      <div class="stat"><div class="k">Homing</div><div class="v">${homing ? `S ${formatNumber(homing.strength, 3)} | ±${Math.round(homing.maxAngleDeg)}°` : "-"}</div></div>
+      <div class="stat"><div class="k">Hull</div><div class="v">${maxHull}</div></div>
+      <div class="stat"><div class="k">Armor</div><div class="v">${maxArmor ? `${maxArmor} (AC ${armorClass})` : "0"}</div></div>
+      <div class="stat"><div class="k">Shields</div><div class="v">${maxShield ? `${maxShield} (+${Math.round(shieldRegen)}/s)` : "0"}</div></div>
+    </div>
+    <div class="notes">
+      <div><strong>Damage model</strong>: ${formula}</div>
+      <div><strong>Rate modifiers</strong>: ${rateNote}</div>
+      <div><strong>Armor class</strong>: each hit to armor applies max(0, damage - AC). Shields do not block collision damage.</div>
+    </div>
+  `;
+}
+
 function renderShipUpgradesPanel() {
   const build = getShipBuild();
+  renderShipStatsPanel();
   if (shipGunValue) {
     const diameter = build.gunDiameter ? capitalize(build.gunDiameter) : "Medium";
     const spread = build.spread ? capitalize(build.spread) : "Focused";
     shipGunValue.textContent = `${diameter} / ${spread}`;
   }
   if (shipFlowValue) {
-    shipFlowValue.textContent = `Rate Lv ${build.flowRateLevel} / Vel Lv ${build.flowVelocityLevel}`;
+    shipFlowValue.textContent = `Rate Lv ${build.flowRateLevel} / Vel Lv ${build.flowVelocityLevel} / Size Lv ${build.flowSizeLevel ?? 0}`;
   }
   if (shipAmmoValue) {
     shipAmmoValue.textContent = build.ammo ? capitalize(build.ammo) : "Kinetic";
@@ -1945,6 +2039,21 @@ function renderShipUpgradesPanel() {
       onClick: () => {
         if (!spend(velCost)) return;
         build.flowVelocityLevel += 1;
+        state.shipBuild = build;
+        saveState();
+        safeUpdateHangar();
+      },
+    });
+
+    const sizeCost = shipPanelUpgradeCost(220, build.flowSizeLevel ?? 0);
+    addOptionRow({
+      name: `Projectile Size (Lv ${build.flowSizeLevel ?? 0})`,
+      desc: "Projectile radius +12% per level (big impact on plasma + explosives).",
+      right: `Upgrade ${sizeCost}/${state.credits}`,
+      disabled: state.credits < sizeCost,
+      onClick: () => {
+        if (!spend(sizeCost)) return;
+        build.flowSizeLevel = (build.flowSizeLevel ?? 0) + 1;
         state.shipBuild = build;
         saveState();
         safeUpdateHangar();
@@ -2504,22 +2613,32 @@ function getPrimaryFireConfig() {
   const ammo = build.ammo || "kinetic";
   const effect = build.effect || "none";
 
-  const diameterScale =
-    gunDiameter === "small" ? 0.85 : gunDiameter === "large" ? 1.25 : 1;
-  const diameterSpeedScale =
-    gunDiameter === "small" ? 1.12 : gunDiameter === "large" ? 0.9 : 1;
+  let diameterScale = 1;
+  let diameterSpeedScale = 1;
+  if (ammo === "plasma") {
+    diameterScale = gunDiameter === "small" ? 1.05 : gunDiameter === "large" ? 2.2 : 1.45;
+    diameterSpeedScale = gunDiameter === "small" ? 0.82 : gunDiameter === "large" ? 0.45 : 0.62;
+  } else {
+    diameterScale = gunDiameter === "small" ? 0.85 : gunDiameter === "large" ? 1.25 : 1;
+    diameterSpeedScale = gunDiameter === "small" ? 1.12 : gunDiameter === "large" ? 0.9 : 1;
+  }
 
   const flowRateLevel = build.flowRateLevel ?? 0;
   const flowVelocityLevel = build.flowVelocityLevel ?? 0;
+  const flowSizeLevel = build.flowSizeLevel ?? 0;
   const flowRateScale = Math.pow(0.9, Math.max(0, flowRateLevel));
-  const flowVelocityScale = 1 + Math.max(0, flowVelocityLevel) * 0.08;
+  const flowVelocityScale =
+    ammo === "plasma"
+      ? 1 + Math.max(0, flowVelocityLevel) * 0.04
+      : 1 + Math.max(0, flowVelocityLevel) * 0.08;
+  const flowSizeScale = 1 + Math.max(0, flowSizeLevel) * 0.12;
 
   const armorSlots =
     (build.defenseSlots?.filter((slot) => slot === "armor").length ?? 0);
   const armorPenalty = 1 + armorSlots * 0.18;
 
   const microScale = spread === "focused" ? 1 : 0.5;
-  const projectileRadius = 4 * diameterScale * microScale;
+  const projectileRadius = 4 * diameterScale * flowSizeScale * microScale;
   const bulletSpeed = baseSpeed * diameterSpeedScale * flowVelocityScale;
 
   let cooldown = baseCooldown * armorPenalty * flowRateScale;
@@ -2545,6 +2664,10 @@ function getPrimaryFireConfig() {
     cooldown,
     jitter,
     angles,
+    armorPenalty,
+    flowRateScale,
+    flowVelocityScale,
+    flowSizeScale,
   };
 }
 
@@ -2574,8 +2697,8 @@ function firePlayerBullet() {
     const radius = extra.radius ?? cfg.projectileRadius;
     const image = resolveBulletImage(cfg.ammo);
     const bullet = {
-      x: player.x,
-      y: player.y - player.radius,
+      x: extra.x ?? player.x,
+      y: extra.y ?? player.y - player.radius,
       vx,
       vy,
       radius,
@@ -2591,6 +2714,10 @@ function firePlayerBullet() {
       payload: cfg.ammo,
       ...extra,
     };
+    if (cfg.ammo === "plasma") {
+      bullet.shape = "orb";
+      bullet.color = "rgba(34, 197, 94, 0.95)";
+    }
     const tune = cfg.effectTune ?? 0;
     if (cfg.effect === "homing") {
       bullet.homing = true;
@@ -3394,9 +3521,19 @@ function drawRmbIndicator() {
 function drawBullet(bullet, color = "#e0f2fe") {
   if (bullet.shape === "orb") {
     ctx.save();
+    const r = bullet.radius || 6;
+    const gradient = ctx.createRadialGradient(bullet.x, bullet.y, 0, bullet.x, bullet.y, r * 1.4);
+    gradient.addColorStop(0, "rgba(236, 254, 255, 0.85)");
+    gradient.addColorStop(0.35, bullet.color || color);
+    gradient.addColorStop(1, "rgba(34, 197, 94, 0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, r * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.85;
     ctx.fillStyle = bullet.color || color;
     ctx.beginPath();
-    ctx.arc(bullet.x, bullet.y, bullet.radius || 6, 0, Math.PI * 2);
+    ctx.arc(bullet.x, bullet.y, r, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
     return;

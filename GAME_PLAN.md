@@ -24,6 +24,12 @@
 
 ---
 
+## ✅ Workflow: Commit + Push After Each Task
+
+Standard procedure (per Adam): **always commit and push** at the end of any change set so Vercel updates for playtesting.
+
+---
+
 ## 🎯 Priority 1: Alt-Fire Overhaul
 
 ### The Problem

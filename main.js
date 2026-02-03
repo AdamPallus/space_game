@@ -145,7 +145,9 @@ function createDefaultShipBuild() {
     defenseSlots: ["shield", "none"], // shield | armor | none
     shieldMaxLevel: 0,
     shieldRegenLevel: 0,
-    armorClass: 0, // placeholder for Part 2+
+    armorAmountLevel: 0,
+    armorClass: 10,
+    armorClassLevel: 0,
   };
 }
 
@@ -900,6 +902,13 @@ function loadState() {
       debugUnlock: false,
       debugInvincible: false,
       shipBuild: createDefaultShipBuild(),
+      shipUnlocked: {
+        gunDiameter: { medium: true },
+        spread: { focused: true },
+        ammo: { kinetic: true },
+        effect: { none: true },
+        defense: { shield: true },
+      },
       weapon: {
         barrel: "focused",
         trigger: "rapid",
@@ -1000,7 +1009,26 @@ function loadState() {
     while (parsed.shipBuild.defenseSlots.length < 2) parsed.shipBuild.defenseSlots.push("none");
     parsed.shipBuild.shieldMaxLevel = parsed.shipBuild.shieldMaxLevel ?? 0;
     parsed.shipBuild.shieldRegenLevel = parsed.shipBuild.shieldRegenLevel ?? 0;
-    parsed.shipBuild.armorClass = parsed.shipBuild.armorClass ?? 0;
+    parsed.shipBuild.armorClass = parsed.shipBuild.armorClass ?? 10;
+    parsed.shipBuild.armorAmountLevel = parsed.shipBuild.armorAmountLevel ?? 0;
+    parsed.shipBuild.armorClassLevel = parsed.shipBuild.armorClassLevel ?? 0;
+    parsed.shipUnlocked = parsed.shipUnlocked || {};
+    parsed.shipUnlocked.gunDiameter = parsed.shipUnlocked.gunDiameter || { medium: true };
+    parsed.shipUnlocked.spread = parsed.shipUnlocked.spread || { focused: true };
+    parsed.shipUnlocked.ammo = parsed.shipUnlocked.ammo || { kinetic: true };
+    parsed.shipUnlocked.effect = parsed.shipUnlocked.effect || { none: true };
+    parsed.shipUnlocked.defense = parsed.shipUnlocked.defense || { none: true, shield: true };
+    parsed.shipUnlocked.armorClass = parsed.shipUnlocked.armorClass || { "10": true };
+    parsed.shipUnlocked.gunDiameter[parsed.shipBuild.gunDiameter] = true;
+    parsed.shipUnlocked.spread[parsed.shipBuild.spread] = true;
+    parsed.shipUnlocked.ammo[parsed.shipBuild.ammo] = true;
+    parsed.shipUnlocked.effect[parsed.shipBuild.effect] = true;
+    if (Number.isFinite(parsed.shipBuild.armorClass) && parsed.shipBuild.armorClass > 0) {
+      parsed.shipUnlocked.armorClass[String(parsed.shipBuild.armorClass)] = true;
+    }
+    parsed.shipBuild.defenseSlots.forEach((slot) => {
+      if (slot && slot !== "none") parsed.shipUnlocked.defense[slot] = true;
+    });
     parsed.weapon = parsed.weapon || {
       barrel: "focused",
       trigger: "rapid",
@@ -1042,6 +1070,13 @@ function loadState() {
       debugUnlock: false,
       debugInvincible: false,
       shipBuild: createDefaultShipBuild(),
+      shipUnlocked: {
+        gunDiameter: { medium: true },
+        spread: { focused: true },
+        ammo: { kinetic: true },
+        effect: { none: true },
+        defense: { shield: true },
+      },
       weapon: {
         barrel: "focused",
         trigger: "rapid",
@@ -1095,6 +1130,56 @@ function getShipBuild() {
     state.shipBuild.effectUpgrades = { homing: 0, explosive: 0, pierce: 0 };
   }
   return state.shipBuild;
+}
+
+function getShipUnlocks() {
+  if (!state.shipUnlocked) {
+    state.shipUnlocked = {
+      gunDiameter: { medium: true },
+      spread: { focused: true },
+      ammo: { kinetic: true },
+      effect: { none: true },
+      defense: { none: true, shield: true },
+      armorClass: { "10": true },
+    };
+  }
+  state.shipUnlocked.gunDiameter = state.shipUnlocked.gunDiameter || { medium: true };
+  state.shipUnlocked.spread = state.shipUnlocked.spread || { focused: true };
+  state.shipUnlocked.ammo = state.shipUnlocked.ammo || { kinetic: true };
+  state.shipUnlocked.effect = state.shipUnlocked.effect || { none: true };
+  state.shipUnlocked.defense = state.shipUnlocked.defense || { none: true, shield: true };
+  state.shipUnlocked.armorClass = state.shipUnlocked.armorClass || { "10": true };
+
+  // Always treat currently-equipped parts as unlocked to prevent double-charging.
+  const build = getShipBuild();
+  state.shipUnlocked.gunDiameter[build.gunDiameter] = true;
+  state.shipUnlocked.spread[build.spread] = true;
+  state.shipUnlocked.ammo[build.ammo] = true;
+  state.shipUnlocked.effect[build.effect] = true;
+  if (Number.isFinite(build.armorClass) && build.armorClass > 0) {
+    state.shipUnlocked.armorClass[String(build.armorClass)] = true;
+  }
+  (build.defenseSlots || []).forEach((slot) => {
+    if (slot && slot !== "none") state.shipUnlocked.defense[slot] = true;
+  });
+
+  return state.shipUnlocked;
+}
+
+function isShipUnlocked(category, id) {
+  const unlocks = getShipUnlocks();
+  return !!unlocks?.[category]?.[id];
+}
+
+function unlockShipOption(category, id, cost) {
+  if (isShipUnlocked(category, id)) return true;
+  if (cost > 0 && state.credits < cost) return false;
+  state.credits -= cost;
+  const unlocks = getShipUnlocks();
+  if (!unlocks[category]) unlocks[category] = {};
+  unlocks[category][id] = true;
+  state.shipUnlocked = unlocks;
+  return true;
 }
 
 function syncShipBuildToLegacy() {
@@ -1159,9 +1244,13 @@ function applyUpgrades() {
   player.shieldCooldown = 0;
 
   const baseArmorPerSlot = 80;
-  player.maxArmor = armorSlots > 0 ? Math.round(baseArmorPerSlot * armorSlots) : 0;
+  const armorAmountMult = 1 + (build.armorAmountLevel ?? 0) * 0.18;
+  player.maxArmor =
+    armorSlots > 0 ? Math.round(baseArmorPerSlot * armorSlots * armorAmountMult) : 0;
   player.armor = player.maxArmor;
-  player.armorClass = armorSlots > 0 ? (build.armorClass ?? 10) : 0;
+  const baseArmorClass = build.armorClass ?? 10;
+  player.armorClass =
+    armorSlots > 0 ? Math.round(baseArmorClass + (build.armorClassLevel ?? 0) * 2) : 0;
 
   player.spreadLevel = 0;
   player.altCooldownTime = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel));
@@ -1800,6 +1889,17 @@ function renderShipStatsPanel() {
   const mountShots = mount === "rear" ? 2 : 1;
   const totalProjectiles = shotsPerTrigger * mountShots;
 
+  const gunDiameter = build.gunDiameter || "medium";
+  let diameterScale = 1;
+  let diameterSpeedScale = 1;
+  if (cfg.ammo === "plasma") {
+    diameterScale = gunDiameter === "small" ? 1.05 : gunDiameter === "large" ? 2.2 : 1.45;
+    diameterSpeedScale = gunDiameter === "small" ? 0.82 : gunDiameter === "large" ? 0.45 : 0.62;
+  } else {
+    diameterScale = gunDiameter === "small" ? 0.85 : gunDiameter === "large" ? 1.25 : 1;
+    diameterSpeedScale = gunDiameter === "small" ? 1.12 : gunDiameter === "large" ? 0.9 : 1;
+  }
+
   const sampleDamage = computePrimaryDamage({
     ammo: cfg.ammo,
     speed: cfg.bulletSpeed,
@@ -1818,7 +1918,7 @@ function renderShipStatsPanel() {
 
   const pierce =
     cfg.effect === "pierce"
-      ? { hits: 2 + (cfg.effectTune ?? 0) } // pierce N means total hits = N+1; baseline pierce=1
+      ? { hits: 2 + (cfg.effectTune ?? 0) } // Total hits per projectile (baseline=1, pierce adds extra hits).
       : null;
 
   const homing =
@@ -1849,28 +1949,79 @@ function renderShipStatsPanel() {
       ? `Armor penalty: cooldown x${formatNumber(cfg.armorPenalty, 2)}`
       : "No armor penalty";
 
+  const triggerRate = cfg.cooldown > 0 ? 1 / cfg.cooldown : 0;
+  const projPerSecond = triggerRate * totalProjectiles;
+  const sizeFactor = Math.max(0.05, cfg.projectileRadius / 4);
+  const velFactor = Math.max(0.2, cfg.bulletSpeed / 560);
+  const baseKinetic = 14;
+  const basePlasma = 12;
+
+  const statRow = (label, value, tip) => `
+    <div class="stat-row" tabindex="0">
+      <span class="stat-k">${label}</span>
+      <span class="stat-v">${value}</span>
+      <span class="stat-tip">${tip}</span>
+    </div>
+  `;
+
+  const damageTip =
+    cfg.ammo === "plasma"
+      ? `Plasma hit dmg = ${basePlasma} base * ${formatNumber(sizeFactor, 2)} (radius/4) = ${formatNumber(sampleDamage, 1)}`
+      : `Kinetic hit dmg = ${baseKinetic} base * ${formatNumber(sizeFactor, 2)} (radius/4) * ${formatNumber(velFactor, 2)} (speed/560) = ${formatNumber(sampleDamage, 1)}`;
+  const dotTip =
+    cfg.ammo === "plasma"
+      ? `DoT DPS = hitDmg * 0.45 = ${formatNumber(sampleDamage, 1)} * 0.45 = ${formatNumber(dotDps, 1)} (for ${dotDuration}s)`
+      : "Plasma only.";
+  const cooldownTip = `Cooldown = 0.28s base * ${formatNumber(cfg.flowRateScale, 3)} (Flow Rate) * ${formatNumber(cfg.armorPenalty, 2)} (Armor penalty) * ${cfg.spread === "burst" ? "2.15 (Burst)" : cfg.spread === "wide" ? "1.15 (Wide)" : "1.00"} = ${formatNumber(cfg.cooldown, 2)}s`;
+  const speedTip = `Speed = 560 base * ${formatNumber(diameterSpeedScale, 2)} (Gun diameter) * ${formatNumber(cfg.flowVelocityScale, 2)} (Velocity) = ${Math.round(cfg.bulletSpeed)} px/s`;
+  const radiusTip = `Radius = 4 base * ${formatNumber(diameterScale, 2)} (Gun diameter) * ${formatNumber(cfg.flowSizeScale, 2)} (Size) * ${cfg.spread === "focused" ? "1.00" : "0.50 (micro-shots)"} = ${formatNumber(cfg.projectileRadius, 1)} px`;
+  const rateTip = `${formatNumber(triggerRate, 2)} triggers/sec; ${totalProjectiles} proj/trigger => ${formatNumber(projPerSecond, 1)} proj/sec (theoretical)`;
+  const explosiveTip = explosive
+    ? `Explosion radius = 70 * (radius/4) * (1 + 0.18*tune)\n= 70 * ${formatNumber(sizeFactor, 2)} * (1 + 0.18*${cfg.effectTune ?? 0}) = ${Math.round(explosive.radius)}px.\nExplosion dmg = hitDmg * ${explosive.mult} (scaled by distance).`
+    : "Not equipped.";
+  const pierceTip = pierce
+    ? `Total hits per projectile = 2 + tune = ${pierce.hits}. (Each projectile can damage up to ${pierce.hits} ships.)`
+    : "Not equipped.";
+  const homingTip = homing
+    ? `Homing strength = 0.05 + 0.018*tune = ${formatNumber(homing.strength, 3)}.\nMax angle offset = ${(0.6 + (cfg.effectTune ?? 0) * 0.14).toFixed(2)} rad (±${Math.round(homing.maxAngleDeg)}deg).`
+    : "Not equipped.";
+
+  const shieldTip =
+    maxShield > 0
+      ? `Max Shield = ${maxShield}. Regen = ${formatNumber(shieldRegen, 1)}/s.\nShield regen pauses briefly after shield damage.\nNote: collision damage bypasses shields.`
+      : "No shield modules installed.";
+  const armorTip =
+    maxArmor > 0
+      ? `Max Armor = ${maxArmor}. Armor Class (AC) = ${armorClass}.\nArmor applies per-hit reduction: max(0, damage - AC).\nArmor modules also increase cooldown: x${formatNumber(cfg.armorPenalty, 2)}.`
+      : "No armor modules installed.";
+
   shipStats.innerHTML = `
     <h3>Ship Stats</h3>
-    <div class="stat-grid">
-      <div class="stat"><div class="k">Ammo</div><div class="v">${capitalize(cfg.ammo)}</div></div>
-      <div class="stat"><div class="k">Pattern</div><div class="v">${capitalize(cfg.spread)} (${totalProjectiles} proj)</div></div>
-      <div class="stat"><div class="k">Cooldown</div><div class="v">${formatNumber(cfg.cooldown, 2)}s</div></div>
-      <div class="stat"><div class="k">Speed</div><div class="v">${Math.round(cfg.bulletSpeed)} px/s</div></div>
-      <div class="stat"><div class="k">Radius</div><div class="v">${formatNumber(cfg.projectileRadius, 1)} px</div></div>
-      <div class="stat"><div class="k">Hit Dmg</div><div class="v">${formatNumber(sampleDamage, 1)}</div></div>
-      <div class="stat"><div class="k">DoT DPS</div><div class="v">${dotDps ? formatNumber(dotDps, 1) : "-"}</div></div>
-      <div class="stat"><div class="k">DoT Dur</div><div class="v">${dotDuration ? `${dotDuration}s` : "-"}</div></div>
-      <div class="stat"><div class="k">Explosive</div><div class="v">${explosive ? `${Math.round(explosive.radius)}px @ ${Math.round(explosive.mult * 100)}%` : "-"}</div></div>
-      <div class="stat"><div class="k">Pierce</div><div class="v">${pierce ? `${pierce.hits} hits` : "-"}</div></div>
-      <div class="stat"><div class="k">Homing</div><div class="v">${homing ? `S ${formatNumber(homing.strength, 3)} | ±${Math.round(homing.maxAngleDeg)}°` : "-"}</div></div>
-      <div class="stat"><div class="k">Hull</div><div class="v">${maxHull}</div></div>
-      <div class="stat"><div class="k">Armor</div><div class="v">${maxArmor ? `${maxArmor} (AC ${armorClass})` : "0"}</div></div>
-      <div class="stat"><div class="k">Shields</div><div class="v">${maxShield ? `${maxShield} (+${Math.round(shieldRegen)}/s)` : "0"}</div></div>
+    <div class="stat-sections">
+      <div class="stat-section">
+        <div class="stat-section-title">Offense</div>
+        ${statRow("Ammo", capitalize(cfg.ammo), `Current ammo source: ${capitalize(cfg.ammo)}.`)}
+        ${statRow("Pattern", `${capitalize(cfg.spread)} (${totalProjectiles} proj)`, `Spread comes from the Gun module. Micro-shot patterns shrink radius.`)}
+        ${statRow("Hit Damage", formatNumber(sampleDamage, 1), damageTip)}
+        ${statRow("DoT DPS", dotDps ? formatNumber(dotDps, 1) : "-", dotTip)}
+        ${statRow("Cooldown", `${formatNumber(cfg.cooldown, 2)}s`, cooldownTip)}
+        ${statRow("Trigger Rate", `${formatNumber(triggerRate, 2)}/s`, rateTip)}
+        ${statRow("Projectile Speed", `${Math.round(cfg.bulletSpeed)} px/s`, speedTip)}
+        ${statRow("Projectile Radius", `${formatNumber(cfg.projectileRadius, 1)} px`, radiusTip)}
+        ${statRow("Explosive", explosive ? `${Math.round(explosive.radius)}px` : "-", explosiveTip)}
+        ${statRow("Pierce", pierce ? `${pierce.hits}` : "-", pierceTip)}
+        ${statRow("Homing", homing ? `${Math.round(homing.maxAngleDeg)}deg` : "-", homingTip)}
+      </div>
+      <div class="stat-section">
+        <div class="stat-section-title">Defense</div>
+        ${statRow("Hull", `${maxHull}`, `Max Hull = 100 * (1 + 0.08*Hull Lv) = ${maxHull}.`)}
+        ${statRow("Shields", maxShield ? `${maxShield}` : "0", shieldTip)}
+        ${statRow("Armor", maxArmor ? `${maxArmor}` : "0", armorTip)}
+        ${statRow("Armor Class", armorClass ? `${armorClass}` : "-", armorTip)}
+      </div>
     </div>
-    <div class="notes">
-      <div><strong>Damage model</strong>: ${formula}</div>
-      <div><strong>Rate modifiers</strong>: ${rateNote}</div>
-      <div><strong>Armor class</strong>: each hit to armor applies max(0, damage - AC). Shields do not block collision damage.</div>
+    <div class="stat-footnote">
+      <span class="muted">${formula}. ${rateNote}.</span>
     </div>
   `;
 }
@@ -1966,15 +2117,16 @@ function renderShipUpgradesPanel() {
       { id: "large", label: "Large", desc: "Bigger projectiles, slower bullets. Better shield burn + explosive radius.", cost: 180 },
     ].forEach((opt) => {
       const active = build.gunDiameter === opt.id;
+      const unlocked = opt.cost === 0 || isShipUnlocked("gunDiameter", opt.id);
       const canAfford = state.credits >= opt.cost;
       addOptionRow({
         name: opt.label,
         desc: opt.desc,
-        right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+        right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
         active,
-        disabled: !active && opt.cost > 0 && !canAfford,
+        disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
         onClick: () => {
-          if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+          if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("gunDiameter", opt.id, opt.cost)) return;
           build.gunDiameter = opt.id;
           state.shipBuild = build;
           syncShipBuildToLegacy();
@@ -1991,15 +2143,16 @@ function renderShipUpgradesPanel() {
       { id: "wide", label: "Wide", desc: "5 micro-shots spread across angles. Great for clearing unarmored swarms.", cost: 220 },
     ].forEach((opt) => {
       const active = build.spread === opt.id;
+      const unlocked = opt.cost === 0 || isShipUnlocked("spread", opt.id);
       const canAfford = state.credits >= opt.cost;
       addOptionRow({
         name: opt.label,
         desc: opt.desc,
-        right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+        right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
         active,
-        disabled: !active && opt.cost > 0 && !canAfford,
+        disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
         onClick: () => {
-          if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+          if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("spread", opt.id, opt.cost)) return;
           build.spread = opt.id;
           state.shipBuild = build;
           syncShipBuildToLegacy();
@@ -2070,15 +2223,16 @@ function renderShipUpgradesPanel() {
       { id: "plasma", label: "Plasma", desc: "Damage scales with projectile size. Applies a damage-over-time burn.", cost: 120 },
     ].forEach((opt) => {
       const active = build.ammo === opt.id;
+      const unlocked = opt.cost === 0 || isShipUnlocked("ammo", opt.id);
       const canAfford = state.credits >= opt.cost;
       addOptionRow({
         name: opt.label,
         desc: opt.desc,
-        right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+        right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
         active,
-        disabled: !active && opt.cost > 0 && !canAfford,
+        disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
         onClick: () => {
-          if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+          if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("ammo", opt.id, opt.cost)) return;
           build.ammo = opt.id;
           state.shipBuild = build;
           syncShipBuildToLegacy();
@@ -2100,15 +2254,16 @@ function renderShipUpgradesPanel() {
       { id: "pierce", label: "Piercing", desc: "Projectiles travel through ships.", cost: 320 },
     ].forEach((opt) => {
       const active = build.effect === opt.id;
+      const unlocked = opt.cost === 0 || isShipUnlocked("effect", opt.id);
       const canAfford = state.credits >= opt.cost;
       addOptionRow({
         name: opt.label,
         desc: opt.desc,
-        right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+        right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
         active,
-        disabled: !active && opt.cost > 0 && !canAfford,
+        disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
         onClick: () => {
-          if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+          if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("effect", opt.id, opt.cost)) return;
           build.effect = opt.id;
           state.shipBuild = build;
           syncShipBuildToLegacy();
@@ -2163,7 +2318,7 @@ function renderShipUpgradesPanel() {
     ];
 
     const setSlot = (index, value, cost) => {
-      if (cost > 0 && !spend(cost)) return;
+      if (cost > 0 && !isShipUnlocked("defense", value) && !unlockShipOption("defense", value, cost)) return;
       build.defenseSlots[index] = value;
       state.shipBuild = build;
       saveState();
@@ -2174,13 +2329,14 @@ function renderShipUpgradesPanel() {
       const activeId = build.defenseSlots?.[i] || "none";
       slotChoices.forEach((choice) => {
         const active = activeId === choice.id;
+        const unlocked = choice.cost === 0 || isShipUnlocked("defense", choice.id);
         const canAfford = state.credits >= choice.cost;
         addOptionRow({
           name: `Slot ${i + 1}: ${choice.label}`,
           desc: choice.desc,
-          right: active ? "Equipped" : choice.cost ? `Equip ${choice.cost}/${state.credits}` : "Equip",
+          right: active ? "Equipped" : !unlocked && choice.cost ? `Unlock ${choice.cost}/${state.credits}` : "Equip",
           active,
-          disabled: !active && choice.cost > 0 && !canAfford,
+          disabled: !active && !unlocked && choice.cost > 0 && !canAfford,
           onClick: () => setSlot(i, choice.id, choice.cost),
         });
       });
@@ -2224,22 +2380,57 @@ function renderShipUpgradesPanel() {
     const hasArmor =
       (build.defenseSlots?.[0] === "armor" || build.defenseSlots?.[1] === "armor");
     if (hasArmor) {
-      addSection("Armor Class");
+      addSection("Armor Upgrades");
+
+      const amountLevel = build.armorAmountLevel ?? 0;
+      const amountCost = shipPanelUpgradeCost(220, amountLevel);
+      addOptionRow({
+        name: `Armor Plating (Lv ${amountLevel})`,
+        desc: "Max armor +18% per level.",
+        right: `Upgrade ${amountCost}/${state.credits}`,
+        disabled: state.credits < amountCost,
+        onClick: () => {
+          if (!spend(amountCost)) return;
+          build.armorAmountLevel = amountLevel + 1;
+          state.shipBuild = build;
+          saveState();
+          safeUpdateHangar();
+        },
+      });
+
+      const hardenLevel = build.armorClassLevel ?? 0;
+      const hardenCost = shipPanelUpgradeCost(260, hardenLevel);
+      addOptionRow({
+        name: `Armor Hardening (Lv ${hardenLevel})`,
+        desc: "Armor class +2 per level (per-hit damage reduction).",
+        right: `Upgrade ${hardenCost}/${state.credits}`,
+        disabled: state.credits < hardenCost,
+        onClick: () => {
+          if (!spend(hardenCost)) return;
+          build.armorClassLevel = hardenLevel + 1;
+          state.shipBuild = build;
+          saveState();
+          safeUpdateHangar();
+        },
+      });
+
+      addSection("Armor Class (Base)");
       [
         { value: 5, label: "Light Armor", desc: "Armor class 5 (Part 2).", cost: 0 },
         { value: 10, label: "Medium Armor", desc: "Armor class 10 (Part 2).", cost: 120 },
         { value: 15, label: "Heavy Armor", desc: "Armor class 15 (Part 2).", cost: 220 },
       ].forEach((opt) => {
         const active = build.armorClass === opt.value;
+        const unlocked = opt.cost === 0 || isShipUnlocked("armorClass", String(opt.value));
         const canAfford = state.credits >= opt.cost;
         addOptionRow({
           name: opt.label,
           desc: opt.desc,
-          right: active ? "Equipped" : opt.cost ? `Equip ${opt.cost}/${state.credits}` : "Equip",
+          right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
           active,
-          disabled: !active && opt.cost > 0 && !canAfford,
+          disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
           onClick: () => {
-            if (!active && opt.cost > 0 && !spend(opt.cost)) return;
+            if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("armorClass", String(opt.value), opt.cost)) return;
             build.armorClass = opt.value;
             state.shipBuild = build;
             saveState();
@@ -2806,7 +2997,12 @@ function useConsumable(slotIndex) {
   if (slotId === "bomb") {
     const blastRadius = 220;
     const blastDamage = 120 + mission.difficulty * 10;
-    spawnExplosion(player.x, player.y, blastRadius * 0.35);
+    spawnExplosion(player.x, player.y, blastRadius * 0.35, {
+      intensity: 0.65,
+      blend: "lighter",
+      style: "big",
+      coalesce: false,
+    });
     playSfx("explosion", 0.12);
     enemies.forEach((enemy) => {
       const d = distance(player.x, player.y, enemy.x, enemy.y);
@@ -3263,7 +3459,12 @@ function handleCollisions() {
         if (bullet.explosive && !bullet.exploded) {
           bullet.exploded = true;
           const radius = bullet.explosiveRadius ?? 90;
-          spawnExplosion(enemy.x, enemy.y, radius * 0.42);
+          spawnExplosion(enemy.x, enemy.y, radius * 0.42, {
+            intensity: 0.35,
+            blend: "lighter",
+            style: "impact",
+            coalesce: true,
+          });
           enemies.forEach((other) => {
             if (other === enemy) return;
             const d = distance(enemy.x, enemy.y, other.x, other.y);
@@ -3295,7 +3496,7 @@ function handleCollisions() {
     if (distance(player.x, player.y, enemy.x, enemy.y) < player.radius + enemy.radius) {
       enemies.splice(i, 1);
       applyDamage(22 + mission.difficulty * 2, { collision: true });
-      spawnExplosion(enemy.x, enemy.y, enemy.radius);
+      spawnExplosion(enemy.x, enemy.y, enemy.radius, { intensity: 0.55, blend: "lighter", style: "impact" });
     }
   }
 
@@ -3314,7 +3515,7 @@ function handleEnemyDestroyed(enemy, bullet) {
   const creditEarned = creditForEnemy(enemy);
   mission.killCredits += creditEarned;
   spawnCreditPopup(enemy.x, enemy.y, creditEarned);
-  spawnExplosion(enemy.x, enemy.y, enemy.radius);
+  spawnExplosion(enemy.x, enemy.y, enemy.radius, { intensity: 0.9, blend: "lighter", style: "kill", coalesce: false });
   playSfx("explosion", 0.135);
   if (enemy.isBoss && mission.level?.completeOnBoss) {
     endMission({ completed: true });
@@ -3953,8 +4154,31 @@ function updateStarfield(delta) {
   });
 }
 
-function spawnExplosion(x, y, radius) {
+function spawnExplosion(
+  x,
+  y,
+  radius,
+  { intensity = 1, blend = "source-over", style = "default", coalesce = true } = {}
+) {
   const duration = 0.55 + radius * 0.01;
+
+  // Fast-fire explosives can stack into a solid blob; coalesce nearby impacts into one effect.
+  if (coalesce) {
+    for (let i = explosions.length - 1; i >= 0; i -= 1) {
+      const boom = explosions[i];
+      if ((boom.style || "default") !== style) continue;
+      if ((boom.blend || "source-over") !== blend) continue;
+      if (boom.elapsed > boom.duration * 0.35) continue;
+      const d = distance(x, y, boom.x, boom.y);
+      const mergeDist = Math.max(18, Math.min(radius, boom.radius) * 0.7);
+      if (d > mergeDist) continue;
+      boom.radius = Math.max(boom.radius, radius);
+      boom.intensity = Math.min(1.15, (boom.intensity ?? 1) + intensity * 0.35);
+      boom.elapsed = Math.min(boom.elapsed, boom.duration * 0.12);
+      return;
+    }
+  }
+
   explosions.push({
     x,
     y,
@@ -3963,6 +4187,9 @@ function spawnExplosion(x, y, radius) {
     duration,
     rotation: Math.random() * Math.PI * 2,
     spin: (Math.random() - 0.5) * 3.5,
+    intensity,
+    blend,
+    style,
   });
 }
 
@@ -3970,33 +4197,53 @@ function drawExplosion(boom) {
   const progress = Math.min(1, boom.elapsed / boom.duration);
   const maxRadius = boom.radius * (2.2 + progress);
   const alpha = 1 - progress;
+  const intensity = boom.intensity ?? 1;
+  const style = boom.style || "default";
 
   ctx.save();
-  const gradient = ctx.createRadialGradient(boom.x, boom.y, 0, boom.x, boom.y, maxRadius);
-  gradient.addColorStop(0, `rgba(255, 244, 214, ${0.7 * alpha})`);
-  gradient.addColorStop(0.45, `rgba(251, 191, 36, ${0.45 * alpha})`);
-  gradient.addColorStop(1, "rgba(251, 191, 36, 0)");
-  ctx.fillStyle = gradient;
-  ctx.beginPath();
-  ctx.arc(boom.x, boom.y, maxRadius, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.globalCompositeOperation = boom.blend || "source-over";
+  if (style === "impact") {
+    // Ring-style impact: reads well, but doesn't stack into a fully opaque blob.
+    const ringR = maxRadius * 0.82;
+    const ringW = Math.max(2, boom.radius * 0.22);
+    const ringAlpha = 0.55 * alpha * intensity;
+    const gradient = ctx.createRadialGradient(boom.x, boom.y, ringR - ringW, boom.x, boom.y, ringR + ringW);
+    gradient.addColorStop(0, "rgba(251, 191, 36, 0)");
+    gradient.addColorStop(0.5, `rgba(251, 191, 36, ${ringAlpha})`);
+    gradient.addColorStop(1, "rgba(251, 191, 36, 0)");
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = ringW;
+    ctx.beginPath();
+    ctx.arc(boom.x, boom.y, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+  } else {
+    const gradient = ctx.createRadialGradient(boom.x, boom.y, 0, boom.x, boom.y, maxRadius);
+    // Keep these big, but slightly lower alpha so stacked explosions don't saturate to a solid disk.
+    gradient.addColorStop(0, `rgba(255, 244, 214, ${0.22 * alpha * intensity})`);
+    gradient.addColorStop(0.5, `rgba(251, 191, 36, ${0.18 * alpha * intensity})`);
+    gradient.addColorStop(1, "rgba(251, 191, 36, 0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(boom.x, boom.y, maxRadius, 0, Math.PI * 2);
+    ctx.fill();
 
-  ctx.globalAlpha = 0.9 * alpha;
-  if (assets.explosionFlare.loaded) {
-    ctx.save();
-    ctx.translate(boom.x, boom.y);
-    ctx.rotate(boom.rotation);
-    ctx.drawImage(
-      assets.explosionFlare.img,
-      -assets.explosionFlare.img.naturalWidth * 0.6,
-      -assets.explosionFlare.img.naturalHeight * 0.6,
-      assets.explosionFlare.img.naturalWidth * 1.2,
-      assets.explosionFlare.img.naturalHeight * 1.2
-    );
-    ctx.restore();
-  }
-  if (assets.explosionCore.loaded) {
-    drawSpriteCentered(assets.explosionCore, boom.x, boom.y, 1.1 + progress * 1.4);
+    ctx.globalAlpha = 0.65 * alpha * intensity;
+    if (assets.explosionFlare.loaded) {
+      ctx.save();
+      ctx.translate(boom.x, boom.y);
+      ctx.rotate(boom.rotation);
+      ctx.drawImage(
+        assets.explosionFlare.img,
+        -assets.explosionFlare.img.naturalWidth * 0.6,
+        -assets.explosionFlare.img.naturalHeight * 0.6,
+        assets.explosionFlare.img.naturalWidth * 1.2,
+        assets.explosionFlare.img.naturalHeight * 1.2
+      );
+      ctx.restore();
+    }
+    if (assets.explosionCore.loaded) {
+      drawSpriteCentered(assets.explosionCore, boom.x, boom.y, 1.1 + progress * 1.4);
+    }
   }
   ctx.restore();
 }

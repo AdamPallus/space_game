@@ -99,6 +99,7 @@ body {
   background: rgba(6, 15, 30, 0.7);
   display: grid;
   gap: 12px;
+  position: relative;
 }
 
 .ship-stats h3 {
@@ -109,38 +110,98 @@ body {
   color: #9ad0ff;
 }
 
-.ship-stats .stat-grid {
+.ship-stats .stat-sections {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 1120px) {
+  .ship-stats .stat-sections {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ship-stats .stat-section {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.ship-stats .stat-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(154, 208, 255, 0.9);
+  padding: 2px 4px;
+}
+
+.ship-stats .stat-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
-}
-
-.ship-stats .stat {
-  display: grid;
-  gap: 4px;
-  padding: 10px 12px;
+  padding: 9px 11px;
   border-radius: 14px;
-  border: 1px solid rgba(125, 190, 255, 0.18);
-  background: rgba(2, 6, 16, 0.35);
+  border: 1px solid rgba(125, 190, 255, 0.14);
+  background: rgba(2, 6, 16, 0.3);
+  cursor: help;
+  outline: none;
 }
 
-.ship-stats .stat .k {
+.ship-stats .stat-row:hover,
+.ship-stats .stat-row:focus-visible {
+  border-color: rgba(125, 190, 255, 0.28);
+  background: rgba(2, 6, 16, 0.42);
+}
+
+.ship-stats .stat-k {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: #8fb3dd;
 }
 
-.ship-stats .stat .v {
+.ship-stats .stat-v {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: #e0f2fe;
 }
 
-.ship-stats .notes {
+.ship-stats .stat-tip {
+  display: none;
+  position: absolute;
+  z-index: 9999;
+  left: 0;
+  top: calc(100% + 8px);
+  max-width: min(440px, calc(100vw - 48px));
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(125, 190, 255, 0.28);
+  background: rgba(4, 10, 22, 0.96);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  color: rgba(224, 242, 254, 0.95);
   font-size: 12px;
-  color: #9bb9dd;
-  line-height: 1.45;
+  line-height: 1.35;
+  white-space: pre-line;
+  pointer-events: none;
+}
+
+.ship-stats .stat-row:hover .stat-tip,
+.ship-stats .stat-row:focus .stat-tip,
+.ship-stats .stat-row:focus-visible .stat-tip {
+  display: block;
+}
+
+.ship-stats .stat-footnote {
+  font-size: 12px;
+  color: rgba(155, 185, 221, 0.92);
+  line-height: 1.4;
+}
+
+.muted {
+  color: rgba(155, 185, 221, 0.92);
 }
 
 .ship-canvas {

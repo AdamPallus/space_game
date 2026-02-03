@@ -418,6 +418,7 @@ let levelLoadPromise = null;
 let selectedLevelId = "level1";
 let lastLoadedLevelId = null;
 let activeHangarTab = "loadout";
+let hangarNeedsRefresh = false;
 const levelMetaCache = new Map();
 
 const sfx = {
@@ -739,7 +740,10 @@ if (returnBtn) {
     overlay.hidden = false;
     setHangarTab("loadout");
     updateMobileControls();
-    safeUpdateHangar();
+    if (hangarNeedsRefresh) {
+      hangarNeedsRefresh = false;
+      safeUpdateHangar();
+    }
   });
 }
 
@@ -748,6 +752,18 @@ if (resetBtn) {
     if (!confirm("Reset all pilot progress?")) return;
     localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
+  });
+}
+
+if (hudItem1) {
+  hudItem1.addEventListener("click", () => {
+    useConsumable(0);
+  });
+}
+
+if (hudItem2) {
+  hudItem2.addEventListener("click", () => {
+    useConsumable(1);
   });
 }
 
@@ -1105,7 +1121,7 @@ function endMission({ ejected = false, completed = false } = {}) {
   debriefPanel.hidden = false;
   hangarPanel.hidden = true;
   updateMobileControls();
-  safeUpdateHangar();
+  hangarNeedsRefresh = true;
 }
 
 function updateHangar() {
@@ -2802,6 +2818,12 @@ function updateConsumableHud() {
     const slotId = slots[index];
     if (!inMission || !slotId || slotId === "none") {
       if (hudEl) hudEl.textContent = "-";
+      if (hudEl) {
+        hudEl.classList.remove("hud-action");
+        hudEl.classList.remove("disabled");
+        hudEl.removeAttribute("role");
+        hudEl.removeAttribute("aria-disabled");
+      }
       if (mobileBtn) {
         mobileBtn.textContent = fallbackLabel;
         mobileBtn.disabled = true;
@@ -2813,11 +2835,17 @@ function updateConsumableHud() {
     const remaining = uses[index] ?? 0;
     const cooldown = cooldowns[index] ?? 0;
     const maxUses = item?.usesPerMission ?? remaining;
-    let hudText = `${label} ${remaining}/${maxUses}`;
+    let hudText = `${label} (${index + 1}) ${remaining}/${maxUses}`;
     if (cooldown > 0) {
       hudText += ` | ${Math.ceil(cooldown)}s`;
     }
     if (hudEl) hudEl.textContent = hudText;
+    if (hudEl) {
+      hudEl.classList.add("hud-action");
+      hudEl.classList.toggle("disabled", cooldown > 0 || remaining <= 0);
+      hudEl.setAttribute("role", "button");
+      hudEl.setAttribute("aria-disabled", cooldown > 0 || remaining <= 0 ? "true" : "false");
+    }
     if (mobileBtn) {
       if (cooldown > 0) {
         mobileBtn.textContent = `${label} ${Math.ceil(cooldown)}s`;

@@ -1,0 +1,82 @@
+{
+  "id": "level9",
+  "name": "Neon Swarm",
+  "background": "blue",
+  "music": "space_battle_bpm150.ogg",
+  "difficulty": "Lightning",
+  "description": "Fast, fragile interceptors with a few shielded skirmishers. Survive the blitz.",
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "gnat": {
+      "sprite": "enemyRed2",
+      "hull": 10,
+      "shield": 0,
+      "armor": 0,
+      "speed": 165,
+      "score": 70,
+      "baseCredit": 9,
+      "radius": 12,
+      "pattern": "zigzag",
+      "patternParams": { "amplitude": 220, "frequency": 6.2 }
+    },
+    "dart": {
+      "sprite": "enemyBlue2",
+      "hull": 16,
+      "shield": 0,
+      "armor": 0,
+      "speed": 150,
+      "score": 110,
+      "baseCredit": 12,
+      "radius": 16,
+      "pattern": "swoop",
+      "patternParams": { "amplitude": 120, "frequency": 5.4 }
+    },
+    "spark": {
+      "sprite": "enemyGreen4",
+      "hull": 14,
+      "shield": 26,
+      "armor": 0,
+      "speed": 142,
+      "score": 160,
+      "baseCredit": 18,
+      "radius": 18,
+      "pattern": "strafe",
+      "fireRate": 1.5,
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "shieldRegen": 14
+    },
+    "boss": {
+      "sprite": "ufoGreen",
+      "hull": 420,
+      "shield": 360,
+      "armor": 0,
+      "speed": 120,
+      "score": 1600,
+      "baseCredit": 420,
+      "radius": 74,
+      "spriteScale": 2.2,
+      "pattern": "bossSweep",
+      "isBoss": true,
+      "empImmune": true,
+      "fireRate": 0.9,
+      "fireMode": "radial",
+      "fireCount": 20,
+      "bulletSpeed": 190,
+      "shieldRegen": 16
+    }
+  },
+  "events": [
+    { "time": 1, "type": "gnat", "count": 18, "interval": 0.22 },
+    { "time": 6, "type": "dart", "count": 10, "interval": 0.45 },
+    { "time": 10, "type": "spark", "count": 3, "interval": 1.0 },
+    { "time": 14, "type": "gnat", "count": 24, "interval": 0.18 },
+    { "time": 18, "type": "dart", "count": 12, "interval": 0.35 },
+    { "time": 22, "type": "spark", "count": 5, "interval": 0.9 },
+    { "time": 28, "type": "gnat", "count": 28, "interval": 0.16 },
+    { "time": 34, "type": "dart", "count": 14, "interval": 0.3 },
+    { "time": 40, "type": "boss", "count": 1 }
+  ]
+}
+

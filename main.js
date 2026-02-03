@@ -2,6 +2,7 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const hudHull = document.getElementById("hud-hull");
+const hudArmor = document.getElementById("hud-armor");
 const hudShield = document.getElementById("hud-shield");
 const hudCredits = document.getElementById("hud-credits");
 const hudScore = document.getElementById("hud-score");
@@ -290,6 +291,7 @@ const player = {
   maxShield: 40,
   shieldRegen: 12,
   shieldCooldown: 0,
+  healthBarTimer: 0,
   fireCooldown: 0,
   spriteScale: 0.75,
   spreadLevel: 0,
@@ -378,6 +380,9 @@ const availableLevels = [
   { id: "level6", label: "Mission 6" },
   { id: "level7", label: "Mission 7" },
   { id: "level8", label: "Mission 8" },
+  { id: "level9", label: "Mission 9" },
+  { id: "level10", label: "Mission 10" },
+  { id: "level11", label: "Mission 11" },
   { id: "overhaul_demo", label: "Overhaul Demo", test: true },
   // Variant missions (Operations Center unlocks - not yet integrated)
   // { id: "level1_patrol", label: "Mission 1: Patrol Alpha" },
@@ -2513,7 +2518,7 @@ function getPrimaryFireConfig() {
     (build.defenseSlots?.filter((slot) => slot === "armor").length ?? 0);
   const armorPenalty = 1 + armorSlots * 0.18;
 
-  const microScale = spread === "focused" ? 1 : 0.25;
+  const microScale = spread === "focused" ? 1 : 0.5;
   const projectileRadius = 4 * diameterScale * microScale;
   const bulletSpeed = baseSpeed * diameterSpeedScale * flowVelocityScale;
 
@@ -2946,6 +2951,10 @@ function update(delta) {
     bullet.y += bullet.vy * delta;
   });
 
+  if (player.healthBarTimer > 0) {
+    player.healthBarTimer = Math.max(0, player.healthBarTimer - delta);
+  }
+
   enemies.forEach((enemy) => {
     if (enemy.healthBarTimer > 0) {
       enemy.healthBarTimer = Math.max(0, enemy.healthBarTimer - delta);
@@ -3190,6 +3199,7 @@ function handleEnemyDestroyed(enemy, bullet) {
 
 function applyDamage(amount, { collision = false } = {}) {
   if (state.debugInvincible) return;
+  revealPlayerHealth();
   player.hitTimer = 0.25;
   let shieldHit = false;
   if (player.bulwarkShield > 0) {
@@ -3241,6 +3251,7 @@ function render() {
     enemies.forEach(drawEnemy);
     explosions.forEach(drawExplosion);
     floatingTexts.forEach(drawFloatingText);
+    drawPlayerHealthBar();
   } else if (showHangar && !showDebrief) {
     drawHangarScene(width, height);
   }
@@ -3509,6 +3520,56 @@ function drawEnemyHealth(enemy) {
   ctx.restore();
 }
 
+function drawPlayerHealthBar() {
+  const maxShield = player.maxShield || 0;
+  const maxArmor = player.maxArmor || 0;
+  const maxHull = player.maxHull || 0;
+  const totalMax = maxShield + maxArmor + maxHull;
+  if (totalMax <= 0) return;
+
+  const width = 84;
+  const height = 8;
+  const x = player.x - width / 2;
+  const y = player.y - player.radius - 22;
+  const alpha = player.healthBarTimer > 0 ? 1 : 0.65;
+
+  const shield = Math.max(0, player.shield || 0);
+  const armor = Math.max(0, player.armor || 0);
+  const hull = Math.max(0, player.hull || 0);
+
+  ctx.save();
+  ctx.globalAlpha = 0.92 * alpha;
+  ctx.fillStyle = "rgba(2, 6, 16, 0.7)";
+  ctx.strokeStyle = "rgba(125, 190, 255, 0.25)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(x - 2, y - 2, width + 4, height + 4, 6);
+  } else {
+    ctx.rect(x - 2, y - 2, width + 4, height + 4);
+  }
+  ctx.fill();
+  ctx.stroke();
+
+  const segment = (value, maxValue, color, offset) => {
+    if (maxValue <= 0) return 0;
+    const fraction = Math.max(0, Math.min(1, value / maxValue));
+    const segW = (width * maxValue) / totalMax;
+    const fillW = segW * fraction;
+    if (fillW > 0) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x + offset, y, fillW, height);
+    }
+    return segW;
+  };
+
+  let offset = 0;
+  offset += segment(shield, maxShield, "#7dd3fc", offset);
+  offset += segment(armor, maxArmor, "#334155", offset);
+  segment(hull, maxHull, "#fb7185", offset);
+  ctx.restore();
+}
+
 function drawHangarScene(width, height) {
   ctx.save();
   ctx.globalAlpha = 0.4;
@@ -3531,6 +3592,7 @@ function drawHangarScene(width, height) {
 function updateHud() {
   if (!mission) {
     hudHull.textContent = "-";
+    if (hudArmor) hudArmor.textContent = "-";
     hudShield.textContent = "-";
     hudScore.textContent = "0";
     hudTime.textContent = "00:00";
@@ -3539,14 +3601,17 @@ function updateHud() {
     if (bossLabel) bossLabel.textContent = "Boss ETA";
   } else {
     const runCredits = creditRewardFor(mission);
-    const armorText =
-      player.maxArmor > 0
-        ? ` | A ${Math.max(0, Math.round(player.armor))}/${Math.round(player.maxArmor)}`
-        : "";
-    hudHull.textContent = `${Math.max(0, Math.round(player.hull))}/${Math.round(player.maxHull)}${armorText}`;
-    hudShield.textContent = player.maxShield > 0
-      ? `${Math.round(player.shield)}/${Math.round(player.maxShield)}`
-      : "0/0";
+    hudHull.textContent = `${Math.max(0, Math.round(player.hull))}/${Math.round(player.maxHull)}`;
+    if (hudArmor) {
+      hudArmor.textContent =
+        player.maxArmor > 0
+          ? `${Math.max(0, Math.round(player.armor))}/${Math.round(player.maxArmor)}`
+          : "0/0";
+    }
+    hudShield.textContent =
+      player.maxShield > 0
+        ? `${Math.round(player.shield)}/${Math.round(player.maxShield)}`
+        : "0/0";
     hudScore.textContent = Math.round(mission.score).toString();
     hudTime.textContent = formatTime(mission.elapsed);
     hudCredits.textContent = `${state.credits} (+${runCredits})`;
@@ -3695,6 +3760,10 @@ function distance(x1, y1, x2, y2) {
 
 function revealEnemyHealth(enemy) {
   enemy.healthBarTimer = Math.max(enemy.healthBarTimer || 0, 1.35);
+}
+
+function revealPlayerHealth() {
+  player.healthBarTimer = Math.max(player.healthBarTimer || 0, 1.8);
 }
 
 function applyDamageToEnemy(enemy, damage) {

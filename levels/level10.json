@@ -1,0 +1,84 @@
+{
+  "id": "level10",
+  "name": "Iron Graveyard",
+  "background": "darkPurple",
+  "music": "space_battle_bpm175.ogg",
+  "difficulty": "Armored",
+  "description": "Slow moving plated hulls with heavy armor class. Bring impact.",
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 26,
+      "shield": 0,
+      "armor": 140,
+      "armorClass": 12,
+      "speed": 46,
+      "score": 220,
+      "baseCredit": 26,
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.6
+    },
+    "bulwark": {
+      "sprite": "ufoBlue",
+      "hull": 40,
+      "shield": 0,
+      "armor": 240,
+      "armorClass": 14,
+      "speed": 30,
+      "score": 360,
+      "baseCredit": 44,
+      "radius": 34,
+      "ai": "transport",
+      "fireRate": 3.0
+    },
+    "escort": {
+      "sprite": "enemyBlack3",
+      "hull": 32,
+      "shield": 0,
+      "armor": 90,
+      "armorClass": 10,
+      "speed": 60,
+      "score": 240,
+      "baseCredit": 30,
+      "radius": 20,
+      "pattern": "strafe",
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "fireRate": 1.9
+    },
+    "boss": {
+      "sprite": "enemyBlack5",
+      "hull": 520,
+      "shield": 0,
+      "armor": 900,
+      "armorClass": 16,
+      "speed": 82,
+      "score": 2200,
+      "baseCredit": 620,
+      "radius": 86,
+      "spriteScale": 2.5,
+      "pattern": "bossSweep",
+      "isBoss": true,
+      "empImmune": true,
+      "fireRate": 0.75,
+      "fireMode": "radial",
+      "fireCount": 26,
+      "bulletSpeed": 185
+    }
+  },
+  "events": [
+    { "time": 1, "type": "plated", "count": 5, "interval": 1.0 },
+    { "time": 7, "type": "escort", "count": 5, "interval": 0.9 },
+    { "time": 12, "type": "plated", "count": 8, "interval": 0.85 },
+    { "time": 18, "type": "bulwark", "count": 1 },
+    { "time": 20, "type": "plated", "count": 10, "interval": 0.75 },
+    { "time": 26, "type": "escort", "count": 7, "interval": 0.75 },
+    { "time": 32, "type": "bulwark", "count": 2, "interval": 1.6 },
+    { "time": 38, "type": "plated", "count": 8, "interval": 0.9 },
+    { "time": 46, "type": "boss", "count": 1 }
+  ]
+}
+

@@ -2462,55 +2462,114 @@ function getWeaponConfig() {
   };
 }
 
-function firePlayerBullet() {
-  const config = getWeaponConfig();
+function getPrimaryFireConfig() {
+  const build = getShipBuild();
   const baseSpeed = 560;
-  const baseDamage = player.damage * config.damageMult * (player.damageBoostMult || 1);
+  const baseCooldown = 0.28;
+  const gunDiameter = build.gunDiameter || "medium";
+  const spread = build.spread || "focused";
+  const ammo = build.ammo || "kinetic";
+  const effect = build.effect || "none";
+
+  const diameterScale =
+    gunDiameter === "small" ? 0.85 : gunDiameter === "large" ? 1.25 : 1;
+  const diameterSpeedScale =
+    gunDiameter === "small" ? 1.12 : gunDiameter === "large" ? 0.9 : 1;
+
+  const flowRateLevel = build.flowRateLevel ?? 0;
+  const flowVelocityLevel = build.flowVelocityLevel ?? 0;
+  const flowRateScale = Math.pow(0.9, Math.max(0, flowRateLevel));
+  const flowVelocityScale = 1 + Math.max(0, flowVelocityLevel) * 0.08;
+
+  const armorSlots =
+    (build.defenseSlots?.filter((slot) => slot === "armor").length ?? 0);
+  const armorPenalty = 1 + armorSlots * 0.18;
+
+  const microScale = spread === "focused" ? 1 : 0.25;
+  const projectileRadius = 4 * diameterScale * microScale;
+  const bulletSpeed = baseSpeed * diameterSpeedScale * flowVelocityScale;
+
+  let cooldown = baseCooldown * armorPenalty * flowRateScale;
+  if (spread === "burst") cooldown *= 2.15; // 5 shots at once
+  if (spread === "wide") cooldown *= 1.15; // still 5 shots, but meant to be spammy
+  cooldown = Math.max(0.08, cooldown);
+
+  const jitter = spread === "burst" ? (5 * Math.PI) / 180 : 0;
+  const angles =
+    spread === "wide"
+      ? [-0.35, -0.175, 0, 0.175, 0.35]
+      : spread === "focused"
+        ? [0]
+        : [0, 0, 0, 0, 0]; // burst: all centered, jitter handles variation
+
+  return {
+    ammo,
+    effect,
+    effectTune: build.effectUpgrades?.[effect] ?? 0,
+    spread,
+    bulletSpeed,
+    projectileRadius,
+    cooldown,
+    jitter,
+    angles,
+  };
+}
+
+function computePrimaryDamage({ ammo, speed, radius }) {
+  const sizeFactor = Math.max(0.05, radius / 4);
+  const velFactor = Math.max(0.2, speed / 560);
+  const baseKinetic = 14;
+  const basePlasma = 12;
+  let damage =
+    ammo === "plasma" ? basePlasma * sizeFactor : baseKinetic * sizeFactor * velFactor;
+  damage *= player.damageBoostMult || 1;
+  return damage;
+}
+
+function firePlayerBullet() {
+  const cfg = getPrimaryFireConfig();
+  const mount = state.weapon.mount || "front";
   playSfx("laserSmall", 0.25);
 
-  const resolveBulletImage = (payload) => {
-    if (payload === "plasma") return assets.spreadBullet;
-    if (payload === "emp") return assets.altArc;
+  const resolveBulletImage = (ammo) => {
+    if (ammo === "plasma") return assets.spreadBullet;
     return assets.playerBullet;
   };
 
-  const spawnBullet = (vx, vy, image = resolveBulletImage(config.payload), extra = {}) => {
+  const spawnBullet = (vx, vy, extra = {}) => {
+    const speed = Math.hypot(vx, vy);
+    const radius = extra.radius ?? cfg.projectileRadius;
+    const image = resolveBulletImage(cfg.ammo);
     const bullet = {
       x: player.x,
       y: player.y - player.radius,
       vx,
       vy,
-      radius: 4,
-      damage: baseDamage,
-      image,
-      width: 10,
-      height: 32,
+      radius,
+      damage: computePrimaryDamage({ ammo: cfg.ammo, speed, radius }),
+      image: extra.image || image,
+      width: extra.width ?? Math.max(6, 10 * (radius / 4)),
+      height: extra.height ?? Math.max(14, 32 * (radius / 4)),
       rotation: Math.atan2(vy, vx) + Math.PI / 2,
-      baseSpeed: Math.hypot(vx, vy),
+      baseSpeed: speed,
       originAngle: Math.atan2(vy, vx),
       homingMaxOffset: 0.6,
       homingStrength: 0.05,
-      payload: config.payload,
-      ...config.modifierData,
+      payload: cfg.ammo,
       ...extra,
     };
-    if (bullet.pierce && !bullet.hitIds) {
-      bullet.hitIds = new Set();
-    }
-    if (bullet.homing) {
-      const build = getShipBuild();
-      const tune = build.effectUpgrades?.homing ?? 0;
+    const tune = cfg.effectTune ?? 0;
+    if (cfg.effect === "homing") {
+      bullet.homing = true;
       bullet.homingMaxOffset = 0.6 + tune * 0.14;
       bullet.homingStrength = 0.05 + tune * 0.018;
+    } else if (cfg.effect === "pierce") {
+      bullet.pierce = 1 + tune;
+    } else if (cfg.effect === "explosive") {
+      bullet.explosive = true;
     }
-    if (bullet.pierce) {
-      const build = getShipBuild();
-      const tune = build.effectUpgrades?.pierce ?? 0;
-      bullet.pierce = Math.max(1, bullet.pierce) + tune;
-    }
+    if (bullet.pierce && !bullet.hitIds) bullet.hitIds = new Set();
     if (bullet.explosive) {
-      const build = getShipBuild();
-      const tune = build.effectUpgrades?.explosive ?? 0;
       bullet.explosiveRadius = 70 * (bullet.radius / 4) * (1 + tune * 0.18);
       bullet.explosiveDamageMult = 0.7;
       bullet.exploded = false;
@@ -2518,41 +2577,38 @@ function firePlayerBullet() {
     bullets.push(bullet);
   };
 
-  const getAngles = (barrel) => {
-    if (barrel === "spread") {
-      return [-0.35, -0.175, 0, 0.175, 0.35];
-    }
-    return [0];
-  };
-
-  const spawnBarrelShots = (direction = 1, mountScale = 1) => {
-    const angles = getAngles(config.barrel);
-    const burstCount = config.trigger === "burst" ? 5 : 1;
-    const damageScale = (config.trigger === "burst" ? 0.7 : 1) * mountScale;
-    const sizeScale = config.trigger === "burst" ? 0.8 : 1;
-    const jitterRange = config.trigger === "burst" ? 0.08 : 0;
-    angles.forEach((angle) => {
-      for (let i = 0; i < burstCount; i += 1) {
-        const jitter = jitterRange > 0 ? (Math.random() * 2 - 1) * jitterRange : 0;
-        const shotAngle = angle + jitter;
-        const vx = Math.sin(shotAngle) * baseSpeed;
-        const vy = -Math.cos(shotAngle) * baseSpeed * direction;
-        spawnBullet(vx, vy, resolveBulletImage(config.payload), {
-          damage: baseDamage * damageScale,
-          width: 10 * sizeScale,
-          height: 32 * sizeScale,
-          radius: 4 * sizeScale,
-        });
+  const spawnPattern = (direction = 1, mountScale = 1) => {
+    cfg.angles.forEach((angle, index) => {
+      const jitter = cfg.jitter ? (Math.random() * 2 - 1) * cfg.jitter : 0;
+      const shotAngle = angle + jitter;
+      const vx = Math.sin(shotAngle) * cfg.bulletSpeed;
+      const vy = -Math.cos(shotAngle) * cfg.bulletSpeed * direction;
+      const radius = cfg.projectileRadius;
+      const sizeScale = radius / 4;
+      // Slight position shuffle so micro-shots don't perfectly overlap.
+      const posJitter = cfg.spread === "focused" ? 0 : (Math.random() - 0.5) * 6;
+      spawnBullet(vx, vy, {
+        x: player.x + posJitter,
+        y: player.y - player.radius,
+        radius,
+        width: Math.max(6, 10 * sizeScale),
+        height: Math.max(14, 32 * sizeScale),
+        damageScale: mountScale,
+      });
+      // Apply mount scale by scaling damage post-compute.
+      bullets[bullets.length - 1].damage *= mountScale;
+      if (cfg.spread !== "focused") {
+        bullets[bullets.length - 1].rotation += (index - 2) * 0.01;
       }
     });
   };
 
-  if (config.mount === "rear") {
+  if (mount === "rear") {
     const mountScale = 0.7;
-    spawnBarrelShots(1, mountScale);
-    spawnBarrelShots(-1, mountScale);
+    spawnPattern(1, mountScale);
+    spawnPattern(-1, mountScale);
   } else {
-    spawnBarrelShots(1, 1);
+    spawnPattern(1, 1);
   }
 }
 
@@ -2782,16 +2838,16 @@ function update(delta) {
   player.x = Math.max(40, Math.min(width - 40, player.x));
   player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
 
-  const weaponConfig = getWeaponConfig();
+  const primaryConfig = getPrimaryFireConfig();
   player.fireCooldown -= delta;
   player.altCooldown -= delta;
   if (pointerButtons.left && player.fireCooldown <= 0) {
     firePlayerBullet();
-    player.fireCooldown = weaponConfig.fireRate;
+    player.fireCooldown = primaryConfig.cooldown;
   }
   if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
     firePlayerBullet();
-    player.fireCooldown = weaponConfig.fireRate;
+    player.fireCooldown = primaryConfig.cooldown;
   }
   if (pointerButtons.right && player.altCooldown <= 0) {
     fireAltWeapon();

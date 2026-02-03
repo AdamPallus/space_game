@@ -9,6 +9,8 @@ const hudTime = document.getElementById("hud-time");
 const hudMission = document.getElementById("hud-mission");
 const bossLabel = document.getElementById("boss-label");
 const bossProgressFill = document.getElementById("boss-progress-fill");
+const hudItem1 = document.getElementById("hud-item-1");
+const hudItem2 = document.getElementById("hud-item-2");
 
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
@@ -31,6 +33,12 @@ const treeAuxUpgrades = document.getElementById("tree-aux-upgrades");
 const treeShipUpgrades = document.getElementById("tree-ship-upgrades");
 const hangarTabButtons = document.querySelectorAll(".tab-btn");
 const hangarTabPanels = document.querySelectorAll(".tab-panel");
+const consumableStore = document.getElementById("consumable-store");
+const consumableEquipList = document.getElementById("consumable-equip-list");
+const consumableSlot1 = document.getElementById("consumable-slot-1");
+const consumableSlot2 = document.getElementById("consumable-slot-2");
+const clearSlot1 = document.getElementById("clear-slot-1");
+const clearSlot2 = document.getElementById("clear-slot-2");
 
 // Investment UI elements
 const engineeringTier = document.getElementById("engineering-tier");
@@ -58,6 +66,8 @@ const debriefCredits = document.getElementById("debrief-credits");
 const mobileAltBtn = document.getElementById("mobile-alt");
 const mobileAltIcon = document.getElementById("mobile-alt-icon");
 const mobileAltLabel = document.getElementById("mobile-alt-label");
+const mobileItem1 = document.getElementById("mobile-item-1");
+const mobileItem2 = document.getElementById("mobile-item-2");
 const mobileEjectBtn = document.getElementById("mobile-eject");
 const mobileLaunchBtn = document.getElementById("mobile-launch");
 const mobileControls = document.getElementById("mobile-controls");
@@ -105,6 +115,42 @@ const upgrades = [
     baseCost: 200,
   },
 ];
+
+const consumables = [
+  {
+    id: "bomb",
+    name: "Bomb Charge",
+    desc: "Detonates a blast that damages nearby enemies.",
+    cost: 220,
+    usesPerMission: 1,
+    cooldown: 12,
+    unlockTier: 1,
+    hudLabel: "Bomb",
+  },
+  {
+    id: "shieldBoost",
+    name: "Shield Booster",
+    desc: "Restore shields and patch some hull.",
+    cost: 160,
+    usesPerMission: 2,
+    cooldown: 10,
+    unlockTier: 3,
+    hudLabel: "Shield",
+  },
+  {
+    id: "overcharge",
+    name: "Overcharge",
+    desc: "Temporarily increases primary damage.",
+    cost: 260,
+    usesPerMission: 1,
+    cooldown: 18,
+    duration: 6,
+    unlockTier: 3,
+    hudLabel: "Overcharge",
+  },
+];
+
+const consumablesById = Object.fromEntries(consumables.map((item) => [item.id, item]));
 
 // Fleet Investment System
 const investments = {
@@ -219,6 +265,8 @@ const player = {
   cloakDuration: 2.5,
   hitTimer: 0,
   bulwarkTimer: 0,
+  damageBoostTimer: 0,
+  damageBoostMult: 1,
   empCooldownTime: 8,
   empDuration: 1.6,
   bulwarkDuration: 1.2,
@@ -537,6 +585,12 @@ window.addEventListener("keydown", (event) => {
   if (event.key.toLowerCase() === "e" && mission && mission.active) {
     endMission({ ejected: true });
   }
+  if (event.key.toLowerCase() === "1") {
+    useConsumable(0);
+  }
+  if (event.key.toLowerCase() === "2") {
+    useConsumable(1);
+  }
 });
 
 window.addEventListener("keyup", (event) => {
@@ -621,6 +675,14 @@ bindMobileButton(mobileEjectBtn, () => {
   }
 }, () => {});
 
+bindMobileButton(mobileItem1, () => {
+  useConsumable(0);
+}, () => {});
+
+bindMobileButton(mobileItem2, () => {
+  useConsumable(1);
+}, () => {});
+
 bindMobileButton(mobileLaunchBtn, () => {
   if (!mission || !mission.active) {
     launchSelectedMission();
@@ -689,6 +751,22 @@ if (resetBtn) {
   });
 }
 
+if (clearSlot1) {
+  clearSlot1.addEventListener("click", () => {
+    state.consumableSlots[0] = "none";
+    saveState();
+    safeUpdateHangar();
+  });
+}
+
+if (clearSlot2) {
+  clearSlot2.addEventListener("click", () => {
+    state.consumableSlots[1] = "none";
+    saveState();
+    safeUpdateHangar();
+  });
+}
+
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".upgrade-node")) {
     if (openUpgradeId !== null) {
@@ -740,6 +818,12 @@ function loadState() {
         modifier: { none: true },
         aux: { cloak: true },
       },
+      consumablesOwned: {
+        bomb: 0,
+        shieldBoost: 0,
+        overcharge: 0,
+      },
+      consumableSlots: ["none", "none"],
       upgrades: {
         hull: 0,
         shield: 0,
@@ -796,6 +880,14 @@ function loadState() {
     parsed.unlocked.payload = parsed.unlocked.payload || { kinetic: true };
     parsed.unlocked.modifier = parsed.unlocked.modifier || { none: true };
     parsed.unlocked.aux = parsed.unlocked.aux || { cloak: true };
+    parsed.consumablesOwned = parsed.consumablesOwned || {};
+    consumables.forEach((item) => {
+      parsed.consumablesOwned[item.id] = parsed.consumablesOwned[item.id] ?? 0;
+    });
+    parsed.consumableSlots = parsed.consumableSlots || ["none", "none"];
+    if (!Array.isArray(parsed.consumableSlots) || parsed.consumableSlots.length < 2) {
+      parsed.consumableSlots = ["none", "none"];
+    }
     if (parsed.weapon?.barrel) parsed.unlocked.barrel[parsed.weapon.barrel] = true;
     if (parsed.weapon?.trigger) parsed.unlocked.trigger[parsed.weapon.trigger] = true;
     if (parsed.weapon?.mount) parsed.unlocked.mount[parsed.weapon.mount] = true;
@@ -828,6 +920,12 @@ function loadState() {
         modifier: { none: true },
         aux: { cloak: true },
       },
+      consumablesOwned: {
+        bomb: 0,
+        shieldBoost: 0,
+        overcharge: 0,
+      },
+      consumableSlots: ["none", "none"],
       upgrades: {
         hull: 0,
         shield: 0,
@@ -882,9 +980,29 @@ function applyUpgrades() {
   player.empCooldownTime = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel));
 }
 
+function initConsumablesForMission() {
+  const slots = Array.isArray(state.consumableSlots)
+    ? state.consumableSlots.slice(0, 2)
+    : ["none", "none"];
+  while (slots.length < 2) slots.push("none");
+  const remainingOwned = { ...state.consumablesOwned };
+  const uses = slots.map((slotId) => {
+    if (!slotId || slotId === "none") return 0;
+    const item = consumablesById[slotId];
+    if (!item) return 0;
+    const owned = remainingOwned[slotId] ?? 0;
+    const allocated = Math.min(item.usesPerMission ?? 0, owned);
+    remainingOwned[slotId] = Math.max(0, owned - allocated);
+    return allocated;
+  });
+  const cooldowns = slots.map(() => 0);
+  return { slots, uses, cooldowns };
+}
+
 async function startMission() {
   const level = await ensureLevelLoaded();
   applyUpgrades();
+  const consumablesState = initConsumablesForMission();
   mission = {
     active: true,
     startTime: performance.now(),
@@ -901,6 +1019,9 @@ async function startMission() {
     bossAlive: false,
     bossSpawnTime: getBossSpawnTime(level),
     empTimer: 0,
+    consumableSlots: consumablesState.slots,
+    consumableUses: consumablesState.uses,
+    consumableCooldowns: consumablesState.cooldowns,
   };
   setDesiredMusic(level);
   bullets.length = 0;
@@ -919,6 +1040,8 @@ async function startMission() {
   player.empCooldown = 0;
   player.bulwarkTimer = 0;
   player.bulwarkShield = 0;
+  player.damageBoostTimer = 0;
+  player.damageBoostMult = 1;
   paused = false;
 
   overlay.hidden = true;
@@ -1008,6 +1131,8 @@ function updateHangar() {
   renderWeaponTree();
   renderAuxTree();
   renderUpgradeTrees();
+  renderConsumableLoadout();
+  renderConsumableStore();
   renderInvestments();
   if (activeHangarTab === "mission") {
     renderLevelSelect();
@@ -1459,6 +1584,141 @@ function renderUpgradeTrees() {
   renderUpgradeNodes(treeShipUpgrades, upgradeCategories.ship);
 }
 
+function getConsumableLabel(item) {
+  return item?.hudLabel || item?.name || "Item";
+}
+
+function isConsumableUnlocked(item) {
+  if (!item) return false;
+  if (state.debugUnlock) return true;
+  const engineeringTier = state.investments?.engineering ?? 0;
+  return engineeringTier >= (item.unlockTier ?? 0);
+}
+
+function renderConsumableStore() {
+  if (!consumableStore) return;
+  consumableStore.innerHTML = "";
+  consumables.forEach((item) => {
+    const unlocked = isConsumableUnlocked(item);
+    const owned = state.consumablesOwned[item.id] ?? 0;
+    const canAfford = state.credits >= item.cost;
+
+    const entry = document.createElement("div");
+    entry.className = "upgrade-item";
+    if (!unlocked) {
+      entry.classList.add("locked");
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const unlockNote =
+      !unlocked && item.unlockTier
+        ? `<span class="desc">Requires Engineering Tier ${item.unlockTier}</span>`
+        : "";
+    meta.innerHTML = `
+      <span class="name">${item.name}</span>
+      <span class="desc">${item.desc}</span>
+      ${unlockNote}
+      <span class="cost">Cost: ${item.cost} | Owned: ${owned}</span>
+    `;
+
+    const button = document.createElement("button");
+    if (!unlocked) {
+      button.textContent = "Locked";
+      button.disabled = true;
+    } else {
+      button.textContent = canAfford ? "Buy" : "Insufficient";
+      button.disabled = !canAfford;
+      button.addEventListener("click", () => {
+        if (state.credits < item.cost) return;
+        state.credits -= item.cost;
+        state.consumablesOwned[item.id] = (state.consumablesOwned[item.id] ?? 0) + 1;
+        saveState();
+        safeUpdateHangar();
+      });
+    }
+
+    entry.appendChild(meta);
+    entry.appendChild(button);
+    consumableStore.appendChild(entry);
+  });
+}
+
+function renderConsumableLoadout() {
+  if (!consumableEquipList) return;
+  const slotIds = state.consumableSlots || ["none", "none"];
+  const slotLabels = slotIds.map((slotId) => {
+    if (!slotId || slotId === "none") return "Empty";
+    return consumablesById[slotId]?.name || "Unknown";
+  });
+
+  if (consumableSlot1) consumableSlot1.textContent = slotLabels[0];
+  if (consumableSlot2) consumableSlot2.textContent = slotLabels[1];
+  if (clearSlot1) clearSlot1.disabled = slotIds[0] === "none";
+  if (clearSlot2) clearSlot2.disabled = slotIds[1] === "none";
+
+  consumableEquipList.innerHTML = "";
+  consumables.forEach((item) => {
+    const unlocked = isConsumableUnlocked(item);
+    const owned = state.consumablesOwned[item.id] ?? 0;
+    const slot1Active = slotIds[0] === item.id;
+    const slot2Active = slotIds[1] === item.id;
+
+    const entry = document.createElement("div");
+    entry.className = "upgrade-item";
+    if (!unlocked) {
+      entry.classList.add("locked");
+    }
+    if (slot1Active || slot2Active) {
+      entry.classList.add("active");
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const unlockNote =
+      !unlocked && item.unlockTier
+        ? `<span class="desc">Requires Engineering Tier ${item.unlockTier}</span>`
+        : "";
+    meta.innerHTML = `
+      <span class="name">${item.name}</span>
+      <span class="desc">${item.desc}</span>
+      ${unlockNote}
+      <span class="cost">Owned: ${owned} | Uses/mission: ${item.usesPerMission}</span>
+    `;
+
+    const actions = document.createElement("div");
+    actions.className = "consumable-actions";
+
+    const slot1Btn = document.createElement("button");
+    slot1Btn.className = "ghost small";
+    slot1Btn.textContent = slot1Active ? "Slot 1 (eq)" : "Slot 1";
+    slot1Btn.disabled = !unlocked;
+    slot1Btn.addEventListener("click", () => {
+      if (!unlocked) return;
+      state.consumableSlots[0] = item.id;
+      saveState();
+      safeUpdateHangar();
+    });
+
+    const slot2Btn = document.createElement("button");
+    slot2Btn.className = "ghost small";
+    slot2Btn.textContent = slot2Active ? "Slot 2 (eq)" : "Slot 2";
+    slot2Btn.disabled = !unlocked;
+    slot2Btn.addEventListener("click", () => {
+      if (!unlocked) return;
+      state.consumableSlots[1] = item.id;
+      saveState();
+      safeUpdateHangar();
+    });
+
+    actions.appendChild(slot1Btn);
+    actions.appendChild(slot2Btn);
+    entry.appendChild(meta);
+    entry.appendChild(actions);
+    consumableEquipList.appendChild(entry);
+  });
+}
+
 function getPilotRank(credits) {
   if (credits < 250) return "Rookie";
   if (credits < 750) return "Wing Ace";
@@ -1648,7 +1908,7 @@ function getWeaponConfig() {
 function firePlayerBullet() {
   const config = getWeaponConfig();
   const baseSpeed = 560;
-  const baseDamage = player.damage * config.damageMult;
+  const baseDamage = player.damage * config.damageMult * (player.damageBoostMult || 1);
   playSfx("laserSmall", 0.25);
 
   const resolveBulletImage = (payload) => {
@@ -1689,10 +1949,10 @@ function firePlayerBullet() {
     return [0];
   };
 
-  const spawnBarrelShots = (direction = 1) => {
+  const spawnBarrelShots = (direction = 1, mountScale = 1) => {
     const angles = getAngles(config.barrel);
     const burstCount = config.trigger === "burst" ? 5 : 1;
-    const damageScale = config.trigger === "burst" ? 0.7 : 1;
+    const damageScale = (config.trigger === "burst" ? 0.7 : 1) * mountScale;
     const sizeScale = config.trigger === "burst" ? 0.8 : 1;
     const jitterRange = config.trigger === "burst" ? 0.08 : 0;
     angles.forEach((angle) => {
@@ -1711,8 +1971,13 @@ function firePlayerBullet() {
     });
   };
 
-  const direction = config.mount === "rear" ? -1 : 1;
-  spawnBarrelShots(direction);
+  if (config.mount === "rear") {
+    const mountScale = 0.7;
+    spawnBarrelShots(1, mountScale);
+    spawnBarrelShots(-1, mountScale);
+  } else {
+    spawnBarrelShots(1, 1);
+  }
 }
 
 function fireAltWeapon() {
@@ -1727,6 +1992,46 @@ function fireAltWeapon() {
     playSfx("boost", 0.45);
     player.bulwarkTimer = player.bulwarkDuration;
     player.bulwarkShield = player.bulwarkShieldBonus;
+  }
+}
+
+function useConsumable(slotIndex) {
+  if (!mission || !mission.active) return;
+  if (!mission.consumableSlots) return;
+  const slotId = mission.consumableSlots[slotIndex];
+  if (!slotId || slotId === "none") return;
+  const item = consumablesById[slotId];
+  if (!item) return;
+  const uses = mission.consumableUses?.[slotIndex] ?? 0;
+  const cooldown = mission.consumableCooldowns?.[slotIndex] ?? 0;
+  if (uses <= 0 || cooldown > 0) return;
+
+  mission.consumableUses[slotIndex] = uses - 1;
+  mission.consumableCooldowns[slotIndex] = item.cooldown ?? 0;
+  state.consumablesOwned[slotId] = Math.max(0, (state.consumablesOwned[slotId] ?? 0) - 1);
+  saveState();
+
+  if (slotId === "bomb") {
+    const blastRadius = 220;
+    const blastDamage = 120 + mission.difficulty * 10;
+    spawnExplosion(player.x, player.y, blastRadius * 0.35);
+    playSfx("explosion", 0.12);
+    enemies.forEach((enemy) => {
+      const d = distance(player.x, player.y, enemy.x, enemy.y);
+      if (d > blastRadius) return;
+      const scale = 1 - d / blastRadius;
+      enemy.hp -= blastDamage * scale;
+    });
+  } else if (slotId === "shieldBoost") {
+    const shieldGain = player.maxShield * 0.65;
+    const hullGain = player.maxHull * 0.18;
+    player.shield = Math.min(player.maxShield, player.shield + shieldGain);
+    player.hull = Math.min(player.maxHull, player.hull + hullGain);
+    playSfx("boost", 0.35);
+  } else if (slotId === "overcharge") {
+    player.damageBoostMult = Math.max(player.damageBoostMult, 1.4);
+    player.damageBoostTimer = item.duration ?? 6;
+    playSfx("boost", 0.4);
   }
 }
 
@@ -1822,6 +2127,12 @@ function update(delta) {
       player.bulwarkShield = 0;
     }
   }
+  if (player.damageBoostTimer > 0) {
+    player.damageBoostTimer = Math.max(0, player.damageBoostTimer - delta);
+    if (player.damageBoostTimer === 0) {
+      player.damageBoostMult = 1;
+    }
+  }
   if (mission.empTimer > 0) {
     mission.empTimer = Math.max(0, mission.empTimer - delta);
   }
@@ -1830,6 +2141,13 @@ function update(delta) {
   }
   if (player.cloakTimer > 0) {
     player.cloakTimer = Math.max(0, player.cloakTimer - delta);
+  }
+  if (mission.consumableCooldowns) {
+    for (let i = 0; i < mission.consumableCooldowns.length; i += 1) {
+      if (mission.consumableCooldowns[i] > 0) {
+        mission.consumableCooldowns[i] = Math.max(0, mission.consumableCooldowns[i] - delta);
+      }
+    }
   }
 
   if (mission.level) {
@@ -1892,7 +2210,7 @@ function update(delta) {
   player.altCooldown -= delta;
   if (pointerButtons.left && player.fireCooldown <= 0) {
     firePlayerBullet();
-  player.fireCooldown = weaponConfig.fireRate;
+    player.fireCooldown = weaponConfig.fireRate;
   }
   if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
     firePlayerBullet();
@@ -2471,6 +2789,47 @@ function updateHud() {
     hudCredits.textContent = `${state.credits} (+${runCredits})`;
     updateBossProgress();
   }
+  updateConsumableHud();
+}
+
+function updateConsumableHud() {
+  const inMission = mission && mission.active;
+  const slots = mission?.consumableSlots || ["none", "none"];
+  const uses = mission?.consumableUses || [0, 0];
+  const cooldowns = mission?.consumableCooldowns || [0, 0];
+
+  const updateSlot = (index, hudEl, mobileBtn, fallbackLabel) => {
+    const slotId = slots[index];
+    if (!inMission || !slotId || slotId === "none") {
+      if (hudEl) hudEl.textContent = "-";
+      if (mobileBtn) {
+        mobileBtn.textContent = fallbackLabel;
+        mobileBtn.disabled = true;
+      }
+      return;
+    }
+    const item = consumablesById[slotId];
+    const label = getConsumableLabel(item);
+    const remaining = uses[index] ?? 0;
+    const cooldown = cooldowns[index] ?? 0;
+    const maxUses = item?.usesPerMission ?? remaining;
+    let hudText = `${label} ${remaining}/${maxUses}`;
+    if (cooldown > 0) {
+      hudText += ` | ${Math.ceil(cooldown)}s`;
+    }
+    if (hudEl) hudEl.textContent = hudText;
+    if (mobileBtn) {
+      if (cooldown > 0) {
+        mobileBtn.textContent = `${label} ${Math.ceil(cooldown)}s`;
+      } else {
+        mobileBtn.textContent = `${label} (${remaining})`;
+      }
+      mobileBtn.disabled = cooldown > 0 || remaining <= 0 || !inMission;
+    }
+  };
+
+  updateSlot(0, hudItem1, mobileItem1, "Item 1");
+  updateSlot(1, hudItem2, mobileItem2, "Item 2");
 }
 
 function playSfx(name, volume = 0.4) {
@@ -2499,6 +2858,14 @@ function updateMobileControls() {
   }
   if (mobileEjectBtn) {
     mobileEjectBtn.hidden = !inMission;
+  }
+  if (mobileItem1) {
+    const hasItem = inMission && mission?.consumableSlots?.[0] && mission.consumableSlots[0] !== "none";
+    mobileItem1.hidden = !hasItem;
+  }
+  if (mobileItem2) {
+    const hasItem = inMission && mission?.consumableSlots?.[1] && mission.consumableSlots[1] !== "none";
+    mobileItem2.hidden = !hasItem;
   }
   if (inMission && hasAlt) {
     const weapon = rmbWeapons.find((item) => item.id === state.rmbWeapon);

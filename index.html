@@ -35,6 +35,8 @@
           <div class="hud-row"><span>Credits</span><span id="hud-credits">0</span></div>
           <div class="hud-row"><span>Score</span><span id="hud-score">0</span></div>
           <div class="hud-row"><span>Timer</span><span id="hud-time">00:00</span></div>
+          <div class="hud-row"><span>Item 1</span><span id="hud-item-1">-</span></div>
+          <div class="hud-row"><span>Item 2</span><span id="hud-item-2">-</span></div>
         </div>
       </div>
 
@@ -138,6 +140,24 @@
               </div>
             </div>
 
+            <div class="loadout">
+              <h2>Mission Items</h2>
+              <p class="investments-desc">Equip consumables purchased in the Economy tab.</p>
+              <div class="consumable-slots">
+                <div class="consumable-slot">
+                  <span class="label">Slot 1</span>
+                  <span id="consumable-slot-1">Empty</span>
+                  <button id="clear-slot-1" class="ghost small">Clear</button>
+                </div>
+                <div class="consumable-slot">
+                  <span class="label">Slot 2</span>
+                  <span id="consumable-slot-2">Empty</span>
+                  <button id="clear-slot-2" class="ghost small">Clear</button>
+                </div>
+              </div>
+              <div class="upgrade-list" id="consumable-equip-list"></div>
+            </div>
+
             <div class="actions">
               <button id="select-mission-btn">Select Mission</button>
             </div>
@@ -191,6 +211,11 @@
                 </div>
               </div>
             </div>
+            <div class="loadout">
+              <h2>Hangar Store</h2>
+              <p class="investments-desc">Purchase consumables for your next mission.</p>
+              <div class="upgrade-list" id="consumable-store"></div>
+            </div>
           </div>
 
           <div class="tab-panel" id="tab-mission" data-tab-panel="mission" hidden>
@@ -235,6 +260,8 @@
       </div>
 
       <div id="mobile-controls" aria-hidden="true" hidden>
+        <button class="mobile-btn item slot1" id="mobile-item-1">Item 1</button>
+        <button class="mobile-btn item slot2" id="mobile-item-2">Item 2</button>
         <button class="mobile-btn alt" id="mobile-alt">
           <img class="mobile-icon" id="mobile-alt-icon" alt="" />
           <span class="mobile-label" id="mobile-alt-label"></span>

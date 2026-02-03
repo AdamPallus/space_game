@@ -597,6 +597,22 @@ button:disabled {
   border: none;
 }
 
+.mobile-btn.item {
+  position: absolute;
+  bottom: 120px;
+  padding: 10px 14px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.mobile-btn.item.slot1 {
+  left: 24px;
+}
+
+.mobile-btn.item.slot2 {
+  right: 24px;
+}
+
 .mobile-icon {
   width: 22px;
   height: 22px;
@@ -652,6 +668,40 @@ button:disabled {
   font-size: 13px;
   color: #9bb9dd;
   margin-bottom: 16px;
+}
+
+.consumable-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.consumable-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(90, 140, 200, 0.3);
+  background: rgba(6, 15, 30, 0.7);
+}
+
+.consumable-slot .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8fb3dd;
+}
+
+.consumable-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.consumable-actions button {
+  white-space: nowrap;
 }
 
 .investment-categories {

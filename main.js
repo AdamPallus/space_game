@@ -283,8 +283,12 @@ const player = {
   velocity: { x: 0, y: 0 },
   hull: 100,
   maxHull: 100,
+  armor: 0,
+  maxArmor: 0,
+  armorClass: 0,
   shield: 40,
   maxShield: 40,
+  shieldRegen: 12,
   shieldCooldown: 0,
   fireCooldown: 0,
   spriteScale: 0.75,
@@ -1126,18 +1130,31 @@ function upgradeCost(upgradeId) {
 
 function applyUpgrades() {
   const hullLevel = state.upgrades.hull;
-  const shieldLevel = state.upgrades.shield;
-  const damageLevel = state.upgrades.damage;
-  const fireRateLevel = state.upgrades.fireRate;
   const auxCooldownLevel = state.upgrades.auxCooldown;
   const cloakDurationLevel = state.upgrades.cloakDuration;
 
   player.maxHull = Math.round(100 * (1 + hullLevel * 0.08));
-  player.maxShield = Math.round(40 * (1 + shieldLevel * 0.1));
   player.hull = player.maxHull;
+
+  const build = getShipBuild();
+  const defenseSlots = Array.isArray(build.defenseSlots) ? build.defenseSlots : ["shield", "none"];
+  const shieldSlots = defenseSlots.filter((slot) => slot === "shield").length;
+  const armorSlots = defenseSlots.filter((slot) => slot === "armor").length;
+
+  const baseShieldPerSlot = 40;
+  const shieldMaxMult = 1 + (build.shieldMaxLevel ?? 0) * 0.18;
+  player.maxShield = shieldSlots > 0 ? Math.round(baseShieldPerSlot * shieldSlots * shieldMaxMult) : 0;
   player.shield = player.maxShield;
-  player.damage = 8 * (1 + damageLevel * 0.1);
-  player.fireRate = Math.max(0.12, 0.28 * Math.pow(0.93, fireRateLevel));
+  const baseShieldRegen = 12;
+  const shieldRegenMult = 1 + (build.shieldRegenLevel ?? 0) * 0.22;
+  player.shieldRegen = shieldSlots > 0 ? baseShieldRegen * shieldSlots * shieldRegenMult : 0;
+  player.shieldCooldown = 0;
+
+  const baseArmorPerSlot = 80;
+  player.maxArmor = armorSlots > 0 ? Math.round(baseArmorPerSlot * armorSlots) : 0;
+  player.armor = player.maxArmor;
+  player.armorClass = armorSlots > 0 ? (build.armorClass ?? 10) : 0;
+
   player.spreadLevel = 0;
   player.altCooldownTime = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel));
   player.cloakDuration = 2.5 * (1 + cloakDurationLevel * 0.12);
@@ -1845,9 +1862,9 @@ function renderShipUpgradesPanel() {
 
     addSection("Gun Diameter");
     [
-      { id: "small", label: "Small", desc: "Smaller projectiles, higher velocity (later).", cost: 120 },
-      { id: "medium", label: "Medium", desc: "Standard issue. Balanced.", cost: 0 },
-      { id: "large", label: "Large", desc: "Bigger projectiles, lower velocity (later).", cost: 180 },
+      { id: "small", label: "Small", desc: "Smaller projectiles, faster bullets. Better vs armor with high velocity.", cost: 120 },
+      { id: "medium", label: "Medium", desc: "Standard issue. Balanced size and speed.", cost: 0 },
+      { id: "large", label: "Large", desc: "Bigger projectiles, slower bullets. Better shield burn + explosive radius.", cost: 180 },
     ].forEach((opt) => {
       const active = build.gunDiameter === opt.id;
       const canAfford = state.credits >= opt.cost;
@@ -1870,9 +1887,9 @@ function renderShipUpgradesPanel() {
 
     addSection("Spread Pattern");
     [
-      { id: "focused", label: "Focused", desc: "1 shot, straight ahead.", cost: 0 },
-      { id: "burst", label: "Burst", desc: "5 micro-shots with jitter; longer cooldown.", cost: 220 },
-      { id: "wide", label: "Wide", desc: "5 micro-shots with fixed angles.", cost: 220 },
+      { id: "focused", label: "Focused", desc: "Single full-size projectile. Best vs armor.", cost: 0 },
+      { id: "burst", label: "Burst", desc: "5 micro-shots with +/- 5 deg jitter. Longer cooldown.", cost: 220 },
+      { id: "wide", label: "Wide", desc: "5 micro-shots spread across angles. Great for clearing unarmored swarms.", cost: 220 },
     ].forEach((opt) => {
       const active = build.spread === opt.id;
       const canAfford = state.credits >= opt.cost;
@@ -1902,7 +1919,7 @@ function renderShipUpgradesPanel() {
     const rateCost = shipPanelUpgradeCost(180, build.flowRateLevel);
     addOptionRow({
       name: `Fire Rate (Lv ${build.flowRateLevel})`,
-      desc: "Reduce primary cooldown (later wiring).",
+      desc: "Cooldown x0.90 per level (armor modules add a penalty).",
       right: `Upgrade ${rateCost}/${state.credits}`,
       disabled: state.credits < rateCost,
       onClick: () => {
@@ -1917,7 +1934,7 @@ function renderShipUpgradesPanel() {
     const velCost = shipPanelUpgradeCost(180, build.flowVelocityLevel);
     addOptionRow({
       name: `Projectile Velocity (Lv ${build.flowVelocityLevel})`,
-      desc: "Increase bullet speed (later wiring).",
+      desc: "Bullet speed +8% per level (kinetic damage scales with velocity).",
       right: `Upgrade ${velCost}/${state.credits}`,
       disabled: state.credits < velCost,
       onClick: () => {
@@ -1935,8 +1952,8 @@ function renderShipUpgradesPanel() {
     clear();
     addSection("Ammo Type");
     [
-      { id: "kinetic", label: "Kinetic", desc: "Damage scales with velocity (Part 3).", cost: 0 },
-      { id: "plasma", label: "Plasma", desc: "Damage scales with projectile size (Part 3).", cost: 120 },
+      { id: "kinetic", label: "Kinetic", desc: "Damage scales with velocity and projectile size.", cost: 0 },
+      { id: "plasma", label: "Plasma", desc: "Damage scales with projectile size. Applies a damage-over-time burn.", cost: 120 },
     ].forEach((opt) => {
       const active = build.ammo === opt.id;
       const canAfford = state.credits >= opt.cost;
@@ -1992,9 +2009,20 @@ function renderShipUpgradesPanel() {
       const level = build.effectUpgrades?.[effectKey] ?? 0;
       const cost = shipPanelUpgradeCost(220, level);
       addSection("Effect Upgrades");
+      const nextLabel =
+        effectKey === "homing"
+          ? "Stronger homing"
+          : effectKey === "pierce"
+            ? "More pierce"
+            : "Bigger blast radius";
       addOptionRow({
         name: `${capitalize(effectKey)} Tuning (Lv ${level})`,
-        desc: "Improve the selected effect (later wiring).",
+        desc:
+          effectKey === "homing"
+            ? "Increases homing strength and angle limit."
+            : effectKey === "pierce"
+              ? "Increases how many ships each projectile can pass through."
+              : "Increases explosion radius (scales with projectile size).",
         right: `Upgrade ${cost}/${state.credits}`,
         disabled: state.credits < cost,
         onClick: () => {
@@ -2860,10 +2888,14 @@ function update(delta) {
     }
   }
 
-  if (player.shieldCooldown > 0) {
-    player.shieldCooldown -= delta;
+  if (player.maxShield > 0) {
+    if (player.shieldCooldown > 0) {
+      player.shieldCooldown = Math.max(0, player.shieldCooldown - delta);
+    } else {
+      player.shield = Math.min(player.maxShield, player.shield + delta * (player.shieldRegen || 12));
+    }
   } else {
-    player.shield = Math.min(player.maxShield, player.shield + delta * 12);
+    player.shield = 0;
   }
 
   bullets.forEach((bullet) => {
@@ -3126,7 +3158,7 @@ function handleCollisions() {
     const enemy = enemies[i];
     if (distance(player.x, player.y, enemy.x, enemy.y) < player.radius + enemy.radius) {
       enemies.splice(i, 1);
-      applyDamage(22 + mission.difficulty * 2);
+      applyDamage(22 + mission.difficulty * 2, { collision: true });
       spawnExplosion(enemy.x, enemy.y, enemy.radius);
     }
   }
@@ -3156,9 +3188,8 @@ function handleEnemyDestroyed(enemy, bullet) {
   }
 }
 
-function applyDamage(amount) {
+function applyDamage(amount, { collision = false } = {}) {
   if (state.debugInvincible) return;
-  player.shieldCooldown = 2.5;
   player.hitTimer = 0.25;
   let shieldHit = false;
   if (player.bulwarkShield > 0) {
@@ -3166,12 +3197,25 @@ function applyDamage(amount) {
     player.bulwarkShield -= absorbed;
     amount -= absorbed;
   }
-  if (player.shield > 0) {
+  if (!collision && player.shield > 0) {
     const absorbed = Math.min(player.shield, amount);
     player.shield -= absorbed;
     amount -= absorbed;
     if (absorbed > 0) shieldHit = true;
+    if (absorbed > 0) player.shieldCooldown = 2.5;
   }
+
+  if (amount > 0 && player.armor > 0) {
+    const effective = Math.max(0, amount - (player.armorClass || 0));
+    if (effective > 0) {
+      const toArmor = Math.min(player.armor, effective);
+      player.armor -= toArmor;
+      amount = effective - toArmor;
+    } else {
+      amount = 0;
+    }
+  }
+
   if (amount > 0) {
     player.hull -= amount;
     playSfx("hullHit", 0.45);
@@ -3495,8 +3539,14 @@ function updateHud() {
     if (bossLabel) bossLabel.textContent = "Boss ETA";
   } else {
     const runCredits = creditRewardFor(mission);
-    hudHull.textContent = `${Math.max(0, Math.round(player.hull))}/${Math.round(player.maxHull)}`;
-    hudShield.textContent = `${Math.round(player.shield)}/${Math.round(player.maxShield)}`;
+    const armorText =
+      player.maxArmor > 0
+        ? ` | A ${Math.max(0, Math.round(player.armor))}/${Math.round(player.maxArmor)}`
+        : "";
+    hudHull.textContent = `${Math.max(0, Math.round(player.hull))}/${Math.round(player.maxHull)}${armorText}`;
+    hudShield.textContent = player.maxShield > 0
+      ? `${Math.round(player.shield)}/${Math.round(player.maxShield)}`
+      : "0/0";
     hudScore.textContent = Math.round(mission.score).toString();
     hudTime.textContent = formatTime(mission.elapsed);
     hudCredits.textContent = `${state.credits} (+${runCredits})`;

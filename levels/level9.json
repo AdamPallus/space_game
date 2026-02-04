@@ -1,7 +1,7 @@
 {
   "id": "level9",
   "name": "Neon Swarm",
-  "background": "nebulaTeal",
+  "background": "nb_tealrift",
   "music": "space_battle_bpm150.ogg",
   "difficulty": "Lightning",
   "description": "Fast, fragile interceptors with a few shielded skirmishers. Survive the blitz.",

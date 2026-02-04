@@ -28,3 +28,8 @@ Note: These are temporary placeholders while we iterate on a final art direction
 Procedurally Generated Backgrounds (Placeholder)
 Source: Generated locally via `scripts/gen_backgrounds.py` (Pillow) for prototype variety.
 Note: These are temporary placeholders while we iterate on a final art direction.
+
+Generated Backgrounds (Placeholder)
+Source: Generated locally via Google Gemini image generation ("Nano Banana") using prompts, then made vertically tileable.
+Script: `scripts/gemini_bg_gen.py`
+Note: These are temporary placeholders while we iterate on a final art direction.

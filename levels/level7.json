@@ -1,7 +1,7 @@
 {
   "id": "level7",
   "name": "The Gauntlet",
-  "background": "wreckage",
+  "background": "nb_wreckfield",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Hell",
   "description": "Endless waves crash against you. Survive long enough to reach the command carrier.",

@@ -343,6 +343,10 @@ const assets = {
     asteroidBelt: loadImage(`${BG_ROOT}/asteroidBelt.png`),
     voidDust: loadImage(`${BG_ROOT}/voidDust.png`),
     wreckage: loadImage(`${BG_ROOT}/wreckage.png`),
+    nb_tealrift: loadImage(`${BG_ROOT}/nb_tealrift.png`),
+    nb_crimsonstorm: loadImage(`${BG_ROOT}/nb_crimsonstorm.png`),
+    nb_aurorawave: loadImage(`${BG_ROOT}/nb_aurorawave.png`),
+    nb_wreckfield: loadImage(`${BG_ROOT}/nb_wreckfield.png`),
   },
   player: loadImage(`${ASSET_ROOT}/playerShip2_blue.png`),
   playerBullet: loadImage(`${ASSET_ROOT}/Lasers/laserBlue02.png`),
@@ -712,6 +716,10 @@ function resizeCanvas() {
   canvas.style.width = `${innerWidth}px`;
   canvas.style.height = `${innerHeight}px`;
   ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in ctx) {
+    ctx.imageSmoothingQuality = "high";
+  }
 }
 
 window.addEventListener("resize", resizeCanvas);

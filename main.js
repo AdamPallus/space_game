@@ -4722,7 +4722,7 @@ function drawEnemyHealth(enemy) {
 
   let offset = 0;
   offset += segment(shield, maxShield, "#7dd3fc", offset); // shields: light blue
-  offset += segment(armor, maxArmor, "#334155", offset); // armor: dark gray
+  offset += segment(armor, maxArmor, "#cbd5e1", offset); // armor: light gray (higher contrast)
   segment(hull, maxHull, "#fb7185", offset); // hull: red
   ctx.restore();
 }
@@ -4772,7 +4772,7 @@ function drawPlayerHealthBar() {
 
   let offset = 0;
   offset += segment(shield, maxShield, "#7dd3fc", offset);
-  offset += segment(armor, maxArmor, "#334155", offset);
+  offset += segment(armor, maxArmor, "#cbd5e1", offset);
   segment(hull, maxHull, "#fb7185", offset);
   ctx.restore();
 }

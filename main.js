@@ -4410,7 +4410,9 @@ function applyDamage(amount, { collision = false, sourceX = null, sourceY = null
 function render() {
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // Keep render coordinates in CSS pixels while using a HiDPI canvas.
+  const dpr = window.devicePixelRatio || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
   drawBackground(width, height);
@@ -4807,7 +4809,7 @@ function updateHud() {
     hudHull.textContent = "-";
     if (hudArmor) hudArmor.textContent = "-";
     hudShield.textContent = "-";
-    hudScore.textContent = "0";
+    if (hudScore) hudScore.textContent = "0";
     hudTime.textContent = "00:00";
     hudCredits.textContent = state.credits.toString();
     if (bossProgressFill) bossProgressFill.style.width = "0%";
@@ -4825,7 +4827,7 @@ function updateHud() {
       player.maxShield > 0
         ? `${Math.round(player.shield)}/${Math.round(player.maxShield)}`
         : "0/0";
-    hudScore.textContent = Math.round(mission.score).toString();
+    if (hudScore) hudScore.textContent = Math.round(mission.score).toString();
     hudTime.textContent = formatTime(mission.elapsed);
     hudCredits.textContent = `${state.credits} (+${runCredits})`;
     updateBossProgress();

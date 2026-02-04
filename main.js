@@ -3253,6 +3253,7 @@ function spawnEnemyFromSpec(spec) {
     enemy.sweepDir = Math.random() < 0.5 ? -1 : 1;
     enemy.targetY = enemy.pattern === "bossOrbit" ? 150 : 130;
     enemy.orbitAngle = Math.random() * Math.PI * 2;
+    enemy.orbitStarted = false;
     enemy.phase = 0;
     enemy.phaseTimer = 0;
   }
@@ -4101,8 +4102,15 @@ function update(delta) {
       const radiusY = enemy.patternParams.radiusY ?? 70;
       const orbitSpeed = enemy.patternParams.orbitSpeed ?? 0.85;
 
-      if (enemy.y < targetY) {
+      // Important: once orbit starts, keep orbiting even if the orbital path dips
+      // above the initial targetY (otherwise the boss jitters between "enter" and "orbit").
+      if (!enemy.orbitStarted) {
         enemy.y += enemy.vy * empFactor * delta;
+        if (enemy.y >= targetY) {
+          enemy.y = targetY;
+          enemy.orbitStarted = true;
+          if (!Number.isFinite(enemy.orbitAngle)) enemy.orbitAngle = Math.random() * Math.PI * 2;
+        }
         return;
       }
       if (!Number.isFinite(enemy.orbitAngle)) enemy.orbitAngle = Math.random() * Math.PI * 2;

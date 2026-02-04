@@ -869,6 +869,10 @@ body {
   z-index: 50;
 }
 
+.mission-card.info-open {
+  z-index: 60;
+}
+
 .mission-shell {
   position: relative;
   overflow: hidden;
@@ -911,7 +915,7 @@ body {
   opacity: 0.7;
 }
 
-.mission-shell > * {
+.mission-shell > :not(.mission-arrow) {
   position: relative;
   z-index: 1;
 }
@@ -1008,6 +1012,56 @@ body {
   flex-wrap: wrap;
 }
 
+.mission-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 190, 255, 0.22);
+  background: rgba(2, 6, 16, 0.55);
+  color: rgba(224, 242, 254, 0.9);
+  display: grid;
+  place-items: center;
+  z-index: 3;
+  opacity: 0.82;
+  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+}
+
+.mission-arrow::before {
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.mission-arrow.left {
+  left: 10px;
+}
+
+.mission-arrow.left::before {
+  content: "\2039";
+}
+
+.mission-arrow.right {
+  right: 10px;
+}
+
+.mission-arrow.right::before {
+  content: "\203A";
+}
+
+.mission-arrow:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.04);
+  background: rgba(6, 15, 30, 0.7);
+}
+
+.mission-arrow:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .mission-actions button.small {
   padding: 8px 10px;
   border-radius: 12px;
@@ -1030,11 +1084,22 @@ body {
   z-index: 20;
 }
 
-.mission-card:hover .mission-hover,
-.mission-card:focus-within .mission-hover {
+.mission-card.info-open .mission-hover {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+}
+
+.mission-hover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mission-hover-header button.small {
+  padding: 6px 10px;
+  border-radius: 12px;
 }
 
 .mission-hover .hover-title {

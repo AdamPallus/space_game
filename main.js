@@ -482,6 +482,7 @@ let lastLoadedLevelId = null;
 let activeHangarTab = "loadout";
 let hangarNeedsRefresh = false;
 let openShipNodeId = null;
+let openMissionInfoBaseId = null;
 const levelMetaCache = new Map();
 
 const sfx = {
@@ -1013,6 +1014,7 @@ function loadState() {
         shares: 0,
       },
       rmbWeapon: "cloak",
+      missionCarouselIndex: {},
     };
   }
   try {
@@ -1079,6 +1081,7 @@ function loadState() {
     parsed.shipBuild.armorClass = parsed.shipBuild.armorClass ?? 10;
     parsed.shipBuild.armorAmountLevel = parsed.shipBuild.armorAmountLevel ?? 0;
     parsed.shipBuild.armorClassLevel = parsed.shipBuild.armorClassLevel ?? 0;
+    parsed.missionCarouselIndex = parsed.missionCarouselIndex || {};
     parsed.shipUnlocked = parsed.shipUnlocked || {};
     parsed.shipUnlocked.gunDiameter = parsed.shipUnlocked.gunDiameter || { medium: true };
     parsed.shipUnlocked.spread = parsed.shipUnlocked.spread || { focused: true };
@@ -1634,25 +1637,39 @@ function getMissionLockReason(levelId) {
   return `Defeat Mission ${requiredIndex} to unlock.`;
 }
 
+function getMissionGroupIds(baseId) {
+  const variants = missionVariantGroups[baseId] || [];
+  return [baseId, ...variants];
+}
+
 async function renderLevelSelectAsync() {
   if (!levelList) return;
   levelList.innerHTML = "";
+
   if (!isLevelUnlocked(selectedLevelId)) {
     const firstUnlocked = availableLevels.find((level) => isLevelUnlocked(level.id));
-    if (firstUnlocked) {
-      selectedLevelId = firstUnlocked.id;
-    }
+    if (firstUnlocked) selectedLevelId = firstUnlocked.id;
   }
+
   if (launchBtn) {
     const canLaunch = isLevelUnlocked(selectedLevelId);
     launchBtn.disabled = !canLaunch;
     launchBtn.textContent = canLaunch ? "Launch Mission" : "Locked";
   }
+
   for (const level of availableLevels) {
-    const metaData = await loadLevelMeta(level.id);
-    const isUnlocked = isLevelUnlocked(level.id);
-    const variants = missionVariantGroups[level.id] || [];
-    const active = level.id === selectedLevelId || variants.includes(selectedLevelId);
+    const baseUnlocked = isLevelUnlocked(level.id);
+    const groupIds = getMissionGroupIds(level.id);
+    const active = groupIds.includes(selectedLevelId);
+    const savedIdx = state.missionCarouselIndex?.[level.id] ?? 0;
+    const selectedIdx = groupIds.indexOf(selectedLevelId);
+    const idx = Math.max(
+      0,
+      Math.min(groupIds.length - 1, active && selectedIdx >= 0 ? selectedIdx : savedIdx)
+    );
+    const slideId = groupIds[idx];
+    const metaData = await loadLevelMeta(slideId);
+
     const bossTime = getBossSpawnTime(metaData);
     const estCredits = estimateLevelCredits(metaData);
     const backgroundUrl = levelBackgroundUrl(metaData);
@@ -1660,13 +1677,16 @@ async function renderLevelSelectAsync() {
     const iconTypes = uniqueTypes.slice(0, 5);
 
     const card = document.createElement("div");
-    card.className = `mission-card${active ? " active" : ""}${!isUnlocked ? " locked" : ""}`;
+    const infoOpen = openMissionInfoBaseId === level.id;
+    card.className = `mission-card${active ? " active" : ""}${!baseUnlocked ? " locked" : ""}${infoOpen ? " info-open" : ""}`;
     card.style.setProperty("--mission-bg", `url('${backgroundUrl}')`);
     card.tabIndex = 0;
 
     const title = metaData.name || level.label;
-    const desc = metaData.description || level.id.toUpperCase();
+    const desc = metaData.description || slideId.toUpperCase();
     const badge = metaData.difficulty || "Unknown";
+    const variantLabel = groupIds.length > 1 ? `${idx + 1}/${groupIds.length}` : "";
+
     const metaBits = [];
     if (bossTime) metaBits.push(`Boss ETA ${formatTime(bossTime)}`);
     if (estCredits) metaBits.push(`Est. ${estCredits} cr`);
@@ -1684,74 +1704,41 @@ async function renderLevelSelectAsync() {
       })
       .join("");
 
-    const hoverLines = [];
-    hoverLines.push(desc);
-    if (bossTime) hoverLines.push(`\nBoss spawns at ${formatTime(bossTime)}.`);
-    if (estCredits) hoverLines.push(`Estimated credits from spawns: ${estCredits}.`);
+    const infoLines = [];
+    infoLines.push(desc);
+    if (bossTime) infoLines.push(`\nBoss spawns at ${formatTime(bossTime)}.`);
+    if (estCredits) infoLines.push(`Estimated credits from spawns: ${estCredits}.`);
     if (metaData.enemyScale?.hp || metaData.enemyScale?.damage) {
-      hoverLines.push(
+      infoLines.push(
         `Enemy scaling: ${metaData.enemyScale?.hp ? `HP x${formatNumber(metaData.enemyScale.hp, 2)}` : "HP x1.00"} | ${metaData.enemyScale?.damage ? `DMG x${formatNumber(metaData.enemyScale.damage, 2)}` : "DMG x1.00"}`
       );
     }
-    if (uniqueTypes.length) hoverLines.push(`Enemy roster: ${uniqueTypes.slice(0, 6).map(capitalize).join(", ")}${uniqueTypes.length > 6 ? "…" : ""}`);
-
-    const variantsContainer = document.createElement("div");
-    variantsContainer.className = "mission-variants";
-    if (variants.length) {
-      for (const variantId of variants) {
-        const variantMeta = await loadLevelMeta(variantId);
-        const variantUnlocked = isLevelUnlocked(variantId);
-        const row = document.createElement("div");
-        row.className = "variant-row";
-        const left = document.createElement("div");
-        left.className = "variant-name";
-        left.textContent = variantMeta?.name || capitalize(variantId);
-        const actions = document.createElement("div");
-        const selectBtn = document.createElement("button");
-        selectBtn.className = "ghost small";
-        selectBtn.textContent = selectedLevelId === variantId ? "Selected" : "Select";
-        selectBtn.disabled = !variantUnlocked;
-        selectBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (!variantUnlocked) return;
-          selectedLevelId = variantId;
-          currentLevel = null;
-          renderLevelSelect();
-        });
-        const launchBtnLocal = document.createElement("button");
-        launchBtnLocal.className = "small";
-        launchBtnLocal.textContent = "Launch";
-        launchBtnLocal.disabled = !variantUnlocked;
-        launchBtnLocal.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          if (!variantUnlocked) return;
-          selectedLevelId = variantId;
-          currentLevel = null;
-          await launchSelectedMission();
-        });
-        actions.appendChild(selectBtn);
-        actions.appendChild(launchBtnLocal);
-        row.appendChild(left);
-        row.appendChild(actions);
-        variantsContainer.appendChild(row);
-      }
+    if (uniqueTypes.length) {
+      infoLines.push(`Enemy roster: ${uniqueTypes.slice(0, 8).map(capitalize).join(", ")}${uniqueTypes.length > 8 ? "…" : ""}`);
     }
 
     card.innerHTML = `
       <div class="mission-shell">
+        ${
+          groupIds.length > 1
+            ? `<button class="mission-arrow left" data-action="prev" aria-label="Previous variant" title="Previous variant"></button>
+               <button class="mission-arrow right" data-action="next" aria-label="Next variant" title="Next variant"></button>`
+            : ""
+        }
         <div class="mission-top">
           <h3 class="mission-title">${title}</h3>
-          <span class="mission-badge">${badge}</span>
+          <span class="mission-badge">${badge}${variantLabel ? ` <span class="muted">(${variantLabel})</span>` : ""}</span>
         </div>
         <p class="mission-desc">${desc}</p>
         <div class="mission-icons">${iconsHtml}</div>
         <div class="mission-meta">${metaBits.map((m) => `<span>${m}</span>`).join("")}</div>
         <div class="mission-actions">
           <div class="left">
-            <button class="ghost small" data-action="select">${active && selectedLevelId === level.id ? "Selected" : "Select"}</button>
+            <button class="ghost small" data-action="select">${selectedLevelId === slideId ? "Selected" : "Select"}</button>
             <button class="small" data-action="launch">Launch</button>
+            <button class="ghost small" data-action="info">${infoOpen ? "Close" : "More Info"}</button>
           </div>
-          <div class="muted">${isUnlocked ? "" : "Locked"}</div>
+          <div class="muted">${baseUnlocked ? "" : "Locked"}</div>
         </div>
         <div class="mission-lock">
           <div>
@@ -1761,46 +1748,102 @@ async function renderLevelSelectAsync() {
         </div>
       </div>
       <div class="mission-hover">
-        <h4 class="hover-title">${title}</h4>
-        <p class="hover-body">${hoverLines.join("\n")}</p>
-        ${variants.length ? `<div class="muted">Variants</div>` : ""}
+        <div class="mission-hover-header">
+          <h4 class="hover-title">${title}</h4>
+          <button class="ghost small" data-action="close-info" aria-label="Close info">Close</button>
+        </div>
+        <p class="hover-body">${infoLines.join("\n")}</p>
       </div>
     `;
 
-    const hover = card.querySelector(".mission-hover");
-    if (hover && variants.length) {
-      hover.appendChild(variantsContainer);
+    const setIndex = (nextIdx) => {
+      if (!baseUnlocked) return;
+      if (!state.missionCarouselIndex) state.missionCarouselIndex = {};
+      const wrapped = (nextIdx + groupIds.length) % groupIds.length;
+      state.missionCarouselIndex[level.id] = wrapped;
+      selectedLevelId = groupIds[wrapped];
+      currentLevel = null;
+      openMissionInfoBaseId = null;
+      saveState();
+      renderLevelSelect();
+    };
+
+    const prevButton = card.querySelector('button[data-action="prev"]');
+    const nextButton = card.querySelector('button[data-action="next"]');
+    if (prevButton) {
+      prevButton.disabled = !baseUnlocked;
+      prevButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        setIndex(idx - 1);
+      });
+    }
+    if (nextButton) {
+      nextButton.disabled = !baseUnlocked;
+      nextButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        setIndex(idx + 1);
+      });
     }
 
-    const selectButton = card.querySelector('button[data-action=\"select\"]');
-    const launchButton = card.querySelector('button[data-action=\"launch\"]');
+    const selectButton = card.querySelector('button[data-action="select"]');
+    const launchButton = card.querySelector('button[data-action="launch"]');
+    const infoButton = card.querySelector('button[data-action="info"]');
+    const closeInfoButton = card.querySelector('button[data-action="close-info"]');
+    const infoPanel = card.querySelector(".mission-hover");
+    const infoHeader = card.querySelector(".mission-hover-header");
+
     if (selectButton) {
-      selectButton.disabled = !isUnlocked;
+      selectButton.disabled = !baseUnlocked;
       selectButton.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (!isUnlocked) return;
-        selectedLevelId = level.id;
+        if (!baseUnlocked) return;
+        selectedLevelId = slideId;
         currentLevel = null;
+        openMissionInfoBaseId = null;
         renderLevelSelect();
       });
     }
     if (launchButton) {
-      launchButton.disabled = !isUnlocked;
+      launchButton.disabled = !baseUnlocked;
       launchButton.addEventListener("click", async (e) => {
         e.stopPropagation();
-        if (!isUnlocked) return;
-        selectedLevelId = level.id;
+        if (!baseUnlocked) return;
+        selectedLevelId = slideId;
         currentLevel = null;
+        openMissionInfoBaseId = null;
         await launchSelectedMission();
       });
     }
+    if (infoButton) {
+      infoButton.disabled = false;
+      infoButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openMissionInfoBaseId = openMissionInfoBaseId === level.id ? null : level.id;
+        renderLevelSelect();
+      });
+    }
+    if (closeInfoButton) {
+      closeInfoButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openMissionInfoBaseId = null;
+        renderLevelSelect();
+      });
+    }
+    if (infoPanel) {
+      infoPanel.addEventListener("click", (e) => e.stopPropagation());
+    }
+    if (infoHeader) {
+      infoHeader.addEventListener("click", (e) => e.stopPropagation());
+    }
 
     card.addEventListener("click", () => {
-      if (!isUnlocked) return;
-      selectedLevelId = level.id;
+      if (!baseUnlocked) return;
+      selectedLevelId = slideId;
       currentLevel = null;
+      openMissionInfoBaseId = null;
       renderLevelSelect();
     });
+
     levelList.appendChild(card);
   }
 }

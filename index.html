@@ -88,6 +88,9 @@
             <button class="tab-btn" data-tab="mission" role="tab" aria-selected="false">
               Mission Select
             </button>
+            <button class="tab-btn" data-tab="compendium" role="tab" aria-selected="false">
+              Drone Compendium
+            </button>
           </div>
 
           <div class="tab-panel" id="tab-loadout" data-tab-panel="loadout">
@@ -222,6 +225,21 @@
             <div class="actions">
               <button id="launch-btn">Launch Mission</button>
             </div>
+          </div>
+
+          <div class="tab-panel" id="tab-compendium" data-tab-panel="compendium" hidden>
+            <h2>Enemy Drone Compendium</h2>
+            <p class="investments-desc">
+              Field intel on hostile drones. (In the full game, entries unlock as you encounter them.)
+            </p>
+            <div class="compendium-toolbar">
+              <input id="compendium-search" class="compendium-search" type="search" placeholder="Search drones..." />
+              <label class="toggle compact">
+                <input type="checkbox" id="compendium-show-bosses" checked />
+                <span>Show Bosses</span>
+              </label>
+            </div>
+            <div class="compendium-grid" id="compendium-list"></div>
           </div>
         </div>
 

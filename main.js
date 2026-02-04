@@ -84,6 +84,9 @@ const mobileEjectBtn = document.getElementById("mobile-eject");
 const mobileLaunchBtn = document.getElementById("mobile-launch");
 const mobileControls = document.getElementById("mobile-controls");
 const levelList = document.getElementById("level-list");
+const compendiumList = document.getElementById("compendium-list");
+const compendiumSearch = document.getElementById("compendium-search");
+const compendiumShowBosses = document.getElementById("compendium-show-bosses");
 
 const STORAGE_KEY = "mini-fighter-save";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
@@ -342,6 +345,7 @@ const assets = {
   explosionFlare: loadImage(`${ASSET_ROOT}/Effects/star3.png`),
   enemies: {
     scout: loadImage(`${ASSET_ROOT}/Enemies/enemyBlue2.png`),
+    blue3: loadImage(`${ASSET_ROOT}/Enemies/enemyBlue3.png`),
     fighter: loadImage(`${ASSET_ROOT}/Enemies/enemyRed3.png`),
     bruiser: loadImage(`${ASSET_ROOT}/Enemies/enemyBlack4.png`),
     hunter: loadImage(`${ASSET_ROOT}/Enemies/enemyGreen4.png`),
@@ -360,6 +364,7 @@ const assets = {
 
 const enemySpriteMap = {
   enemyBlue2: assets.enemies.scout,
+  enemyBlue3: assets.enemies.blue3,
   enemyRed2: assets.enemies.red2,
   enemyRed3: assets.enemies.fighter,
   enemyBlack3: assets.enemies.black3,
@@ -752,6 +757,9 @@ function setHangarTab(tabId, { renderLevels = true } = {}) {
   if (renderLevels && tabId === "mission") {
     renderLevelSelect();
   }
+  if (renderLevels && tabId === "compendium") {
+    renderDroneCompendium();
+  }
   updateMobileControls();
 }
 
@@ -762,6 +770,17 @@ hangarTabButtons.forEach((button) => {
 });
 
 setHangarTab(activeHangarTab, { renderLevels: false });
+
+if (compendiumSearch) {
+  compendiumSearch.addEventListener("input", () => {
+    if (activeHangarTab === "compendium") renderDroneCompendium();
+  });
+}
+if (compendiumShowBosses) {
+  compendiumShowBosses.addEventListener("change", () => {
+    if (activeHangarTab === "compendium") renderDroneCompendium();
+  });
+}
 
 async function launchSelectedMission() {
   if (!isLevelUnlocked(selectedLevelId)) return;
@@ -1423,6 +1442,9 @@ function updateHangar() {
   if (activeHangarTab === "mission") {
     renderLevelSelect();
   }
+  if (activeHangarTab === "compendium") {
+    renderDroneCompendium();
+  }
   if ((!mission || !mission.active) && hangarPanel && !hangarPanel.hidden) {
     setHangarMusic();
   }
@@ -1584,6 +1606,256 @@ async function renderLevelSelectAsync() {
     item.appendChild(meta);
     item.appendChild(button);
     levelList.appendChild(item);
+  }
+}
+
+const COMPENDIUM_LEVEL_IDS = [
+  ...availableLevels.map((level) => level.id),
+  // Level variants live on disk but aren't currently listed in Mission Select.
+  "level1_patrol",
+  "level2_skirmish",
+];
+
+const compendiumNameMap = {
+  scout: "Blue Scout Drone",
+  fighter: "Redline Fighter",
+  sentinel: "Sentinel Strafe Drone",
+  lurker: "Lurker Ambush Probe",
+  hunter: "Hunter Pursuit Drone",
+  transport: "Cargo Transport (Pirated)",
+  interceptor: "Interceptor Wing",
+  marauder: "Marauder Spiralwing",
+  warden: "Warden Gunline",
+  phantom: "Phantom Spiralwing",
+  reaper: "Reaper Hunter-Killer",
+  harvester: "Harvester Bomber",
+  overseer: "Overseer Command Skiff",
+  captain: "Captain-Class Corvette",
+  elite: "Elite Vortex Drone",
+  gnat: "Gnat Interceptor",
+  dart: "Dart Skirmisher",
+  spark: "Spark Shield-Kite",
+  stalker: "Stalker Proximity Hunter",
+  plated: "Plated Bastion",
+  escort: "Escort Gunship",
+  bulwark: "Bulwark Heavy Hauler",
+  drone: "Training Drone",
+  shieldkite: "Shield-Kite Drone",
+  tank: "Armored Test Rig",
+
+  "level1:boss": "Warden of First Contact",
+  "level2:boss": "Warden of Second Contact",
+  "level3:boss": "Warden of Third Contact",
+  "level4:boss": "Warden of Fourth Contact",
+  "level5:boss": "Warden of Fifth Contact",
+  "level6:boss": "Warden of Sixth Contact",
+  "level7:boss": "Warden of Seventh Contact",
+  "level8:boss": "Warden of Eighth Contact",
+  "level9:boss": "Neon Swarm Sovereign",
+  "level10:boss": "Iron Graveyard Juggernaut",
+  "level11:boss": "Corridor Gatekeeper",
+  "overhaul_demo:boss": "Systems Test Sentinel",
+  "level1_patrol:boss": "Patrol Wing Overboss",
+  "level2_skirmish:boss": "Skirmish Wing Overboss",
+};
+
+function spriteSrcForKey(spriteKey) {
+  if (!spriteKey) return "";
+  if (spriteKey.startsWith("enemy")) return `${ASSET_ROOT}/Enemies/${spriteKey}.png`;
+  if (spriteKey.startsWith("ufo")) return `${ASSET_ROOT}/${spriteKey}.png`;
+  // fallback to the key directly if it already looks like a path
+  return spriteKey;
+}
+
+function normalizeEnemyDefense(spec) {
+  const hull = spec.hull ?? spec.hp ?? 0;
+  const armor = spec.armor ?? 0;
+  const shield = spec.shield ?? 0;
+  const armorClass = spec.armorClass ?? 0;
+  const shieldRegen = spec.shieldRegen ?? (shield > 0 ? 10 : 0);
+  return { hull, armor, shield, armorClass, shieldRegen };
+}
+
+function describeMovement(spec) {
+  const pattern = spec.pattern || "drift";
+  const ai = spec.ai || "";
+  if (pattern === "zigzag") return "Serpentine zig-zag descent (hard to track).";
+  if (pattern === "swoop") return "Swoops in from the flank with a bobbing path.";
+  if (pattern === "strafe") return "Slides side-to-side while descending slowly.";
+  if (pattern === "spiral") return "Corkscrew spiral path that drifts across lanes.";
+  if (pattern === "bossSweep") return "Entrances, then sweeps horizontally across the arena.";
+  if (ai === "hunter") return "Actively hunts the pilot; aggression ramps as the mission drags on.";
+  if (ai === "stalker") return "Lurks until you enter its aggro radius, then pursues.";
+  if (ai === "transport") return "Slow hauler with mild weave; prioritizes survival over speed.";
+  return "Steady descent with light drift.";
+}
+
+function describeWeapons(spec) {
+  const mode = spec.fireMode || "aim";
+  const rate = spec.fireRate ?? 2.2;
+  const speed = spec.bulletSpeed;
+  const count = spec.fireCount;
+  const spread = spec.fireSpread;
+
+  const cadence =
+    rate <= 0.9
+      ? "high cadence"
+      : rate <= 1.6
+        ? "medium cadence"
+        : "low cadence";
+
+  if (mode === "radial") {
+    return `Radial barrage (${count || 18} shots), ${cadence}.`;
+  }
+  if (mode === "spread") {
+    return `Spread volley (${count || 5} shots, ${(spread || 0.8).toFixed(1)} rad), ${cadence}.`;
+  }
+  const bs = speed ? ` Bullet speed ~${Math.round(speed)}.` : "";
+  return `Aimed shots, ${cadence}.${bs}`;
+}
+
+function describeDefense(spec) {
+  const d = normalizeEnemyDefense(spec);
+  const parts = [];
+  if (d.shield > 0) {
+    parts.push(`Shields ${d.shield}${d.shieldRegen ? ` (+${Math.round(d.shieldRegen)}/s regen)` : ""}`);
+  }
+  if (d.armor > 0) {
+    parts.push(`Armor ${d.armor}${d.armorClass ? ` (AC ${d.armorClass})` : ""}`);
+  }
+  parts.push(`Hull ${d.hull}`);
+  const extra = spec.empImmune ? " EMP-immune." : "";
+  return `${parts.join(" | ")}.${extra}`;
+}
+
+function compendiumKeyFor(levelId, typeId, spec) {
+  const isBoss = !!spec?.isBoss || typeId === "boss";
+  return isBoss ? `${levelId}:boss` : typeId;
+}
+
+let compendiumCache = null;
+let compendiumLoading = null;
+
+async function buildCompendium() {
+  if (compendiumCache) return compendiumCache;
+  if (compendiumLoading) return compendiumLoading;
+  compendiumLoading = (async () => {
+    const levels = await Promise.all(COMPENDIUM_LEVEL_IDS.map((id) => loadLevelMeta(id)));
+    const byKey = new Map();
+    levels.forEach((level) => {
+      const levelId = level.id;
+      const enemyTypes = level.enemyTypes || {};
+      Object.keys(enemyTypes).forEach((typeId) => {
+        const spec = enemyTypes[typeId] || {};
+        const key = compendiumKeyFor(levelId, typeId, spec);
+        const entry = byKey.get(key) || {
+          key,
+          typeId,
+          isBoss: !!spec.isBoss || typeId === "boss",
+          spec,
+          sources: [],
+        };
+        entry.sources.push({
+          levelId,
+          levelName: level.name || levelId,
+          difficulty: level.difficulty || "Unknown",
+        });
+        // Prefer the first non-empty spec, but always keep a boss spec per boss key.
+        if (!entry.spec || Object.keys(entry.spec).length === 0) {
+          entry.spec = spec;
+        }
+        byKey.set(key, entry);
+      });
+    });
+    const list = Array.from(byKey.values());
+    // Stable, friendly ordering: non-boss first, then bosses; within groups by name.
+    list.sort((a, b) => {
+      if (a.isBoss !== b.isBoss) return a.isBoss ? 1 : -1;
+      const an = (compendiumNameMap[a.key] || compendiumNameMap[a.typeId] || a.key).toLowerCase();
+      const bn = (compendiumNameMap[b.key] || compendiumNameMap[b.typeId] || b.key).toLowerCase();
+      return an.localeCompare(bn);
+    });
+    compendiumCache = list;
+    compendiumLoading = null;
+    return list;
+  })();
+  return compendiumLoading;
+}
+
+function makeCompendiumDescription(entry) {
+  const spec = entry.spec || {};
+  const movement = describeMovement(spec);
+  const weapons = describeWeapons(spec);
+  const defense = describeDefense(spec);
+  const speed = spec.speed ? `Top speed ~${Math.round(spec.speed)}.` : "";
+  const aggro = spec.ai === "stalker" && spec.aggroRadius ? `Aggro radius ~${Math.round(spec.aggroRadius)}.` : "";
+  const notes = [movement, weapons, defense, speed, aggro].filter(Boolean).join("\n");
+  return notes;
+}
+
+function renderDroneCompendium() {
+  renderDroneCompendiumAsync();
+}
+
+async function renderDroneCompendiumAsync() {
+  if (!compendiumList) return;
+  compendiumList.innerHTML = `<div class="muted">Loading intel…</div>`;
+
+  const query = (compendiumSearch?.value || "").trim().toLowerCase();
+  const showBosses = compendiumShowBosses ? !!compendiumShowBosses.checked : true;
+  const list = await buildCompendium();
+
+  const filtered = list.filter((entry) => {
+    if (!showBosses && entry.isBoss) return false;
+    if (!query) return true;
+    const name = (compendiumNameMap[entry.key] || compendiumNameMap[entry.typeId] || entry.key).toLowerCase();
+    const sprite = (entry.spec?.sprite || "").toLowerCase();
+    const pattern = (entry.spec?.pattern || "").toLowerCase();
+    const ai = (entry.spec?.ai || "").toLowerCase();
+    const hay = `${name} ${sprite} ${pattern} ${ai}`;
+    return hay.includes(query);
+  });
+
+  compendiumList.innerHTML = "";
+  filtered.forEach((entry) => {
+    const spec = entry.spec || {};
+    const displayName =
+      compendiumNameMap[entry.key] || compendiumNameMap[entry.typeId] || capitalize(entry.typeId);
+    const spriteSrc = spriteSrcForKey(spec.sprite);
+    const tags = [];
+    if (spec.ai) tags.push(spec.ai);
+    if (spec.pattern) tags.push(spec.pattern);
+    if (spec.fireMode) tags.push(spec.fireMode);
+    if (spec.empImmune) tags.push("EMP-immune");
+    if (normalizeEnemyDefense(spec).armor > 0) tags.push("armored");
+    if (normalizeEnemyDefense(spec).shield > 0) tags.push("shielded");
+
+    const firstSource = entry.sources[0];
+    const subtitle = entry.isBoss
+      ? `Boss target | ${firstSource?.levelName || "Unknown mission"}`
+      : `Seen in: ${entry.sources.slice(0, 2).map((s) => s.levelName).join(", ")}${entry.sources.length > 2 ? "…" : ""}`;
+
+    const card = document.createElement("div");
+    card.className = `compendium-card${entry.isBoss ? " boss" : ""}`;
+    card.innerHTML = `
+      <div class="compendium-sprite">
+        ${spriteSrc ? `<img src="${spriteSrc}" alt="${displayName}" loading="lazy" />` : ""}
+      </div>
+      <div class="compendium-body">
+        <h3 class="compendium-title">${displayName}</h3>
+        <p class="compendium-subtitle">${subtitle}</p>
+        <div class="compendium-tags">
+          ${entry.isBoss ? `<span class="tag warn">BOSS</span>` : ""}
+          ${tags.slice(0, 5).map((tag) => `<span class="tag${tag === "EMP-immune" ? " warn" : ""}">${tag}</span>`).join("")}
+        </div>
+      </div>
+      <div class="compendium-details">${makeCompendiumDescription(entry)}</div>
+    `;
+    compendiumList.appendChild(card);
+  });
+
+  if (!filtered.length) {
+    compendiumList.innerHTML = `<div class="muted">No matching drones found.</div>`;
   }
 }
 

@@ -204,6 +204,131 @@ body {
   color: rgba(155, 185, 221, 0.92);
 }
 
+.compendium-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 14px 0 16px;
+}
+
+.compendium-search {
+  flex: 1 1 220px;
+  min-width: 200px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(125, 190, 255, 0.22);
+  background: rgba(2, 6, 16, 0.35);
+  color: rgba(224, 242, 254, 0.95);
+  outline: none;
+}
+
+.compendium-search::placeholder {
+  color: rgba(143, 179, 221, 0.75);
+}
+
+.toggle.compact {
+  padding: 8px 10px;
+  border-radius: 14px;
+}
+
+.compendium-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.compendium-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(125, 190, 255, 0.18);
+  background: rgba(2, 6, 16, 0.32);
+  padding: 12px 12px;
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 12px;
+  min-height: 92px;
+}
+
+.compendium-card.boss {
+  border-color: rgba(251, 191, 36, 0.32);
+  background: radial-gradient(circle at 20% 20%, rgba(251, 191, 36, 0.1), rgba(2, 6, 16, 0.3));
+}
+
+.compendium-sprite {
+  width: 76px;
+  height: 76px;
+  border-radius: 16px;
+  background: rgba(6, 15, 30, 0.65);
+  border: 1px solid rgba(125, 190, 255, 0.16);
+  display: grid;
+  place-items: center;
+}
+
+.compendium-sprite img {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.compendium-body {
+  display: grid;
+  gap: 6px;
+}
+
+.compendium-title {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(224, 242, 254, 0.95);
+  font-weight: 800;
+  margin: 0;
+}
+
+.compendium-subtitle {
+  font-size: 12px;
+  color: rgba(154, 208, 255, 0.9);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.compendium-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 4px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 190, 255, 0.18);
+  background: rgba(6, 15, 30, 0.6);
+  color: rgba(155, 185, 221, 0.95);
+}
+
+.tag.warn {
+  border-color: rgba(251, 191, 36, 0.35);
+  color: rgba(251, 191, 36, 0.95);
+}
+
+.compendium-details {
+  grid-column: 1 / -1;
+  border-top: 1px dashed rgba(125, 190, 255, 0.18);
+  margin-top: 10px;
+  padding-top: 10px;
+  font-size: 12px;
+  color: rgba(224, 242, 254, 0.85);
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
 .ship-canvas {
   position: relative;
   width: min(520px, 100%);

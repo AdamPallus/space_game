@@ -859,6 +859,18 @@ body {
 
 .mission-card {
   position: relative;
+  cursor: pointer;
+  overflow: visible;
+  z-index: 0;
+}
+
+.mission-card:hover,
+.mission-card:focus-within {
+  z-index: 50;
+}
+
+.mission-shell {
+  position: relative;
   overflow: hidden;
   border-radius: 18px;
   border: 1px solid rgba(90, 140, 200, 0.28);
@@ -867,10 +879,9 @@ body {
   min-height: 188px;
   display: grid;
   gap: 10px;
-  cursor: pointer;
 }
 
-.mission-card::before {
+.mission-shell::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -883,7 +894,7 @@ body {
   pointer-events: none;
 }
 
-.mission-card::after {
+.mission-shell::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -891,16 +902,16 @@ body {
   pointer-events: none;
 }
 
-.mission-card.active {
+.mission-card.active .mission-shell {
   border-color: rgba(34, 211, 238, 0.75);
   box-shadow: 0 10px 24px rgba(34, 211, 238, 0.1);
 }
 
-.mission-card.locked {
+.mission-card.locked .mission-shell {
   opacity: 0.7;
 }
 
-.mission-card > * {
+.mission-shell > * {
   position: relative;
   z-index: 1;
 }
@@ -1016,7 +1027,7 @@ body {
   transform: translateY(6px);
   transition: opacity 140ms ease, transform 140ms ease;
   pointer-events: none;
-  z-index: 3;
+  z-index: 20;
 }
 
 .mission-card:hover .mission-hover,

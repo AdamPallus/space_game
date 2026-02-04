@@ -1738,30 +1738,32 @@ async function renderLevelSelectAsync() {
     }
 
     card.innerHTML = `
-      <div class="mission-top">
-        <h3 class="mission-title">${title}</h3>
-        <span class="mission-badge">${badge}</span>
-      </div>
-      <p class="mission-desc">${desc}</p>
-      <div class="mission-icons">${iconsHtml}</div>
-      <div class="mission-meta">${metaBits.map((m) => `<span>${m}</span>`).join("")}</div>
-      <div class="mission-actions">
-        <div class="left">
-          <button class="ghost small" data-action="select">${active && selectedLevelId === level.id ? "Selected" : "Select"}</button>
-          <button class="small" data-action="launch">Launch</button>
+      <div class="mission-shell">
+        <div class="mission-top">
+          <h3 class="mission-title">${title}</h3>
+          <span class="mission-badge">${badge}</span>
         </div>
-        <div class="muted">${isUnlocked ? "" : "Locked"}</div>
+        <p class="mission-desc">${desc}</p>
+        <div class="mission-icons">${iconsHtml}</div>
+        <div class="mission-meta">${metaBits.map((m) => `<span>${m}</span>`).join("")}</div>
+        <div class="mission-actions">
+          <div class="left">
+            <button class="ghost small" data-action="select">${active && selectedLevelId === level.id ? "Selected" : "Select"}</button>
+            <button class="small" data-action="launch">Launch</button>
+          </div>
+          <div class="muted">${isUnlocked ? "" : "Locked"}</div>
+        </div>
+        <div class="mission-lock">
+          <div>
+            <div class="lock-title">Locked</div>
+            <div class="lock-desc">${getMissionLockReason(level.id)}</div>
+          </div>
+        </div>
       </div>
       <div class="mission-hover">
         <h4 class="hover-title">${title}</h4>
         <p class="hover-body">${hoverLines.join("\n")}</p>
         ${variants.length ? `<div class="muted">Variants</div>` : ""}
-      </div>
-      <div class="mission-lock">
-        <div>
-          <div class="lock-title">Locked</div>
-          <div class="lock-desc">${getMissionLockReason(level.id)}</div>
-        </div>
       </div>
     `;
 

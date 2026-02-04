@@ -3254,6 +3254,7 @@ function spawnEnemyFromSpec(spec) {
     enemy.targetY = enemy.pattern === "bossOrbit" ? 150 : 130;
     enemy.orbitAngle = Math.random() * Math.PI * 2;
     enemy.orbitStarted = false;
+    enemy.orbitWarmup = 0;
     enemy.phase = 0;
     enemy.phaseTimer = 0;
   }
@@ -4048,6 +4049,8 @@ function update(delta) {
       const advanceTime = enemy.patternParams.advanceTime ?? 0.65;
       const sweepDuration = enemy.patternParams.sweepDuration ?? 2.3;
       const retreatTime = enemy.patternParams.retreatTime ?? 0.8;
+      const depth = enemy.patternParams.depth ?? 70;
+      const sweepAmp = enemy.patternParams.sweepAmp ?? Math.min(320, width * 0.38);
 
       if (enemy.y < targetY) {
         enemy.y += enemy.vy * empFactor * delta;
@@ -4073,13 +4076,17 @@ function update(delta) {
         if (enemy.phaseTimer >= advanceTime) {
           enemy.phase = 2;
           enemy.phaseTimer = 0;
+          enemy.sweepAngle = 0;
         }
       } else if (enemy.phase === 2) {
-        enemy.x += enemy.sweepDir * enemy.speed * 1.05 * empFactor * delta;
-        if (enemy.x < 80 || enemy.x > width - 80) {
-          enemy.sweepDir *= -1;
-        }
-        if (enemy.phaseTimer >= sweepDuration) {
+        if (!Number.isFinite(enemy.sweepAngle)) enemy.sweepAngle = 0;
+        // Smooth, heavy-feeling sweep: a full sinusoid across the arena + a gentle dip in depth.
+        const sweepSpeed = (Math.PI * 2) / Math.max(0.4, sweepDuration);
+        enemy.sweepAngle += sweepSpeed * empFactor * delta;
+        const a = enemy.sweepAngle;
+        enemy.x = centerX + Math.sin(a) * sweepAmp;
+        enemy.y = (targetY + advance) + Math.sin(a * 0.5) * depth;
+        if (enemy.phaseTimer >= sweepDuration || enemy.sweepAngle >= Math.PI * 2) {
           enemy.phase = 3;
           enemy.phaseTimer = 0;
         }
@@ -4097,7 +4104,10 @@ function update(delta) {
       const width = canvas.width / window.devicePixelRatio;
       const targetY = enemy.targetY ?? 150;
       const centerX = width / 2;
-      const baseCenterY = targetY + Math.sin(mission.elapsed * 0.35) * 16;
+      const warmupTime = enemy.patternParams.warmupTime ?? 0.55;
+      const wobble = enemy.patternParams.wobble ?? 16;
+      const warmup = Math.max(0, Math.min(1, enemy.orbitWarmup ?? 0));
+      const baseCenterY = targetY + Math.sin(mission.elapsed * 0.35) * wobble * warmup;
       const radiusX = enemy.patternParams.radiusX ?? Math.min(340, width * 0.34);
       const radiusY = enemy.patternParams.radiusY ?? 70;
       const orbitSpeed = enemy.patternParams.orbitSpeed ?? 0.85;
@@ -4109,14 +4119,17 @@ function update(delta) {
         if (enemy.y >= targetY) {
           enemy.y = targetY;
           enemy.orbitStarted = true;
+          enemy.orbitWarmup = 0;
           if (!Number.isFinite(enemy.orbitAngle)) enemy.orbitAngle = Math.random() * Math.PI * 2;
         }
         return;
       }
+      enemy.orbitWarmup = Math.min(1, (enemy.orbitWarmup ?? 0) + delta / Math.max(0.1, warmupTime));
       if (!Number.isFinite(enemy.orbitAngle)) enemy.orbitAngle = Math.random() * Math.PI * 2;
       enemy.orbitAngle += orbitSpeed * empFactor * delta;
-      enemy.x = centerX + Math.cos(enemy.orbitAngle) * radiusX;
-      enemy.y = baseCenterY + Math.sin(enemy.orbitAngle) * radiusY;
+      const rScale = enemy.orbitWarmup ?? 1;
+      enemy.x = centerX + Math.cos(enemy.orbitAngle) * radiusX * rScale;
+      enemy.y = baseCenterY + Math.sin(enemy.orbitAngle) * radiusY * rScale;
       return;
     }
     if (enemy.ai === "stalker") {

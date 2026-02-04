@@ -394,6 +394,7 @@ const availableLevels = [
   { id: "level10", label: "Mission 10" },
   { id: "level11", label: "Mission 11" },
   { id: "overhaul_demo", label: "Overhaul Demo", test: true },
+  { id: "patterns_demo", label: "Pattern Lab", test: true },
   // Variant missions (Operations Center unlocks - not yet integrated)
   // { id: "level1_patrol", label: "Mission 1: Patrol Alpha" },
   // { id: "level2_skirmish", label: "Mission 2: Skirmish" },
@@ -1909,7 +1910,12 @@ function describeMovement(spec) {
   if (pattern === "swoop") return "Swoops in from the flank with a bobbing path.";
   if (pattern === "strafe") return "Slides side-to-side while descending slowly.";
   if (pattern === "spiral") return "Corkscrew spiral path that drifts across lanes.";
+  if (pattern === "spiralIn") return "Tightening spiral that collapses inward over time.";
+  if (pattern === "laneShift") return "Lane-shifts in decisive hops while maintaining pressure.";
+  if (pattern === "stall") return "Hovers to hold firing lines, then resumes its descent.";
   if (pattern === "bossSweep") return "Entrances, then sweeps horizontally across the arena.";
+  if (pattern === "bossAdvanceSweep") return "Pushes forward, sweeps, then regroups in repeating attack phases.";
+  if (pattern === "bossOrbit") return "Orbits in a wide arc while maintaining fire discipline.";
   if (ai === "hunter") return "Actively hunts the pilot; aggression ramps as the mission drags on.";
   if (ai === "stalker") return "Lurks until you enter its aggro radius, then pursues.";
   if (ai === "transport") return "Slow hauler with mild weave; prioritizes survival over speed.";
@@ -3228,13 +3234,27 @@ function spawnEnemyFromSpec(spec) {
     enemy.spawnY = enemy.y;
   }
 
-  if (enemy.pattern === "bossSweep") {
+  if (enemy.pattern === "spiralIn") {
+    enemy.spawnX = enemy.x;
+    enemy.spawnY = enemy.y;
+  }
+
+  if (enemy.pattern === "laneShift") {
+    enemy.laneTargetX = enemy.x;
+    enemy.laneShiftAt = enemy.patternParams.shiftEvery ?? 1.2;
+    enemy.laneIndex = Math.floor(Math.random() * 3);
+  }
+
+  if (enemy.pattern === "bossSweep" || enemy.pattern === "bossAdvanceSweep" || enemy.pattern === "bossOrbit") {
     enemy.x = width / 2;
-    enemy.y = -80;
+    enemy.y = -90;
     enemy.vx = enemy.speed;
-    enemy.vy = enemy.speed * 0.6;
+    enemy.vy = enemy.speed * 0.7;
     enemy.sweepDir = Math.random() < 0.5 ? -1 : 1;
-    enemy.targetY = 130;
+    enemy.targetY = enemy.pattern === "bossOrbit" ? 150 : 130;
+    enemy.orbitAngle = Math.random() * Math.PI * 2;
+    enemy.phase = 0;
+    enemy.phaseTimer = 0;
   }
 
   const spriteKey = spec.sprite;
@@ -3928,6 +3948,84 @@ function update(delta) {
       enemy.y = cy + t * enemy.speed * 0.4 * empFactor;
       return;
     }
+    if (enemy.pattern === "spiralIn") {
+      const amplitude = enemy.patternParams.amplitude ?? 160;
+      const frequency = enemy.patternParams.frequency ?? 4.4;
+      const decay = enemy.patternParams.decay ?? 0.22;
+      const t = enemy.patternTime;
+      const cx = enemy.spawnX ?? enemy.x;
+      const cy = enemy.spawnY ?? enemy.y;
+      const a = amplitude * Math.exp(-decay * t);
+      enemy.x = cx + Math.cos(t * frequency) * a;
+      enemy.y = cy + t * enemy.speed * 0.5 * empFactor;
+      return;
+    }
+    if (enemy.pattern === "laneShift") {
+      const width = canvas.width / window.devicePixelRatio;
+      const margin = 60;
+      const shiftEvery = enemy.patternParams.shiftEvery ?? 1.2;
+      const shiftSpeed = enemy.patternParams.shiftSpeed ?? 5.5;
+      const lanes = Array.isArray(enemy.patternParams.lanes) ? enemy.patternParams.lanes : null;
+
+      if (enemy.laneShiftAt === undefined) enemy.laneShiftAt = shiftEvery;
+      if (enemy.laneIndex === undefined) enemy.laneIndex = Math.floor(Math.random() * 3);
+      if (enemy.laneTargetX === undefined) enemy.laneTargetX = enemy.x;
+
+      while (enemy.patternTime >= enemy.laneShiftAt) {
+        enemy.laneShiftAt += shiftEvery;
+        if (lanes && lanes.length) {
+          enemy.laneIndex = (enemy.laneIndex + 1 + (Math.random() < 0.25 ? 1 : 0)) % lanes.length;
+          const laneVal = lanes[enemy.laneIndex];
+          const lane = Number.isFinite(laneVal) ? laneVal : Math.random();
+          const frac = lane <= 1.2 ? lane : lane / width;
+          enemy.laneTargetX = margin + frac * (width - margin * 2);
+        } else {
+          enemy.laneTargetX = margin + Math.random() * (width - margin * 2);
+        }
+      }
+
+      const alpha = 1 - Math.exp(-shiftSpeed * empFactor * delta);
+      enemy.x += (enemy.laneTargetX - enemy.x) * alpha;
+      enemy.y += enemy.speed * empFactor * delta;
+      return;
+    }
+    if (enemy.pattern === "stall") {
+      const width = canvas.width / window.devicePixelRatio;
+      const stallY = enemy.patternParams.stallY ?? 150;
+      const stallDuration = enemy.patternParams.stallDuration ?? 1.8;
+      const strafeAmp = enemy.patternParams.strafeAmp ?? 90;
+      const strafeFreq = enemy.patternParams.strafeFreq ?? 1.6;
+      const postSpeed = enemy.patternParams.postSpeedMult ?? 1.05;
+
+      if (enemy.stallState === undefined) {
+        enemy.stallState = 0;
+        enemy.stallTimer = 0;
+        enemy.stallAnchorX = enemy.x;
+      }
+
+      if (enemy.stallState === 0) {
+        enemy.y += enemy.speed * 0.95 * empFactor * delta;
+        if (enemy.y >= stallY) {
+          enemy.y = stallY;
+          enemy.stallState = 1;
+          enemy.stallTimer = 0;
+          enemy.stallAnchorX = enemy.x;
+        }
+      } else if (enemy.stallState === 1) {
+        enemy.stallTimer += empFactor * delta;
+        enemy.y = stallY;
+        enemy.x = enemy.stallAnchorX + Math.sin(enemy.patternTime * strafeFreq) * strafeAmp;
+        if (enemy.x < 60) enemy.x = 60;
+        if (enemy.x > width - 60) enemy.x = width - 60;
+        if (enemy.stallTimer >= stallDuration) {
+          enemy.stallState = 2;
+        }
+      } else {
+        enemy.y += enemy.speed * postSpeed * empFactor * delta;
+        enemy.x += Math.sin(enemy.patternTime * (strafeFreq * 0.7)) * 12 * empFactor * delta;
+      }
+      return;
+    }
     if (enemy.pattern === "bossSweep") {
       if (enemy.y < enemy.targetY) {
         enemy.y += enemy.vy * empFactor * delta;
@@ -3938,6 +4036,79 @@ function update(delta) {
           enemy.sweepDir *= -1;
         }
       }
+      return;
+    }
+    if (enemy.pattern === "bossAdvanceSweep") {
+      const width = canvas.width / window.devicePixelRatio;
+      const targetY = enemy.targetY ?? 130;
+      const centerX = width / 2;
+      const pause = enemy.patternParams.pause ?? 0.85;
+      const advance = enemy.patternParams.advance ?? 55;
+      const advanceTime = enemy.patternParams.advanceTime ?? 0.65;
+      const sweepDuration = enemy.patternParams.sweepDuration ?? 2.3;
+      const retreatTime = enemy.patternParams.retreatTime ?? 0.8;
+
+      if (enemy.y < targetY) {
+        enemy.y += enemy.vy * empFactor * delta;
+        return;
+      }
+
+      if (enemy.phase === undefined) {
+        enemy.phase = 0;
+        enemy.phaseTimer = 0;
+      }
+      enemy.phaseTimer += empFactor * delta;
+
+      if (enemy.phase === 0) {
+        enemy.x += (centerX - enemy.x) * 0.08;
+        enemy.y += (targetY - enemy.y) * 0.08;
+        if (enemy.phaseTimer >= pause) {
+          enemy.phase = 1;
+          enemy.phaseTimer = 0;
+        }
+      } else if (enemy.phase === 1) {
+        enemy.y += (advance / Math.max(0.15, advanceTime)) * empFactor * delta;
+        enemy.x += Math.sin(mission.elapsed * 1.1) * 10 * empFactor * delta;
+        if (enemy.phaseTimer >= advanceTime) {
+          enemy.phase = 2;
+          enemy.phaseTimer = 0;
+        }
+      } else if (enemy.phase === 2) {
+        enemy.x += enemy.sweepDir * enemy.speed * 1.05 * empFactor * delta;
+        if (enemy.x < 80 || enemy.x > width - 80) {
+          enemy.sweepDir *= -1;
+        }
+        if (enemy.phaseTimer >= sweepDuration) {
+          enemy.phase = 3;
+          enemy.phaseTimer = 0;
+        }
+      } else {
+        enemy.y -= (advance / Math.max(0.2, retreatTime)) * empFactor * delta;
+        if (enemy.y < targetY) enemy.y = targetY;
+        if (enemy.phaseTimer >= retreatTime) {
+          enemy.phase = 0;
+          enemy.phaseTimer = 0;
+        }
+      }
+      return;
+    }
+    if (enemy.pattern === "bossOrbit") {
+      const width = canvas.width / window.devicePixelRatio;
+      const targetY = enemy.targetY ?? 150;
+      const centerX = width / 2;
+      const baseCenterY = targetY + Math.sin(mission.elapsed * 0.35) * 16;
+      const radiusX = enemy.patternParams.radiusX ?? Math.min(340, width * 0.34);
+      const radiusY = enemy.patternParams.radiusY ?? 70;
+      const orbitSpeed = enemy.patternParams.orbitSpeed ?? 0.85;
+
+      if (enemy.y < targetY) {
+        enemy.y += enemy.vy * empFactor * delta;
+        return;
+      }
+      if (!Number.isFinite(enemy.orbitAngle)) enemy.orbitAngle = Math.random() * Math.PI * 2;
+      enemy.orbitAngle += orbitSpeed * empFactor * delta;
+      enemy.x = centerX + Math.cos(enemy.orbitAngle) * radiusX;
+      enemy.y = baseCenterY + Math.sin(enemy.orbitAngle) * radiusY;
       return;
     }
     if (enemy.ai === "stalker") {

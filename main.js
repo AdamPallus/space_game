@@ -1721,8 +1721,8 @@ async function renderLevelSelectAsync() {
       <div class="mission-shell">
         ${
           groupIds.length > 1
-            ? `<button class="mission-arrow left" data-action="prev" aria-label="Previous variant" title="Previous variant"></button>
-               <button class="mission-arrow right" data-action="next" aria-label="Next variant" title="Next variant"></button>`
+            ? `<button type="button" class="mission-arrow left" data-action="prev" aria-label="Previous variant" title="Previous variant"></button>
+               <button type="button" class="mission-arrow right" data-action="next" aria-label="Next variant" title="Next variant"></button>`
             : ""
         }
         <div class="mission-top">
@@ -1734,9 +1734,9 @@ async function renderLevelSelectAsync() {
         <div class="mission-meta">${metaBits.map((m) => `<span>${m}</span>`).join("")}</div>
         <div class="mission-actions">
           <div class="left">
-            <button class="ghost small" data-action="select">${selectedLevelId === slideId ? "Selected" : "Select"}</button>
-            <button class="small" data-action="launch">Launch</button>
-            <button class="ghost small" data-action="info">${infoOpen ? "Close" : "More Info"}</button>
+            <button type="button" class="ghost small" data-action="select">${selectedLevelId === slideId ? "Selected" : "Select"}</button>
+            <button type="button" class="small" data-action="launch">Launch</button>
+            <button type="button" class="ghost small" data-action="info">${infoOpen ? "Close" : "More Info"}</button>
           </div>
           <div class="muted">${baseUnlocked ? "" : "Locked"}</div>
         </div>
@@ -1750,7 +1750,7 @@ async function renderLevelSelectAsync() {
       <div class="mission-hover">
         <div class="mission-hover-header">
           <h4 class="hover-title">${title}</h4>
-          <button class="ghost small" data-action="close-info" aria-label="Close info">Close</button>
+          <button type="button" class="ghost small" data-action="close-info" aria-label="Close info">Close</button>
         </div>
         <p class="hover-body">${infoLines.join("\n")}</p>
       </div>
@@ -1773,6 +1773,7 @@ async function renderLevelSelectAsync() {
     if (prevButton) {
       prevButton.disabled = !baseUnlocked;
       prevButton.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
         setIndex(idx - 1);
       });
@@ -1780,6 +1781,7 @@ async function renderLevelSelectAsync() {
     if (nextButton) {
       nextButton.disabled = !baseUnlocked;
       nextButton.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
         setIndex(idx + 1);
       });
@@ -1795,6 +1797,7 @@ async function renderLevelSelectAsync() {
     if (selectButton) {
       selectButton.disabled = !baseUnlocked;
       selectButton.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
         if (!baseUnlocked) return;
         selectedLevelId = slideId;
@@ -1806,6 +1809,7 @@ async function renderLevelSelectAsync() {
     if (launchButton) {
       launchButton.disabled = !baseUnlocked;
       launchButton.addEventListener("click", async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         if (!baseUnlocked) return;
         selectedLevelId = slideId;
@@ -1817,6 +1821,7 @@ async function renderLevelSelectAsync() {
     if (infoButton) {
       infoButton.disabled = false;
       infoButton.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
         openMissionInfoBaseId = openMissionInfoBaseId === level.id ? null : level.id;
         renderLevelSelect();
@@ -1824,6 +1829,7 @@ async function renderLevelSelectAsync() {
     }
     if (closeInfoButton) {
       closeInfoButton.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
         openMissionInfoBaseId = null;
         renderLevelSelect();

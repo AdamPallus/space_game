@@ -1027,6 +1027,7 @@ body {
   z-index: 3;
   opacity: 0.82;
   transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+  touch-action: manipulation;
 }
 
 .mission-arrow::before {
@@ -1066,6 +1067,7 @@ body {
   padding: 8px 10px;
   border-radius: 12px;
   font-size: 12px;
+  touch-action: manipulation;
 }
 
 .mission-hover {

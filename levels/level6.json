@@ -1,7 +1,7 @@
 {
   "id": "level6",
   "name": "Crimson Fleet",
-  "background": "darkPurple",
+  "background": "aurora",
   "music": "space_adventure_bpm140.ogg",
   "difficulty": "Very Hard",
   "description": "A coordinated assault fleet with multiple command ships. Break their formation.",

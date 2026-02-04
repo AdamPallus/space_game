@@ -1,7 +1,7 @@
 {
   "id": "level4",
   "name": "Void Cascade",
-  "background": "black",
+  "background": "asteroidBelt",
   "music": "04_emergency_no_alarm.ogg",
   "difficulty": "Extreme",
   "description": "Dense kill box with relentless spread fire.",

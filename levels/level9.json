@@ -1,7 +1,7 @@
 {
   "id": "level9",
   "name": "Neon Swarm",
-  "background": "blue",
+  "background": "nebulaTeal",
   "music": "space_battle_bpm150.ogg",
   "difficulty": "Lightning",
   "description": "Fast, fragile interceptors with a few shielded skirmishers. Survive the blitz.",
@@ -79,4 +79,3 @@
     { "time": 40, "type": "boss", "count": 1 }
   ]
 }
-

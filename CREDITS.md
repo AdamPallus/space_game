@@ -24,3 +24,7 @@ Tracks used: space_adventure_bpm140.ogg, space_battle_bpm130.ogg, space_boss_bat
 Generated Boss Sprites (Placeholder)
 Source: Generated locally via Google Gemini image generation ("Nano Banana") using prompts + reference sprites.
 Note: These are temporary placeholders while we iterate on a final art direction.
+
+Procedurally Generated Backgrounds (Placeholder)
+Source: Generated locally via `scripts/gen_backgrounds.py` (Pillow) for prototype variety.
+Note: These are temporary placeholders while we iterate on a final art direction.

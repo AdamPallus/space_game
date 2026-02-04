@@ -1,7 +1,7 @@
 {
   "id": "level11",
   "name": "Crossfire Corridor",
-  "background": "purple",
+  "background": "warpGrid",
   "music": "space_boss_battle_bpm175.ogg",
   "difficulty": "Mixed",
   "description": "A balanced combined-arms push: fast skirmishers, shield kites, and plated heavies.",
@@ -98,4 +98,3 @@
     { "time": 48, "type": "boss", "count": 1 }
   ]
 }
-

@@ -1,7 +1,7 @@
 {
   "id": "level10",
   "name": "Iron Graveyard",
-  "background": "darkPurple",
+  "background": "voidDust",
   "music": "space_battle_bpm175.ogg",
   "difficulty": "Armored",
   "description": "Slow moving plated hulls with heavy armor class. Bring impact.",
@@ -81,4 +81,3 @@
     { "time": 46, "type": "boss", "count": 1 }
   ]
 }
-

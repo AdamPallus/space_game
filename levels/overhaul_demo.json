@@ -3,7 +3,7 @@
   "name": "Overhaul Test Range",
   "description": "Prototype enemies with Shields/Armor/Hull and armor class damage reduction.",
   "difficulty": "Test",
-  "background": "black",
+  "background": "nebulaLime",
   "completeOnBoss": true,
   "enemyTypes": {
     "drone": {

@@ -411,6 +411,7 @@ const availableLevels = [
   { id: "level11", label: "Mission 11" },
   { id: "overhaul_demo", label: "Overhaul Demo", test: true },
   { id: "patterns_demo", label: "Pattern Lab", test: true },
+  { id: "ai_demo", label: "AI Lab", test: true },
   // Variant missions (Operations Center unlocks - not yet integrated)
   // { id: "level1_patrol", label: "Mission 1: Patrol Alpha" },
   // { id: "level2_skirmish", label: "Mission 2: Skirmish" },
@@ -1996,6 +1997,9 @@ function describeMovement(spec) {
   if (ai === "hunter") return "Actively hunts the pilot; aggression ramps as the mission drags on.";
   if (ai === "stalker") return "Lurks until you enter its aggro radius, then pursues.";
   if (ai === "transport") return "Slow hauler with mild weave; prioritizes survival over speed.";
+  if (ai === "sentinel") return "Holds a firing line near the top and strafes to keep you in its sights.";
+  if (ai === "skitter") return "Nervous skirmisher that attempts to dodge incoming fire.";
+  if (ai === "duelist") return "Keeps a standoff distance and slides into flanking angles.";
   return "Steady descent with light drift.";
 }
 
@@ -3247,6 +3251,7 @@ function spawnEnemyFromSpec(spec) {
     spriteScale: spec.spriteScale ?? 0.7,
     empImmune: spec.empImmune ?? !!spec.isBoss,
     ai: spec.ai,
+    aiParams: spec.aiParams || {},
     pattern: spec.pattern || "drift",
     patternParams: spec.patternParams || {},
     spawnTime: mission.elapsed,
@@ -4263,6 +4268,90 @@ function update(delta) {
     } else if (enemy.ai === "transport") {
       enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.03;
       enemy.vy += (enemy.speed * empFactor - enemy.vy) * 0.04;
+    } else if (enemy.ai === "sentinel") {
+      const width = canvas.width / window.devicePixelRatio;
+      const holdY = enemy.aiParams.holdY ?? 150;
+      const slide = enemy.aiParams.slideSpeed ?? 0.9;
+      const keepOut = enemy.aiParams.keepOut ?? 140;
+      const dx = player.x - enemy.x;
+      const dy = player.y - enemy.y;
+      const dist = Math.hypot(dx, dy) || 1;
+
+      // Prefer to hold near a fixed Y, but back off if the player gets too close.
+      const desiredY = dist < keepOut ? Math.max(80, holdY - 70) : holdY;
+      const yErr = desiredY - enemy.y;
+      const targetVy = yErr * 1.2;
+      enemy.vy += (targetVy - enemy.vy) * 0.08;
+
+      // Strafe to roughly align with player X, with a gentle sway.
+      const sway = Math.sin(mission.elapsed * 1.2 + enemy.id) * 50;
+      const targetX = Math.max(60, Math.min(width - 60, player.x + sway));
+      const xErr = targetX - enemy.x;
+      const targetVx = xErr * slide;
+      enemy.vx += (targetVx - enemy.vx) * 0.09;
+    } else if (enemy.ai === "skitter") {
+      const dodgeRadius = enemy.aiParams.dodgeRadius ?? 150;
+      const dodgeStrength = enemy.aiParams.dodgeStrength ?? 1.65;
+      const baseVy = enemy.speed * 0.85 * empFactor;
+
+      // Baseline descent.
+      enemy.vy += (baseVy - enemy.vy) * 0.06;
+
+      // Reactive dodge away from the nearest threatening player bullet.
+      let closest = null;
+      let best = Infinity;
+      const maxCheck = Math.min(10, bullets.length);
+      for (let bi = 0; bi < maxCheck; bi += 1) {
+        const b = bullets[bullets.length - 1 - bi];
+        if (!b) continue;
+        const dx = b.x - enemy.x;
+        const dy = b.y - enemy.y;
+        // Only consider bullets generally heading toward the enemy's vertical band.
+        if (dy > 180) continue;
+        const d = dx * dx + dy * dy;
+        if (d < best) {
+          best = d;
+          closest = b;
+        }
+      }
+      if (closest) {
+        const d = Math.sqrt(best) || 1;
+        if (d < dodgeRadius) {
+          const dir = enemy.x < closest.x ? -1 : 1;
+          const panic = 1 - d / dodgeRadius;
+          const targetVx = dir * enemy.speed * dodgeStrength * (0.55 + panic);
+          enemy.vx += (targetVx - enemy.vx) * (0.18 + panic * 0.12);
+        } else {
+          enemy.vx += Math.sin(mission.elapsed * 2.2 + enemy.id) * 0.08;
+        }
+      } else {
+        enemy.vx += Math.sin(mission.elapsed * 2.2 + enemy.id) * 0.08;
+      }
+    } else if (enemy.ai === "duelist") {
+      const width = canvas.width / window.devicePixelRatio;
+      const holdY = enemy.aiParams.holdY ?? 190;
+      const standoff = enemy.aiParams.standoff ?? 240;
+      const strafeSpeed = enemy.aiParams.strafeSpeed ?? 1.0;
+      const dx = player.x - enemy.x;
+      const dy = player.y - enemy.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const ux = dx / dist;
+      const uy = dy / dist;
+      const tx = -uy;
+      const ty = ux;
+
+      // Keep a standoff ring around the player, while also preferring a top-ish hold Y.
+      const radialErr = dist - standoff;
+      const radialPush = radialErr * 0.9;
+      const targetVx = (tx * enemy.speed * strafeSpeed + ux * radialPush) * empFactor;
+      const targetVy =
+        (ty * enemy.speed * 0.12 + uy * radialPush + (holdY - enemy.y) * 1.1) * empFactor;
+      enemy.vx += (targetVx - enemy.vx) * 0.1;
+      enemy.vy += (targetVy - enemy.vy) * 0.1;
+
+      // Avoid hugging edges.
+      if (enemy.x < 70) enemy.vx += 40 * empFactor;
+      if (enemy.x > width - 70) enemy.vx -= 40 * empFactor;
     } else {
       enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.05;
     }

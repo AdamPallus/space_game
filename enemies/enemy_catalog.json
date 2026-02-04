@@ -115,6 +115,66 @@
         "fireRate": 1.9
       }
     },
+    "sentinel": {
+      "name": "Sentry Line Drone",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlack3",
+        "hull": 34,
+        "shield": 40,
+        "armor": 0,
+        "speed": 78,
+        "score": 180,
+        "baseCredit": 22,
+        "radius": 22,
+        "ai": "sentinel",
+        "aiParams": { "holdY": 150, "slideSpeed": 0.85, "keepOut": 150 },
+        "fireRate": 1.5,
+        "fireMode": "aim",
+        "bulletSpeed": 210
+      }
+    },
+    "skitter": {
+      "name": "Skitter Evasion Drone",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlue5",
+        "hull": 22,
+        "shield": 0,
+        "armor": 0,
+        "speed": 120,
+        "score": 140,
+        "baseCredit": 18,
+        "radius": 18,
+        "ai": "skitter",
+        "aiParams": { "dodgeRadius": 160, "dodgeStrength": 1.75 },
+        "fireRate": 2.1,
+        "fireMode": "spread",
+        "fireCount": 3,
+        "fireSpread": 0.55,
+        "bulletSpeed": 190
+      }
+    },
+    "duelist": {
+      "name": "Duelist Flank Drone",
+      "boss": false,
+      "template": {
+        "sprite": "enemyRed5",
+        "hull": 30,
+        "shield": 0,
+        "armor": 70,
+        "armorClass": 8,
+        "speed": 92,
+        "score": 220,
+        "baseCredit": 28,
+        "radius": 20,
+        "ai": "duelist",
+        "aiParams": { "holdY": 190, "standoff": 240, "strafeSpeed": 1.05 },
+        "fireRate": 1.65,
+        "fireMode": "aim",
+        "bulletSpeed": 215
+      }
+    },
     "fighter": {
       "name": "Redline Fighter",
       "boss": false,

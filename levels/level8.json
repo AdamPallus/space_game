@@ -176,7 +176,7 @@
       "ai": "transport"
     },
     "boss": {
-      "sprite": "assets/generated/boss_fortress.png",
+      "sprite": "assets/generated/boss_warden8.png",
       "hp": 2800,
       "speed": 125,
       "score": 6000,
@@ -188,7 +188,7 @@
       "fireMode": "radial",
       "fireCount": 32,
       "bulletSpeed": 235,
-      "spriteScale": 0.73
+      "spriteScale": 0.93
     }
   },
   "events": [

@@ -130,7 +130,7 @@
       "ai": "transport"
     },
     "boss": {
-      "sprite": "assets/generated/boss_anvil.png",
+      "sprite": "assets/generated/boss_warden5.png",
       "hp": 1400,
       "speed": 110,
       "score": 3000,
@@ -142,7 +142,7 @@
       "fireMode": "radial",
       "fireCount": 24,
       "bulletSpeed": 200,
-      "spriteScale": 0.82
+      "spriteScale": 1.03
     }
   },
   "events": [

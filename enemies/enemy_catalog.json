@@ -328,7 +328,7 @@
       "name": "Warden of Third Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/boss_fortress.png",
+        "sprite": "assets/generated/boss_warden3.png",
         "hp": 720,
         "speed": 90,
         "score": 1600,
@@ -340,7 +340,7 @@
         "fireMode": "radial",
         "fireCount": 18,
         "bulletSpeed": 180,
-        "spriteScale": 0.73
+        "spriteScale": 0.86
       }
     },
     "level4:boss": {
@@ -366,7 +366,7 @@
       "name": "Warden of Fifth Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/boss_anvil.png",
+        "sprite": "assets/generated/boss_warden5.png",
         "hp": 1400,
         "speed": 110,
         "score": 3000,
@@ -378,7 +378,7 @@
         "fireMode": "radial",
         "fireCount": 24,
         "bulletSpeed": 200,
-        "spriteScale": 0.82
+        "spriteScale": 1.03
       }
     },
     "level6:boss": {
@@ -423,7 +423,7 @@
       "name": "Warden of Eighth Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/boss_fortress.png",
+        "sprite": "assets/generated/boss_warden8.png",
         "hp": 2800,
         "speed": 125,
         "score": 6000,
@@ -435,7 +435,7 @@
         "fireMode": "radial",
         "fireCount": 32,
         "bulletSpeed": 235,
-        "spriteScale": 0.73
+        "spriteScale": 0.93
       }
     },
     "level9:boss": {

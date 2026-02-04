@@ -475,7 +475,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Third Contact
 
-![Warden of Third Contact](assets/generated/boss_fortress.png)
+![Warden of Third Contact](assets/generated/boss_warden3.png)
 
 - Key: `level3:boss`
 
@@ -505,7 +505,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Fifth Contact
 
-![Warden of Fifth Contact](assets/generated/boss_anvil.png)
+![Warden of Fifth Contact](assets/generated/boss_warden5.png)
 
 - Key: `level5:boss`
 
@@ -550,7 +550,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Eighth Contact
 
-![Warden of Eighth Contact](assets/generated/boss_fortress.png)
+![Warden of Eighth Contact](assets/generated/boss_warden8.png)
 
 - Key: `level8:boss`
 

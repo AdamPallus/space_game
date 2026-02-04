@@ -34,6 +34,7 @@ const lifetimeCreditsEl = document.getElementById("lifetime-credits");
 const lastMissionEl = document.getElementById("last-mission");
 const debugUnlock = document.getElementById("debug-unlock");
 const debugInvincible = document.getElementById("debug-invincible");
+const debugShowCompendium = document.getElementById("debug-show-compendium");
 const treeBarrel = document.getElementById("tree-barrel");
 const treeTrigger = document.getElementById("tree-trigger");
 const treeMount = document.getElementById("tree-mount");
@@ -958,6 +959,14 @@ if (debugInvincible) {
   });
 }
 
+if (debugShowCompendium) {
+  debugShowCompendium.addEventListener("change", () => {
+    state.debugShowFullCompendium = debugShowCompendium.checked;
+    saveState();
+    if (activeHangarTab === "compendium") renderDroneCompendium();
+  });
+}
+
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
@@ -969,6 +978,8 @@ function loadState() {
       unlockedLevels: 1,
       debugUnlock: false,
       debugInvincible: false,
+      debugShowFullCompendium: false,
+      encounteredEnemies: {},
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
         gunDiameter: { medium: true },
@@ -1040,6 +1051,8 @@ function loadState() {
     parsed.unlockedLevels = parsed.unlockedLevels ?? 1;
     parsed.debugUnlock = parsed.debugUnlock ?? false;
     parsed.debugInvincible = parsed.debugInvincible ?? false;
+    parsed.debugShowFullCompendium = parsed.debugShowFullCompendium ?? false;
+    parsed.encounteredEnemies = parsed.encounteredEnemies || {};
     const hadShipBuild = !!parsed.shipBuild;
     parsed.shipBuild = parsed.shipBuild || createDefaultShipBuild();
     if (!hadShipBuild) {
@@ -1484,6 +1497,9 @@ function updateHangar() {
   }
   if (debugInvincible) {
     debugInvincible.checked = !!state.debugInvincible;
+  }
+  if (debugShowCompendium) {
+    debugShowCompendium.checked = !!state.debugShowFullCompendium;
   }
 
   renderAuxTree();
@@ -2032,8 +2048,11 @@ async function renderDroneCompendiumAsync() {
   const query = (compendiumSearch?.value || "").trim().toLowerCase();
   const showBosses = compendiumShowBosses ? !!compendiumShowBosses.checked : true;
   const list = await buildCompendium();
+  const showFull = !!state.debugShowFullCompendium;
+  const encountered = state.encounteredEnemies || {};
+  const gatedList = showFull ? list : list.filter((entry) => !!encountered[entry.key]);
 
-  const filtered = list.filter((entry) => {
+  const filtered = gatedList.filter((entry) => {
     if (!showBosses && entry.isBoss) return false;
     if (!query) return true;
     const name = compendiumDisplayName(entry).toLowerCase();
@@ -2084,7 +2103,9 @@ async function renderDroneCompendiumAsync() {
   });
 
   if (!filtered.length) {
-    compendiumList.innerHTML = `<div class="muted">No matching drones found.</div>`;
+    compendiumList.innerHTML = showFull
+      ? `<div class="muted">No matching drones found.</div>`
+      : `<div class="muted">No intel yet. Encounter enemies in missions to populate the compendium.</div>`;
   }
 }
 
@@ -3123,6 +3144,7 @@ function spawnEnemyFromSpec(spec) {
   const enemy = {
     id: enemyIdCounter++,
     type: spec.type || "fighter",
+    compendiumKey: null,
     radius: spec.radius ?? 20,
     speed: spec.speed ?? 70,
     hull,
@@ -3221,6 +3243,17 @@ function spawnEnemyFromSpec(spec) {
   enemy.sprite = spriteLooksLikePath
     ? loadImageCached(spriteKey)
     : enemySpriteMap[spriteKey] || assets.enemies[enemy.type] || assets.enemies.fighter;
+
+  // Record first-time sightings for the Drone Compendium.
+  const levelId = mission?.level?.id || "unknown";
+  const compKey = compendiumKeyFor(levelId, enemy.type, spec);
+  enemy.compendiumKey = compKey;
+  if (!state.encounteredEnemies) state.encounteredEnemies = {};
+  if (!state.encounteredEnemies[compKey]) {
+    state.encounteredEnemies[compKey] = true;
+    saveState();
+  }
+
   enemies.push(enemy);
   if (enemy.isBoss) {
     mission.bossAlive = true;

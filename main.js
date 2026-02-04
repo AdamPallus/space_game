@@ -398,6 +398,17 @@ const availableLevels = [
   // { id: "level2_skirmish", label: "Mission 2: Skirmish" },
 ];
 
+// Temporary mission variants: shown inside the Mission Select card hover panel.
+// Later this should be data-driven (e.g. Operations Center unlocks + per-tier variants).
+const missionVariantGroups = {
+  level1: ["level1_patrol"],
+  level2: ["level2_skirmish"],
+};
+const missionVariantBaseById = {
+  level1_patrol: "level1",
+  level2_skirmish: "level2",
+};
+
 const levelFallback = {
   id: "level1",
   name: "First Contact",
@@ -1596,6 +1607,33 @@ function renderLevelSelect() {
   renderLevelSelectAsync();
 }
 
+function levelBackgroundUrl(levelMeta) {
+  const bg = levelMeta?.background || "blue";
+  return `${BG_ROOT}/${bg}.png`;
+}
+
+function estimateLevelCredits(levelMeta) {
+  if (!levelMeta?.events || !levelMeta?.enemyTypes) return null;
+  let total = 0;
+  levelMeta.events.forEach((ev) => {
+    const count = ev.count ?? 1;
+    const spec = levelMeta.enemyTypes?.[ev.type] || {};
+    const base = spec.baseCredit ?? 12;
+    total += count * base;
+  });
+  return Math.round(total);
+}
+
+function getMissionLockReason(levelId) {
+  if (state.debugUnlock) return "Debug: unlocked";
+  const entry = availableLevels.find((level) => level.id === levelId);
+  if (entry?.test) return "Test mission";
+  const index = availableLevels.findIndex((level) => level.id === levelId);
+  if (index <= 0) return "Unlocked";
+  const requiredIndex = Math.max(1, index);
+  return `Defeat Mission ${requiredIndex} to unlock.`;
+}
+
 async function renderLevelSelectAsync() {
   if (!levelList) return;
   levelList.innerHTML = "";
@@ -1613,37 +1651,155 @@ async function renderLevelSelectAsync() {
   for (const level of availableLevels) {
     const metaData = await loadLevelMeta(level.id);
     const isUnlocked = isLevelUnlocked(level.id);
-    const item = document.createElement("div");
-    item.className = "upgrade-item";
-    if (level.id === selectedLevelId) {
-      item.classList.add("active");
+    const variants = missionVariantGroups[level.id] || [];
+    const active = level.id === selectedLevelId || variants.includes(selectedLevelId);
+    const bossTime = getBossSpawnTime(metaData);
+    const estCredits = estimateLevelCredits(metaData);
+    const backgroundUrl = levelBackgroundUrl(metaData);
+    const uniqueTypes = Object.keys(metaData.enemyTypes || {}).filter((t) => t !== "boss");
+    const iconTypes = uniqueTypes.slice(0, 5);
+
+    const card = document.createElement("div");
+    card.className = `mission-card${active ? " active" : ""}${!isUnlocked ? " locked" : ""}`;
+    card.style.setProperty("--mission-bg", `url('${backgroundUrl}')`);
+    card.tabIndex = 0;
+
+    const title = metaData.name || level.label;
+    const desc = metaData.description || level.id.toUpperCase();
+    const badge = metaData.difficulty || "Unknown";
+    const metaBits = [];
+    if (bossTime) metaBits.push(`Boss ETA ${formatTime(bossTime)}`);
+    if (estCredits) metaBits.push(`Est. ${estCredits} cr`);
+    if (metaData.enemyScale?.hp || metaData.enemyScale?.damage) {
+      const hp = metaData.enemyScale?.hp ? `HP x${formatNumber(metaData.enemyScale.hp, 2)}` : null;
+      const dmg = metaData.enemyScale?.damage ? `DMG x${formatNumber(metaData.enemyScale.damage, 2)}` : null;
+      metaBits.push([hp, dmg].filter(Boolean).join(" "));
     }
-    if (!isUnlocked) {
-      item.classList.add("locked");
+
+    const iconsHtml = iconTypes
+      .map((typeId) => {
+        const spriteKey = metaData.enemyTypes?.[typeId]?.sprite;
+        const src = spriteSrcForKey(spriteKey);
+        return `<span class="mission-icon">${src ? `<img src="${src}" alt="" />` : ""}</span>`;
+      })
+      .join("");
+
+    const hoverLines = [];
+    hoverLines.push(desc);
+    if (bossTime) hoverLines.push(`\nBoss spawns at ${formatTime(bossTime)}.`);
+    if (estCredits) hoverLines.push(`Estimated credits from spawns: ${estCredits}.`);
+    if (metaData.enemyScale?.hp || metaData.enemyScale?.damage) {
+      hoverLines.push(
+        `Enemy scaling: ${metaData.enemyScale?.hp ? `HP x${formatNumber(metaData.enemyScale.hp, 2)}` : "HP x1.00"} | ${metaData.enemyScale?.damage ? `DMG x${formatNumber(metaData.enemyScale.damage, 2)}` : "DMG x1.00"}`
+      );
     }
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.innerHTML = `
-      <span class="name">${metaData.name || level.label}</span>
-      <span class="desc">${metaData.description || level.id.toUpperCase()}</span>
-      <span class="badge">${metaData.difficulty || "Unknown"}</span>
+    if (uniqueTypes.length) hoverLines.push(`Enemy roster: ${uniqueTypes.slice(0, 6).map(capitalize).join(", ")}${uniqueTypes.length > 6 ? "…" : ""}`);
+
+    const variantsContainer = document.createElement("div");
+    variantsContainer.className = "mission-variants";
+    if (variants.length) {
+      for (const variantId of variants) {
+        const variantMeta = await loadLevelMeta(variantId);
+        const variantUnlocked = isLevelUnlocked(variantId);
+        const row = document.createElement("div");
+        row.className = "variant-row";
+        const left = document.createElement("div");
+        left.className = "variant-name";
+        left.textContent = variantMeta?.name || capitalize(variantId);
+        const actions = document.createElement("div");
+        const selectBtn = document.createElement("button");
+        selectBtn.className = "ghost small";
+        selectBtn.textContent = selectedLevelId === variantId ? "Selected" : "Select";
+        selectBtn.disabled = !variantUnlocked;
+        selectBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (!variantUnlocked) return;
+          selectedLevelId = variantId;
+          currentLevel = null;
+          renderLevelSelect();
+        });
+        const launchBtnLocal = document.createElement("button");
+        launchBtnLocal.className = "small";
+        launchBtnLocal.textContent = "Launch";
+        launchBtnLocal.disabled = !variantUnlocked;
+        launchBtnLocal.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          if (!variantUnlocked) return;
+          selectedLevelId = variantId;
+          currentLevel = null;
+          await launchSelectedMission();
+        });
+        actions.appendChild(selectBtn);
+        actions.appendChild(launchBtnLocal);
+        row.appendChild(left);
+        row.appendChild(actions);
+        variantsContainer.appendChild(row);
+      }
+    }
+
+    card.innerHTML = `
+      <div class="mission-top">
+        <h3 class="mission-title">${title}</h3>
+        <span class="mission-badge">${badge}</span>
+      </div>
+      <p class="mission-desc">${desc}</p>
+      <div class="mission-icons">${iconsHtml}</div>
+      <div class="mission-meta">${metaBits.map((m) => `<span>${m}</span>`).join("")}</div>
+      <div class="mission-actions">
+        <div class="left">
+          <button class="ghost small" data-action="select">${active && selectedLevelId === level.id ? "Selected" : "Select"}</button>
+          <button class="small" data-action="launch">Launch</button>
+        </div>
+        <div class="muted">${isUnlocked ? "" : "Locked"}</div>
+      </div>
+      <div class="mission-hover">
+        <h4 class="hover-title">${title}</h4>
+        <p class="hover-body">${hoverLines.join("\n")}</p>
+        ${variants.length ? `<div class="muted">Variants</div>` : ""}
+      </div>
+      <div class="mission-lock">
+        <div>
+          <div class="lock-title">Locked</div>
+          <div class="lock-desc">${getMissionLockReason(level.id)}</div>
+        </div>
+      </div>
     `;
-    const button = document.createElement("button");
-    button.textContent = !isUnlocked
-      ? "Locked"
-      : level.id === selectedLevelId
-        ? "Selected"
-        : "Select";
-    button.disabled = !isUnlocked;
-    button.addEventListener("click", () => {
+
+    const hover = card.querySelector(".mission-hover");
+    if (hover && variants.length) {
+      hover.appendChild(variantsContainer);
+    }
+
+    const selectButton = card.querySelector('button[data-action=\"select\"]');
+    const launchButton = card.querySelector('button[data-action=\"launch\"]');
+    if (selectButton) {
+      selectButton.disabled = !isUnlocked;
+      selectButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!isUnlocked) return;
+        selectedLevelId = level.id;
+        currentLevel = null;
+        renderLevelSelect();
+      });
+    }
+    if (launchButton) {
+      launchButton.disabled = !isUnlocked;
+      launchButton.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (!isUnlocked) return;
+        selectedLevelId = level.id;
+        currentLevel = null;
+        await launchSelectedMission();
+      });
+    }
+
+    card.addEventListener("click", () => {
       if (!isUnlocked) return;
       selectedLevelId = level.id;
       currentLevel = null;
       renderLevelSelect();
     });
-    item.appendChild(meta);
-    item.appendChild(button);
-    levelList.appendChild(item);
+    levelList.appendChild(card);
   }
 }
 
@@ -2889,10 +3045,18 @@ function getPilotRank(credits) {
   return "Legend";
 }
 
-function isLevelUnlocked(levelId) {
+function isLevelUnlocked(levelId, seen = null) {
   if (state.debugUnlock) return true;
+  const visited = seen || new Set();
+  if (visited.has(levelId)) return false;
+  visited.add(levelId);
+
   const entry = availableLevels.find((level) => level.id === levelId);
-  if (!entry) return false;
+  if (!entry) {
+    const base = missionVariantBaseById[levelId];
+    if (base) return isLevelUnlocked(base, visited);
+    return false;
+  }
   if (entry.test) return true;
   const index = availableLevels.findIndex((level) => level.id === levelId);
   return index >= 0 && index < state.unlockedLevels;

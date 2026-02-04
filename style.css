@@ -850,6 +850,248 @@ body {
   margin-top: 12px;
 }
 
+.mission-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.mission-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(90, 140, 200, 0.28);
+  background: rgba(6, 15, 30, 0.7);
+  padding: 14px 14px;
+  min-height: 188px;
+  display: grid;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.mission-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--mission-bg);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  filter: saturate(1.05) contrast(1.05);
+  transform: scale(1.08);
+  pointer-events: none;
+}
+
+.mission-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 15%, rgba(125, 211, 252, 0.15), rgba(3, 8, 20, 0.92) 55%);
+  pointer-events: none;
+}
+
+.mission-card.active {
+  border-color: rgba(34, 211, 238, 0.75);
+  box-shadow: 0 10px 24px rgba(34, 211, 238, 0.1);
+}
+
+.mission-card.locked {
+  opacity: 0.7;
+}
+
+.mission-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.mission-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mission-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(224, 242, 254, 0.95);
+  margin: 0;
+}
+
+.mission-badge {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 190, 255, 0.22);
+  background: rgba(6, 15, 30, 0.55);
+  color: rgba(154, 208, 255, 0.95);
+  white-space: nowrap;
+}
+
+.mission-desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(207, 228, 255, 0.92);
+  min-height: 34px;
+}
+
+.mission-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mission-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(125, 190, 255, 0.16);
+  background: rgba(2, 6, 16, 0.35);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.mission-icon img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.mission-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: rgba(155, 185, 221, 0.95);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.mission-meta span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 190, 255, 0.14);
+  background: rgba(2, 6, 16, 0.28);
+}
+
+.mission-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.mission-actions .left {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mission-actions button.small {
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.mission-hover {
+  position: absolute;
+  inset: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(125, 190, 255, 0.22);
+  background: rgba(2, 6, 16, 0.92);
+  padding: 12px 12px;
+  display: grid;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.mission-card:hover .mission-hover,
+.mission-card:focus-within .mission-hover {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.mission-hover .hover-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(224, 242, 254, 0.96);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mission-hover .hover-body {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(224, 242, 254, 0.86);
+  white-space: pre-line;
+}
+
+.mission-variants {
+  display: grid;
+  gap: 8px;
+}
+
+.mission-variants .variant-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(125, 190, 255, 0.16);
+  background: rgba(6, 15, 30, 0.5);
+}
+
+.variant-row .variant-name {
+  font-size: 12px;
+  color: rgba(207, 228, 255, 0.95);
+}
+
+.mission-lock {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  text-align: center;
+  background: rgba(3, 8, 20, 0.72);
+  z-index: 4;
+  padding: 16px;
+}
+
+.mission-card.locked .mission-lock {
+  display: grid;
+}
+
+.mission-lock .lock-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(251, 191, 36, 0.95);
+  margin-bottom: 6px;
+}
+
+.mission-lock .lock-desc {
+  font-size: 12px;
+  color: rgba(224, 242, 254, 0.88);
+}
+
 .upgrade-item {
   display: flex;
   align-items: center;

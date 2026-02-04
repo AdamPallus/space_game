@@ -265,7 +265,7 @@
         "fireMode": "radial",
         "fireCount": 12,
         "bulletSpeed": 160,
-        "spriteScale": 0.28
+        "spriteScale": 0.71
       }
     },
     "level1_patrol:boss": {
@@ -302,7 +302,7 @@
         "fireMode": "radial",
         "fireCount": 16,
         "bulletSpeed": 170,
-        "spriteScale": 0.28
+        "spriteScale": 0.95
       }
     },
     "level2_skirmish:boss": {
@@ -321,7 +321,7 @@
         "fireMode": "radial",
         "fireCount": 16,
         "bulletSpeed": 175,
-        "spriteScale": 0.28
+        "spriteScale": 0.72
       }
     },
     "level3:boss": {
@@ -340,7 +340,7 @@
         "fireMode": "radial",
         "fireCount": 18,
         "bulletSpeed": 180,
-        "spriteScale": 0.28
+        "spriteScale": 0.73
       }
     },
     "level4:boss": {
@@ -359,7 +359,7 @@
         "fireMode": "radial",
         "fireCount": 20,
         "bulletSpeed": 190,
-        "spriteScale": 0.28
+        "spriteScale": 0.75
       }
     },
     "level5:boss": {
@@ -378,7 +378,7 @@
         "fireMode": "radial",
         "fireCount": 24,
         "bulletSpeed": 200,
-        "spriteScale": 0.28
+        "spriteScale": 0.82
       }
     },
     "level6:boss": {
@@ -397,7 +397,7 @@
         "fireMode": "radial",
         "fireCount": 26,
         "bulletSpeed": 210,
-        "spriteScale": 0.28
+        "spriteScale": 0.72
       }
     },
     "level7:boss": {
@@ -416,7 +416,7 @@
         "fireMode": "radial",
         "fireCount": 28,
         "bulletSpeed": 220,
-        "spriteScale": 0.28
+        "spriteScale": 0.95
       }
     },
     "level8:boss": {
@@ -435,7 +435,7 @@
         "fireMode": "radial",
         "fireCount": 32,
         "bulletSpeed": 235,
-        "spriteScale": 0.28
+        "spriteScale": 0.73
       }
     },
     "level9:boss": {
@@ -518,7 +518,7 @@
         "fireRate": 1.8,
         "bulletSpeed": 180,
         "shieldRegen": 12,
-        "spriteScale": 0.28
+        "spriteScale": 0.71
       }
     },
     "overseer": {

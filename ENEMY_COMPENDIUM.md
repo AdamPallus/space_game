@@ -385,7 +385,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of First Contact
 
-![Warden of First Contact](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Warden of First Contact](assets/generated/boss_manta.png)
 
 - Key: `level1:boss`
 
@@ -445,7 +445,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Second Contact
 
-![Warden of Second Contact](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Warden of Second Contact](assets/generated/boss_trident.png)
 
 - Key: `level2:boss`
 
@@ -460,7 +460,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Skirmish Wing Overboss
 
-![Skirmish Wing Overboss](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Skirmish Wing Overboss](assets/generated/boss_halo.png)
 
 - Key: `level2_skirmish:boss`
 
@@ -475,7 +475,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Third Contact
 
-![Warden of Third Contact](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Warden of Third Contact](assets/generated/boss_fortress.png)
 
 - Key: `level3:boss`
 
@@ -490,7 +490,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Fourth Contact
 
-![Warden of Fourth Contact](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Warden of Fourth Contact](assets/generated/boss_serpent.png)
 
 - Key: `level4:boss`
 
@@ -505,7 +505,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Fifth Contact
 
-![Warden of Fifth Contact](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Warden of Fifth Contact](assets/generated/boss_anvil.png)
 
 - Key: `level5:boss`
 
@@ -520,7 +520,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Sixth Contact
 
-![Warden of Sixth Contact](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Warden of Sixth Contact](assets/generated/boss_halo.png)
 
 - Key: `level6:boss`
 
@@ -535,7 +535,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Seventh Contact
 
-![Warden of Seventh Contact](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Warden of Seventh Contact](assets/generated/boss_trident.png)
 
 - Key: `level7:boss`
 
@@ -550,7 +550,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Warden of Eighth Contact
 
-![Warden of Eighth Contact](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Warden of Eighth Contact](assets/generated/boss_fortress.png)
 
 - Key: `level8:boss`
 
@@ -580,7 +580,7 @@ In the full game, these entries will unlock as the player encounters each enemy.
 
 ### Systems Test Sentinel
 
-![Systems Test Sentinel](assets/SpaceShooterRedux/PNG/ufoRed.png)
+![Systems Test Sentinel](assets/generated/boss_manta.png)
 
 - Key: `overhaul_demo:boss`
 

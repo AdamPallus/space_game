@@ -85,7 +85,7 @@
       "fireMode": "radial",
       "fireCount": 12,
       "bulletSpeed": 160,
-      "spriteScale": 0.28
+      "spriteScale": 0.71
     }
   },
   "events": [

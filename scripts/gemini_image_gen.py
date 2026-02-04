@@ -23,6 +23,8 @@ import os
 import pathlib
 import sys
 import urllib.request
+import math
+from collections import deque
 
 
 DEFAULT_MODEL = "gemini-2.5-flash-image"
@@ -80,6 +82,83 @@ def extract_first_png(response: dict) -> bytes | None:
     return None
 
 
+def _color_dist(a, b) -> float:
+    return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2)
+
+
+def _avg_corner_color(px, w, h):
+    corners = [px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1]]
+    r = sum(c[0] for c in corners) / 4.0
+    g = sum(c[1] for c in corners) / 4.0
+    b = sum(c[2] for c in corners) / 4.0
+    return (r, g, b)
+
+
+def postprocess_make_bg_transparent(path: pathlib.Path, threshold: float) -> None:
+    try:
+        from PIL import Image
+    except Exception:
+        # Optional: don't fail the whole generation if PIL isn't installed.
+        return
+
+    im = Image.open(path).convert("RGBA")
+    a = im.getchannel("A")
+    lo, hi = a.getextrema()
+    if lo < 255:
+        return  # already has transparency
+
+    w, h = im.size
+    px = im.load()
+    bg = _avg_corner_color(px, w, h)
+
+    visited = bytearray(w * h)
+    mask = bytearray(w * h)
+    q = deque()
+
+    def idx(x, y):
+        return y * w + x
+
+    def push(x, y):
+        i = idx(x, y)
+        if visited[i]:
+            return
+        visited[i] = 1
+        c = px[x, y]
+        if _color_dist(c, bg) <= threshold:
+            mask[i] = 1
+            q.append((x, y))
+
+    for x in range(w):
+        push(x, 0)
+        push(x, h - 1)
+    for y in range(h):
+        push(0, y)
+        push(w - 1, y)
+
+    while q:
+        x, y = q.popleft()
+        for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+            if nx < 0 or nx >= w or ny < 0 or ny >= h:
+                continue
+            i = idx(nx, ny)
+            if visited[i]:
+                continue
+            visited[i] = 1
+            c = px[nx, ny]
+            if _color_dist(c, bg) <= threshold:
+                mask[i] = 1
+                q.append((nx, ny))
+
+    for y in range(h):
+        for x in range(w):
+            i = idx(x, y)
+            if mask[i]:
+                r, g, b, _ = px[x, y]
+                px[x, y] = (r, g, b, 0)
+
+    im.save(path)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--prompt", required=True, help="Prompt for image generation.")
@@ -90,6 +169,17 @@ def main() -> int:
         "--modalities",
         default="IMAGE",
         help="Comma-separated response modalities (e.g. IMAGE or TEXT,IMAGE). Default: IMAGE",
+    )
+    ap.add_argument(
+        "--no-make-transparent",
+        action="store_true",
+        help="Disable background-to-transparent post-process (enabled by default for sprite work).",
+    )
+    ap.add_argument(
+        "--transparent-threshold",
+        type=float,
+        default=36.0,
+        help="RGB distance threshold for background removal (default: 36).",
     )
     args = ap.parse_args()
 
@@ -123,10 +213,11 @@ def main() -> int:
         return 3
 
     out_path.write_bytes(img)
+    if not args.no_make_transparent:
+        postprocess_make_bg_transparent(out_path, args.transparent_threshold)
     print(f"Wrote {out_path}")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

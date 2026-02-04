@@ -83,7 +83,7 @@
       "fireRate": 1.8,
       "bulletSpeed": 180,
       "shieldRegen": 12,
-      "spriteScale": 0.28
+      "spriteScale": 0.71
     }
   },
   "events": [

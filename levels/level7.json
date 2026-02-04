@@ -15,7 +15,10 @@
       "baseCredit": 36,
       "radius": 16,
       "pattern": "zigzag",
-      "patternParams": { "amplitude": 190, "frequency": 5.2 }
+      "patternParams": {
+        "amplitude": 190,
+        "frequency": 5.2
+      }
     },
     "fighter": {
       "sprite": "enemyRed3",
@@ -25,7 +28,10 @@
       "baseCredit": 52,
       "radius": 20,
       "pattern": "swoop",
-      "patternParams": { "amplitude": 120, "frequency": 4.6 }
+      "patternParams": {
+        "amplitude": 120,
+        "frequency": 4.6
+      }
     },
     "sentinel": {
       "sprite": "enemyBlue5",
@@ -48,7 +54,10 @@
       "baseCredit": 62,
       "radius": 20,
       "pattern": "spiral",
-      "patternParams": { "amplitude": 220, "frequency": 5.2 },
+      "patternParams": {
+        "amplitude": 220,
+        "frequency": 5.2
+      },
       "fireRate": 1.1,
       "fireMode": "spread",
       "fireCount": 7,
@@ -75,7 +84,10 @@
       "baseCredit": 100,
       "radius": 22,
       "pattern": "spiral",
-      "patternParams": { "amplitude": 240, "frequency": 5.6 },
+      "patternParams": {
+        "amplitude": 240,
+        "frequency": 5.6
+      },
       "fireRate": 0.9,
       "fireMode": "spread",
       "fireCount": 7,
@@ -102,7 +114,10 @@
       "baseCredit": 160,
       "radius": 34,
       "pattern": "swoop",
-      "patternParams": { "amplitude": 85, "frequency": 2.9 },
+      "patternParams": {
+        "amplitude": 85,
+        "frequency": 2.9
+      },
       "fireRate": 1.2,
       "fireMode": "spread",
       "fireCount": 10,
@@ -116,7 +131,10 @@
       "baseCredit": 190,
       "radius": 36,
       "pattern": "swoop",
-      "patternParams": { "amplitude": 95, "frequency": 2.5 },
+      "patternParams": {
+        "amplitude": 95,
+        "frequency": 2.5
+      },
       "fireRate": 1.0,
       "fireMode": "radial",
       "fireCount": 20,
@@ -141,7 +159,7 @@
       "ai": "transport"
     },
     "boss": {
-      "sprite": "ufoRed",
+      "sprite": "assets/generated/boss_trident.png",
       "hp": 2200,
       "speed": 120,
       "score": 4500,
@@ -152,32 +170,152 @@
       "fireRate": 0.55,
       "fireMode": "radial",
       "fireCount": 28,
-      "bulletSpeed": 220
+      "bulletSpeed": 220,
+      "spriteScale": 0.28
     }
   },
   "events": [
-    { "time": 1, "type": "scout", "count": 18, "interval": 0.24, "comment": "Wave 1" },
-    { "time": 6, "type": "fighter", "count": 10, "interval": 0.45 },
-    { "time": 12, "type": "sentinel", "count": 5, "interval": 0.6 },
-    { "time": 16, "type": "hunter", "count": 6, "interval": 0.8, "comment": "Wave 2" },
-    { "time": 20, "type": "marauder", "count": 4, "interval": 0.8 },
-    { "time": 24, "type": "scout", "count": 20, "interval": 0.2 },
-    { "time": 28, "type": "warden", "count": 2, "interval": 1.0, "comment": "Wave 3" },
-    { "time": 32, "type": "reaper", "count": 3, "interval": 0.9 },
-    { "time": 36, "type": "transport", "count": 2, "interval": 1.0 },
-    { "time": 40, "type": "phantom", "count": 4, "interval": 0.9, "comment": "Wave 4" },
-    { "time": 44, "type": "fighter", "count": 14, "interval": 0.35 },
-    { "time": 48, "type": "harvester", "count": 1 },
-    { "time": 52, "type": "scout", "count": 22, "interval": 0.18, "comment": "Wave 5 - Swarm" },
-    { "time": 56, "type": "hunter", "count": 5, "interval": 0.75 },
-    { "time": 60, "type": "marauder", "count": 4, "interval": 0.75 },
-    { "time": 64, "type": "overseer", "count": 1, "comment": "Wave 6 - Mini-boss" },
-    { "time": 66, "type": "warden", "count": 3, "interval": 1.0 },
-    { "time": 70, "type": "reaper", "count": 4, "interval": 0.8 },
-    { "time": 74, "type": "transport", "count": 3, "interval": 0.9 },
-    { "time": 78, "type": "phantom", "count": 3, "interval": 0.85, "comment": "Wave 7" },
-    { "time": 82, "type": "fighter", "count": 16, "interval": 0.32 },
-    { "time": 86, "type": "harvester", "count": 2, "interval": 1.4 },
-    { "time": 94, "type": "boss", "count": 1 }
+    {
+      "time": 1,
+      "type": "scout",
+      "count": 18,
+      "interval": 0.24,
+      "comment": "Wave 1"
+    },
+    {
+      "time": 6,
+      "type": "fighter",
+      "count": 10,
+      "interval": 0.45
+    },
+    {
+      "time": 12,
+      "type": "sentinel",
+      "count": 5,
+      "interval": 0.6
+    },
+    {
+      "time": 16,
+      "type": "hunter",
+      "count": 6,
+      "interval": 0.8,
+      "comment": "Wave 2"
+    },
+    {
+      "time": 20,
+      "type": "marauder",
+      "count": 4,
+      "interval": 0.8
+    },
+    {
+      "time": 24,
+      "type": "scout",
+      "count": 20,
+      "interval": 0.2
+    },
+    {
+      "time": 28,
+      "type": "warden",
+      "count": 2,
+      "interval": 1.0,
+      "comment": "Wave 3"
+    },
+    {
+      "time": 32,
+      "type": "reaper",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 36,
+      "type": "transport",
+      "count": 2,
+      "interval": 1.0
+    },
+    {
+      "time": 40,
+      "type": "phantom",
+      "count": 4,
+      "interval": 0.9,
+      "comment": "Wave 4"
+    },
+    {
+      "time": 44,
+      "type": "fighter",
+      "count": 14,
+      "interval": 0.35
+    },
+    {
+      "time": 48,
+      "type": "harvester",
+      "count": 1
+    },
+    {
+      "time": 52,
+      "type": "scout",
+      "count": 22,
+      "interval": 0.18,
+      "comment": "Wave 5 - Swarm"
+    },
+    {
+      "time": 56,
+      "type": "hunter",
+      "count": 5,
+      "interval": 0.75
+    },
+    {
+      "time": 60,
+      "type": "marauder",
+      "count": 4,
+      "interval": 0.75
+    },
+    {
+      "time": 64,
+      "type": "overseer",
+      "count": 1,
+      "comment": "Wave 6 - Mini-boss"
+    },
+    {
+      "time": 66,
+      "type": "warden",
+      "count": 3,
+      "interval": 1.0
+    },
+    {
+      "time": 70,
+      "type": "reaper",
+      "count": 4,
+      "interval": 0.8
+    },
+    {
+      "time": 74,
+      "type": "transport",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 78,
+      "type": "phantom",
+      "count": 3,
+      "interval": 0.85,
+      "comment": "Wave 7"
+    },
+    {
+      "time": 82,
+      "type": "fighter",
+      "count": 16,
+      "interval": 0.32
+    },
+    {
+      "time": 86,
+      "type": "harvester",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 94,
+      "type": "boss",
+      "count": 1
+    }
   ]
 }

@@ -15,7 +15,10 @@
       "baseCredit": 32,
       "radius": 16,
       "pattern": "zigzag",
-      "patternParams": { "amplitude": 180, "frequency": 5.0 }
+      "patternParams": {
+        "amplitude": 180,
+        "frequency": 5.0
+      }
     },
     "fighter": {
       "sprite": "enemyRed3",
@@ -25,7 +28,10 @@
       "baseCredit": 46,
       "radius": 20,
       "pattern": "swoop",
-      "patternParams": { "amplitude": 115, "frequency": 4.4 }
+      "patternParams": {
+        "amplitude": 115,
+        "frequency": 4.4
+      }
     },
     "sentinel": {
       "sprite": "enemyRed5",
@@ -48,7 +54,10 @@
       "baseCredit": 56,
       "radius": 20,
       "pattern": "spiral",
-      "patternParams": { "amplitude": 210, "frequency": 5.0 },
+      "patternParams": {
+        "amplitude": 210,
+        "frequency": 5.0
+      },
       "fireRate": 1.2,
       "fireMode": "spread",
       "fireCount": 7,
@@ -75,7 +84,10 @@
       "baseCredit": 94,
       "radius": 22,
       "pattern": "spiral",
-      "patternParams": { "amplitude": 230, "frequency": 5.4 },
+      "patternParams": {
+        "amplitude": 230,
+        "frequency": 5.4
+      },
       "fireRate": 1.0,
       "fireMode": "spread",
       "fireCount": 6,
@@ -113,7 +125,7 @@
       "ai": "transport"
     },
     "boss": {
-      "sprite": "ufoRed",
+      "sprite": "assets/generated/boss_halo.png",
       "hp": 1800,
       "speed": 115,
       "score": 3800,
@@ -124,26 +136,111 @@
       "fireRate": 0.65,
       "fireMode": "radial",
       "fireCount": 26,
-      "bulletSpeed": 210
+      "bulletSpeed": 210,
+      "spriteScale": 0.28
     }
   },
   "events": [
-    { "time": 1, "type": "scout", "count": 16, "interval": 0.26 },
-    { "time": 6, "type": "fighter", "count": 12, "interval": 0.48 },
-    { "time": 11, "type": "sentinel", "count": 5, "interval": 0.65 },
-    { "time": 14, "type": "hunter", "count": 6, "interval": 0.85 },
-    { "time": 18, "type": "marauder", "count": 4, "interval": 0.85 },
-    { "time": 22, "type": "captain", "count": 1, "comment": "First mini-boss" },
-    { "time": 24, "type": "scout", "count": 18, "interval": 0.22 },
-    { "time": 28, "type": "warden", "count": 3, "interval": 1.1 },
-    { "time": 32, "type": "phantom", "count": 3, "interval": 1.0 },
-    { "time": 36, "type": "transport", "count": 3, "interval": 1.0 },
-    { "time": 40, "type": "captain", "count": 1, "comment": "Second mini-boss" },
-    { "time": 42, "type": "fighter", "count": 14, "interval": 0.38 },
-    { "time": 48, "type": "hunter", "count": 5, "interval": 0.9 },
-    { "time": 52, "type": "marauder", "count": 3, "interval": 0.9 },
-    { "time": 56, "type": "transport", "count": 2, "interval": 1.0 },
-    { "time": 62, "type": "warden", "count": 2, "interval": 1.2 },
-    { "time": 70, "type": "boss", "count": 1 }
+    {
+      "time": 1,
+      "type": "scout",
+      "count": 16,
+      "interval": 0.26
+    },
+    {
+      "time": 6,
+      "type": "fighter",
+      "count": 12,
+      "interval": 0.48
+    },
+    {
+      "time": 11,
+      "type": "sentinel",
+      "count": 5,
+      "interval": 0.65
+    },
+    {
+      "time": 14,
+      "type": "hunter",
+      "count": 6,
+      "interval": 0.85
+    },
+    {
+      "time": 18,
+      "type": "marauder",
+      "count": 4,
+      "interval": 0.85
+    },
+    {
+      "time": 22,
+      "type": "captain",
+      "count": 1,
+      "comment": "First mini-boss"
+    },
+    {
+      "time": 24,
+      "type": "scout",
+      "count": 18,
+      "interval": 0.22
+    },
+    {
+      "time": 28,
+      "type": "warden",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 32,
+      "type": "phantom",
+      "count": 3,
+      "interval": 1.0
+    },
+    {
+      "time": 36,
+      "type": "transport",
+      "count": 3,
+      "interval": 1.0
+    },
+    {
+      "time": 40,
+      "type": "captain",
+      "count": 1,
+      "comment": "Second mini-boss"
+    },
+    {
+      "time": 42,
+      "type": "fighter",
+      "count": 14,
+      "interval": 0.38
+    },
+    {
+      "time": 48,
+      "type": "hunter",
+      "count": 5,
+      "interval": 0.9
+    },
+    {
+      "time": 52,
+      "type": "marauder",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 56,
+      "type": "transport",
+      "count": 2,
+      "interval": 1.0
+    },
+    {
+      "time": 62,
+      "type": "warden",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 70,
+      "type": "boss",
+      "count": 1
+    }
   ]
 }

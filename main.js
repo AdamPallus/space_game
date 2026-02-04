@@ -567,6 +567,16 @@ function loadImage(src) {
   return record;
 }
 
+// Support custom sprites referenced by URL/path in level JSON (e.g. generated boss art).
+const dynamicImageCache = new Map();
+function loadImageCached(src) {
+  if (!src) return null;
+  if (dynamicImageCache.has(src)) return dynamicImageCache.get(src);
+  const record = loadImage(src);
+  dynamicImageCache.set(src, record);
+  return record;
+}
+
 async function loadLevel(levelName) {
   try {
     const response = await fetch(`levels/${levelName}.json`, { cache: "no-store" });
@@ -585,6 +595,33 @@ async function loadLevelMeta(levelName) {
   const data = await loadLevel(levelName);
   levelMetaCache.set(levelName, data);
   return data;
+}
+
+const ENEMY_CATALOG_PATH = "enemies/enemy_catalog.json";
+let enemyCatalog = null;
+let enemyCatalogPromise = null;
+
+async function loadEnemyCatalog() {
+  try {
+    const response = await fetch(ENEMY_CATALOG_PATH, { cache: "no-store" });
+    if (!response.ok) throw new Error("enemy catalog load failed");
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.warn("Enemy catalog load failed; using minimal fallback.");
+    return { version: 1, entries: {} };
+  }
+}
+
+async function ensureEnemyCatalogLoaded() {
+  if (enemyCatalog) return enemyCatalog;
+  if (!enemyCatalogPromise) enemyCatalogPromise = loadEnemyCatalog();
+  enemyCatalog = await enemyCatalogPromise;
+  return enemyCatalog;
+}
+
+function getEnemyCatalogEntry(id) {
+  return enemyCatalog?.entries?.[id] || null;
 }
 
 async function ensureLevelLoaded() {
@@ -1302,6 +1339,7 @@ function initConsumablesForMission() {
 
 async function startMission() {
   closeShipModal();
+  await ensureEnemyCatalogLoaded();
   const level = await ensureLevelLoaded();
   applyUpgrades();
   const consumablesState = initConsumablesForMission();
@@ -1616,48 +1654,13 @@ const COMPENDIUM_LEVEL_IDS = [
   "level2_skirmish",
 ];
 
-const compendiumNameMap = {
-  scout: "Blue Scout Drone",
-  fighter: "Redline Fighter",
-  sentinel: "Sentinel Strafe Drone",
-  lurker: "Lurker Ambush Probe",
-  hunter: "Hunter Pursuit Drone",
-  transport: "Cargo Transport (Pirated)",
-  interceptor: "Interceptor Wing",
-  marauder: "Marauder Spiralwing",
-  warden: "Warden Gunline",
-  phantom: "Phantom Spiralwing",
-  reaper: "Reaper Hunter-Killer",
-  harvester: "Harvester Bomber",
-  overseer: "Overseer Command Skiff",
-  captain: "Captain-Class Corvette",
-  elite: "Elite Vortex Drone",
-  gnat: "Gnat Interceptor",
-  dart: "Dart Skirmisher",
-  spark: "Spark Shield-Kite",
-  stalker: "Stalker Proximity Hunter",
-  plated: "Plated Bastion",
-  escort: "Escort Gunship",
-  bulwark: "Bulwark Heavy Hauler",
-  drone: "Training Drone",
-  shieldkite: "Shield-Kite Drone",
-  tank: "Armored Test Rig",
-
-  "level1:boss": "Warden of First Contact",
-  "level2:boss": "Warden of Second Contact",
-  "level3:boss": "Warden of Third Contact",
-  "level4:boss": "Warden of Fourth Contact",
-  "level5:boss": "Warden of Fifth Contact",
-  "level6:boss": "Warden of Sixth Contact",
-  "level7:boss": "Warden of Seventh Contact",
-  "level8:boss": "Warden of Eighth Contact",
-  "level9:boss": "Neon Swarm Sovereign",
-  "level10:boss": "Iron Graveyard Juggernaut",
-  "level11:boss": "Corridor Gatekeeper",
-  "overhaul_demo:boss": "Systems Test Sentinel",
-  "level1_patrol:boss": "Patrol Wing Overboss",
-  "level2_skirmish:boss": "Skirmish Wing Overboss",
-};
+function compendiumDisplayName(entry) {
+  const fromKey = getEnemyCatalogEntry(entry.key);
+  if (fromKey?.name) return fromKey.name;
+  const fromType = getEnemyCatalogEntry(entry.typeId);
+  if (fromType?.name) return fromType.name;
+  return capitalize(entry.typeId);
+}
 
 function spriteSrcForKey(spriteKey) {
   if (!spriteKey) return "";
@@ -1740,6 +1743,7 @@ async function buildCompendium() {
   if (compendiumCache) return compendiumCache;
   if (compendiumLoading) return compendiumLoading;
   compendiumLoading = (async () => {
+    await ensureEnemyCatalogLoaded();
     const levels = await Promise.all(COMPENDIUM_LEVEL_IDS.map((id) => loadLevelMeta(id)));
     const byKey = new Map();
     levels.forEach((level) => {
@@ -1767,12 +1771,29 @@ async function buildCompendium() {
         byKey.set(key, entry);
       });
     });
+
+    // Include catalog entries even if they're not present in any mission yet (prototype visibility).
+    const catalogEntries = enemyCatalog?.entries || {};
+    Object.keys(catalogEntries).forEach((catalogKey) => {
+      if (byKey.has(catalogKey)) return;
+      // Only include entries that look like a drone id or a boss key.
+      const def = catalogEntries[catalogKey];
+      if (!def || (!def.name && !def.template)) return;
+      byKey.set(catalogKey, {
+        key: catalogKey,
+        typeId: catalogKey,
+        isBoss: !!def.boss || catalogKey.includes(":boss"),
+        spec: def.template || {},
+        sources: [],
+      });
+    });
+
     const list = Array.from(byKey.values());
     // Stable, friendly ordering: non-boss first, then bosses; within groups by name.
     list.sort((a, b) => {
       if (a.isBoss !== b.isBoss) return a.isBoss ? 1 : -1;
-      const an = (compendiumNameMap[a.key] || compendiumNameMap[a.typeId] || a.key).toLowerCase();
-      const bn = (compendiumNameMap[b.key] || compendiumNameMap[b.typeId] || b.key).toLowerCase();
+      const an = compendiumDisplayName(a).toLowerCase();
+      const bn = compendiumDisplayName(b).toLowerCase();
       return an.localeCompare(bn);
     });
     compendiumCache = list;
@@ -1808,7 +1829,7 @@ async function renderDroneCompendiumAsync() {
   const filtered = list.filter((entry) => {
     if (!showBosses && entry.isBoss) return false;
     if (!query) return true;
-    const name = (compendiumNameMap[entry.key] || compendiumNameMap[entry.typeId] || entry.key).toLowerCase();
+    const name = compendiumDisplayName(entry).toLowerCase();
     const sprite = (entry.spec?.sprite || "").toLowerCase();
     const pattern = (entry.spec?.pattern || "").toLowerCase();
     const ai = (entry.spec?.ai || "").toLowerCase();
@@ -1819,8 +1840,7 @@ async function renderDroneCompendiumAsync() {
   compendiumList.innerHTML = "";
   filtered.forEach((entry) => {
     const spec = entry.spec || {};
-    const displayName =
-      compendiumNameMap[entry.key] || compendiumNameMap[entry.typeId] || capitalize(entry.typeId);
+    const displayName = compendiumDisplayName(entry);
     const spriteSrc = spriteSrcForKey(spec.sprite);
     const tags = [];
     if (spec.ai) tags.push(spec.ai);
@@ -1831,9 +1851,11 @@ async function renderDroneCompendiumAsync() {
     if (normalizeEnemyDefense(spec).shield > 0) tags.push("shielded");
 
     const firstSource = entry.sources[0];
-    const subtitle = entry.isBoss
-      ? `Boss target | ${firstSource?.levelName || "Unknown mission"}`
-      : `Seen in: ${entry.sources.slice(0, 2).map((s) => s.levelName).join(", ")}${entry.sources.length > 2 ? "…" : ""}`;
+    const subtitle = entry.sources?.length
+      ? entry.isBoss
+        ? `Boss target | ${firstSource?.levelName || "Unknown mission"}`
+        : `Seen in: ${entry.sources.slice(0, 2).map((s) => s.levelName).join(", ")}${entry.sources.length > 2 ? "…" : ""}`
+      : "Prototype entry (unseen)";
 
     const card = document.createElement("div");
     card.className = `compendium-card${entry.isBoss ? " boss" : ""}`;
@@ -2913,6 +2935,9 @@ function spawnEnemyFromSpec(spec) {
     fireCooldown: Math.random() * (spec.fireRate ?? 2.2),
     fireMode: spec.fireMode || "aim",
     bulletSpeed: spec.bulletSpeed,
+    bulletDamage: spec.bulletDamage,
+    collisionDamage: spec.collisionDamage,
+    damageScale: spec.damageScale ?? 1,
     aggroRadius: spec.aggroRadius,
     bulletStyle: spec.bulletStyle,
     patternTime: 0,
@@ -2976,7 +3001,11 @@ function spawnEnemyFromSpec(spec) {
   }
 
   const spriteKey = spec.sprite;
-  enemy.sprite = enemySpriteMap[spriteKey] || assets.enemies[enemy.type] || assets.enemies.fighter;
+  const spriteLooksLikePath =
+    typeof spriteKey === "string" && (spriteKey.includes("/") || spriteKey.endsWith(".png"));
+  enemy.sprite = spriteLooksLikePath
+    ? loadImageCached(spriteKey)
+    : enemySpriteMap[spriteKey] || assets.enemies[enemy.type] || assets.enemies.fighter;
   enemies.push(enemy);
   if (enemy.isBoss) {
     mission.bossAlive = true;
@@ -3004,12 +3033,47 @@ function scheduleLevelSpawns() {
 
 function resolveEnemySpec(type, overrides = {}) {
   const level = mission.level;
-  const base = level?.enemyTypes?.[type] || {};
-  return {
+  const baseLocal = level?.enemyTypes?.[type] || {};
+  const templateId = baseLocal?.template;
+  const baseTemplate =
+    (typeof templateId === "string" && getEnemyCatalogEntry(templateId)?.template) ||
+    getEnemyCatalogEntry(type)?.template ||
+    {};
+
+  const merged = {
     type,
-    ...base,
+    ...baseTemplate,
+    ...baseLocal,
     ...overrides,
   };
+  delete merged.template;
+
+  const levelScale = level?.enemyScale || level?.scale || {};
+  const hpScale = Math.max(
+    0.05,
+    Number.isFinite(merged.hpScale) ? merged.hpScale : (Number.isFinite(levelScale.hp) ? levelScale.hp : 1)
+  );
+  const damageScale = Math.max(
+    0.05,
+    Number.isFinite(merged.damageScale) ? merged.damageScale : (Number.isFinite(levelScale.damage) ? levelScale.damage : 1)
+  );
+
+  const scaleField = (key) => {
+    if (!Number.isFinite(merged[key])) return;
+    merged[key] = Math.max(0, Math.round(merged[key] * hpScale));
+  };
+  // HP pools
+  scaleField("hp");
+  scaleField("hull");
+  scaleField("armor");
+  scaleField("shield");
+  if (Number.isFinite(merged.shieldRegen)) {
+    merged.shieldRegen = Math.max(0, merged.shieldRegen * hpScale);
+  }
+
+  // Damage scaling is applied at runtime (bullets/collisions) so it works with mission difficulty too.
+  merged.damageScale = damageScale;
+  return merged;
 }
 
 function spawnPlayerBullet({ x, y, vx, vy, damage, image }) {
@@ -3306,6 +3370,8 @@ function fireEnemyBullet(enemy, angleOverride, speedOverride) {
       : Math.atan2(player.y - enemy.y, player.x - enemy.x));
   const speed =
     speedOverride ?? enemy.bulletSpeed ?? 200 + mission.difficulty * 15;
+  const baseDamage = enemy.bulletDamage ?? (14 + mission.difficulty * 1.3);
+  const damage = baseDamage * (enemy.damageScale ?? 1);
 
   const style = enemy.bulletStyle || getEnemyBulletStyle(enemy);
   if (style.shape === "orb") {
@@ -3317,6 +3383,7 @@ function fireEnemyBullet(enemy, angleOverride, speedOverride) {
       radius: style.radius || 6,
       color: style.color || "#fb7185",
       shape: "orb",
+      damage,
     });
     return;
   }
@@ -3331,6 +3398,7 @@ function fireEnemyBullet(enemy, angleOverride, speedOverride) {
     width: style.width || 10,
     height: style.height || 32,
     rotation: angle + Math.PI / 2,
+    damage,
   });
 }
 
@@ -3767,7 +3835,8 @@ function handleCollisions() {
     const enemy = enemies[i];
     if (distance(player.x, player.y, enemy.x, enemy.y) < player.radius + enemy.radius) {
       enemies.splice(i, 1);
-      applyDamage(22 + mission.difficulty * 2, { collision: true });
+      const base = enemy.collisionDamage ?? (22 + mission.difficulty * 2);
+      applyDamage(base * (enemy.damageScale ?? 1), { collision: true });
       spawnExplosion(enemy.x, enemy.y, enemy.radius, { intensity: 0.55, blend: "lighter", style: "impact" });
     }
   }
@@ -3776,7 +3845,8 @@ function handleCollisions() {
     const bullet = enemyBullets[i];
     if (distance(player.x, player.y, bullet.x, bullet.y) < player.radius + bullet.radius) {
       enemyBullets.splice(i, 1);
-      applyDamage(14 + mission.difficulty * 1.3);
+      const base = Number.isFinite(bullet.damage) ? bullet.damage : 14 + mission.difficulty * 1.3;
+      applyDamage(base);
     }
   }
 }

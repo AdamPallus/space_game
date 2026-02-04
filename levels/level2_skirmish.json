@@ -17,7 +17,10 @@
       "baseCredit": 18,
       "radius": 16,
       "pattern": "zigzag",
-      "patternParams": { "amplitude": 115, "frequency": 3.8 }
+      "patternParams": {
+        "amplitude": 115,
+        "frequency": 3.8
+      }
     },
     "fighter": {
       "sprite": "enemyRed3",
@@ -27,7 +30,10 @@
       "baseCredit": 25,
       "radius": 20,
       "pattern": "swoop",
-      "patternParams": { "amplitude": 75, "frequency": 3.1 }
+      "patternParams": {
+        "amplitude": 75,
+        "frequency": 3.1
+      }
     },
     "sentinel": {
       "sprite": "enemyBlue5",
@@ -47,7 +53,10 @@
       "baseCredit": 33,
       "radius": 20,
       "pattern": "spiral",
-      "patternParams": { "amplitude": 125, "frequency": 3.8 },
+      "patternParams": {
+        "amplitude": 125,
+        "frequency": 3.8
+      },
       "fireRate": 1.5,
       "fireMode": "spread",
       "fireCount": 5,
@@ -63,7 +72,7 @@
       "ai": "hunter"
     },
     "boss": {
-      "sprite": "ufoRed",
+      "sprite": "assets/generated/boss_halo.png",
       "hp": 480,
       "speed": 85,
       "score": 1300,
@@ -74,18 +83,64 @@
       "fireRate": 1.1,
       "fireMode": "radial",
       "fireCount": 16,
-      "bulletSpeed": 175
+      "bulletSpeed": 175,
+      "spriteScale": 0.28
     }
   },
   "events": [
-    { "time": 1, "type": "scout", "count": 10, "interval": 0.3, "comment": "Fast start" },
-    { "time": 4, "type": "fighter", "count": 8, "interval": 0.5 },
-    { "time": 8, "type": "sentinel", "count": 4, "interval": 0.65 },
-    { "time": 11, "type": "marauder", "count": 3, "interval": 0.8 },
-    { "time": 14, "type": "hunter", "count": 4, "interval": 0.75 },
-    { "time": 17, "type": "scout", "count": 12, "interval": 0.25 },
-    { "time": 20, "type": "fighter", "count": 6, "interval": 0.45 },
-    { "time": 24, "type": "hunter", "count": 3, "interval": 0.7 },
-    { "time": 28, "type": "boss", "count": 1 }
+    {
+      "time": 1,
+      "type": "scout",
+      "count": 10,
+      "interval": 0.3,
+      "comment": "Fast start"
+    },
+    {
+      "time": 4,
+      "type": "fighter",
+      "count": 8,
+      "interval": 0.5
+    },
+    {
+      "time": 8,
+      "type": "sentinel",
+      "count": 4,
+      "interval": 0.65
+    },
+    {
+      "time": 11,
+      "type": "marauder",
+      "count": 3,
+      "interval": 0.8
+    },
+    {
+      "time": 14,
+      "type": "hunter",
+      "count": 4,
+      "interval": 0.75
+    },
+    {
+      "time": 17,
+      "type": "scout",
+      "count": 12,
+      "interval": 0.25
+    },
+    {
+      "time": 20,
+      "type": "fighter",
+      "count": 6,
+      "interval": 0.45
+    },
+    {
+      "time": 24,
+      "type": "hunter",
+      "count": 3,
+      "interval": 0.7
+    },
+    {
+      "time": 28,
+      "type": "boss",
+      "count": 1
+    }
   ]
 }

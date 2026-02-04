@@ -16,7 +16,10 @@
       "baseCredit": 10,
       "radius": 16,
       "pattern": "zigzag",
-      "patternParams": { "amplitude": 80, "frequency": 3.1 },
+      "patternParams": {
+        "amplitude": 80,
+        "frequency": 3.1
+      },
       "shieldRegen": 10
     },
     "shieldkite": {
@@ -63,7 +66,7 @@
       "fireRate": 3.2
     },
     "boss": {
-      "sprite": "ufoRed",
+      "sprite": "assets/generated/boss_manta.png",
       "hull": 160,
       "shield": 120,
       "armor": 120,
@@ -79,18 +82,56 @@
       "fireCount": 22,
       "fireRate": 1.8,
       "bulletSpeed": 180,
-      "shieldRegen": 12
+      "shieldRegen": 12,
+      "spriteScale": 0.28
     }
   },
   "events": [
-    { "time": 1, "type": "drone", "count": 5, "interval": 0.5 },
-    { "time": 5, "type": "plated", "count": 2, "interval": 1.2 },
-    { "time": 9, "type": "shieldkite", "count": 2, "interval": 1.4 },
-    { "time": 13, "type": "drone", "count": 8, "interval": 0.35 },
-    { "time": 18, "type": "tank", "count": 1 },
-    { "time": 22, "type": "plated", "count": 3, "interval": 1.1 },
-    { "time": 28, "type": "shieldkite", "count": 3, "interval": 1.1 },
-    { "time": 36, "type": "boss", "count": 1 }
+    {
+      "time": 1,
+      "type": "drone",
+      "count": 5,
+      "interval": 0.5
+    },
+    {
+      "time": 5,
+      "type": "plated",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 9,
+      "type": "shieldkite",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 13,
+      "type": "drone",
+      "count": 8,
+      "interval": 0.35
+    },
+    {
+      "time": 18,
+      "type": "tank",
+      "count": 1
+    },
+    {
+      "time": 22,
+      "type": "plated",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 28,
+      "type": "shieldkite",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 36,
+      "type": "boss",
+      "count": 1
+    }
   ]
 }
-

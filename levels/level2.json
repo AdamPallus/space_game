@@ -15,7 +15,10 @@
       "baseCredit": 14,
       "radius": 16,
       "pattern": "zigzag",
-      "patternParams": { "amplitude": 110, "frequency": 3.6 }
+      "patternParams": {
+        "amplitude": 110,
+        "frequency": 3.6
+      }
     },
     "fighter": {
       "sprite": "enemyRed3",
@@ -25,7 +28,10 @@
       "baseCredit": 20,
       "radius": 20,
       "pattern": "swoop",
-      "patternParams": { "amplitude": 70, "frequency": 2.9 }
+      "patternParams": {
+        "amplitude": 70,
+        "frequency": 2.9
+      }
     },
     "sentinel": {
       "sprite": "enemyBlue5",
@@ -44,7 +50,10 @@
       "baseCredit": 26,
       "radius": 20,
       "pattern": "spiral",
-      "patternParams": { "amplitude": 120, "frequency": 3.6 },
+      "patternParams": {
+        "amplitude": 120,
+        "frequency": 3.6
+      },
       "fireRate": 1.6,
       "fireMode": "spread",
       "fireCount": 5,
@@ -71,7 +80,7 @@
       "ai": "hunter"
     },
     "boss": {
-      "sprite": "ufoRed",
+      "sprite": "assets/generated/boss_trident.png",
       "hp": 520,
       "speed": 80,
       "score": 1200,
@@ -82,19 +91,69 @@
       "fireRate": 1.2,
       "fireMode": "radial",
       "fireCount": 16,
-      "bulletSpeed": 170
+      "bulletSpeed": 170,
+      "spriteScale": 0.28
     }
   },
   "events": [
-    { "time": 1, "type": "scout", "count": 8, "interval": 0.4 },
-    { "time": 6, "type": "fighter", "count": 6, "interval": 0.7 },
-    { "time": 10, "type": "sentinel", "count": 3, "interval": 0.9 },
-    { "time": 12, "type": "scout", "count": 10, "interval": 0.3 },
-    { "time": 16, "type": "marauder", "count": 2, "interval": 1.1 },
-    { "time": 20, "type": "lurker", "count": 2, "interval": 1.2 },
-    { "time": 18, "type": "hunter", "count": 3, "interval": 1.1 },
-    { "time": 32, "type": "fighter", "count": 8, "interval": 0.55 },
-    { "time": 40, "type": "hunter", "count": 2, "interval": 1.4 },
-    { "time": 48, "type": "boss", "count": 1 }
+    {
+      "time": 1,
+      "type": "scout",
+      "count": 8,
+      "interval": 0.4
+    },
+    {
+      "time": 6,
+      "type": "fighter",
+      "count": 6,
+      "interval": 0.7
+    },
+    {
+      "time": 10,
+      "type": "sentinel",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 12,
+      "type": "scout",
+      "count": 10,
+      "interval": 0.3
+    },
+    {
+      "time": 16,
+      "type": "marauder",
+      "count": 2,
+      "interval": 1.1
+    },
+    {
+      "time": 20,
+      "type": "lurker",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 18,
+      "type": "hunter",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 32,
+      "type": "fighter",
+      "count": 8,
+      "interval": 0.55
+    },
+    {
+      "time": 40,
+      "type": "hunter",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 48,
+      "type": "boss",
+      "count": 1
+    }
   ]
 }

@@ -15,7 +15,10 @@
       "baseCredit": 12,
       "radius": 16,
       "pattern": "zigzag",
-      "patternParams": { "amplitude": 90, "frequency": 3.2 }
+      "patternParams": {
+        "amplitude": 90,
+        "frequency": 3.2
+      }
     },
     "fighter": {
       "sprite": "enemyRed3",
@@ -25,7 +28,10 @@
       "baseCredit": 16,
       "radius": 20,
       "pattern": "swoop",
-      "patternParams": { "amplitude": 60, "frequency": 2.6 }
+      "patternParams": {
+        "amplitude": 60,
+        "frequency": 2.6
+      }
     },
     "sentinel": {
       "sprite": "enemyBlue5",
@@ -67,7 +73,7 @@
       "ai": "transport"
     },
     "boss": {
-      "sprite": "ufoRed",
+      "sprite": "assets/generated/boss_manta.png",
       "hp": 380,
       "speed": 70,
       "score": 900,
@@ -78,18 +84,62 @@
       "fireRate": 1.4,
       "fireMode": "radial",
       "fireCount": 12,
-      "bulletSpeed": 160
+      "bulletSpeed": 160,
+      "spriteScale": 0.28
     }
   },
   "events": [
-    { "time": 1, "type": "scout", "count": 6, "interval": 0.45 },
-    { "time": 6, "type": "fighter", "count": 4, "interval": 0.8 },
-    { "time": 9, "type": "sentinel", "count": 2, "interval": 1.0 },
-    { "time": 12, "type": "scout", "count": 8, "interval": 0.35 },
-    { "time": 16, "type": "lurker", "count": 2, "interval": 1.2 },
-    { "time": 18, "type": "hunter", "count": 2, "interval": 1.2 },
-    { "time": 24, "type": "transport", "count": 1 },
-    { "time": 32, "type": "fighter", "count": 6, "interval": 0.6 },
-    { "time": 42, "type": "boss", "count": 1 }
+    {
+      "time": 1,
+      "type": "scout",
+      "count": 6,
+      "interval": 0.45
+    },
+    {
+      "time": 6,
+      "type": "fighter",
+      "count": 4,
+      "interval": 0.8
+    },
+    {
+      "time": 9,
+      "type": "sentinel",
+      "count": 2,
+      "interval": 1.0
+    },
+    {
+      "time": 12,
+      "type": "scout",
+      "count": 8,
+      "interval": 0.35
+    },
+    {
+      "time": 16,
+      "type": "lurker",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 18,
+      "type": "hunter",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 24,
+      "type": "transport",
+      "count": 1
+    },
+    {
+      "time": 32,
+      "type": "fighter",
+      "count": 6,
+      "interval": 0.6
+    },
+    {
+      "time": 42,
+      "type": "boss",
+      "count": 1
+    }
   ]
 }

@@ -1,0 +1,742 @@
+{
+  "version": 1,
+  "entries": {
+    "bulwark": {
+      "name": "Bulwark Heavy Hauler",
+      "boss": false,
+      "template": {
+        "sprite": "ufoBlue",
+        "hull": 40,
+        "shield": 0,
+        "armor": 240,
+        "armorClass": 14,
+        "speed": 30,
+        "score": 360,
+        "baseCredit": 44,
+        "radius": 34,
+        "ai": "transport",
+        "fireRate": 3.0
+      }
+    },
+    "captain": {
+      "name": "Captain-Class Corvette",
+      "boss": false,
+      "template": {
+        "sprite": "ufoYellow",
+        "hp": 320,
+        "speed": 75,
+        "score": 1100,
+        "baseCredit": 200,
+        "radius": 38,
+        "pattern": "strafe",
+        "fireRate": 1.0,
+        "fireMode": "radial",
+        "fireCount": 14,
+        "bulletSpeed": 175
+      }
+    },
+    "dart": {
+      "name": "Dart Skirmisher",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlue2",
+        "hull": 16,
+        "shield": 0,
+        "armor": 0,
+        "speed": 150,
+        "score": 110,
+        "baseCredit": 12,
+        "radius": 16,
+        "pattern": "swoop",
+        "patternParams": {
+          "amplitude": 120,
+          "frequency": 5.4
+        }
+      }
+    },
+    "drone": {
+      "name": "Training Drone",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlue2",
+        "hull": 28,
+        "shield": 22,
+        "armor": 0,
+        "speed": 72,
+        "score": 90,
+        "baseCredit": 10,
+        "radius": 16,
+        "pattern": "zigzag",
+        "patternParams": {
+          "amplitude": 80,
+          "frequency": 3.1
+        },
+        "shieldRegen": 10
+      }
+    },
+    "elite": {
+      "name": "Elite Vortex Drone",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlack3",
+        "hp": 140,
+        "speed": 150,
+        "score": 900,
+        "baseCredit": 140,
+        "radius": 24,
+        "pattern": "spiral",
+        "patternParams": {
+          "amplitude": 200,
+          "frequency": 5.0
+        },
+        "fireRate": 0.8,
+        "fireMode": "radial",
+        "fireCount": 12,
+        "bulletSpeed": 170
+      }
+    },
+    "escort": {
+      "name": "Escort Gunship",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlack3",
+        "hull": 32,
+        "shield": 0,
+        "armor": 90,
+        "armorClass": 10,
+        "speed": 60,
+        "score": 240,
+        "baseCredit": 30,
+        "radius": 20,
+        "pattern": "strafe",
+        "fireMode": "spread",
+        "fireCount": 5,
+        "fireSpread": 0.9,
+        "fireRate": 1.9
+      }
+    },
+    "fighter": {
+      "name": "Redline Fighter",
+      "boss": false,
+      "template": {
+        "sprite": "enemyRed3",
+        "hp": 84,
+        "speed": 135,
+        "score": 400,
+        "baseCredit": 58,
+        "radius": 20,
+        "pattern": "swoop",
+        "patternParams": {
+          "amplitude": 125,
+          "frequency": 4.8
+        }
+      }
+    },
+    "gnat": {
+      "name": "Gnat Interceptor",
+      "boss": false,
+      "template": {
+        "sprite": "enemyRed2",
+        "hull": 10,
+        "shield": 0,
+        "armor": 0,
+        "speed": 165,
+        "score": 70,
+        "baseCredit": 9,
+        "radius": 12,
+        "pattern": "zigzag",
+        "patternParams": {
+          "amplitude": 220,
+          "frequency": 6.2
+        }
+      }
+    },
+    "harvester": {
+      "name": "Harvester Bomber",
+      "boss": false,
+      "template": {
+        "sprite": "ufoGreen",
+        "hp": 320,
+        "speed": 70,
+        "score": 1000,
+        "baseCredit": 180,
+        "radius": 34,
+        "pattern": "swoop",
+        "patternParams": {
+          "amplitude": 90,
+          "frequency": 3.0
+        },
+        "fireRate": 1.1,
+        "fireMode": "spread",
+        "fireCount": 11,
+        "fireSpread": 1.5
+      }
+    },
+    "hunter": {
+      "name": "Hunter Pursuit Drone",
+      "boss": false,
+      "template": {
+        "sprite": "enemyGreen4",
+        "hp": 102,
+        "speed": 155,
+        "score": 580,
+        "baseCredit": 90,
+        "radius": 22,
+        "ai": "hunter"
+      }
+    },
+    "interceptor": {
+      "name": "Interceptor Wing",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlue3",
+        "hp": 22,
+        "speed": 95,
+        "score": 120,
+        "baseCredit": 16,
+        "radius": 18,
+        "pattern": "swoop",
+        "patternParams": {
+          "amplitude": 70,
+          "frequency": 2.8
+        }
+      }
+    },
+    "level10:boss": {
+      "name": "Iron Graveyard Juggernaut",
+      "boss": true,
+      "template": {
+        "sprite": "enemyBlack5",
+        "hull": 520,
+        "shield": 0,
+        "armor": 900,
+        "armorClass": 16,
+        "speed": 82,
+        "score": 2200,
+        "baseCredit": 620,
+        "radius": 86,
+        "spriteScale": 2.5,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.75,
+        "fireMode": "radial",
+        "fireCount": 26,
+        "bulletSpeed": 185
+      }
+    },
+    "level11:boss": {
+      "name": "Corridor Gatekeeper",
+      "boss": true,
+      "template": {
+        "sprite": "ufoYellow",
+        "hull": 540,
+        "shield": 360,
+        "armor": 520,
+        "armorClass": 12,
+        "speed": 95,
+        "score": 2600,
+        "baseCredit": 720,
+        "radius": 82,
+        "spriteScale": 2.35,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.7,
+        "fireMode": "radial",
+        "fireCount": 28,
+        "bulletSpeed": 200,
+        "shieldRegen": 12
+      }
+    },
+    "level1:boss": {
+      "name": "Warden of First Contact",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_manta.png",
+        "hp": 380,
+        "speed": 70,
+        "score": 900,
+        "baseCredit": 180,
+        "radius": 42,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.4,
+        "fireMode": "radial",
+        "fireCount": 12,
+        "bulletSpeed": 160,
+        "spriteScale": 0.28
+      }
+    },
+    "level1_patrol:boss": {
+      "name": "Patrol Wing Overboss",
+      "boss": true,
+      "template": {
+        "sprite": "ufoBlue",
+        "hp": 360,
+        "speed": 68,
+        "score": 850,
+        "baseCredit": 170,
+        "radius": 40,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.5,
+        "fireMode": "radial",
+        "fireCount": 10,
+        "bulletSpeed": 155
+      }
+    },
+    "level2:boss": {
+      "name": "Warden of Second Contact",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_trident.png",
+        "hp": 520,
+        "speed": 80,
+        "score": 1200,
+        "baseCredit": 240,
+        "radius": 46,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.2,
+        "fireMode": "radial",
+        "fireCount": 16,
+        "bulletSpeed": 170,
+        "spriteScale": 0.28
+      }
+    },
+    "level2_skirmish:boss": {
+      "name": "Skirmish Wing Overboss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_halo.png",
+        "hp": 480,
+        "speed": 85,
+        "score": 1300,
+        "baseCredit": 300,
+        "radius": 46,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.1,
+        "fireMode": "radial",
+        "fireCount": 16,
+        "bulletSpeed": 175,
+        "spriteScale": 0.28
+      }
+    },
+    "level3:boss": {
+      "name": "Warden of Third Contact",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_fortress.png",
+        "hp": 720,
+        "speed": 90,
+        "score": 1600,
+        "baseCredit": 320,
+        "radius": 52,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.0,
+        "fireMode": "radial",
+        "fireCount": 18,
+        "bulletSpeed": 180,
+        "spriteScale": 0.28
+      }
+    },
+    "level4:boss": {
+      "name": "Warden of Fourth Contact",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_serpent.png",
+        "hp": 980,
+        "speed": 100,
+        "score": 2200,
+        "baseCredit": 460,
+        "radius": 58,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 0.9,
+        "fireMode": "radial",
+        "fireCount": 20,
+        "bulletSpeed": 190,
+        "spriteScale": 0.28
+      }
+    },
+    "level5:boss": {
+      "name": "Warden of Fifth Contact",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_anvil.png",
+        "hp": 1400,
+        "speed": 110,
+        "score": 3000,
+        "baseCredit": 700,
+        "radius": 64,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 0.75,
+        "fireMode": "radial",
+        "fireCount": 24,
+        "bulletSpeed": 200,
+        "spriteScale": 0.28
+      }
+    },
+    "level6:boss": {
+      "name": "Warden of Sixth Contact",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_halo.png",
+        "hp": 1800,
+        "speed": 115,
+        "score": 3800,
+        "baseCredit": 850,
+        "radius": 68,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 0.65,
+        "fireMode": "radial",
+        "fireCount": 26,
+        "bulletSpeed": 210,
+        "spriteScale": 0.28
+      }
+    },
+    "level7:boss": {
+      "name": "Warden of Seventh Contact",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_trident.png",
+        "hp": 2200,
+        "speed": 120,
+        "score": 4500,
+        "baseCredit": 1000,
+        "radius": 72,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 0.55,
+        "fireMode": "radial",
+        "fireCount": 28,
+        "bulletSpeed": 220,
+        "spriteScale": 0.28
+      }
+    },
+    "level8:boss": {
+      "name": "Warden of Eighth Contact",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_fortress.png",
+        "hp": 2800,
+        "speed": 125,
+        "score": 6000,
+        "baseCredit": 1400,
+        "radius": 78,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 0.45,
+        "fireMode": "radial",
+        "fireCount": 32,
+        "bulletSpeed": 235,
+        "spriteScale": 0.28
+      }
+    },
+    "level9:boss": {
+      "name": "Neon Swarm Sovereign",
+      "boss": true,
+      "template": {
+        "sprite": "ufoGreen",
+        "hull": 420,
+        "shield": 360,
+        "armor": 0,
+        "speed": 120,
+        "score": 1600,
+        "baseCredit": 420,
+        "radius": 74,
+        "spriteScale": 2.2,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.9,
+        "fireMode": "radial",
+        "fireCount": 20,
+        "bulletSpeed": 190,
+        "shieldRegen": 16
+      }
+    },
+    "lurker": {
+      "name": "Lurker Ambush Probe",
+      "boss": false,
+      "template": {
+        "sprite": "enemyGreen4",
+        "hp": 40,
+        "speed": 90,
+        "score": 220,
+        "baseCredit": 30,
+        "radius": 18,
+        "ai": "stalker",
+        "aggroRadius": 260,
+        "fireRate": 1.7
+      }
+    },
+    "marauder": {
+      "name": "Marauder Spiralwing",
+      "boss": false,
+      "template": {
+        "sprite": "enemyRed5",
+        "hp": 88,
+        "speed": 140,
+        "score": 460,
+        "baseCredit": 68,
+        "radius": 20,
+        "pattern": "spiral",
+        "patternParams": {
+          "amplitude": 230,
+          "frequency": 5.4
+        },
+        "fireRate": 1.0,
+        "fireMode": "spread",
+        "fireCount": 8,
+        "fireSpread": 1.2
+      }
+    },
+    "overhaul_demo:boss": {
+      "name": "Systems Test Sentinel",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_manta.png",
+        "hull": 160,
+        "shield": 120,
+        "armor": 120,
+        "armorClass": 8,
+        "speed": 68,
+        "score": 900,
+        "baseCredit": 220,
+        "radius": 46,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "empImmune": true,
+        "fireMode": "radial",
+        "fireCount": 22,
+        "fireRate": 1.8,
+        "bulletSpeed": 180,
+        "shieldRegen": 12,
+        "spriteScale": 0.28
+      }
+    },
+    "overseer": {
+      "name": "Overseer Command Skiff",
+      "boss": false,
+      "template": {
+        "sprite": "ufoYellow",
+        "hp": 380,
+        "speed": 80,
+        "score": 1200,
+        "baseCredit": 210,
+        "radius": 36,
+        "pattern": "swoop",
+        "patternParams": {
+          "amplitude": 100,
+          "frequency": 2.6
+        },
+        "fireRate": 0.9,
+        "fireMode": "radial",
+        "fireCount": 22,
+        "bulletSpeed": 195
+      }
+    },
+    "phantom": {
+      "name": "Phantom Spiralwing",
+      "boss": false,
+      "template": {
+        "sprite": "enemyGreen5",
+        "hp": 118,
+        "speed": 155,
+        "score": 740,
+        "baseCredit": 108,
+        "radius": 22,
+        "pattern": "spiral",
+        "patternParams": {
+          "amplitude": 250,
+          "frequency": 5.8
+        },
+        "fireRate": 0.85,
+        "fireMode": "spread",
+        "fireCount": 8,
+        "fireSpread": 1.2
+      }
+    },
+    "plated": {
+      "name": "Plated Bastion",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlack4",
+        "hull": 26,
+        "shield": 0,
+        "armor": 70,
+        "armorClass": 10,
+        "speed": 42,
+        "score": 190,
+        "baseCredit": 22,
+        "radius": 22,
+        "pattern": "drift",
+        "fireRate": 2.8
+      }
+    },
+    "reaper": {
+      "name": "Reaper Hunter-Killer",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlack4",
+        "hp": 105,
+        "speed": 165,
+        "score": 780,
+        "baseCredit": 120,
+        "radius": 22,
+        "ai": "hunter",
+        "fireRate": 1.2,
+        "fireMode": "spread",
+        "fireCount": 6,
+        "fireSpread": 0.9
+      }
+    },
+    "scout": {
+      "name": "Blue Scout Drone",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlue2",
+        "hp": 56,
+        "speed": 145,
+        "score": 280,
+        "baseCredit": 40,
+        "radius": 16,
+        "pattern": "zigzag",
+        "patternParams": {
+          "amplitude": 200,
+          "frequency": 5.4
+        }
+      }
+    },
+    "sentinel": {
+      "name": "Sentinel Strafe Drone",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlue5",
+        "hp": 64,
+        "speed": 125,
+        "score": 380,
+        "baseCredit": 58,
+        "radius": 18,
+        "pattern": "strafe",
+        "fireRate": 1.3,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.1
+      }
+    },
+    "shieldkite": {
+      "name": "Shield-Kite Drone",
+      "boss": false,
+      "template": {
+        "sprite": "enemyGreen5",
+        "hull": 22,
+        "shield": 70,
+        "armor": 0,
+        "speed": 62,
+        "score": 150,
+        "baseCredit": 16,
+        "radius": 18,
+        "pattern": "strafe",
+        "fireMode": "spread",
+        "fireCount": 5,
+        "fireSpread": 0.8,
+        "fireRate": 2.4,
+        "shieldRegen": 14
+      }
+    },
+    "spark": {
+      "name": "Spark Shield-Kite",
+      "boss": false,
+      "template": {
+        "sprite": "enemyGreen4",
+        "hull": 14,
+        "shield": 26,
+        "armor": 0,
+        "speed": 142,
+        "score": 160,
+        "baseCredit": 18,
+        "radius": 18,
+        "pattern": "strafe",
+        "fireRate": 1.5,
+        "fireMode": "spread",
+        "fireCount": 5,
+        "fireSpread": 0.9,
+        "shieldRegen": 14
+      }
+    },
+    "stalker": {
+      "name": "Stalker Proximity Hunter",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlue5",
+        "hull": 34,
+        "shield": 22,
+        "armor": 0,
+        "speed": 110,
+        "score": 280,
+        "baseCredit": 34,
+        "radius": 18,
+        "ai": "stalker",
+        "aggroRadius": 240,
+        "fireRate": 1.8,
+        "fireMode": "aim",
+        "shieldRegen": 10
+      }
+    },
+    "tank": {
+      "name": "Armored Test Rig",
+      "boss": false,
+      "template": {
+        "sprite": "ufoYellow",
+        "hull": 45,
+        "shield": 0,
+        "armor": 120,
+        "armorClass": 12,
+        "speed": 26,
+        "score": 320,
+        "baseCredit": 40,
+        "radius": 30,
+        "ai": "transport",
+        "fireMode": "aim",
+        "fireRate": 3.2
+      }
+    },
+    "transport": {
+      "name": "Cargo Transport (Pirated)",
+      "boss": false,
+      "template": {
+        "sprite": "ufoBlue",
+        "hp": 400,
+        "speed": 62,
+        "score": 1100,
+        "baseCredit": 200,
+        "radius": 36,
+        "ai": "transport"
+      }
+    },
+    "warden": {
+      "name": "Warden Gunline",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlack5",
+        "hp": 130,
+        "speed": 105,
+        "score": 700,
+        "baseCredit": 98,
+        "radius": 26,
+        "pattern": "strafe",
+        "fireRate": 1.1,
+        "fireMode": "spread",
+        "fireCount": 11,
+        "fireSpread": 1.4
+      }
+    }
+  }
+}

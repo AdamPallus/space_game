@@ -2,6 +2,16 @@
 
 This doc is a temporary bridge between the scripted JSON events (`levels/*.json`) and the intended "story + learning curve" pacing.
 
+## Level JSON knobs (for difficulty scaling / reuse)
+
+- `enemyScale`: optional per-level scaling for reusing early enemy archetypes later.
+  - Example: `"enemyScale": { "hp": 1.25, "damage": 1.15 }`
+  - `hp` scales `hp` (legacy) or `hull/armor/shield` pools (and shield regen).
+  - `damage` scales enemy bullet damage and collision damage (without needing to rebalance `mission.difficulty`).
+- Per-enemy overrides can also include:
+  - `hpScale` (multiplies the pools for that spawn/type)
+  - `damageScale` (multiplies damage for that spawn/type)
+
 ## Example: Mission 10 - "Iron Graveyard"
 
 "Iron Graveyard" is built to *teach armor* (and the feeling of "impact matters") by putting the player into long time-to-kill engagements unless their build is tuned for per-shot damage.
@@ -20,4 +30,3 @@ What the mission is trying to make the player learn:
 
 Why it works as a "story beat":
 - The fantasy is “fighting through wreckage and plated hulls” — slow, heavy ships, lots of debris vibes, and a boss that feels like a salvage-yard kingpin.
-

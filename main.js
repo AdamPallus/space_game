@@ -1012,6 +1012,7 @@ function loadState() {
       debugInvincible: false,
       debugShowFullCompendium: false,
       encounteredEnemies: {},
+      killsByEnemyKey: {},
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
         gunDiameter: { medium: true },
@@ -1085,6 +1086,7 @@ function loadState() {
     parsed.debugInvincible = parsed.debugInvincible ?? false;
     parsed.debugShowFullCompendium = parsed.debugShowFullCompendium ?? false;
     parsed.encounteredEnemies = parsed.encounteredEnemies || {};
+    parsed.killsByEnemyKey = parsed.killsByEnemyKey || {};
     const hadShipBuild = !!parsed.shipBuild;
     parsed.shipBuild = parsed.shipBuild || createDefaultShipBuild();
     if (!hadShipBuild) {
@@ -2105,6 +2107,7 @@ async function renderDroneCompendiumAsync() {
     const spec = entry.spec || {};
     const displayName = compendiumDisplayName(entry);
     const spriteSrc = spriteSrcForKey(spec.sprite);
+    const kills = state.killsByEnemyKey?.[entry.key] ?? 0;
     const tags = [];
     if (spec.ai) tags.push(spec.ai);
     if (spec.pattern) tags.push(spec.pattern);
@@ -2116,9 +2119,9 @@ async function renderDroneCompendiumAsync() {
     const firstSource = entry.sources[0];
     const subtitle = entry.sources?.length
       ? entry.isBoss
-        ? `Boss target | ${firstSource?.levelName || "Unknown mission"}`
-        : `Seen in: ${entry.sources.slice(0, 2).map((s) => s.levelName).join(", ")}${entry.sources.length > 2 ? "…" : ""}`
-      : "Prototype entry (unseen)";
+        ? `Boss target | ${firstSource?.levelName || "Unknown mission"} | Destroyed: ${kills}`
+        : `Seen in: ${entry.sources.slice(0, 2).map((s) => s.levelName).join(", ")}${entry.sources.length > 2 ? "…" : ""} | Destroyed: ${kills}`
+      : `Prototype entry (unseen) | Destroyed: ${kills}`;
 
     const card = document.createElement("div");
     card.className = `compendium-card${entry.isBoss ? " boss" : ""}`;
@@ -4337,6 +4340,9 @@ function handleEnemyDestroyed(enemy, bullet) {
   mission.score += enemy.score;
   const creditEarned = creditForEnemy(enemy);
   mission.killCredits += creditEarned;
+  if (!state.killsByEnemyKey) state.killsByEnemyKey = {};
+  const killKey = enemy.compendiumKey || compendiumKeyFor(mission?.level?.id || "unknown", enemy.type, enemy);
+  state.killsByEnemyKey[killKey] = (state.killsByEnemyKey[killKey] ?? 0) + 1;
   spawnCreditPopup(enemy.x, enemy.y, creditEarned);
   spawnExplosion(enemy.x, enemy.y, enemy.radius, { intensity: 0.9, blend: "lighter", style: "kill", coalesce: false });
   playSfx("explosion", 0.135);

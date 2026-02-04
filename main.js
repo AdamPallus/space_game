@@ -485,6 +485,12 @@ let activeHangarTab = "loadout";
 let hangarNeedsRefresh = false;
 let openShipNodeId = null;
 let openMissionInfoBaseId = null;
+const cameraShake = {
+  trauma: 0,
+  kickX: 0,
+  kickY: 0,
+};
+let screenFlash = 0;
 const levelMetaCache = new Map();
 
 const sfx = {
@@ -565,6 +571,31 @@ function enableAudio() {
   if (!audioEnabled) {
     audioEnabled = true;
     updateMusicPlayback();
+  }
+}
+
+function addCameraShake(strength, sourceX = null, sourceY = null) {
+  const amount = Math.max(0, strength || 0);
+  if (amount <= 0) return;
+  cameraShake.trauma = Math.min(1, cameraShake.trauma + amount);
+
+  // Optional "push" away from the impact source for extra punch.
+  if (
+    Number.isFinite(sourceX) &&
+    Number.isFinite(sourceY) &&
+    Number.isFinite(player?.x) &&
+    Number.isFinite(player?.y)
+  ) {
+    const dx = player.x - sourceX;
+    const dy = player.y - sourceY;
+    const dist = Math.hypot(dx, dy) || 1;
+    const ux = dx / dist;
+    const uy = dy / dist;
+    cameraShake.kickX += ux * amount * 14;
+    cameraShake.kickY += uy * amount * 14;
+    const maxKick = 18;
+    cameraShake.kickX = Math.max(-maxKick, Math.min(maxKick, cameraShake.kickX));
+    cameraShake.kickY = Math.max(-maxKick, Math.min(maxKick, cameraShake.kickY));
   }
 }
 
@@ -3609,6 +3640,7 @@ function useConsumable(slotIndex) {
       style: "big",
       coalesce: false,
     });
+    addCameraShake(0.22, player.x, player.y);
     playSfx("explosion", 0.12);
     enemies.forEach((enemy) => {
       const d = distance(player.x, player.y, enemy.x, enemy.y);
@@ -3714,6 +3746,14 @@ function getEnemyBulletStyle(enemy) {
 function update(delta) {
   backgroundScroll += delta * 18;
   updateStarfield(delta);
+
+  // Camera/flash juice decays even if we leave the mission early.
+  cameraShake.trauma = Math.max(0, cameraShake.trauma - delta * 7.0);
+  const kickDamp = Math.exp(-12 * delta);
+  cameraShake.kickX *= kickDamp;
+  cameraShake.kickY *= kickDamp;
+  screenFlash = Math.max(0, screenFlash - delta * 6.0);
+
   if (!mission || !mission.active || paused) return;
 
   mission.elapsed += delta;
@@ -4245,6 +4285,7 @@ function handleCollisions() {
             style: "impact",
             coalesce: true,
           });
+          addCameraShake(Math.min(0.2, 0.03 + radius / 700), enemy.x, enemy.y);
           enemies.forEach((other) => {
             if (other === enemy) return;
             const d = distance(enemy.x, enemy.y, other.x, other.y);
@@ -4276,7 +4317,7 @@ function handleCollisions() {
     if (distance(player.x, player.y, enemy.x, enemy.y) < player.radius + enemy.radius) {
       enemies.splice(i, 1);
       const base = enemy.collisionDamage ?? (22 + mission.difficulty * 2);
-      applyDamage(base * (enemy.damageScale ?? 1), { collision: true });
+      applyDamage(base * (enemy.damageScale ?? 1), { collision: true, sourceX: enemy.x, sourceY: enemy.y });
       spawnExplosion(enemy.x, enemy.y, enemy.radius, { intensity: 0.55, blend: "lighter", style: "impact" });
     }
   }
@@ -4286,7 +4327,7 @@ function handleCollisions() {
     if (distance(player.x, player.y, bullet.x, bullet.y) < player.radius + bullet.radius) {
       enemyBullets.splice(i, 1);
       const base = Number.isFinite(bullet.damage) ? bullet.damage : 14 + mission.difficulty * 1.3;
-      applyDamage(base);
+      applyDamage(base, { sourceX: bullet.x, sourceY: bullet.y });
     }
   }
 }
@@ -4299,6 +4340,11 @@ function handleEnemyDestroyed(enemy, bullet) {
   spawnCreditPopup(enemy.x, enemy.y, creditEarned);
   spawnExplosion(enemy.x, enemy.y, enemy.radius, { intensity: 0.9, blend: "lighter", style: "kill", coalesce: false });
   playSfx("explosion", 0.135);
+  const baseTrauma = Math.min(0.22, 0.03 + enemy.radius / 260);
+  addCameraShake(enemy.isBoss ? 0.42 : baseTrauma, enemy.x, enemy.y);
+  if (enemy.isBoss) {
+    screenFlash = Math.min(0.6, screenFlash + 0.35);
+  }
   if (enemy.isBoss && mission.level?.completeOnBoss) {
     endMission({ completed: true });
   }
@@ -4307,14 +4353,17 @@ function handleEnemyDestroyed(enemy, bullet) {
   }
 }
 
-function applyDamage(amount, { collision = false } = {}) {
+function applyDamage(amount, { collision = false, sourceX = null, sourceY = null } = {}) {
   if (state.debugInvincible) return;
   revealPlayerHealth();
   player.hitTimer = 0.25;
   let shieldHit = false;
+  let absorbedShield = 0;
+  let absorbedBulwark = 0;
   if (player.bulwarkShield > 0) {
     const absorbed = Math.min(player.bulwarkShield, amount);
     player.bulwarkShield -= absorbed;
+    absorbedBulwark = absorbed;
     amount -= absorbed;
   }
   if (!collision && player.shield > 0) {
@@ -4322,6 +4371,7 @@ function applyDamage(amount, { collision = false } = {}) {
     player.shield -= absorbed;
     amount -= absorbed;
     if (absorbed > 0) shieldHit = true;
+    absorbedShield = absorbed;
     if (absorbed > 0) player.shieldCooldown = 2.5;
   }
 
@@ -4339,14 +4389,22 @@ function applyDamage(amount, { collision = false } = {}) {
   if (amount > 0) {
     player.hull -= amount;
     playSfx("hullHit", 0.45);
+    const trauma = Math.min(0.28, 0.06 + amount / 120);
+    addCameraShake(trauma + (collision ? 0.06 : 0), sourceX, sourceY);
+    if (amount > Math.max(18, player.maxHull * 0.12)) {
+      screenFlash = Math.min(0.28, screenFlash + 0.12);
+    }
   } else if (shieldHit) {
     playSfx("hit", 0.35);
+    const shieldTrauma = Math.min(0.12, 0.02 + absorbedShield / 220 + absorbedBulwark / 260);
+    addCameraShake(shieldTrauma + (collision ? 0.03 : 0), sourceX, sourceY);
   }
 }
 
 function render() {
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
   drawBackground(width, height);
@@ -4355,6 +4413,25 @@ function render() {
   const showHangar = hangarPanel && !hangarPanel.hidden;
 
   if (mission && mission.active) {
+    // Screen shake applies only to the game layer (not the HUD/DOM).
+    ctx.save();
+    const trauma = cameraShake.trauma || 0;
+    const kickX = cameraShake.kickX || 0;
+    const kickY = cameraShake.kickY || 0;
+    if (trauma > 0.001 || Math.abs(kickX) > 0.05 || Math.abs(kickY) > 0.05) {
+      const s = Math.min(1, trauma) ** 2;
+      const t = performance.now() * 0.001;
+      const nx = Math.sin(t * 41.7) + Math.sin(t * 27.4 + 1.3);
+      const ny = Math.sin(t * 36.2 + 0.4) + Math.sin(t * 21.9 + 2.1);
+      const maxPx = 14;
+      const x = nx * 0.5 * maxPx * s + kickX;
+      const y = ny * 0.5 * maxPx * s + kickY;
+      const rot = Math.sin(t * 18.3 + 0.7) * 0.012 * s;
+      ctx.translate(width / 2, height / 2);
+      ctx.rotate(rot);
+      ctx.translate(-width / 2, -height / 2);
+      ctx.translate(x, y);
+    }
     drawPlayer();
     bullets.forEach(drawBullet);
     enemyBullets.forEach((bullet) => drawBullet(bullet, "#f97316"));
@@ -4362,6 +4439,16 @@ function render() {
     explosions.forEach(drawExplosion);
     floatingTexts.forEach(drawFloatingText);
     drawPlayerHealthBar();
+    ctx.restore();
+
+    if (screenFlash > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = Math.min(1, screenFlash) * 0.55;
+      ctx.fillStyle = "#e0f2fe";
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    }
   } else if (showHangar && !showDebrief) {
     drawHangarScene(width, height);
   }

@@ -357,6 +357,9 @@ const assets = {
   shield: loadImage(`${ASSET_ROOT}/Effects/shield3.png`),
   explosionCore: loadImage(`${ASSET_ROOT}/Effects/star2.png`),
   explosionFlare: loadImage(`${ASSET_ROOT}/Effects/star3.png`),
+  explosionFire: Array.from({ length: 20 }, (_, i) =>
+    loadImage(`${ASSET_ROOT}/Effects/fire${String(i).padStart(2, "0")}.png`)
+  ),
   enemies: {
     scout: loadImage(`${ASSET_ROOT}/Enemies/enemyBlue2.png`),
     blue3: loadImage(`${ASSET_ROOT}/Enemies/enemyBlue3.png`),
@@ -1528,6 +1531,30 @@ function endMission({ ejected = false, completed = false } = {}) {
   hangarPanel.hidden = true;
   updateMobileControls();
   hangarNeedsRefresh = true;
+}
+
+function startPlayerDeathSequence() {
+  if (!mission || !mission.active) return;
+  if (mission.deathTimer > 0) return;
+  mission.deathTimer = 2.0;
+  mission.deathTotal = 2.0;
+  mission.deathX = player.x;
+  mission.deathY = player.y;
+
+  // Freeze the combat tableau and focus attention on the player death.
+  bullets.length = 0;
+  enemyBullets.length = 0;
+  enemies.length = 0;
+
+  spawnExplosion(player.x, player.y, Math.max(36, player.radius * 2.2), {
+    intensity: 1.15,
+    blend: "lighter",
+    style: "playerDeath",
+    coalesce: false,
+  });
+  addCameraShake(0.55, player.x, player.y);
+  screenFlash = Math.min(0.8, screenFlash + 0.55);
+  playSfx("explosion", 0.12);
 }
 
 function updateHangar() {
@@ -3777,6 +3804,10 @@ function update(delta) {
   if (!mission || !mission.active || paused) return;
 
   mission.elapsed += delta;
+  const dying = mission.deathTimer > 0;
+  if (dying) {
+    mission.deathTimer = Math.max(0, mission.deathTimer - delta);
+  }
   mission.spawnTimer -= delta;
   mission.enemyFireTimer -= delta;
   mission.difficulty = 1 + state.missionCount * 0.15 + mission.elapsed / 22;
@@ -3809,80 +3840,86 @@ function update(delta) {
     }
   }
 
-  if (mission.level) {
-    scheduleLevelSpawns();
-    for (let i = mission.spawnQueue.length - 1; i >= 0; i -= 1) {
-      const entry = mission.spawnQueue[i];
-      if (mission.elapsed >= entry.spawnTime) {
-        const spec = resolveEnemySpec(entry.type, entry.overrides);
-        spawnEnemyFromSpec(spec);
-        mission.spawnQueue.splice(i, 1);
+  if (!dying) {
+    if (mission.level) {
+      scheduleLevelSpawns();
+      for (let i = mission.spawnQueue.length - 1; i >= 0; i -= 1) {
+        const entry = mission.spawnQueue[i];
+        if (mission.elapsed >= entry.spawnTime) {
+          const spec = resolveEnemySpec(entry.type, entry.overrides);
+          spawnEnemyFromSpec(spec);
+          mission.spawnQueue.splice(i, 1);
+        }
       }
-    }
-  } else {
-    const spawnInterval = Math.max(0.3, 1.2 - mission.difficulty * 0.05);
-    if (mission.spawnTimer <= 0) {
-      // fallback random spawning
-      spawnEnemyFromSpec({ type: "fighter" });
-      mission.spawnTimer = spawnInterval;
+    } else {
+      const spawnInterval = Math.max(0.3, 1.2 - mission.difficulty * 0.05);
+      if (mission.spawnTimer <= 0) {
+        // fallback random spawning
+        spawnEnemyFromSpec({ type: "fighter" });
+        mission.spawnTimer = spawnInterval;
+      }
     }
   }
 
   const globalEmp = mission.empTimer > 0;
-  enemies.forEach((enemy) => {
-    if (!enemy.empImmune && (globalEmp || enemy.empHitTimer > 0)) return;
-    enemy.fireCooldown -= delta;
-    if (enemy.fireCooldown > 0) return;
-    if (enemy.y < 40) return;
-    if (enemy.isBoss || enemy.y < canvas.height * 0.75) {
-      if (enemy.fireMode === "spread") {
-        fireEnemySpread(enemy, enemy.fireCount || 5, enemy.fireSpread || 0.8);
-      } else if (enemy.fireMode === "radial") {
-        fireEnemyRadial(enemy, enemy.fireCount || 18);
-      } else {
-        fireEnemyBullet(enemy);
+  if (!dying) {
+    enemies.forEach((enemy) => {
+      if (!enemy.empImmune && (globalEmp || enemy.empHitTimer > 0)) return;
+      enemy.fireCooldown -= delta;
+      if (enemy.fireCooldown > 0) return;
+      if (enemy.y < 40) return;
+      if (enemy.isBoss || enemy.y < canvas.height * 0.75) {
+        if (enemy.fireMode === "spread") {
+          fireEnemySpread(enemy, enemy.fireCount || 5, enemy.fireSpread || 0.8);
+        } else if (enemy.fireMode === "radial") {
+          fireEnemyRadial(enemy, enemy.fireCount || 18);
+        } else {
+          fireEnemyBullet(enemy);
+        }
+        enemy.fireCooldown = Math.max(0.4, enemy.fireRate * 0.95);
       }
-      enemy.fireCooldown = Math.max(0.4, enemy.fireRate * 0.95);
-    }
-  });
+    });
+  }
 
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
 
-  if (inputMode === "touch" && touchState.active) {
-    const dx = touchState.x - player.x;
-    const dy = touchState.y - player.y;
-    const distanceToTarget = Math.hypot(dx, dy) || 1;
-    const step = Math.min(distanceToTarget, touchState.maxSpeed * delta);
-    player.x += (dx / distanceToTarget) * step;
-    player.y += (dy / distanceToTarget) * step;
-  } else if (pointer.active) {
-    player.x = pointer.x;
-    player.y = pointer.y;
-  }
+  if (!dying) {
+    if (inputMode === "touch" && touchState.active) {
+      const dx = touchState.x - player.x;
+      const dy = touchState.y - player.y;
+      const distanceToTarget = Math.hypot(dx, dy) || 1;
+      const step = Math.min(distanceToTarget, touchState.maxSpeed * delta);
+      player.x += (dx / distanceToTarget) * step;
+      player.y += (dy / distanceToTarget) * step;
+    } else if (pointer.active) {
+      player.x = pointer.x;
+      player.y = pointer.y;
+    }
 
-  player.x = Math.max(40, Math.min(width - 40, player.x));
-  player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
+    player.x = Math.max(40, Math.min(width - 40, player.x));
+    player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
 
-  const primaryConfig = getPrimaryFireConfig();
-  player.fireCooldown -= delta;
-  player.altCooldown -= delta;
-  if (pointerButtons.left && player.fireCooldown <= 0) {
-    firePlayerBullet();
-    player.fireCooldown = primaryConfig.cooldown;
-  }
-  if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
-    firePlayerBullet();
-    player.fireCooldown = primaryConfig.cooldown;
-  }
-  if (pointerButtons.right && player.altCooldown <= 0) {
-    fireAltWeapon();
-    if (state.rmbWeapon === "cloak") {
-      player.altCooldown = player.cloakCooldownTime + player.cloakDuration;
-    } else if (state.rmbWeapon === "emp") {
-      player.altCooldown = player.empCooldownTime + player.empDuration;
-    } else {
-      player.altCooldown = player.altCooldownTime + player.bulwarkDuration;
+    const primaryConfig = getPrimaryFireConfig();
+    player.fireCooldown -= delta;
+    player.altCooldown -= delta;
+    if (pointerButtons.left && player.fireCooldown <= 0) {
+      firePlayerBullet();
+      player.fireCooldown = primaryConfig.cooldown;
+    }
+    if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
+      firePlayerBullet();
+      player.fireCooldown = primaryConfig.cooldown;
+    }
+    if (pointerButtons.right && player.altCooldown <= 0) {
+      fireAltWeapon();
+      if (state.rmbWeapon === "cloak") {
+        player.altCooldown = player.cloakCooldownTime + player.cloakDuration;
+      } else if (state.rmbWeapon === "emp") {
+        player.altCooldown = player.empCooldownTime + player.empDuration;
+      } else {
+        player.altCooldown = player.altCooldownTime + player.bulwarkDuration;
+      }
     }
   }
 
@@ -4265,9 +4302,17 @@ function update(delta) {
   cleanArrays(floatingTexts, (text) => text.life <= 0);
   cleanArrays(explosions, (boom) => boom.elapsed >= boom.duration);
 
-  handleCollisions();
-  if (player.hull <= 0) {
+  if (!dying) {
+    handleCollisions();
+    if (player.hull <= 0) {
+      startPlayerDeathSequence();
+      return;
+    }
+  }
+
+  if (dying && mission.deathTimer <= 0) {
     endMission({ ejected: false });
+    return;
   }
 
   mission.score += delta * 15 + mission.difficulty * 2;
@@ -4457,13 +4502,17 @@ function render() {
       ctx.translate(-width / 2, -height / 2);
       ctx.translate(x, y);
     }
-    drawPlayer();
+    if (!(mission && mission.deathTimer > 0)) {
+      drawPlayer();
+    }
     bullets.forEach(drawBullet);
     enemyBullets.forEach((bullet) => drawBullet(bullet, "#f97316"));
     enemies.forEach(drawEnemy);
     explosions.forEach(drawExplosion);
     floatingTexts.forEach(drawFloatingText);
-    drawPlayerHealthBar();
+    if (!(mission && mission.deathTimer > 0)) {
+      drawPlayerHealthBar();
+    }
     ctx.restore();
 
     if (screenFlash > 0) {
@@ -5085,6 +5134,7 @@ function spawnExplosion(
     intensity,
     blend,
     style,
+    deathScale: style === "playerDeath" ? 3.2 : undefined,
   });
 }
 
@@ -5097,6 +5147,34 @@ function drawExplosion(boom) {
 
   ctx.save();
   ctx.globalCompositeOperation = boom.blend || "source-over";
+  if (style === "playerDeath") {
+    // Big, readable explosion with a fiery animated core.
+    const ringR = maxRadius * 0.9;
+    const ringW = Math.max(3, boom.radius * 0.18);
+    const ringAlpha = 0.55 * alpha * intensity;
+    const gradient = ctx.createRadialGradient(boom.x, boom.y, ringR - ringW, boom.x, boom.y, ringR + ringW);
+    gradient.addColorStop(0, "rgba(251, 191, 36, 0)");
+    gradient.addColorStop(0.5, `rgba(251, 191, 36, ${ringAlpha})`);
+    gradient.addColorStop(1, "rgba(251, 191, 36, 0)");
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = ringW;
+    ctx.beginPath();
+    ctx.arc(boom.x, boom.y, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    const frames = assets.explosionFire || [];
+    const idx = Math.min(frames.length - 1, Math.floor(progress * frames.length));
+    const frame = frames[idx];
+    ctx.globalAlpha = Math.min(1, 0.95 * alpha * intensity);
+    if (frame && frame.loaded) {
+      const scale = (boom.deathScale ?? 3.2) * (1 + progress * 0.2);
+      drawSpriteCentered(frame, boom.x, boom.y, scale);
+    } else if (assets.explosionCore.loaded) {
+      drawSpriteCentered(assets.explosionCore, boom.x, boom.y, 2.6 + progress * 2.2);
+    }
+    ctx.restore();
+    return;
+  }
   if (style === "impact") {
     // Ring-style impact: reads well, but doesn't stack into a fully opaque blob.
     const ringR = maxRadius * 0.82;

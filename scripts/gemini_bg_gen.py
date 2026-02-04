@@ -191,7 +191,7 @@ def generate_one(key: str, prompt: str, out_dir: pathlib.Path, model: str) -> pa
         raise RuntimeError("No image data found in response.")
     out_path.write_bytes(img)
 
-    # Ensure RGB/opaque and tileable.
+    # Ensure RGB/opaque. (Tile-fix is optional; many generations are seamless already.)
     try:
         from PIL import Image
 
@@ -202,8 +202,6 @@ def generate_one(key: str, prompt: str, out_dir: pathlib.Path, model: str) -> pa
     except Exception:
         # If PIL isn't available, keep raw output.
         pass
-
-    make_vertical_tileable(out_path, band_frac=0.12)
     return out_path
 
 
@@ -213,6 +211,17 @@ def main() -> int:
     ap.add_argument("--model", default=DEFAULT_MODEL, help=f"Gemini model (default: {DEFAULT_MODEL})")
     ap.add_argument("--name", default=None, help="Generate a single background key.")
     ap.add_argument("--prompt", default=None, help="Prompt for single background generation.")
+    ap.add_argument(
+        "--tile-fix",
+        action="store_true",
+        help="Apply a gentle top/bottom edge blend to enforce vertical tiling (disabled by default).",
+    )
+    ap.add_argument(
+        "--tile-band-frac",
+        type=float,
+        default=0.12,
+        help="Band size used for --tile-fix blending (fraction of image height).",
+    )
     args = ap.parse_args()
 
     out_dir = pathlib.Path(args.out_dir)
@@ -220,6 +229,8 @@ def main() -> int:
     if args.name and args.prompt:
         try:
             out = generate_one(args.name, args.prompt, out_dir, args.model)
+            if args.tile_fix:
+                make_vertical_tileable(out, band_frac=args.tile_band_frac)
             print(f"Wrote {out}")
             return 0
         except Exception as e:
@@ -231,6 +242,8 @@ def main() -> int:
     for key, prompt in DEFAULT_BG_SET:
         try:
             out = generate_one(key, prompt, out_dir, args.model)
+            if args.tile_fix:
+                make_vertical_tileable(out, band_frac=args.tile_band_frac)
             print(f"Wrote {out}")
         except Exception as e:
             failures += 1
@@ -241,4 +254,3 @@ def main() -> int:
 
 if __name__ == "__main__":
   raise SystemExit(main())
-

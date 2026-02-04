@@ -4494,9 +4494,10 @@ function drawBackground(width, height) {
     const img = background.img;
     const scale = width / img.naturalWidth;
     const drawHeight = img.naturalHeight * scale;
-    const offset = backgroundScroll % drawHeight;
-    ctx.drawImage(img, 0, -offset, width, drawHeight);
-    ctx.drawImage(img, 0, drawHeight - offset, width, drawHeight);
+    // Positive scroll moves the background down (top -> bottom), matching starfield motion.
+    const offset = ((backgroundScroll % drawHeight) + drawHeight) % drawHeight;
+    ctx.drawImage(img, 0, offset - drawHeight, width, drawHeight);
+    ctx.drawImage(img, 0, offset, width, drawHeight);
   }
 
   ctx.save();

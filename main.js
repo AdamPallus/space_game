@@ -417,16 +417,9 @@ const availableLevels = [
   // { id: "level2_skirmish", label: "Mission 2: Skirmish" },
 ];
 
-// Temporary mission variants: shown inside the Mission Select card hover panel.
-// Later this should be data-driven (e.g. Operations Center unlocks + per-tier variants).
-const missionVariantGroups = {
-  level1: ["level1_patrol"],
-  level2: ["level2_skirmish"],
-};
-const missionVariantBaseById = {
-  level1_patrol: "level1",
-  level2_skirmish: "level2",
-};
+// Variant naming convention: the Mission Select carousel will probe for these files.
+// (No directory listing in a static webapp, so we try known suffixes.)
+const VARIANT_SUFFIXES = ["_swarm", "_armored"];
 
 const levelFallback = {
   id: "level1",
@@ -652,10 +645,32 @@ async function loadLevel(levelName) {
   }
 }
 
+// Strict fetch for discovery: returns null if the level file doesn't exist.
+async function loadLevelStrict(levelName) {
+  try {
+    const response = await fetch(`levels/${levelName}.json`, { cache: "no-store" });
+    if (!response.ok) return null;
+    const data = await response.json();
+    data.id = data.id || levelName;
+    return data;
+  } catch (error) {
+    return null;
+  }
+}
+
 async function loadLevelMeta(levelName) {
   if (levelMetaCache.has(levelName)) return levelMetaCache.get(levelName);
   const data = await loadLevel(levelName);
   levelMetaCache.set(levelName, data);
+  return data;
+}
+
+// Cache strict loads separately (including missing=null) so we don't spam fetches.
+const levelMetaStrictCache = new Map();
+async function loadLevelMetaStrict(levelName) {
+  if (levelMetaStrictCache.has(levelName)) return levelMetaStrictCache.get(levelName);
+  const data = await loadLevelStrict(levelName);
+  levelMetaStrictCache.set(levelName, data);
   return data;
 }
 
@@ -1732,9 +1747,28 @@ function getMissionLockReason(levelId) {
   return `Defeat Mission ${requiredIndex} to unlock.`;
 }
 
-function getMissionGroupIds(baseId) {
-  const variants = missionVariantGroups[baseId] || [];
-  return [baseId, ...variants];
+function missionBaseIdFor(levelId) {
+  if (!levelId) return levelId;
+  for (const suf of VARIANT_SUFFIXES) {
+    if (levelId.endsWith(suf)) return levelId.slice(0, -suf.length);
+  }
+  return levelId;
+}
+
+const missionVariantCache = new Map();
+async function getMissionGroupIds(baseId) {
+  const base = missionBaseIdFor(baseId);
+  if (missionVariantCache.has(base)) {
+    return [base, ...(missionVariantCache.get(base) || [])];
+  }
+  const variants = [];
+  for (const suf of VARIANT_SUFFIXES) {
+    const id = `${base}${suf}`;
+    const meta = await loadLevelMetaStrict(id);
+    if (meta) variants.push(id);
+  }
+  missionVariantCache.set(base, variants);
+  return [base, ...variants];
 }
 
 async function renderLevelSelectAsync() {
@@ -1754,7 +1788,7 @@ async function renderLevelSelectAsync() {
 
   for (const level of availableLevels) {
     const baseUnlocked = isLevelUnlocked(level.id);
-    const groupIds = getMissionGroupIds(level.id);
+    const groupIds = await getMissionGroupIds(level.id);
     const active = groupIds.includes(selectedLevelId);
     const savedIdx = state.missionCarouselIndex?.[level.id] ?? 0;
     const selectedIdx = groupIds.indexOf(selectedLevelId);
@@ -1949,13 +1983,6 @@ async function renderLevelSelectAsync() {
   }
 }
 
-const COMPENDIUM_LEVEL_IDS = [
-  ...availableLevels.map((level) => level.id),
-  // Level variants live on disk but aren't currently listed in Mission Select.
-  "level1_patrol",
-  "level2_skirmish",
-];
-
 function compendiumDisplayName(entry) {
   const fromKey = getEnemyCatalogEntry(entry.key);
   if (fromKey?.name) return fromKey.name;
@@ -2054,7 +2081,16 @@ async function buildCompendium() {
   if (compendiumLoading) return compendiumLoading;
   compendiumLoading = (async () => {
     await ensureEnemyCatalogLoaded();
-    const levels = await Promise.all(COMPENDIUM_LEVEL_IDS.map((id) => loadLevelMeta(id)));
+    const baseIds = availableLevels.map((level) => level.id);
+    const probeIds = [];
+    baseIds.forEach((id) => {
+      probeIds.push(id);
+      VARIANT_SUFFIXES.forEach((suf) => probeIds.push(`${id}${suf}`));
+    });
+    const uniqueIds = Array.from(new Set(probeIds));
+    const levels = (
+      await Promise.all(uniqueIds.map((id) => loadLevelMetaStrict(id)))
+    ).filter(Boolean);
     const byKey = new Map();
     levels.forEach((level) => {
       const levelId = level.id;
@@ -3213,8 +3249,8 @@ function isLevelUnlocked(levelId, seen = null) {
 
   const entry = availableLevels.find((level) => level.id === levelId);
   if (!entry) {
-    const base = missionVariantBaseById[levelId];
-    if (base) return isLevelUnlocked(base, visited);
+    const base = missionBaseIdFor(levelId);
+    if (base && base !== levelId) return isLevelUnlocked(base, visited);
     return false;
   }
   if (entry.test) return true;

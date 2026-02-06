@@ -419,12 +419,12 @@ const starfield = Array.from({ length: 120 }, () => ({
   size: 0.5 + Math.random() * 1.4,
 }));
 
+let activeShipBuildOverride = null;
 const state = loadState();
 refreshSystemUnlocks();
 syncShipBuildToLegacy();
 saveState();
 let mission = null;
-let activeShipBuildOverride = null;
 
 const player = {
   x: 0,

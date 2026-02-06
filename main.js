@@ -1792,7 +1792,6 @@ async function renderLevelSelectAsync() {
   if (!levelList) return;
   await warmMissionVariantCache();
   if (renderVersion !== missionSelectRenderVersion || !levelList) return;
-  levelList.innerHTML = "";
 
   if (!isLevelUnlocked(selectedLevelId)) {
     const firstUnlocked = availableLevels.find((level) => isLevelUnlocked(level.id));
@@ -1805,6 +1804,7 @@ async function renderLevelSelectAsync() {
     launchBtn.textContent = canLaunch ? "Launch Mission" : "Locked";
   }
 
+  const nextCards = [];
   for (const level of availableLevels) {
     const baseUnlocked = isLevelUnlocked(level.id);
     const groupIds = await getMissionGroupIds(level.id);
@@ -1910,12 +1910,17 @@ async function renderLevelSelectAsync() {
       if (!baseUnlocked) return;
       if (!state.missionCarouselIndex) state.missionCarouselIndex = {};
       const wrapped = (nextIdx + groupIds.length) % groupIds.length;
+      const previousScrollY = window.scrollY;
       state.missionCarouselIndex[level.id] = wrapped;
       selectedLevelId = groupIds[wrapped];
       currentLevel = null;
       openMissionInfoBaseId = null;
       saveState();
       renderLevelSelect();
+      // Keep the viewport stable while cards are rerendered.
+      requestAnimationFrame(() => {
+        window.scrollTo(0, previousScrollY);
+      });
     };
 
     const prevButton = card.querySelector('button[data-action="prev"]');
@@ -2000,8 +2005,21 @@ async function renderLevelSelectAsync() {
       renderLevelSelect();
     });
 
-    levelList.appendChild(card);
+    nextCards.push(card);
   }
+
+  if (renderVersion !== missionSelectRenderVersion || !levelList) return;
+  const previousHeight = levelList.offsetHeight;
+  if (previousHeight > 0) {
+    levelList.style.minHeight = `${previousHeight}px`;
+  }
+  const fragment = document.createDocumentFragment();
+  nextCards.forEach((card) => fragment.appendChild(card));
+  levelList.replaceChildren(fragment);
+  requestAnimationFrame(() => {
+    if (renderVersion !== missionSelectRenderVersion || !levelList) return;
+    levelList.style.minHeight = "";
+  });
 }
 
 function compendiumDisplayName(entry) {

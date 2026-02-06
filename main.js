@@ -1756,6 +1756,9 @@ function missionBaseIdFor(levelId) {
 }
 
 const missionVariantCache = new Map();
+let missionVariantWarmupPromise = null;
+let missionSelectRenderVersion = 0;
+
 async function getMissionGroupIds(baseId) {
   const base = missionBaseIdFor(baseId);
   if (missionVariantCache.has(base)) {
@@ -1771,8 +1774,24 @@ async function getMissionGroupIds(baseId) {
   return [base, ...variants];
 }
 
+async function warmMissionVariantCache() {
+  if (missionVariantWarmupPromise) return missionVariantWarmupPromise;
+  missionVariantWarmupPromise = (async () => {
+    const groups = await Promise.all(availableLevels.map((level) => getMissionGroupIds(level.id)));
+    const ids = new Set();
+    groups.forEach((group) => group.forEach((id) => ids.add(id)));
+    await Promise.all(Array.from(ids).map((id) => loadLevelMetaStrict(id)));
+  })().catch((error) => {
+    console.warn("Mission variant warmup failed.", error);
+  });
+  return missionVariantWarmupPromise;
+}
+
 async function renderLevelSelectAsync() {
+  const renderVersion = ++missionSelectRenderVersion;
   if (!levelList) return;
+  await warmMissionVariantCache();
+  if (renderVersion !== missionSelectRenderVersion || !levelList) return;
   levelList.innerHTML = "";
 
   if (!isLevelUnlocked(selectedLevelId)) {
@@ -1789,6 +1808,7 @@ async function renderLevelSelectAsync() {
   for (const level of availableLevels) {
     const baseUnlocked = isLevelUnlocked(level.id);
     const groupIds = await getMissionGroupIds(level.id);
+    if (renderVersion !== missionSelectRenderVersion) return;
     const active = groupIds.includes(selectedLevelId);
     const savedIdx = state.missionCarouselIndex?.[level.id] ?? 0;
     const selectedIdx = groupIds.indexOf(selectedLevelId);
@@ -1798,6 +1818,7 @@ async function renderLevelSelectAsync() {
     );
     const slideId = groupIds[idx];
     const metaData = await loadLevelMeta(slideId);
+    if (renderVersion !== missionSelectRenderVersion) return;
 
     const bossTime = getBossSpawnTime(metaData);
     const estCredits = estimateLevelCredits(metaData);
@@ -4030,6 +4051,9 @@ function update(delta) {
     if (enemy.healthBarTimer > 0) {
       enemy.healthBarTimer = Math.max(0, enemy.healthBarTimer - delta);
     }
+    if (enemy.playerCollisionCooldown > 0) {
+      enemy.playerCollisionCooldown = Math.max(0, enemy.playerCollisionCooldown - delta);
+    }
     if (enemy.dotTimer > 0) {
       enemy.dotTimer -= delta;
       revealEnemyHealth(enemy);
@@ -4450,6 +4474,9 @@ function cleanArrays(list, predicate) {
 }
 
 function handleCollisions() {
+  const width = canvas.width / window.devicePixelRatio;
+  const height = canvas.height / window.devicePixelRatio;
+
   bulletsLoop: for (let i = bullets.length - 1; i >= 0; i -= 1) {
     const bullet = bullets[i];
     for (let j = enemies.length - 1; j >= 0; j -= 1) {
@@ -4504,11 +4531,29 @@ function handleCollisions() {
 
   for (let i = enemies.length - 1; i >= 0; i -= 1) {
     const enemy = enemies[i];
+    if (enemy.playerCollisionCooldown > 0) continue;
     if (distance(player.x, player.y, enemy.x, enemy.y) < player.radius + enemy.radius) {
-      enemies.splice(i, 1);
       const base = enemy.collisionDamage ?? (22 + mission.difficulty * 2);
       applyDamage(base * (enemy.damageScale ?? 1), { collision: true, sourceX: enemy.x, sourceY: enemy.y });
       spawnExplosion(enemy.x, enemy.y, enemy.radius, { intensity: 0.55, blend: "lighter", style: "impact" });
+
+      // Bosses should not despawn on contact; this also prevents boss-kill softlocks.
+      if (enemy.isBoss) {
+        enemy.playerCollisionCooldown = 0.35;
+        const dx = player.x - enemy.x;
+        const dy = player.y - enemy.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const ux = dx / dist;
+        const uy = dy / dist;
+        const overlap = Math.max(0, player.radius + enemy.radius - dist);
+        const push = Math.min(24, 6 + overlap * 1.15);
+        player.x = Math.max(player.radius, Math.min(width - player.radius, player.x + ux * push));
+        player.y = Math.max(player.radius, Math.min(height - player.radius, player.y + uy * push));
+        continue;
+      }
+
+      enemy.playerCollisionCooldown = 0.55;
+      enemies.splice(i, 1);
     }
   }
 

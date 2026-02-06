@@ -16,3 +16,7 @@ These are the most important near-term TODOs that are easy to forget while we sh
 - Standardize enemy archetypes: consider extracting shared enemy definitions to a separate file and letting levels reference them (optional next refactor).
 - Level story arc: introduce new enemy mechanics gradually (1–2 new concepts per mission) with clear “learn, remix, mastery” pacing.
 
+## Art Backlog
+- Boss sprite cleanup: replace non-transparent boss PNGs and enforce transparent alpha in all encounter assets.
+- Boss style consistency: regenerate boss art to match the existing sprite-sheet style (no conflicting line-art treatment).
+- Animation pass: add runtime animation support/frames for boss, enemy, and player sprites (idle/move/hit/death where possible).

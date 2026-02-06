@@ -1,0 +1,182 @@
+{
+  "id": "level7_armored",
+  "baseLevel": "level7",
+  "variant": "armored",
+  "name": "The Gauntlet: Armored",
+  "background": "nb_wreckfield",
+  "music": "space_battle_bpm130.ogg",
+  "difficulty": "Hell+",
+  "description": "Fortress spearhead. Heavy AC values test sustained per-shot damage.",
+  "enemyScale": {
+    "hp": 1.28,
+    "damage": 1.12
+  },
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 40,
+      "shield": 0,
+      "armor": 160,
+      "armorClass": 13,
+      "speed": 40,
+      "score": 190,
+      "baseCredit": 22,
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.8
+    },
+    "escort": {
+      "sprite": "enemyBlack3",
+      "hull": 48,
+      "shield": 0,
+      "armor": 200,
+      "armorClass": 14,
+      "speed": 54,
+      "score": 250,
+      "baseCredit": 30,
+      "radius": 20,
+      "pattern": "stall",
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "fireRate": 1.9,
+      "patternParams": {
+        "stallY": 168,
+        "stallDuration": 1.9,
+        "strafeAmp": 108,
+        "strafeFreq": 1.45
+      }
+    },
+    "duelist": {
+      "sprite": "enemyRed5",
+      "hull": 46,
+      "shield": 0,
+      "armor": 156,
+      "armorClass": 13,
+      "speed": 84,
+      "score": 230,
+      "baseCredit": 28,
+      "radius": 20,
+      "ai": "duelist",
+      "aiParams": {
+        "holdY": 190,
+        "standoff": 240,
+        "strafeSpeed": 1.08
+      },
+      "fireRate": 1.65,
+      "fireMode": "aim",
+      "bulletSpeed": 215
+    },
+    "tank": {
+      "sprite": "ufoYellow",
+      "hull": 80,
+      "shield": 0,
+      "armor": 420,
+      "armorClass": 18,
+      "speed": 26,
+      "score": 340,
+      "baseCredit": 42,
+      "radius": 30,
+      "ai": "transport",
+      "fireMode": "aim",
+      "fireRate": 3,
+      "bulletSpeed": 160
+    },
+    "bulwark": {
+      "sprite": "ufoBlue",
+      "hull": 110,
+      "shield": 0,
+      "armor": 760,
+      "armorClass": 20,
+      "speed": 20,
+      "score": 420,
+      "baseCredit": 52,
+      "radius": 34,
+      "ai": "transport",
+      "fireRate": 3.2
+    },
+    "boss": {
+      "sprite": "assets/generated/boss_fortress.png",
+      "hull": 1280,
+      "shield": 760,
+      "armor": 900,
+      "armorClass": 14,
+      "shieldRegen": 16,
+      "speed": 118,
+      "score": 4600,
+      "baseCredit": 1080,
+      "radius": 76,
+      "pattern": "bossOrbit",
+      "patternParams": {
+        "warmupTime": 0.6,
+        "radiusX": 320,
+        "radiusY": 95,
+        "orbitSpeed": 0.78,
+        "wobble": 22
+      },
+      "isBoss": true,
+      "empImmune": true,
+      "fireRate": 0.56,
+      "fireMode": "radial",
+      "fireCount": 30,
+      "bulletSpeed": 224,
+      "spriteScale": 0.96
+    }
+  },
+  "events": [
+    {
+      "time": 2,
+      "type": "plated",
+      "count": 7,
+      "interval": 0.8
+    },
+    {
+      "time": 12,
+      "type": "escort",
+      "count": 6,
+      "interval": 0.78
+    },
+    {
+      "time": 22,
+      "type": "duelist",
+      "count": 5,
+      "interval": 0.82
+    },
+    {
+      "time": 32,
+      "type": "tank",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 44,
+      "type": "plated",
+      "count": 8,
+      "interval": 0.72
+    },
+    {
+      "time": 56,
+      "type": "escort",
+      "count": 7,
+      "interval": 0.72
+    },
+    {
+      "time": 68,
+      "type": "duelist",
+      "count": 6,
+      "interval": 0.78
+    },
+    {
+      "time": 80,
+      "type": "bulwark",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 94,
+      "type": "boss",
+      "count": 1
+    }
+  ]
+}

@@ -4,26 +4,30 @@
   "background": "purple",
   "music": "02_stillness_of_space.ogg",
   "difficulty": "Medium",
-  "description": "Aggressive raiders with sweeping attack runs.",
+  "description": "Armor appears in force. Sentinel lines pin your movement while plated hulls soak shots.",
   "completeOnBoss": true,
   "enemyTypes": {
     "scout": {
       "sprite": "enemyBlue2",
-      "hp": 22,
-      "speed": 95,
-      "score": 110,
+      "hull": 22,
+      "shield": 0,
+      "armor": 0,
+      "speed": 96,
+      "score": 108,
       "baseCredit": 14,
       "radius": 16,
       "pattern": "zigzag",
       "patternParams": {
-        "amplitude": 110,
-        "frequency": 3.6
+        "amplitude": 95,
+        "frequency": 3.2
       }
     },
     "fighter": {
       "sprite": "enemyRed3",
-      "hp": 32,
-      "speed": 85,
+      "hull": 34,
+      "shield": 0,
+      "armor": 0,
+      "speed": 86,
       "score": 150,
       "baseCredit": 20,
       "radius": 20,
@@ -34,64 +38,66 @@
       }
     },
     "sentinel": {
-      "sprite": "enemyBlue5",
-      "hp": 30,
-      "speed": 78,
-      "score": 170,
-      "baseCredit": 22,
-      "radius": 18,
-      "pattern": "strafe"
-    },
-    "marauder": {
-      "sprite": "enemyRed5",
-      "hp": 36,
-      "speed": 90,
-      "score": 200,
-      "baseCredit": 26,
-      "radius": 20,
-      "pattern": "spiral",
-      "patternParams": {
-        "amplitude": 120,
-        "frequency": 3.6
+      "sprite": "enemyBlack3",
+      "hull": 28,
+      "shield": 24,
+      "armor": 0,
+      "speed": 80,
+      "score": 190,
+      "baseCredit": 24,
+      "radius": 22,
+      "ai": "sentinel",
+      "aiParams": {
+        "holdY": 150,
+        "slideSpeed": 0.88,
+        "keepOut": 140
       },
-      "fireRate": 1.6,
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.9
+      "fireRate": 1.75,
+      "fireMode": "aim",
+      "bulletSpeed": 210
     },
-    "lurker": {
-      "sprite": "enemyGreen4",
-      "hp": 28,
-      "speed": 75,
-      "score": 170,
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 24,
+      "shield": 0,
+      "armor": 58,
+      "armorClass": 8,
+      "speed": 42,
+      "score": 190,
       "baseCredit": 22,
-      "radius": 18,
-      "ai": "stalker",
-      "aggroRadius": 220,
-      "fireRate": 2.1
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.6
     },
     "hunter": {
       "sprite": "enemyGreen4",
-      "hp": 38,
-      "speed": 92,
-      "score": 230,
-      "baseCredit": 34,
+      "hull": 34,
+      "shield": 0,
+      "armor": 20,
+      "armorClass": 4,
+      "speed": 102,
+      "score": 250,
+      "baseCredit": 32,
       "radius": 20,
-      "ai": "hunter"
+      "ai": "hunter",
+      "fireRate": 2
     },
     "boss": {
       "sprite": "assets/generated/boss_trident.png",
-      "hp": 520,
-      "speed": 80,
+      "hull": 400,
+      "shield": 0,
+      "armor": 190,
+      "armorClass": 10,
+      "speed": 82,
       "score": 1200,
-      "baseCredit": 240,
-      "radius": 46,
+      "baseCredit": 250,
+      "radius": 48,
       "pattern": "bossSweep",
       "isBoss": true,
-      "fireRate": 1.2,
+      "fireRate": 1.15,
       "fireMode": "radial",
-      "fireCount": 16,
-      "bulletSpeed": 170,
+      "fireCount": 15,
+      "bulletSpeed": 175,
       "spriteScale": 0.95
     }
   },
@@ -112,43 +118,43 @@
       "time": 10,
       "type": "sentinel",
       "count": 3,
-      "interval": 0.9
+      "interval": 0.95
     },
     {
-      "time": 12,
-      "type": "scout",
-      "count": 10,
-      "interval": 0.3
-    },
-    {
-      "time": 16,
-      "type": "marauder",
-      "count": 2,
-      "interval": 1.1
-    },
-    {
-      "time": 20,
-      "type": "lurker",
+      "time": 14,
+      "type": "plated",
       "count": 2,
       "interval": 1.2
     },
     {
       "time": 18,
-      "type": "hunter",
-      "count": 3,
-      "interval": 1.1
+      "type": "scout",
+      "count": 10,
+      "interval": 0.3
     },
     {
-      "time": 32,
+      "time": 23,
+      "type": "hunter",
+      "count": 3,
+      "interval": 1.05
+    },
+    {
+      "time": 30,
       "type": "fighter",
       "count": 8,
       "interval": 0.55
     },
     {
-      "time": 40,
-      "type": "hunter",
+      "time": 38,
+      "type": "plated",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 44,
+      "type": "sentinel",
       "count": 2,
-      "interval": 1.4
+      "interval": 1
     },
     {
       "time": 48,

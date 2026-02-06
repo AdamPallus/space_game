@@ -1,0 +1,182 @@
+{
+  "id": "level4_swarm",
+  "baseLevel": "level4",
+  "variant": "swarm",
+  "name": "Void Cascade: Swarm",
+  "background": "asteroidBelt",
+  "music": "04_emergency_no_alarm.ogg",
+  "difficulty": "Extreme",
+  "description": "Unstable skirmisher waves and ambush stalkers. Little time to breathe.",
+  "enemyScale": {
+    "hp": 0.9,
+    "damage": 0.98
+  },
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "gnat": {
+      "sprite": "enemyRed2",
+      "hull": 12,
+      "shield": 0,
+      "armor": 0,
+      "speed": 166,
+      "score": 72,
+      "baseCredit": 10,
+      "radius": 12,
+      "pattern": "laneShift",
+      "patternParams": {
+        "amplitude": 205,
+        "frequency": 6,
+        "shiftEvery": 1
+      }
+    },
+    "dart": {
+      "sprite": "enemyBlue2",
+      "hull": 18,
+      "shield": 0,
+      "armor": 0,
+      "speed": 154,
+      "score": 108,
+      "baseCredit": 12,
+      "radius": 16,
+      "pattern": "spiralIn",
+      "patternParams": {
+        "amplitude": 120,
+        "frequency": 4.8,
+        "decay": 0.2
+      }
+    },
+    "spark": {
+      "sprite": "enemyGreen4",
+      "hull": 14,
+      "shield": 28,
+      "armor": 0,
+      "speed": 146,
+      "score": 160,
+      "baseCredit": 18,
+      "radius": 18,
+      "pattern": "strafe",
+      "fireRate": 1.6,
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "shieldRegen": 14
+    },
+    "skitter": {
+      "sprite": "enemyBlue5",
+      "hull": 24,
+      "shield": 0,
+      "armor": 0,
+      "speed": 128,
+      "score": 150,
+      "baseCredit": 18,
+      "radius": 18,
+      "ai": "skitter",
+      "aiParams": {
+        "dodgeRadius": 160,
+        "dodgeStrength": 1.75
+      },
+      "fireRate": 1.85,
+      "fireMode": "spread",
+      "fireCount": 3,
+      "fireSpread": 0.56,
+      "bulletSpeed": 190
+    },
+    "stalker": {
+      "sprite": "enemyBlue5",
+      "hull": 32,
+      "shield": 18,
+      "armor": 0,
+      "speed": 116,
+      "score": 290,
+      "baseCredit": 34,
+      "radius": 18,
+      "ai": "stalker",
+      "aggroRadius": 240,
+      "fireRate": 1.8,
+      "fireMode": "aim",
+      "shieldRegen": 10
+    },
+    "boss": {
+      "sprite": "assets/generated/boss_serpent.png",
+      "hull": 560,
+      "shield": 320,
+      "armor": 280,
+      "armorClass": 11,
+      "shieldRegen": 11,
+      "speed": 96,
+      "score": 2200,
+      "baseCredit": 460,
+      "radius": 60,
+      "pattern": "bossAdvanceSweep",
+      "patternParams": {
+        "pause": 0.85,
+        "advance": 58,
+        "advanceTime": 0.7,
+        "sweepDuration": 2.4,
+        "retreatTime": 0.8,
+        "depth": 76
+      },
+      "isBoss": true,
+      "fireRate": 0.9,
+      "fireMode": "radial",
+      "fireCount": 21,
+      "bulletSpeed": 192,
+      "spriteScale": 0.75
+    }
+  },
+  "events": [
+    {
+      "time": 1,
+      "type": "gnat",
+      "count": 18,
+      "interval": 0.2
+    },
+    {
+      "time": 6,
+      "type": "dart",
+      "count": 14,
+      "interval": 0.3
+    },
+    {
+      "time": 11,
+      "type": "spark",
+      "count": 4,
+      "interval": 0.8
+    },
+    {
+      "time": 16,
+      "type": "skitter",
+      "count": 5,
+      "interval": 0.75
+    },
+    {
+      "time": 22,
+      "type": "gnat",
+      "count": 22,
+      "interval": 0.18
+    },
+    {
+      "time": 28,
+      "type": "stalker",
+      "count": 4,
+      "interval": 0.9
+    },
+    {
+      "time": 34,
+      "type": "dart",
+      "count": 16,
+      "interval": 0.26
+    },
+    {
+      "time": 42,
+      "type": "spark",
+      "count": 6,
+      "interval": 0.78
+    },
+    {
+      "time": 58,
+      "type": "boss",
+      "count": 1
+    }
+  ]
+}

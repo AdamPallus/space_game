@@ -4,116 +4,105 @@
   "background": "darkPurple",
   "music": "03_racing_through_asteroids_loop.ogg",
   "difficulty": "Hard",
-  "description": "Rapid strike group with heavy sentries.",
+  "description": "Shield-kites and evasive skitters join the fight. Sustained pressure now matters.",
   "completeOnBoss": true,
   "enemyTypes": {
     "scout": {
       "sprite": "enemyBlue2",
-      "hp": 26,
-      "speed": 105,
-      "score": 130,
+      "hull": 24,
+      "shield": 0,
+      "armor": 0,
+      "speed": 104,
+      "score": 128,
       "baseCredit": 18,
       "radius": 16,
       "pattern": "zigzag",
       "patternParams": {
-        "amplitude": 130,
-        "frequency": 4.0
+        "amplitude": 95,
+        "frequency": 3.2
       }
     },
     "fighter": {
       "sprite": "enemyRed3",
-      "hp": 40,
-      "speed": 95,
-      "score": 190,
+      "hull": 38,
+      "shield": 0,
+      "armor": 0,
+      "speed": 94,
+      "score": 188,
       "baseCredit": 26,
       "radius": 20,
       "pattern": "swoop",
       "patternParams": {
-        "amplitude": 80,
-        "frequency": 3.3
+        "amplitude": 70,
+        "frequency": 2.9
       }
     },
-    "sentinel": {
-      "sprite": "enemyBlue5",
-      "hp": 34,
-      "speed": 90,
-      "score": 210,
-      "baseCredit": 30,
+    "shieldkite": {
+      "sprite": "enemyGreen5",
+      "hull": 20,
+      "shield": 68,
+      "armor": 0,
+      "speed": 64,
+      "score": 150,
+      "baseCredit": 16,
       "radius": 18,
-      "pattern": "strafe"
-    },
-    "marauder": {
-      "sprite": "enemyRed5",
-      "hp": 44,
-      "speed": 100,
-      "score": 240,
-      "baseCredit": 34,
-      "radius": 20,
-      "pattern": "spiral",
-      "patternParams": {
-        "amplitude": 140,
-        "frequency": 3.9
-      },
-      "fireRate": 1.4,
-      "fireMode": "spread",
-      "fireCount": 6,
-      "fireSpread": 1.0
-    },
-    "warden": {
-      "sprite": "enemyBlack5",
-      "hp": 60,
-      "speed": 80,
-      "score": 320,
-      "baseCredit": 46,
-      "radius": 24,
       "pattern": "strafe",
-      "fireRate": 1.5,
       "fireMode": "spread",
-      "fireCount": 7,
-      "fireSpread": 1.1
+      "fireCount": 5,
+      "fireSpread": 0.8,
+      "fireRate": 2.25,
+      "shieldRegen": 13
     },
-    "lurker": {
-      "sprite": "enemyGreen4",
-      "hp": 34,
-      "speed": 82,
-      "score": 190,
-      "baseCredit": 26,
+    "skitter": {
+      "sprite": "enemyBlue5",
+      "hull": 24,
+      "shield": 0,
+      "armor": 0,
+      "speed": 122,
+      "score": 150,
+      "baseCredit": 18,
       "radius": 18,
-      "ai": "stalker",
-      "aggroRadius": 240,
-      "fireRate": 1.9
+      "ai": "skitter",
+      "aiParams": {
+        "dodgeRadius": 160,
+        "dodgeStrength": 1.75
+      },
+      "fireRate": 1.95,
+      "fireMode": "spread",
+      "fireCount": 3,
+      "fireSpread": 0.56,
+      "bulletSpeed": 190
     },
-    "hunter": {
-      "sprite": "enemyGreen4",
-      "hp": 48,
-      "speed": 105,
-      "score": 300,
-      "baseCredit": 44,
-      "radius": 21,
-      "ai": "hunter"
-    },
-    "transport": {
-      "sprite": "ufoBlue",
-      "hp": 160,
-      "speed": 45,
-      "score": 520,
-      "baseCredit": 85,
-      "radius": 32,
-      "ai": "transport"
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 26,
+      "shield": 0,
+      "armor": 74,
+      "armorClass": 9,
+      "speed": 44,
+      "score": 190,
+      "baseCredit": 22,
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.8
     },
     "boss": {
       "sprite": "assets/generated/boss_warden3.png",
-      "hp": 720,
+      "hull": 450,
+      "shield": 240,
+      "armor": 100,
+      "armorClass": 8,
+      "shieldRegen": 10,
       "speed": 90,
       "score": 1600,
       "baseCredit": 320,
-      "radius": 52,
+      "radius": 54,
       "pattern": "bossSweep",
       "isBoss": true,
-      "fireRate": 1.0,
+      "fireRate": 1,
       "fireMode": "radial",
       "fireCount": 18,
-      "bulletSpeed": 180,
+      "bulletSpeed": 184,
       "spriteScale": 0.86
     }
   },
@@ -127,67 +116,56 @@
     {
       "time": 7,
       "type": "fighter",
-      "count": 8,
-      "interval": 0.6
+      "count": 7,
+      "interval": 0.62
     },
     {
       "time": 11,
-      "type": "sentinel",
-      "count": 4,
-      "interval": 0.8
+      "type": "shieldkite",
+      "count": 3,
+      "interval": 1
     },
     {
-      "time": 12,
+      "time": 15,
+      "type": "skitter",
+      "count": 3,
+      "interval": 0.95
+    },
+    {
+      "time": 19,
       "type": "scout",
       "count": 12,
       "interval": 0.28
     },
     {
-      "time": 16,
-      "type": "marauder",
-      "count": 3,
-      "interval": 1.0
-    },
-    {
-      "time": 18,
-      "type": "hunter",
-      "count": 4,
-      "interval": 1.0
-    },
-    {
-      "time": 22,
-      "type": "warden",
-      "count": 2,
-      "interval": 1.4
-    },
-    {
-      "time": 26,
-      "type": "lurker",
-      "count": 3,
-      "interval": 1.1
-    },
-    {
       "time": 24,
-      "type": "transport",
+      "type": "plated",
       "count": 2,
-      "interval": 1.2
+      "interval": 1.25
     },
     {
       "time": 30,
+      "type": "shieldkite",
+      "count": 4,
+      "interval": 0.95
+    },
+    {
+      "time": 36,
       "type": "fighter",
-      "count": 10,
+      "count": 9,
       "interval": 0.5
     },
     {
-      "time": 38,
-      "type": "hunter",
-      "count": 3,
-      "interval": 1.3
+      "time": 42,
+      "type": "skitter",
+      "count": 4,
+      "interval": 0.85
     },
     {
-      "time": 46,
-      "type": "transport",
-      "count": 1
+      "time": 48,
+      "type": "plated",
+      "count": 3,
+      "interval": 1.1
     },
     {
       "time": 54,

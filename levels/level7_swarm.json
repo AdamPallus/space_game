@@ -1,0 +1,199 @@
+{
+  "id": "level7_swarm",
+  "baseLevel": "level7",
+  "variant": "swarm",
+  "name": "The Gauntlet: Swarm",
+  "background": "nb_wreckfield",
+  "music": "space_battle_bpm130.ogg",
+  "difficulty": "Hell",
+  "description": "Maximum density skirmisher push. Precision and area control are mandatory.",
+  "enemyScale": {
+    "hp": 0.88,
+    "damage": 1.02
+  },
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "gnat": {
+      "sprite": "enemyRed2",
+      "hull": 15,
+      "shield": 0,
+      "armor": 0,
+      "speed": 178,
+      "score": 72,
+      "baseCredit": 10,
+      "radius": 12,
+      "pattern": "laneShift",
+      "patternParams": {
+        "amplitude": 205,
+        "frequency": 6,
+        "shiftEvery": 0.82,
+        "shiftSpeed": 6.7
+      }
+    },
+    "dart": {
+      "sprite": "enemyBlue2",
+      "hull": 22,
+      "shield": 0,
+      "armor": 0,
+      "speed": 166,
+      "score": 108,
+      "baseCredit": 12,
+      "radius": 16,
+      "pattern": "spiralIn",
+      "patternParams": {
+        "amplitude": 180,
+        "frequency": 5.6,
+        "decay": 0.15
+      }
+    },
+    "spark": {
+      "sprite": "enemyGreen4",
+      "hull": 18,
+      "shield": 36,
+      "armor": 0,
+      "speed": 156,
+      "score": 160,
+      "baseCredit": 18,
+      "radius": 18,
+      "pattern": "laneShift",
+      "fireRate": 1.6,
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "shieldRegen": 14,
+      "patternParams": {
+        "shiftEvery": 0.95,
+        "shiftSpeed": 6.1
+      }
+    },
+    "skitter": {
+      "sprite": "enemyBlue5",
+      "hull": 30,
+      "shield": 0,
+      "armor": 0,
+      "speed": 138,
+      "score": 150,
+      "baseCredit": 18,
+      "radius": 18,
+      "ai": "skitter",
+      "aiParams": {
+        "dodgeRadius": 160,
+        "dodgeStrength": 1.75
+      },
+      "fireRate": 1.5,
+      "fireMode": "spread",
+      "fireCount": 3,
+      "fireSpread": 0.56,
+      "bulletSpeed": 190
+    },
+    "stalker": {
+      "sprite": "enemyBlue5",
+      "hull": 40,
+      "shield": 24,
+      "armor": 0,
+      "speed": 128,
+      "score": 290,
+      "baseCredit": 34,
+      "radius": 18,
+      "ai": "stalker",
+      "aggroRadius": 240,
+      "fireRate": 1.45,
+      "fireMode": "aim",
+      "shieldRegen": 10
+    },
+    "boss": {
+      "sprite": "assets/generated/boss_fortress.png",
+      "hull": 1280,
+      "shield": 760,
+      "armor": 900,
+      "armorClass": 14,
+      "shieldRegen": 16,
+      "speed": 118,
+      "score": 4600,
+      "baseCredit": 1080,
+      "radius": 76,
+      "pattern": "bossOrbit",
+      "patternParams": {
+        "warmupTime": 0.6,
+        "radiusX": 320,
+        "radiusY": 95,
+        "orbitSpeed": 0.78,
+        "wobble": 22
+      },
+      "isBoss": true,
+      "empImmune": true,
+      "fireRate": 0.56,
+      "fireMode": "radial",
+      "fireCount": 30,
+      "bulletSpeed": 224,
+      "spriteScale": 0.96
+    }
+  },
+  "events": [
+    {
+      "time": 1,
+      "type": "gnat",
+      "count": 26,
+      "interval": 0.15
+    },
+    {
+      "time": 6,
+      "type": "dart",
+      "count": 18,
+      "interval": 0.21
+    },
+    {
+      "time": 12,
+      "type": "spark",
+      "count": 8,
+      "interval": 0.56
+    },
+    {
+      "time": 18,
+      "type": "skitter",
+      "count": 8,
+      "interval": 0.55
+    },
+    {
+      "time": 24,
+      "type": "gnat",
+      "count": 30,
+      "interval": 0.13
+    },
+    {
+      "time": 32,
+      "type": "dart",
+      "count": 20,
+      "interval": 0.18
+    },
+    {
+      "time": 40,
+      "type": "stalker",
+      "count": 6,
+      "interval": 0.66
+    },
+    {
+      "time": 52,
+      "type": "spark",
+      "count": 10,
+      "interval": 0.5
+    },
+    {
+      "time": 64,
+      "type": "skitter",
+      "count": 10,
+      "interval": 0.5
+    },
+    {
+      "time": 76,
+      "type": "gnat",
+      "count": 32,
+      "interval": 0.12
+    },
+    {
+      "time": 94,
+      "type": "boss",
+      "count": 1
+    }
+  ]
+}

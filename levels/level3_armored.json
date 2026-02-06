@@ -1,0 +1,161 @@
+{
+  "id": "level3_armored",
+  "baseLevel": "level3",
+  "variant": "armored",
+  "name": "Nebula Run: Armored",
+  "background": "darkPurple",
+  "music": "03_racing_through_asteroids_loop.ogg",
+  "difficulty": "Hard+",
+  "description": "Layered armor screens with disciplined flanking escorts.",
+  "enemyScale": {
+    "hp": 1.18,
+    "damage": 1.07
+  },
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 28,
+      "shield": 0,
+      "armor": 82,
+      "armorClass": 10,
+      "speed": 44,
+      "score": 190,
+      "baseCredit": 22,
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.8
+    },
+    "escort": {
+      "sprite": "enemyBlack3",
+      "hull": 32,
+      "shield": 0,
+      "armor": 92,
+      "armorClass": 10,
+      "speed": 60,
+      "score": 250,
+      "baseCredit": 30,
+      "radius": 20,
+      "pattern": "strafe",
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "fireRate": 1.9
+    },
+    "duelist": {
+      "sprite": "enemyRed5",
+      "hull": 32,
+      "shield": 0,
+      "armor": 74,
+      "armorClass": 8,
+      "speed": 92,
+      "score": 230,
+      "baseCredit": 28,
+      "radius": 20,
+      "ai": "duelist",
+      "aiParams": {
+        "holdY": 190,
+        "standoff": 240,
+        "strafeSpeed": 1.08
+      },
+      "fireRate": 1.65,
+      "fireMode": "aim",
+      "bulletSpeed": 215
+    },
+    "tank": {
+      "sprite": "ufoYellow",
+      "hull": 40,
+      "shield": 0,
+      "armor": 126,
+      "armorClass": 11,
+      "speed": 30,
+      "score": 340,
+      "baseCredit": 42,
+      "radius": 30,
+      "ai": "transport",
+      "fireMode": "aim",
+      "fireRate": 3,
+      "bulletSpeed": 160
+    },
+    "bulwark": {
+      "sprite": "ufoBlue",
+      "hull": 52,
+      "shield": 0,
+      "armor": 220,
+      "armorClass": 13,
+      "speed": 26,
+      "score": 420,
+      "baseCredit": 52,
+      "radius": 34,
+      "ai": "transport",
+      "fireRate": 3.2
+    },
+    "boss": {
+      "sprite": "assets/generated/boss_warden3.png",
+      "hull": 450,
+      "shield": 240,
+      "armor": 100,
+      "armorClass": 8,
+      "shieldRegen": 10,
+      "speed": 90,
+      "score": 1600,
+      "baseCredit": 320,
+      "radius": 54,
+      "pattern": "bossSweep",
+      "isBoss": true,
+      "fireRate": 1,
+      "fireMode": "radial",
+      "fireCount": 18,
+      "bulletSpeed": 184,
+      "spriteScale": 0.86
+    }
+  },
+  "events": [
+    {
+      "time": 2,
+      "type": "plated",
+      "count": 4,
+      "interval": 1
+    },
+    {
+      "time": 8,
+      "type": "escort",
+      "count": 3,
+      "interval": 1.05
+    },
+    {
+      "time": 14,
+      "type": "duelist",
+      "count": 3,
+      "interval": 1
+    },
+    {
+      "time": 20,
+      "type": "plated",
+      "count": 5,
+      "interval": 0.9
+    },
+    {
+      "time": 28,
+      "type": "tank",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 36,
+      "type": "escort",
+      "count": 4,
+      "interval": 0.95
+    },
+    {
+      "time": 44,
+      "type": "bulwark",
+      "count": 1
+    },
+    {
+      "time": 54,
+      "type": "boss",
+      "count": 1
+    }
+  ]
+}

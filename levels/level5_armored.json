@@ -1,0 +1,171 @@
+{
+  "id": "level5_armored",
+  "baseLevel": "level5",
+  "variant": "armored",
+  "name": "Annihilation Protocol: Armored",
+  "background": "ionStorm",
+  "music": "05_building_a_colony_loop_1.ogg",
+  "difficulty": "Nightmare+",
+  "description": "Heavy armor battlegroup with layered escorts and reinforced haulers.",
+  "enemyScale": {
+    "hp": 1.24,
+    "damage": 1.1
+  },
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 32,
+      "shield": 0,
+      "armor": 108,
+      "armorClass": 11,
+      "speed": 44,
+      "score": 190,
+      "baseCredit": 22,
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.8
+    },
+    "escort": {
+      "sprite": "enemyBlack3",
+      "hull": 40,
+      "shield": 0,
+      "armor": 136,
+      "armorClass": 12,
+      "speed": 58,
+      "score": 250,
+      "baseCredit": 30,
+      "radius": 20,
+      "pattern": "strafe",
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "fireRate": 1.9
+    },
+    "duelist": {
+      "sprite": "enemyRed5",
+      "hull": 38,
+      "shield": 0,
+      "armor": 104,
+      "armorClass": 10,
+      "speed": 90,
+      "score": 230,
+      "baseCredit": 28,
+      "radius": 20,
+      "ai": "duelist",
+      "aiParams": {
+        "holdY": 190,
+        "standoff": 240,
+        "strafeSpeed": 1.08
+      },
+      "fireRate": 1.65,
+      "fireMode": "aim",
+      "bulletSpeed": 215
+    },
+    "tank": {
+      "sprite": "ufoYellow",
+      "hull": 60,
+      "shield": 0,
+      "armor": 250,
+      "armorClass": 14,
+      "speed": 30,
+      "score": 340,
+      "baseCredit": 42,
+      "radius": 30,
+      "ai": "transport",
+      "fireMode": "aim",
+      "fireRate": 3,
+      "bulletSpeed": 160
+    },
+    "bulwark": {
+      "sprite": "ufoBlue",
+      "hull": 78,
+      "shield": 0,
+      "armor": 420,
+      "armorClass": 16,
+      "speed": 24,
+      "score": 420,
+      "baseCredit": 52,
+      "radius": 34,
+      "ai": "transport",
+      "fireRate": 3.2
+    },
+    "boss": {
+      "sprite": "assets/generated/boss_warden5.png",
+      "hull": 700,
+      "shield": 420,
+      "armor": 460,
+      "armorClass": 12,
+      "shieldRegen": 12,
+      "speed": 108,
+      "score": 3000,
+      "baseCredit": 700,
+      "radius": 66,
+      "pattern": "bossAdvanceSweep",
+      "patternParams": {
+        "pause": 0.78,
+        "advance": 66,
+        "advanceTime": 0.64,
+        "sweepDuration": 2.25,
+        "retreatTime": 0.78,
+        "depth": 82
+      },
+      "isBoss": true,
+      "fireRate": 0.76,
+      "fireMode": "radial",
+      "fireCount": 24,
+      "bulletSpeed": 205,
+      "spriteScale": 1.03,
+      "empImmune": true
+    }
+  },
+  "events": [
+    {
+      "time": 2,
+      "type": "plated",
+      "count": 6,
+      "interval": 0.9
+    },
+    {
+      "time": 9,
+      "type": "escort",
+      "count": 4,
+      "interval": 0.95
+    },
+    {
+      "time": 16,
+      "type": "duelist",
+      "count": 4,
+      "interval": 0.95
+    },
+    {
+      "time": 24,
+      "type": "tank",
+      "count": 2,
+      "interval": 1.25
+    },
+    {
+      "time": 32,
+      "type": "plated",
+      "count": 7,
+      "interval": 0.82
+    },
+    {
+      "time": 40,
+      "type": "escort",
+      "count": 5,
+      "interval": 0.86
+    },
+    {
+      "time": 48,
+      "type": "bulwark",
+      "count": 2,
+      "interval": 1.35
+    },
+    {
+      "time": 62,
+      "type": "boss",
+      "count": 1
+    }
+  ]
+}

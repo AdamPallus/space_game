@@ -1,0 +1,138 @@
+{
+  "id": "level1_armored",
+  "baseLevel": "level1",
+  "variant": "armored",
+  "name": "First Contact: Armored",
+  "background": "blue",
+  "music": "01_lift_off_b.ogg",
+  "difficulty": "Easy+",
+  "description": "Few targets, thick plating. Focus fire and avoid chip-damage builds.",
+  "enemyScale": {
+    "hp": 1.12,
+    "damage": 1.04
+  },
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "drone": {
+      "sprite": "enemyBlue3",
+      "hull": 24,
+      "shield": 18,
+      "armor": 0,
+      "speed": 74,
+      "score": 120,
+      "baseCredit": 14,
+      "radius": 16,
+      "pattern": "zigzag",
+      "patternParams": {
+        "amplitude": 75,
+        "frequency": 2.8
+      },
+      "shieldRegen": 8
+    },
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 20,
+      "shield": 0,
+      "armor": 46,
+      "armorClass": 7,
+      "speed": 40,
+      "score": 190,
+      "baseCredit": 22,
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.8
+    },
+    "escort": {
+      "sprite": "enemyBlack3",
+      "hull": 28,
+      "shield": 0,
+      "armor": 70,
+      "armorClass": 8,
+      "speed": 54,
+      "score": 250,
+      "baseCredit": 30,
+      "radius": 20,
+      "pattern": "strafe",
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "fireRate": 2.1
+    },
+    "tank": {
+      "sprite": "ufoYellow",
+      "hull": 34,
+      "shield": 0,
+      "armor": 90,
+      "armorClass": 9,
+      "speed": 26,
+      "score": 340,
+      "baseCredit": 42,
+      "radius": 30,
+      "ai": "transport",
+      "fireMode": "aim",
+      "fireRate": 3.3,
+      "bulletSpeed": 160
+    },
+    "boss": {
+      "sprite": "assets/generated/boss_manta.png",
+      "hull": 330,
+      "shield": 80,
+      "armor": 60,
+      "armorClass": 6,
+      "shieldRegen": 8,
+      "speed": 74,
+      "score": 900,
+      "baseCredit": 180,
+      "radius": 44,
+      "pattern": "bossSweep",
+      "isBoss": true,
+      "fireRate": 1.3,
+      "fireMode": "radial",
+      "fireCount": 12,
+      "bulletSpeed": 165,
+      "spriteScale": 0.71
+    }
+  },
+  "events": [
+    {
+      "time": 2,
+      "type": "drone",
+      "count": 4,
+      "interval": 0.9
+    },
+    {
+      "time": 8,
+      "type": "plated",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 15,
+      "type": "escort",
+      "count": 2,
+      "interval": 1.3
+    },
+    {
+      "time": 24,
+      "type": "drone",
+      "count": 5,
+      "interval": 0.8
+    },
+    {
+      "time": 31,
+      "type": "tank",
+      "count": 1
+    },
+    {
+      "time": 36,
+      "type": "escort",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 42,
+      "type": "boss",
+      "count": 1
+    }
+  ]
+}

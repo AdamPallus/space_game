@@ -1,0 +1,183 @@
+{
+  "id": "level6_armored",
+  "baseLevel": "level6",
+  "variant": "armored",
+  "name": "Crimson Fleet: Armored",
+  "background": "nb_aurorawave",
+  "music": "space_adventure_bpm140.ogg",
+  "difficulty": "Very Hard+",
+  "description": "Slow pressure from fortified columns. Every kill requires commitment.",
+  "enemyScale": {
+    "hp": 1.26,
+    "damage": 1.1
+  },
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 36,
+      "shield": 0,
+      "armor": 132,
+      "armorClass": 12,
+      "speed": 42,
+      "score": 190,
+      "baseCredit": 22,
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.8
+    },
+    "escort": {
+      "sprite": "enemyBlack3",
+      "hull": 44,
+      "shield": 0,
+      "armor": 168,
+      "armorClass": 13,
+      "speed": 56,
+      "score": 250,
+      "baseCredit": 30,
+      "radius": 20,
+      "pattern": "stall",
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "fireRate": 1.9,
+      "patternParams": {
+        "stallY": 165,
+        "stallDuration": 1.8,
+        "strafeAmp": 100,
+        "strafeFreq": 1.5
+      }
+    },
+    "duelist": {
+      "sprite": "enemyRed5",
+      "hull": 42,
+      "shield": 0,
+      "armor": 126,
+      "armorClass": 11,
+      "speed": 88,
+      "score": 230,
+      "baseCredit": 28,
+      "radius": 20,
+      "ai": "duelist",
+      "aiParams": {
+        "holdY": 190,
+        "standoff": 240,
+        "strafeSpeed": 1.08
+      },
+      "fireRate": 1.65,
+      "fireMode": "aim",
+      "bulletSpeed": 215
+    },
+    "tank": {
+      "sprite": "ufoYellow",
+      "hull": 68,
+      "shield": 0,
+      "armor": 320,
+      "armorClass": 16,
+      "speed": 28,
+      "score": 340,
+      "baseCredit": 42,
+      "radius": 30,
+      "ai": "transport",
+      "fireMode": "aim",
+      "fireRate": 3,
+      "bulletSpeed": 160
+    },
+    "bulwark": {
+      "sprite": "ufoBlue",
+      "hull": 92,
+      "shield": 0,
+      "armor": 520,
+      "armorClass": 18,
+      "speed": 22,
+      "score": 420,
+      "baseCredit": 52,
+      "radius": 34,
+      "ai": "transport",
+      "fireRate": 3.2
+    },
+    "boss": {
+      "sprite": "assets/generated/boss_halo.png",
+      "hull": 920,
+      "shield": 560,
+      "armor": 640,
+      "armorClass": 13,
+      "shieldRegen": 14,
+      "speed": 114,
+      "score": 3800,
+      "baseCredit": 850,
+      "radius": 68,
+      "pattern": "bossAdvanceSweep",
+      "patternParams": {
+        "pause": 0.74,
+        "advance": 72,
+        "advanceTime": 0.62,
+        "sweepDuration": 2.1,
+        "retreatTime": 0.72,
+        "depth": 90
+      },
+      "isBoss": true,
+      "empImmune": true,
+      "fireRate": 0.66,
+      "fireMode": "radial",
+      "fireCount": 27,
+      "bulletSpeed": 214,
+      "spriteScale": 0.72
+    }
+  },
+  "events": [
+    {
+      "time": 2,
+      "type": "plated",
+      "count": 6,
+      "interval": 0.85
+    },
+    {
+      "time": 10,
+      "type": "escort",
+      "count": 5,
+      "interval": 0.88
+    },
+    {
+      "time": 18,
+      "type": "duelist",
+      "count": 4,
+      "interval": 0.9
+    },
+    {
+      "time": 26,
+      "type": "tank",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 34,
+      "type": "plated",
+      "count": 8,
+      "interval": 0.78
+    },
+    {
+      "time": 42,
+      "type": "escort",
+      "count": 6,
+      "interval": 0.82
+    },
+    {
+      "time": 50,
+      "type": "duelist",
+      "count": 5,
+      "interval": 0.85
+    },
+    {
+      "time": 58,
+      "type": "bulwark",
+      "count": 2,
+      "interval": 1.25
+    },
+    {
+      "time": 70,
+      "type": "boss",
+      "count": 1
+    }
+  ]
+}

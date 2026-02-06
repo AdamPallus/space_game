@@ -1,0 +1,349 @@
+{
+  "id": "level8",
+  "name": "Last Light",
+  "background": "nb_crimsonstorm",
+  "music": "space_boss_battle_bpm175.ogg",
+  "difficulty": "Ultimate",
+  "description": "The enemy flagship and its elite guard. Everything you've learned comes down to this.",
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "scout": {
+      "sprite": "enemyBlue2",
+      "hp": 56,
+      "speed": 145,
+      "score": 280,
+      "baseCredit": 40,
+      "radius": 16,
+      "pattern": "zigzag",
+      "patternParams": {
+        "amplitude": 200,
+        "frequency": 5.4
+      }
+    },
+    "fighter": {
+      "sprite": "enemyRed3",
+      "hp": 84,
+      "speed": 135,
+      "score": 400,
+      "baseCredit": 58,
+      "radius": 20,
+      "pattern": "swoop",
+      "patternParams": {
+        "amplitude": 125,
+        "frequency": 4.8
+      }
+    },
+    "sentinel": {
+      "sprite": "enemyBlue5",
+      "hp": 64,
+      "speed": 125,
+      "score": 380,
+      "baseCredit": 58,
+      "radius": 18,
+      "pattern": "strafe",
+      "fireRate": 1.3,
+      "fireMode": "spread",
+      "fireCount": 7,
+      "fireSpread": 1.1
+    },
+    "marauder": {
+      "sprite": "enemyRed5",
+      "hp": 88,
+      "speed": 140,
+      "score": 460,
+      "baseCredit": 68,
+      "radius": 20,
+      "pattern": "spiral",
+      "patternParams": {
+        "amplitude": 230,
+        "frequency": 5.4
+      },
+      "fireRate": 1.0,
+      "fireMode": "spread",
+      "fireCount": 8,
+      "fireSpread": 1.2
+    },
+    "warden": {
+      "sprite": "enemyBlack5",
+      "hp": 130,
+      "speed": 105,
+      "score": 700,
+      "baseCredit": 98,
+      "radius": 26,
+      "pattern": "strafe",
+      "fireRate": 1.1,
+      "fireMode": "spread",
+      "fireCount": 11,
+      "fireSpread": 1.4
+    },
+    "phantom": {
+      "sprite": "enemyGreen5",
+      "hp": 118,
+      "speed": 155,
+      "score": 740,
+      "baseCredit": 108,
+      "radius": 22,
+      "pattern": "spiral",
+      "patternParams": {
+        "amplitude": 250,
+        "frequency": 5.8
+      },
+      "fireRate": 0.85,
+      "fireMode": "spread",
+      "fireCount": 8,
+      "fireSpread": 1.2
+    },
+    "reaper": {
+      "sprite": "enemyBlack4",
+      "hp": 105,
+      "speed": 165,
+      "score": 780,
+      "baseCredit": 120,
+      "radius": 22,
+      "ai": "hunter",
+      "fireRate": 1.2,
+      "fireMode": "spread",
+      "fireCount": 6,
+      "fireSpread": 0.9
+    },
+    "elite": {
+      "sprite": "enemyBlack3",
+      "hp": 140,
+      "speed": 150,
+      "score": 900,
+      "baseCredit": 140,
+      "radius": 24,
+      "pattern": "spiral",
+      "patternParams": {
+        "amplitude": 200,
+        "frequency": 5.0
+      },
+      "fireRate": 0.8,
+      "fireMode": "radial",
+      "fireCount": 12,
+      "bulletSpeed": 170
+    },
+    "harvester": {
+      "sprite": "ufoGreen",
+      "hp": 320,
+      "speed": 70,
+      "score": 1000,
+      "baseCredit": 180,
+      "radius": 34,
+      "pattern": "swoop",
+      "patternParams": {
+        "amplitude": 90,
+        "frequency": 3.0
+      },
+      "fireRate": 1.1,
+      "fireMode": "spread",
+      "fireCount": 11,
+      "fireSpread": 1.5
+    },
+    "overseer": {
+      "sprite": "ufoYellow",
+      "hp": 380,
+      "speed": 80,
+      "score": 1200,
+      "baseCredit": 210,
+      "radius": 36,
+      "pattern": "swoop",
+      "patternParams": {
+        "amplitude": 100,
+        "frequency": 2.6
+      },
+      "fireRate": 0.9,
+      "fireMode": "radial",
+      "fireCount": 22,
+      "bulletSpeed": 195
+    },
+    "hunter": {
+      "sprite": "enemyGreen4",
+      "hp": 102,
+      "speed": 155,
+      "score": 580,
+      "baseCredit": 90,
+      "radius": 22,
+      "ai": "hunter"
+    },
+    "transport": {
+      "sprite": "ufoBlue",
+      "hp": 400,
+      "speed": 62,
+      "score": 1100,
+      "baseCredit": 200,
+      "radius": 36,
+      "ai": "transport"
+    },
+    "boss": {
+      "sprite": "assets/generated/boss_warden8.png",
+      "hp": 2800,
+      "speed": 125,
+      "score": 6000,
+      "baseCredit": 1400,
+      "radius": 78,
+      "pattern": "bossSweep",
+      "isBoss": true,
+      "fireRate": 0.45,
+      "fireMode": "radial",
+      "fireCount": 32,
+      "bulletSpeed": 235,
+      "spriteScale": 0.93
+    }
+  },
+  "events": [
+    {
+      "time": 1,
+      "type": "elite",
+      "count": 2,
+      "interval": 1.0,
+      "comment": "Elite vanguard"
+    },
+    {
+      "time": 4,
+      "type": "scout",
+      "count": 20,
+      "interval": 0.22
+    },
+    {
+      "time": 9,
+      "type": "fighter",
+      "count": 12,
+      "interval": 0.42
+    },
+    {
+      "time": 14,
+      "type": "sentinel",
+      "count": 6,
+      "interval": 0.55
+    },
+    {
+      "time": 18,
+      "type": "hunter",
+      "count": 7,
+      "interval": 0.75
+    },
+    {
+      "time": 22,
+      "type": "marauder",
+      "count": 5,
+      "interval": 0.75
+    },
+    {
+      "time": 26,
+      "type": "overseer",
+      "count": 1,
+      "comment": "First guardian"
+    },
+    {
+      "time": 28,
+      "type": "scout",
+      "count": 22,
+      "interval": 0.2
+    },
+    {
+      "time": 32,
+      "type": "warden",
+      "count": 3,
+      "interval": 0.95
+    },
+    {
+      "time": 36,
+      "type": "reaper",
+      "count": 4,
+      "interval": 0.8
+    },
+    {
+      "time": 40,
+      "type": "phantom",
+      "count": 4,
+      "interval": 0.8
+    },
+    {
+      "time": 44,
+      "type": "transport",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 48,
+      "type": "elite",
+      "count": 3,
+      "interval": 0.9,
+      "comment": "Elite wave"
+    },
+    {
+      "time": 52,
+      "type": "harvester",
+      "count": 2,
+      "interval": 1.3
+    },
+    {
+      "time": 56,
+      "type": "overseer",
+      "count": 1,
+      "comment": "Second guardian"
+    },
+    {
+      "time": 58,
+      "type": "fighter",
+      "count": 16,
+      "interval": 0.3
+    },
+    {
+      "time": 62,
+      "type": "hunter",
+      "count": 6,
+      "interval": 0.7
+    },
+    {
+      "time": 66,
+      "type": "marauder",
+      "count": 4,
+      "interval": 0.7
+    },
+    {
+      "time": 70,
+      "type": "warden",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 74,
+      "type": "phantom",
+      "count": 4,
+      "interval": 0.75,
+      "comment": "Final wave"
+    },
+    {
+      "time": 78,
+      "type": "reaper",
+      "count": 5,
+      "interval": 0.7
+    },
+    {
+      "time": 82,
+      "type": "elite",
+      "count": 2,
+      "interval": 1.0
+    },
+    {
+      "time": 86,
+      "type": "transport",
+      "count": 2,
+      "interval": 0.9
+    },
+    {
+      "time": 92,
+      "type": "harvester",
+      "count": 1,
+      "comment": "Last escort"
+    },
+    {
+      "time": 98,
+      "type": "boss",
+      "count": 1,
+      "comment": "The Flagship"
+    }
+  ]
+}

@@ -4,230 +4,221 @@
   "background": "ionStorm",
   "music": "05_building_a_colony_loop_1.ogg",
   "difficulty": "Nightmare",
-  "description": "Overwhelming assault with elite UFO escorts.",
+  "description": "Full enemy doctrine. Stalker ambushes, gunline escorts, and bulwark priorities.",
   "completeOnBoss": true,
   "enemyTypes": {
-    "scout": {
-      "sprite": "enemyBlue2",
-      "hp": 38,
-      "speed": 130,
-      "score": 190,
-      "baseCredit": 28,
-      "radius": 16,
-      "pattern": "zigzag",
-      "patternParams": {
-        "amplitude": 175,
-        "frequency": 4.9
-      }
-    },
-    "fighter": {
-      "sprite": "enemyRed3",
-      "hp": 60,
-      "speed": 120,
-      "score": 280,
-      "baseCredit": 40,
-      "radius": 20,
-      "pattern": "swoop",
-      "patternParams": {
-        "amplitude": 110,
-        "frequency": 4.2
-      }
-    },
-    "sentinel": {
-      "sprite": "enemyBlue5",
-      "hp": 46,
-      "speed": 112,
-      "score": 280,
-      "baseCredit": 44,
+    "spark": {
+      "sprite": "enemyGreen4",
+      "hull": 16,
+      "shield": 34,
+      "armor": 0,
+      "speed": 146,
+      "score": 160,
+      "baseCredit": 18,
       "radius": 18,
-      "pattern": "strafe"
-    },
-    "marauder": {
-      "sprite": "enemyRed5",
-      "hp": 64,
-      "speed": 126,
-      "score": 320,
-      "baseCredit": 50,
-      "radius": 20,
-      "pattern": "spiral",
-      "patternParams": {
-        "amplitude": 200,
-        "frequency": 4.8
-      }
-    },
-    "warden": {
-      "sprite": "enemyBlack5",
-      "hp": 96,
-      "speed": 95,
-      "score": 520,
-      "baseCredit": 74,
-      "radius": 26,
-      "pattern": "strafe"
-    },
-    "phantom": {
-      "sprite": "enemyGreen5",
-      "hp": 88,
-      "speed": 140,
-      "score": 560,
-      "baseCredit": 86,
-      "radius": 22,
-      "pattern": "spiral",
-      "patternParams": {
-        "amplitude": 220,
-        "frequency": 5.2
-      }
-    },
-    "harvester": {
-      "sprite": "ufoGreen",
-      "hp": 220,
-      "speed": 60,
-      "score": 760,
-      "baseCredit": 140,
-      "radius": 34,
-      "pattern": "swoop",
-      "patternParams": {
-        "amplitude": 80,
-        "frequency": 2.8
-      },
-      "fireRate": 1.4,
+      "pattern": "strafe",
+      "fireRate": 1.45,
       "fireMode": "spread",
-      "fireCount": 9,
-      "fireSpread": 1.3
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "shieldRegen": 14
     },
-    "overseer": {
-      "sprite": "ufoYellow",
-      "hp": 260,
-      "speed": 70,
-      "score": 900,
-      "baseCredit": 170,
-      "radius": 36,
-      "pattern": "swoop",
-      "patternParams": {
-        "amplitude": 90,
-        "frequency": 2.4
+    "stalker": {
+      "sprite": "enemyBlue5",
+      "hull": 38,
+      "shield": 28,
+      "armor": 0,
+      "speed": 118,
+      "score": 290,
+      "baseCredit": 34,
+      "radius": 18,
+      "ai": "stalker",
+      "aggroRadius": 240,
+      "fireRate": 1.65,
+      "fireMode": "aim",
+      "shieldRegen": 10
+    },
+    "duelist": {
+      "sprite": "enemyRed5",
+      "hull": 36,
+      "shield": 0,
+      "armor": 92,
+      "armorClass": 9,
+      "speed": 98,
+      "score": 230,
+      "baseCredit": 28,
+      "radius": 20,
+      "ai": "duelist",
+      "aiParams": {
+        "holdY": 190,
+        "standoff": 240,
+        "strafeSpeed": 1.08
       },
-      "fireRate": 1.1,
-      "fireMode": "radial",
-      "fireCount": 18,
-      "bulletSpeed": 180
+      "fireRate": 1.65,
+      "fireMode": "aim",
+      "bulletSpeed": 215
+    },
+    "escort": {
+      "sprite": "enemyBlack3",
+      "hull": 38,
+      "shield": 0,
+      "armor": 122,
+      "armorClass": 11,
+      "speed": 64,
+      "score": 250,
+      "baseCredit": 30,
+      "radius": 20,
+      "pattern": "strafe",
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "fireRate": 1.7
+    },
+    "tank": {
+      "sprite": "ufoYellow",
+      "hull": 56,
+      "shield": 0,
+      "armor": 220,
+      "armorClass": 13,
+      "speed": 30,
+      "score": 340,
+      "baseCredit": 42,
+      "radius": 30,
+      "ai": "transport",
+      "fireMode": "aim",
+      "fireRate": 3,
+      "bulletSpeed": 160
+    },
+    "bulwark": {
+      "sprite": "ufoBlue",
+      "hull": 70,
+      "shield": 0,
+      "armor": 340,
+      "armorClass": 15,
+      "speed": 24,
+      "score": 420,
+      "baseCredit": 52,
+      "radius": 34,
+      "ai": "transport",
+      "fireRate": 3.2
     },
     "hunter": {
       "sprite": "enemyGreen4",
-      "hp": 78,
-      "speed": 140,
-      "score": 460,
-      "baseCredit": 72,
-      "radius": 22,
-      "ai": "hunter"
-    },
-    "transport": {
-      "sprite": "ufoBlue",
-      "hp": 280,
-      "speed": 55,
-      "score": 820,
-      "baseCredit": 140,
-      "radius": 36,
-      "ai": "transport"
+      "hull": 44,
+      "shield": 0,
+      "armor": 26,
+      "armorClass": 5,
+      "speed": 126,
+      "score": 250,
+      "baseCredit": 32,
+      "radius": 20,
+      "ai": "hunter",
+      "fireRate": 1.8
     },
     "boss": {
       "sprite": "assets/generated/boss_warden5.png",
-      "hp": 1400,
-      "speed": 110,
+      "hull": 700,
+      "shield": 420,
+      "armor": 460,
+      "armorClass": 12,
+      "shieldRegen": 12,
+      "speed": 108,
       "score": 3000,
       "baseCredit": 700,
-      "radius": 64,
-      "pattern": "bossSweep",
+      "radius": 66,
+      "pattern": "bossAdvanceSweep",
+      "patternParams": {
+        "pause": 0.78,
+        "advance": 66,
+        "advanceTime": 0.64,
+        "sweepDuration": 2.25,
+        "retreatTime": 0.78,
+        "depth": 82
+      },
       "isBoss": true,
-      "fireRate": 0.75,
+      "fireRate": 0.76,
       "fireMode": "radial",
       "fireCount": 24,
-      "bulletSpeed": 200,
-      "spriteScale": 1.03
+      "bulletSpeed": 205,
+      "spriteScale": 1.03,
+      "empImmune": true
     }
   },
   "events": [
     {
       "time": 1,
-      "type": "scout",
-      "count": 14,
-      "interval": 0.28
-    },
-    {
-      "time": 6,
-      "type": "fighter",
-      "count": 12,
+      "type": "spark",
+      "count": 8,
       "interval": 0.5
     },
     {
+      "time": 5,
+      "type": "stalker",
+      "count": 3,
+      "interval": 1
+    },
+    {
       "time": 10,
-      "type": "sentinel",
-      "count": 5,
-      "interval": 0.7
+      "type": "duelist",
+      "count": 4,
+      "interval": 0.95
     },
     {
-      "time": 12,
-      "type": "hunter",
-      "count": 6,
-      "interval": 0.9
-    },
-    {
-      "time": 16,
-      "type": "marauder",
+      "time": 14,
+      "type": "escort",
       "count": 4,
       "interval": 0.9
     },
     {
       "time": 18,
-      "type": "scout",
-      "count": 16,
-      "interval": 0.24
-    },
-    {
-      "time": 22,
-      "type": "warden",
-      "count": 3,
-      "interval": 1.2
-    },
-    {
-      "time": 28,
-      "type": "phantom",
-      "count": 3,
-      "interval": 1.1
-    },
-    {
-      "time": 34,
-      "type": "harvester",
-      "count": 2,
-      "interval": 1.6
-    },
-    {
-      "time": 40,
-      "type": "overseer",
+      "type": "tank",
       "count": 1
     },
     {
+      "time": 22,
+      "type": "spark",
+      "count": 10,
+      "interval": 0.36
+    },
+    {
       "time": 26,
-      "type": "transport",
-      "count": 3,
-      "interval": 1.1
+      "type": "hunter",
+      "count": 4,
+      "interval": 0.9
+    },
+    {
+      "time": 30,
+      "type": "bulwark",
+      "count": 1
     },
     {
       "time": 34,
-      "type": "fighter",
-      "count": 14,
-      "interval": 0.4
+      "type": "stalker",
+      "count": 4,
+      "interval": 0.85
     },
     {
-      "time": 42,
-      "type": "hunter",
+      "time": 38,
+      "type": "escort",
       "count": 5,
-      "interval": 1.0
+      "interval": 0.85
+    },
+    {
+      "time": 44,
+      "type": "tank",
+      "count": 2,
+      "interval": 1.25
     },
     {
       "time": 50,
-      "type": "transport",
-      "count": 2,
-      "interval": 1.0
+      "type": "duelist",
+      "count": 5,
+      "interval": 0.82
+    },
+    {
+      "time": 56,
+      "type": "bulwark",
+      "count": 1
     },
     {
       "time": 62,

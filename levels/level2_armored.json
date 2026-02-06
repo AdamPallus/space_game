@@ -1,0 +1,147 @@
+{
+  "id": "level2_armored",
+  "baseLevel": "level2",
+  "variant": "armored",
+  "name": "Orion Drift: Armored",
+  "background": "purple",
+  "music": "02_stillness_of_space.ogg",
+  "difficulty": "Medium+",
+  "description": "Plated convoy with flank gunships and one armored command rig.",
+  "enemyScale": {
+    "hp": 1.16,
+    "damage": 1.06
+  },
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "plated": {
+      "sprite": "enemyBlack4",
+      "hull": 24,
+      "shield": 0,
+      "armor": 62,
+      "armorClass": 9,
+      "speed": 44,
+      "score": 190,
+      "baseCredit": 22,
+      "radius": 22,
+      "pattern": "drift",
+      "fireRate": 2.8
+    },
+    "escort": {
+      "sprite": "enemyBlack3",
+      "hull": 30,
+      "shield": 0,
+      "armor": 82,
+      "armorClass": 9,
+      "speed": 56,
+      "score": 250,
+      "baseCredit": 30,
+      "radius": 20,
+      "pattern": "strafe",
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "fireRate": 1.9
+    },
+    "duelist": {
+      "sprite": "enemyRed5",
+      "hull": 30,
+      "shield": 0,
+      "armor": 66,
+      "armorClass": 7,
+      "speed": 88,
+      "score": 230,
+      "baseCredit": 28,
+      "radius": 20,
+      "ai": "duelist",
+      "aiParams": {
+        "holdY": 190,
+        "standoff": 240,
+        "strafeSpeed": 1.08
+      },
+      "fireRate": 1.65,
+      "fireMode": "aim",
+      "bulletSpeed": 215
+    },
+    "tank": {
+      "sprite": "ufoYellow",
+      "hull": 36,
+      "shield": 0,
+      "armor": 110,
+      "armorClass": 10,
+      "speed": 30,
+      "score": 340,
+      "baseCredit": 42,
+      "radius": 30,
+      "ai": "transport",
+      "fireMode": "aim",
+      "fireRate": 3,
+      "bulletSpeed": 160
+    },
+    "boss": {
+      "sprite": "assets/generated/boss_trident.png",
+      "hull": 400,
+      "shield": 0,
+      "armor": 190,
+      "armorClass": 10,
+      "speed": 82,
+      "score": 1200,
+      "baseCredit": 250,
+      "radius": 48,
+      "pattern": "bossSweep",
+      "isBoss": true,
+      "fireRate": 1.15,
+      "fireMode": "radial",
+      "fireCount": 15,
+      "bulletSpeed": 175,
+      "spriteScale": 0.95
+    }
+  },
+  "events": [
+    {
+      "time": 2,
+      "type": "plated",
+      "count": 4,
+      "interval": 1
+    },
+    {
+      "time": 8,
+      "type": "escort",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 14,
+      "type": "duelist",
+      "count": 2,
+      "interval": 1.1
+    },
+    {
+      "time": 20,
+      "type": "plated",
+      "count": 5,
+      "interval": 0.95
+    },
+    {
+      "time": 27,
+      "type": "tank",
+      "count": 1
+    },
+    {
+      "time": 32,
+      "type": "escort",
+      "count": 4,
+      "interval": 0.95
+    },
+    {
+      "time": 40,
+      "type": "duelist",
+      "count": 3,
+      "interval": 1
+    },
+    {
+      "time": 48,
+      "type": "boss",
+      "count": 1
+    }
+  ]
+}

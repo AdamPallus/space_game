@@ -78,9 +78,14 @@
                 <input type="checkbox" id="debug-show-compendium" />
                 <span>Show Full Compendium</span>
               </label>
+              <label class="toggle">
+                <input type="checkbox" id="debug-skip-onboarding" />
+                <span>Skip Onboarding</span>
+              </label>
               <button id="reset-btn" class="ghost small">Reset Progress</button>
             </div>
           </div>
+          <div id="onboarding-banner" class="onboarding-banner" hidden></div>
           <div class="tab-bar" role="tablist" aria-label="Hangar tabs">
             <button class="tab-btn active" data-tab="loadout" role="tab" aria-selected="true">
               Ship Loadout
@@ -223,7 +228,7 @@
 
           <div class="tab-panel" id="tab-mission" data-tab-panel="mission" hidden>
             <h2>Mission Briefing</h2>
-            <p>Select a mission profile. Each sortie increases in difficulty.</p>
+            <p id="mission-briefing-text">Select a mission profile. Each sortie increases in difficulty.</p>
             <div class="mission-grid" id="level-list"></div>
             <div class="actions">
               <button id="launch-btn">Launch Mission</button>

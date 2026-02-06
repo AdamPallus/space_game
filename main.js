@@ -35,6 +35,9 @@ const lastMissionEl = document.getElementById("last-mission");
 const debugUnlock = document.getElementById("debug-unlock");
 const debugInvincible = document.getElementById("debug-invincible");
 const debugShowCompendium = document.getElementById("debug-show-compendium");
+const debugSkipOnboarding = document.getElementById("debug-skip-onboarding");
+const onboardingBanner = document.getElementById("onboarding-banner");
+const missionBriefingText = document.getElementById("mission-briefing-text");
 const treeBarrel = document.getElementById("tree-barrel");
 const treeTrigger = document.getElementById("tree-trigger");
 const treeMount = document.getElementById("tree-mount");
@@ -240,6 +243,142 @@ function calculateDividends(baseCredits) {
   return Math.round(baseCredits * rate);
 }
 
+const ONBOARDING_STAGE_TRAINING_COMPLETE = 3;
+const ONBOARDING_STAGE_COMPLETE = 4;
+const DEFAULT_SYSTEM_UNLOCKS = {
+  loadout: false,
+  economy: false,
+  compendium: false,
+};
+
+const onboardingTrainingMissions = [
+  {
+    missionId: "level1",
+    title: "Flight School: Fundamentals",
+    briefing:
+      "Standard kinetic trainer. Stay on target and break formation before the warden arrives.",
+    forcedBuild: {
+      gunDiameter: "medium",
+      spread: "focused",
+      ammo: "kinetic",
+      effect: "none",
+      flowRateLevel: 0,
+      flowVelocityLevel: 0,
+      flowSizeLevel: 0,
+      defenseSlots: ["shield", "none"],
+      shieldMaxLevel: 0,
+      shieldRegenLevel: 0,
+      armorAmountLevel: 0,
+      armorClass: 10,
+      armorClassLevel: 0,
+    },
+    reward: "Swarm training frame unlocked.",
+  },
+  {
+    missionId: "level1_swarm",
+    title: "Flight School: Area Control",
+    briefing:
+      "Wide plasma spread tuned for interceptor packs. Sweep lanes and keep pressure on clustered wings.",
+    forcedBuild: {
+      gunDiameter: "medium",
+      spread: "wide",
+      ammo: "plasma",
+      effect: "explosive",
+      flowRateLevel: 1,
+      flowVelocityLevel: 0,
+      flowSizeLevel: 1,
+      defenseSlots: ["shield", "none"],
+      shieldMaxLevel: 0,
+      shieldRegenLevel: 1,
+      armorAmountLevel: 0,
+      armorClass: 10,
+      armorClassLevel: 0,
+    },
+    reward: "Armor-breaker training frame unlocked.",
+  },
+  {
+    missionId: "level1_armored",
+    title: "Flight School: Armor Break",
+    briefing:
+      "Large focused kinetic slugs with pierce. Commit to heavy targets and push through plated lines.",
+    forcedBuild: {
+      gunDiameter: "large",
+      spread: "focused",
+      ammo: "kinetic",
+      effect: "pierce",
+      flowRateLevel: 0,
+      flowVelocityLevel: 2,
+      flowSizeLevel: 1,
+      defenseSlots: ["shield", "armor"],
+      shieldMaxLevel: 1,
+      shieldRegenLevel: 0,
+      armorAmountLevel: 1,
+      armorClass: 12,
+      armorClassLevel: 0,
+    },
+    reward: "Ship loadout systems unlocked.",
+  },
+];
+
+function cloneShipBuild(build) {
+  return JSON.parse(JSON.stringify(build));
+}
+
+function buildSystemUnlocksForStage(stage, skipOnboarding = false) {
+  if (skipOnboarding || stage >= ONBOARDING_STAGE_COMPLETE) {
+    return { loadout: true, economy: true, compendium: true };
+  }
+  if (stage >= ONBOARDING_STAGE_TRAINING_COMPLETE) {
+    return { loadout: true, economy: false, compendium: true };
+  }
+  return { ...DEFAULT_SYSTEM_UNLOCKS };
+}
+
+function normalizeOnboardingState(parsed) {
+  const explicitSkip = !!parsed.debugSkipOnboarding;
+  let stage = Number.isFinite(parsed.onboardingStage) ? parsed.onboardingStage : null;
+  if (stage === null) {
+    // Existing pilots keep access; only fresh saves run onboarding.
+    stage = (parsed.missionCount ?? 0) > 0 ? ONBOARDING_STAGE_COMPLETE : 0;
+  }
+  stage = Math.max(0, Math.min(ONBOARDING_STAGE_COMPLETE, Math.floor(stage)));
+  parsed.onboardingStage = stage;
+  parsed.debugSkipOnboarding = explicitSkip;
+  const unlocks = buildSystemUnlocksForStage(stage, explicitSkip);
+  parsed.systemUnlocks = {
+    loadout: !!(parsed.systemUnlocks?.loadout || unlocks.loadout),
+    economy: !!(parsed.systemUnlocks?.economy || unlocks.economy),
+    compendium: !!(parsed.systemUnlocks?.compendium || unlocks.compendium),
+  };
+}
+
+function isOnboardingSkipped() {
+  return !!state.debugSkipOnboarding;
+}
+
+function isOnboardingTrainingActive() {
+  return !isOnboardingSkipped() && state.onboardingStage < ONBOARDING_STAGE_TRAINING_COMPLETE;
+}
+
+function getCurrentOnboardingMission() {
+  if (!isOnboardingTrainingActive()) return null;
+  return onboardingTrainingMissions[state.onboardingStage] || null;
+}
+
+function isSystemUnlocked(systemId) {
+  if (isOnboardingSkipped()) return true;
+  return !!state.systemUnlocks?.[systemId];
+}
+
+function refreshSystemUnlocks() {
+  const derived = buildSystemUnlocksForStage(state.onboardingStage, isOnboardingSkipped());
+  state.systemUnlocks = {
+    loadout: !!(state.systemUnlocks?.loadout || derived.loadout),
+    economy: !!(state.systemUnlocks?.economy || derived.economy),
+    compendium: !!(state.systemUnlocks?.compendium || derived.compendium),
+  };
+}
+
 const keyState = new Set();
 let paused = false;
 const pointer = {
@@ -281,9 +420,11 @@ const starfield = Array.from({ length: 120 }, () => ({
 }));
 
 const state = loadState();
+refreshSystemUnlocks();
 syncShipBuildToLegacy();
 saveState();
 let mission = null;
+let activeShipBuildOverride = null;
 
 const player = {
   x: 0,
@@ -862,8 +1003,40 @@ bindMobileButton(mobileLaunchBtn, () => {
 
 updateMobileControls();
 
+function getTabAvailability() {
+  return {
+    mission: true,
+    loadout: isSystemUnlocked("loadout"),
+    economy: isSystemUnlocked("economy"),
+    compendium: isSystemUnlocked("compendium"),
+  };
+}
+
+function getTabLockReason(tabId) {
+  if (tabId === "loadout") return "Complete training directives to unlock ship loadouts.";
+  if (tabId === "economy") return "Complete one live mission after training to unlock Economy.";
+  if (tabId === "compendium") return "Compendium unlocks after initial training flights.";
+  return "";
+}
+
+function refreshHangarTabLocks() {
+  const availability = getTabAvailability();
+  hangarTabButtons.forEach((button) => {
+    const tab = button.dataset.tab;
+    const unlocked = availability[tab] ?? true;
+    button.disabled = !unlocked;
+    button.classList.toggle("locked", !unlocked);
+    button.title = unlocked ? "" : getTabLockReason(tab);
+  });
+}
+
 function setHangarTab(tabId, { renderLevels = true } = {}) {
+  const availability = getTabAvailability();
+  if (!(availability[tabId] ?? true)) {
+    tabId = "mission";
+  }
   activeHangarTab = tabId;
+  refreshHangarTabLocks();
   hangarTabButtons.forEach((button) => {
     const isActive = button.dataset.tab === tabId;
     button.classList.toggle("active", isActive);
@@ -902,6 +1075,13 @@ if (compendiumShowBosses) {
 
 async function launchSelectedMission() {
   if (!isLevelUnlocked(selectedLevelId)) return;
+  const directive = getCurrentOnboardingMission();
+  if (directive && selectedLevelId !== directive.missionId) {
+    selectedLevelId = directive.missionId;
+    currentLevel = null;
+    renderLevelSelect();
+    return;
+  }
   await startMission();
 }
 
@@ -1035,6 +1215,19 @@ if (debugShowCompendium) {
   });
 }
 
+if (debugSkipOnboarding) {
+  debugSkipOnboarding.addEventListener("change", () => {
+    state.debugSkipOnboarding = debugSkipOnboarding.checked;
+    if (state.debugSkipOnboarding) {
+      state.onboardingStage = Math.max(state.onboardingStage, ONBOARDING_STAGE_COMPLETE);
+    }
+    refreshSystemUnlocks();
+    saveState();
+    safeUpdateHangar();
+    renderLevelSelect();
+  });
+}
+
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
@@ -1044,6 +1237,9 @@ function loadState() {
       missionCount: 0,
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
+      onboardingStage: 0,
+      debugSkipOnboarding: false,
+      systemUnlocks: { ...DEFAULT_SYSTEM_UNLOCKS },
       debugUnlock: false,
       debugInvincible: false,
       debugShowFullCompendium: false,
@@ -1118,6 +1314,7 @@ function loadState() {
       parsed.rmbWeapon = "cloak";
     }
     parsed.unlockedLevels = parsed.unlockedLevels ?? 1;
+    normalizeOnboardingState(parsed);
     parsed.debugUnlock = parsed.debugUnlock ?? false;
     parsed.debugInvincible = parsed.debugInvincible ?? false;
     parsed.debugShowFullCompendium = parsed.debugShowFullCompendium ?? false;
@@ -1220,6 +1417,9 @@ function loadState() {
       missionCount: 0,
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
+      onboardingStage: 0,
+      debugSkipOnboarding: false,
+      systemUnlocks: { ...DEFAULT_SYSTEM_UNLOCKS },
       debugUnlock: false,
       debugInvincible: false,
       shipBuild: createDefaultShipBuild(),
@@ -1276,6 +1476,7 @@ function saveState() {
 }
 
 function getShipBuild() {
+  if (activeShipBuildOverride) return activeShipBuildOverride;
   if (!state.shipBuild) {
     state.shipBuild = createDefaultShipBuild();
   }
@@ -1437,7 +1638,23 @@ function initConsumablesForMission() {
 async function startMission() {
   closeShipModal();
   await ensureEnemyCatalogLoaded();
+  const directive = getCurrentOnboardingMission();
+  if (directive && selectedLevelId !== directive.missionId) {
+    selectedLevelId = directive.missionId;
+    currentLevel = null;
+  }
   const level = await ensureLevelLoaded();
+  if (directive && level?.id !== directive.missionId) {
+    return;
+  }
+  activeShipBuildOverride = null;
+  if (directive?.forcedBuild) {
+    activeShipBuildOverride = {
+      ...cloneShipBuild(createDefaultShipBuild()),
+      ...cloneShipBuild(directive.forcedBuild),
+      effectUpgrades: cloneShipBuild(createDefaultShipBuild().effectUpgrades),
+    };
+  }
   applyUpgrades();
   const consumablesState = initConsumablesForMission();
   mission = {
@@ -1459,6 +1676,9 @@ async function startMission() {
     consumableSlots: consumablesState.slots,
     consumableUses: consumablesState.uses,
     consumableCooldowns: consumablesState.cooldowns,
+    onboardingStage: state.onboardingStage,
+    onboardingMissionId: directive?.missionId || null,
+    onboardingTitle: directive?.title || "",
   };
   setDesiredMusic(level);
   bullets.length = 0;
@@ -1493,6 +1713,7 @@ async function startMission() {
 function endMission({ ejected = false, completed = false } = {}) {
   if (!mission || !mission.active) return;
   mission.active = false;
+  activeShipBuildOverride = null;
   closeShipModal();
   setHangarMusic();
   setHangarTab("loadout", { renderLevels: false });
@@ -1510,14 +1731,41 @@ function endMission({ ejected = false, completed = false } = {}) {
   state.lifetimeCredits += finalReward;
   state.missionCount += 1;
   state.lastMissionSummary = `${formatTime(mission.elapsed)} | ${mission.kills} kills`;
+  let completedEntry = null;
   if (completed && mission.level?.id) {
-    const entry = availableLevels.find((level) => level.id === mission.level.id);
-    if (!entry?.test) {
+    completedEntry = availableLevels.find((level) => level.id === mission.level.id);
+    if (!completedEntry?.test) {
       const currentIndex = availableLevels.findIndex((level) => level.id === mission.level.id);
       if (currentIndex !== -1 && state.unlockedLevels <= currentIndex + 1) {
         state.unlockedLevels = Math.min(availableLevels.length, currentIndex + 2);
       }
     }
+  }
+  let onboardingMessage = "";
+  const directive = getCurrentOnboardingMission();
+  if (directive) {
+    if (completed && mission.level?.id === directive.missionId) {
+      state.onboardingStage = Math.min(
+        ONBOARDING_STAGE_TRAINING_COMPLETE,
+        state.onboardingStage + 1
+      );
+      refreshSystemUnlocks();
+      onboardingMessage =
+        state.onboardingStage >= ONBOARDING_STAGE_TRAINING_COMPLETE
+          ? "Training complete. Ship Loadout and Drone Compendium unlocked."
+          : directive.reward;
+    } else {
+      onboardingMessage = `Training directive incomplete: clear ${directive.title} to continue.`;
+    }
+  } else if (
+    !isOnboardingSkipped() &&
+    state.onboardingStage === ONBOARDING_STAGE_TRAINING_COMPLETE &&
+    completed &&
+    !completedEntry?.test
+  ) {
+    state.onboardingStage = ONBOARDING_STAGE_COMPLETE;
+    refreshSystemUnlocks();
+    onboardingMessage = "Economy systems unlocked. You now have full hangar access.";
   }
   saveState();
 
@@ -1535,6 +1783,9 @@ function endMission({ ejected = false, completed = false } = {}) {
   // Add dividend info if player has fleet shares
   if (dividends > 0) {
     debriefMsg += ` | Fleet dividends: +${dividends}`;
+  }
+  if (onboardingMessage) {
+    debriefMsg += ` | ${onboardingMessage}`;
   }
   
   debriefText.textContent = debriefMsg;
@@ -1574,6 +1825,7 @@ function startPlayerDeathSequence() {
 }
 
 function updateHangar() {
+  refreshSystemUnlocks();
   if (pilotRank) {
     pilotRank.textContent = getPilotRank(state.lifetimeCredits);
   }
@@ -1595,6 +1847,41 @@ function updateHangar() {
   if (debugShowCompendium) {
     debugShowCompendium.checked = !!state.debugShowFullCompendium;
   }
+  if (debugSkipOnboarding) {
+    debugSkipOnboarding.checked = !!state.debugSkipOnboarding;
+  }
+
+  const directive = getCurrentOnboardingMission();
+  if (onboardingBanner) {
+    if (directive) {
+      onboardingBanner.hidden = false;
+      onboardingBanner.innerHTML = `<strong>${directive.title}</strong><br>${directive.briefing}`;
+    } else if (
+      !isOnboardingSkipped() &&
+      state.onboardingStage === ONBOARDING_STAGE_TRAINING_COMPLETE
+    ) {
+      onboardingBanner.hidden = false;
+      onboardingBanner.innerHTML =
+        "<strong>Post-Training Objective</strong><br>Complete one live mission to unlock Economy systems.";
+    } else {
+      onboardingBanner.hidden = true;
+      onboardingBanner.textContent = "";
+    }
+  }
+  if (missionBriefingText) {
+    if (directive) {
+      missionBriefingText.textContent = `${directive.title}: ${directive.briefing}`;
+    } else if (
+      !isOnboardingSkipped() &&
+      state.onboardingStage === ONBOARDING_STAGE_TRAINING_COMPLETE
+    ) {
+      missionBriefingText.textContent =
+        "Training complete. Run one live mission to bring Economy systems online.";
+    } else {
+      missionBriefingText.textContent =
+        "Select a mission profile. Each sortie increases in difficulty.";
+    }
+  }
 
   renderAuxTree();
   renderShipUpgradesPanel();
@@ -1609,6 +1896,11 @@ function updateHangar() {
   }
   if ((!mission || !mission.active) && hangarPanel && !hangarPanel.hidden) {
     setHangarMusic();
+  }
+  refreshHangarTabLocks();
+  if (!getTabAvailability()[activeHangarTab]) {
+    setHangarTab("mission", { renderLevels: activeHangarTab === "mission" });
+    return;
   }
   updateMobileControls();
 }
@@ -1792,14 +2084,21 @@ async function renderLevelSelectAsync() {
   if (!levelList) return;
   await warmMissionVariantCache();
   if (renderVersion !== missionSelectRenderVersion || !levelList) return;
+  const directive = getCurrentOnboardingMission();
+  const requiredMissionId = directive?.missionId || null;
 
   if (!isLevelUnlocked(selectedLevelId)) {
     const firstUnlocked = availableLevels.find((level) => isLevelUnlocked(level.id));
     if (firstUnlocked) selectedLevelId = firstUnlocked.id;
   }
+  if (requiredMissionId) {
+    selectedLevelId = requiredMissionId;
+  }
 
   if (launchBtn) {
-    const canLaunch = isLevelUnlocked(selectedLevelId);
+    const canLaunch =
+      isLevelUnlocked(selectedLevelId) &&
+      (!requiredMissionId || selectedLevelId === requiredMissionId);
     launchBtn.disabled = !canLaunch;
     launchBtn.textContent = canLaunch ? "Launch Mission" : "Locked";
   }
@@ -1809,12 +2108,18 @@ async function renderLevelSelectAsync() {
     const baseUnlocked = isLevelUnlocked(level.id);
     const groupIds = await getMissionGroupIds(level.id);
     if (renderVersion !== missionSelectRenderVersion) return;
+    const onboardingLockedBase =
+      !!requiredMissionId && !groupIds.includes(requiredMissionId);
+    const cardUnlocked = baseUnlocked && !onboardingLockedBase;
     const active = groupIds.includes(selectedLevelId);
     const savedIdx = state.missionCarouselIndex?.[level.id] ?? 0;
     const selectedIdx = groupIds.indexOf(selectedLevelId);
+    const requiredIdx = requiredMissionId ? groupIds.indexOf(requiredMissionId) : -1;
+    const desiredIdx =
+      requiredIdx >= 0 ? requiredIdx : active && selectedIdx >= 0 ? selectedIdx : savedIdx;
     const idx = Math.max(
       0,
-      Math.min(groupIds.length - 1, active && selectedIdx >= 0 ? selectedIdx : savedIdx)
+      Math.min(groupIds.length - 1, desiredIdx)
     );
     const slideId = groupIds[idx];
     const metaData = await loadLevelMeta(slideId);
@@ -1828,7 +2133,7 @@ async function renderLevelSelectAsync() {
 
     const card = document.createElement("div");
     const infoOpen = openMissionInfoBaseId === level.id;
-    card.className = `mission-card${active ? " active" : ""}${!baseUnlocked ? " locked" : ""}${infoOpen ? " info-open" : ""}`;
+    card.className = `mission-card${active ? " active" : ""}${!cardUnlocked ? " locked" : ""}${infoOpen ? " info-open" : ""}`;
     card.style.setProperty("--mission-bg", `url('${backgroundUrl}')`);
     card.tabIndex = 0;
 
@@ -1867,6 +2172,11 @@ async function renderLevelSelectAsync() {
       infoLines.push(`Enemy roster: ${uniqueTypes.slice(0, 8).map(capitalize).join(", ")}${uniqueTypes.length > 8 ? "…" : ""}`);
     }
 
+    const lockTitle = onboardingLockedBase ? "Training" : "Locked";
+    const lockReason = onboardingLockedBase
+      ? `Training directive: ${directive.title}`
+      : getMissionLockReason(level.id);
+
     card.innerHTML = `
       <div class="mission-shell">
         ${
@@ -1888,12 +2198,12 @@ async function renderLevelSelectAsync() {
             <button type="button" class="small" data-action="launch">Launch</button>
             <button type="button" class="ghost small" data-action="info">${infoOpen ? "Close" : "More Info"}</button>
           </div>
-          <div class="muted">${baseUnlocked ? "" : "Locked"}</div>
+          <div class="muted">${cardUnlocked ? "" : lockTitle}</div>
         </div>
         <div class="mission-lock">
           <div>
-            <div class="lock-title">Locked</div>
-            <div class="lock-desc">${getMissionLockReason(level.id)}</div>
+            <div class="lock-title">${lockTitle}</div>
+            <div class="lock-desc">${lockReason}</div>
           </div>
         </div>
       </div>
@@ -1907,7 +2217,7 @@ async function renderLevelSelectAsync() {
     `;
 
     const setIndex = (nextIdx) => {
-      if (!baseUnlocked) return;
+      if (!cardUnlocked || requiredMissionId) return;
       if (!state.missionCarouselIndex) state.missionCarouselIndex = {};
       const wrapped = (nextIdx + groupIds.length) % groupIds.length;
       const previousScrollY = window.scrollY;
@@ -1926,7 +2236,7 @@ async function renderLevelSelectAsync() {
     const prevButton = card.querySelector('button[data-action="prev"]');
     const nextButton = card.querySelector('button[data-action="next"]');
     if (prevButton) {
-      prevButton.disabled = !baseUnlocked;
+      prevButton.disabled = !cardUnlocked || !!requiredMissionId;
       prevButton.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1934,7 +2244,7 @@ async function renderLevelSelectAsync() {
       });
     }
     if (nextButton) {
-      nextButton.disabled = !baseUnlocked;
+      nextButton.disabled = !cardUnlocked || !!requiredMissionId;
       nextButton.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1950,11 +2260,11 @@ async function renderLevelSelectAsync() {
     const infoHeader = card.querySelector(".mission-hover-header");
 
     if (selectButton) {
-      selectButton.disabled = !baseUnlocked;
+      selectButton.disabled = !cardUnlocked || !!requiredMissionId;
       selectButton.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!baseUnlocked) return;
+        if (!cardUnlocked || requiredMissionId) return;
         selectedLevelId = slideId;
         currentLevel = null;
         openMissionInfoBaseId = null;
@@ -1962,11 +2272,13 @@ async function renderLevelSelectAsync() {
       });
     }
     if (launchButton) {
-      launchButton.disabled = !baseUnlocked;
+      launchButton.disabled =
+        !cardUnlocked || (requiredMissionId && slideId !== requiredMissionId);
       launchButton.addEventListener("click", async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!baseUnlocked) return;
+        if (!cardUnlocked) return;
+        if (requiredMissionId && slideId !== requiredMissionId) return;
         selectedLevelId = slideId;
         currentLevel = null;
         openMissionInfoBaseId = null;
@@ -1998,7 +2310,7 @@ async function renderLevelSelectAsync() {
     }
 
     card.addEventListener("click", () => {
-      if (!baseUnlocked) return;
+      if (!cardUnlocked || requiredMissionId) return;
       selectedLevelId = slideId;
       currentLevel = null;
       openMissionInfoBaseId = null;

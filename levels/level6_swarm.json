@@ -14,14 +14,10 @@
   "completeOnBoss": true,
   "enemyTypes": {
     "gnat": {
-      "sprite": "enemyRed2",
       "hull": 14,
-      "shield": 0,
-      "armor": 0,
       "speed": 172,
       "score": 72,
       "baseCredit": 10,
-      "radius": 12,
       "pattern": "laneShift",
       "patternParams": {
         "amplitude": 205,
@@ -31,14 +27,9 @@
       }
     },
     "dart": {
-      "sprite": "enemyBlue2",
       "hull": 20,
-      "shield": 0,
-      "armor": 0,
       "speed": 160,
       "score": 108,
-      "baseCredit": 12,
-      "radius": 16,
       "pattern": "spiralIn",
       "patternParams": {
         "amplitude": 160,
@@ -47,87 +38,32 @@
       }
     },
     "spark": {
-      "sprite": "enemyGreen4",
       "hull": 16,
       "shield": 34,
-      "armor": 0,
       "speed": 152,
-      "score": 160,
-      "baseCredit": 18,
-      "radius": 18,
       "pattern": "laneShift",
       "fireRate": 1.6,
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.9,
-      "shieldRegen": 14,
       "patternParams": {
         "shiftEvery": 1,
         "shiftSpeed": 5.6
       }
     },
     "skitter": {
-      "sprite": "enemyBlue5",
       "hull": 26,
-      "shield": 0,
-      "armor": 0,
       "speed": 132,
       "score": 150,
-      "baseCredit": 18,
-      "radius": 18,
-      "ai": "skitter",
-      "aiParams": {
-        "dodgeRadius": 160,
-        "dodgeStrength": 1.75
-      },
       "fireRate": 1.7,
-      "fireMode": "spread",
-      "fireCount": 3,
-      "fireSpread": 0.56,
-      "bulletSpeed": 190
+      "fireSpread": 0.56
     },
     "stalker": {
-      "sprite": "enemyBlue5",
       "hull": 36,
       "shield": 20,
-      "armor": 0,
       "speed": 126,
       "score": 290,
-      "baseCredit": 34,
-      "radius": 18,
-      "ai": "stalker",
-      "aggroRadius": 240,
-      "fireRate": 1.6,
-      "fireMode": "aim",
-      "shieldRegen": 10
+      "fireRate": 1.6
     },
     "boss": {
-      "sprite": "assets/generated/boss_halo.png",
-      "hull": 920,
-      "shield": 560,
-      "armor": 640,
-      "armorClass": 13,
-      "shieldRegen": 14,
-      "speed": 114,
-      "score": 3800,
-      "baseCredit": 850,
-      "radius": 68,
-      "pattern": "bossAdvanceSweep",
-      "patternParams": {
-        "pause": 0.74,
-        "advance": 72,
-        "advanceTime": 0.62,
-        "sweepDuration": 2.1,
-        "retreatTime": 0.72,
-        "depth": 90
-      },
-      "isBoss": true,
-      "empImmune": true,
-      "fireRate": 0.66,
-      "fireMode": "radial",
-      "fireCount": 27,
-      "bulletSpeed": 214,
-      "spriteScale": 0.72
+      "template": "level6_swarm:boss"
     }
   },
   "events": [

@@ -14,33 +14,18 @@
   "completeOnBoss": true,
   "enemyTypes": {
     "plated": {
-      "sprite": "enemyBlack4",
       "hull": 44,
-      "shield": 0,
       "armor": 200,
       "armorClass": 15,
-      "speed": 38,
-      "score": 190,
-      "baseCredit": 22,
-      "radius": 22,
-      "pattern": "drift",
-      "fireRate": 2.8
+      "speed": 38
     },
     "escort": {
-      "sprite": "enemyBlack3",
       "hull": 56,
-      "shield": 0,
       "armor": 260,
       "armorClass": 16,
       "speed": 52,
       "score": 250,
-      "baseCredit": 30,
-      "radius": 20,
       "pattern": "stall",
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.9,
-      "fireRate": 1.9,
       "patternParams": {
         "stallY": 170,
         "stallDuration": 2.05,
@@ -49,79 +34,36 @@
       }
     },
     "duelist": {
-      "sprite": "enemyRed5",
       "hull": 54,
-      "shield": 0,
       "armor": 210,
       "armorClass": 15,
       "speed": 82,
       "score": 230,
-      "baseCredit": 28,
-      "radius": 20,
-      "ai": "duelist",
       "aiParams": {
-        "holdY": 190,
-        "standoff": 240,
         "strafeSpeed": 1.08
-      },
-      "fireRate": 1.65,
-      "fireMode": "aim",
-      "bulletSpeed": 215
+      }
     },
     "tank": {
-      "sprite": "ufoYellow",
       "hull": 92,
-      "shield": 0,
       "armor": 620,
       "armorClass": 21,
       "speed": 22,
       "score": 340,
       "baseCredit": 42,
-      "radius": 30,
-      "ai": "transport",
-      "fireMode": "aim",
       "fireRate": 3,
       "bulletSpeed": 160
     },
     "bulwark": {
-      "sprite": "ufoBlue",
       "hull": 130,
-      "shield": 0,
       "armor": 1100,
       "armorClass": 24,
       "speed": 17,
       "score": 420,
       "baseCredit": 52,
-      "radius": 34,
-      "ai": "transport",
       "fireRate": 3.2
     },
     "boss": {
-      "sprite": "assets/generated/boss_anvil.png",
-      "hull": 1680,
-      "shield": 1040,
-      "armor": 1240,
-      "armorClass": 16,
-      "shieldRegen": 20,
-      "speed": 124,
-      "score": 6200,
-      "baseCredit": 1450,
-      "radius": 82,
-      "pattern": "bossOrbit",
-      "patternParams": {
-        "warmupTime": 0.55,
-        "radiusX": 340,
-        "radiusY": 108,
-        "orbitSpeed": 0.86,
-        "wobble": 26
-      },
-      "isBoss": true,
-      "empImmune": true,
-      "fireRate": 0.46,
-      "fireMode": "radial",
-      "fireCount": 34,
-      "bulletSpeed": 236,
-      "spriteScale": 0.92
+      "template": "level8_armored:boss"
     }
   },
   "events": [

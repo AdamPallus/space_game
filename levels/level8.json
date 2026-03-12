@@ -8,14 +8,10 @@
   "completeOnBoss": true,
   "enemyTypes": {
     "gnat": {
-      "sprite": "enemyRed2",
       "hull": 16,
-      "shield": 0,
-      "armor": 0,
       "speed": 182,
       "score": 72,
       "baseCredit": 10,
-      "radius": 12,
       "pattern": "laneShift",
       "patternParams": {
         "amplitude": 205,
@@ -25,14 +21,9 @@
       }
     },
     "dart": {
-      "sprite": "enemyBlue2",
       "hull": 24,
-      "shield": 0,
-      "armor": 0,
       "speed": 170,
       "score": 108,
-      "baseCredit": 12,
-      "radius": 16,
       "pattern": "spiralIn",
       "patternParams": {
         "amplitude": 190,
@@ -41,44 +32,22 @@
       }
     },
     "spark": {
-      "sprite": "enemyGreen4",
       "hull": 20,
       "shield": 42,
-      "armor": 0,
       "speed": 160,
-      "score": 160,
-      "baseCredit": 18,
-      "radius": 18,
       "pattern": "laneShift",
       "fireRate": 1.6,
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.9,
-      "shieldRegen": 14,
       "patternParams": {
         "shiftEvery": 0.9,
         "shiftSpeed": 6.2
       }
     },
     "skitter": {
-      "sprite": "enemyBlue5",
       "hull": 32,
-      "shield": 0,
-      "armor": 0,
       "speed": 142,
       "score": 150,
-      "baseCredit": 18,
-      "radius": 18,
-      "ai": "skitter",
-      "aiParams": {
-        "dodgeRadius": 160,
-        "dodgeStrength": 1.75
-      },
       "fireRate": 1.4,
-      "fireMode": "spread",
-      "fireCount": 3,
-      "fireSpread": 0.56,
-      "bulletSpeed": 190
+      "fireSpread": 0.56
     },
     "sentinel": {
       "sprite": "enemyBlack3",
@@ -100,55 +69,30 @@
       "bulletSpeed": 210
     },
     "stalker": {
-      "sprite": "enemyBlue5",
       "hull": 46,
       "shield": 34,
-      "armor": 0,
       "speed": 130,
       "score": 290,
-      "baseCredit": 34,
-      "radius": 18,
-      "ai": "stalker",
-      "aggroRadius": 240,
-      "fireRate": 1.35,
-      "fireMode": "aim",
-      "shieldRegen": 10
+      "fireRate": 1.35
     },
     "duelist": {
-      "sprite": "enemyRed5",
       "hull": 50,
-      "shield": 0,
       "armor": 176,
       "armorClass": 14,
       "speed": 94,
       "score": 230,
-      "baseCredit": 28,
-      "radius": 20,
-      "ai": "duelist",
       "aiParams": {
-        "holdY": 190,
-        "standoff": 240,
         "strafeSpeed": 1.08
       },
-      "fireRate": 1.3,
-      "fireMode": "aim",
-      "bulletSpeed": 215
+      "fireRate": 1.3
     },
     "escort": {
-      "sprite": "enemyBlack3",
       "hull": 52,
-      "shield": 0,
       "armor": 220,
       "armorClass": 15,
       "speed": 56,
       "score": 250,
-      "baseCredit": 30,
-      "radius": 20,
       "pattern": "stall",
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.9,
-      "fireRate": 1.9,
       "patternParams": {
         "stallY": 172,
         "stallDuration": 2,
@@ -157,35 +101,25 @@
       }
     },
     "tank": {
-      "sprite": "ufoYellow",
       "hull": 86,
-      "shield": 0,
       "armor": 500,
       "armorClass": 19,
       "speed": 24,
       "score": 340,
       "baseCredit": 42,
-      "radius": 30,
-      "ai": "transport",
-      "fireMode": "aim",
       "fireRate": 3,
       "bulletSpeed": 160
     },
     "bulwark": {
-      "sprite": "ufoBlue",
       "hull": 122,
-      "shield": 0,
       "armor": 900,
       "armorClass": 22,
       "speed": 18,
       "score": 420,
       "baseCredit": 52,
-      "radius": 34,
-      "ai": "transport",
       "fireRate": 3.2
     },
     "hunter": {
-      "sprite": "enemyGreen4",
       "hull": 52,
       "shield": 0,
       "armor": 44,
@@ -194,35 +128,10 @@
       "score": 250,
       "baseCredit": 32,
       "radius": 20,
-      "ai": "hunter",
       "fireRate": 1.55
     },
     "boss": {
-      "sprite": "assets/generated/boss_anvil.png",
-      "hull": 1680,
-      "shield": 1040,
-      "armor": 1240,
-      "armorClass": 16,
-      "shieldRegen": 20,
-      "speed": 124,
-      "score": 6200,
-      "baseCredit": 1450,
-      "radius": 82,
-      "pattern": "bossOrbit",
-      "patternParams": {
-        "warmupTime": 0.55,
-        "radiusX": 340,
-        "radiusY": 108,
-        "orbitSpeed": 0.86,
-        "wobble": 26
-      },
-      "isBoss": true,
-      "empImmune": true,
-      "fireRate": 0.46,
-      "fireMode": "radial",
-      "fireCount": 34,
-      "bulletSpeed": 236,
-      "spriteScale": 0.92
+      "template": "level8:boss"
     }
   },
   "events": [

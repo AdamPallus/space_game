@@ -652,6 +652,17 @@ body {
   line-height: 1.45;
 }
 
+.hangar-status {
+  margin-top: 14px;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 14px;
+  background: linear-gradient(120deg, rgba(58, 32, 12, 0.82), rgba(69, 42, 10, 0.6));
+  color: #ffedd5;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .onboarding-banner strong {
   color: #7dd3fc;
   text-transform: uppercase;

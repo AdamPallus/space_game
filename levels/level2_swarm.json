@@ -14,70 +14,33 @@
   "completeOnBoss": true,
   "enemyTypes": {
     "gnat": {
-      "sprite": "enemyRed2",
       "hull": 11,
-      "shield": 0,
-      "armor": 0,
       "speed": 162,
       "score": 72,
       "baseCredit": 10,
-      "radius": 12,
-      "pattern": "zigzag",
       "patternParams": {
         "amplitude": 205,
         "frequency": 6
       }
     },
     "dart": {
-      "sprite": "enemyBlue2",
-      "hull": 16,
-      "shield": 0,
-      "armor": 0,
-      "speed": 150,
       "score": 108,
-      "baseCredit": 12,
-      "radius": 16,
-      "pattern": "swoop",
       "patternParams": {
-        "amplitude": 120,
         "frequency": 5.2
       }
     },
     "spark": {
-      "sprite": "enemyGreen4",
       "hull": 13,
       "shield": 24,
-      "armor": 0,
       "speed": 138,
-      "score": 160,
-      "baseCredit": 18,
-      "radius": 18,
-      "pattern": "strafe",
-      "fireRate": 1.6,
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.9,
-      "shieldRegen": 14
+      "fireRate": 1.6
     },
     "skitter": {
-      "sprite": "enemyBlue5",
       "hull": 20,
-      "shield": 0,
-      "armor": 0,
       "speed": 118,
       "score": 150,
-      "baseCredit": 18,
-      "radius": 18,
-      "ai": "skitter",
-      "aiParams": {
-        "dodgeRadius": 160,
-        "dodgeStrength": 1.75
-      },
       "fireRate": 2.15,
-      "fireMode": "spread",
-      "fireCount": 3,
-      "fireSpread": 0.56,
-      "bulletSpeed": 190
+      "fireSpread": 0.56
     },
     "sentinel": {
       "sprite": "enemyBlack3",
@@ -99,22 +62,7 @@
       "bulletSpeed": 210
     },
     "boss": {
-      "sprite": "assets/generated/boss_trident.png",
-      "hull": 400,
-      "shield": 0,
-      "armor": 190,
-      "armorClass": 10,
-      "speed": 82,
-      "score": 1200,
-      "baseCredit": 250,
-      "radius": 48,
-      "pattern": "bossSweep",
-      "isBoss": true,
-      "fireRate": 1.15,
-      "fireMode": "radial",
-      "fireCount": 15,
-      "bulletSpeed": 175,
-      "spriteScale": 0.95
+      "template": "level2_swarm:boss"
     }
   },
   "events": [

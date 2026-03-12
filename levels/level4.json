@@ -11,12 +11,9 @@
       "sprite": "enemyBlue3",
       "hull": 26,
       "shield": 20,
-      "armor": 0,
       "speed": 78,
       "score": 120,
       "baseCredit": 14,
-      "radius": 16,
-      "pattern": "zigzag",
       "patternParams": {
         "amplitude": 75,
         "frequency": 2.8
@@ -24,113 +21,44 @@
       "shieldRegen": 9
     },
     "shieldkite": {
-      "sprite": "enemyGreen5",
-      "hull": 22,
       "shield": 78,
-      "armor": 0,
-      "speed": 66,
-      "score": 150,
-      "baseCredit": 16,
-      "radius": 18,
-      "pattern": "strafe",
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.8,
-      "fireRate": 2.4,
-      "shieldRegen": 14
+      "speed": 66
     },
     "duelist": {
-      "sprite": "enemyRed5",
       "hull": 34,
-      "shield": 0,
       "armor": 80,
       "armorClass": 9,
       "speed": 98,
       "score": 230,
-      "baseCredit": 28,
-      "radius": 20,
-      "ai": "duelist",
       "aiParams": {
-        "holdY": 190,
-        "standoff": 240,
         "strafeSpeed": 1.08
-      },
-      "fireRate": 1.65,
-      "fireMode": "aim",
-      "bulletSpeed": 215
+      }
     },
     "escort": {
-      "sprite": "enemyBlack3",
       "hull": 36,
-      "shield": 0,
       "armor": 106,
-      "armorClass": 10,
       "speed": 62,
       "score": 250,
-      "baseCredit": 30,
-      "radius": 20,
-      "pattern": "strafe",
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.9,
       "fireRate": 1.8
     },
     "stalker": {
-      "sprite": "enemyBlue5",
       "hull": 36,
       "shield": 24,
-      "armor": 0,
       "speed": 114,
       "score": 290,
-      "baseCredit": 34,
-      "radius": 18,
-      "ai": "stalker",
-      "aggroRadius": 240,
-      "fireRate": 1.7,
-      "fireMode": "aim",
-      "shieldRegen": 10
+      "fireRate": 1.7
     },
     "tank": {
-      "sprite": "ufoYellow",
       "hull": 50,
-      "shield": 0,
       "armor": 162,
-      "armorClass": 12,
       "speed": 30,
       "score": 340,
       "baseCredit": 42,
-      "radius": 30,
-      "ai": "transport",
-      "fireMode": "aim",
       "fireRate": 3,
       "bulletSpeed": 160
     },
     "boss": {
-      "sprite": "assets/generated/boss_serpent.png",
-      "hull": 560,
-      "shield": 320,
-      "armor": 280,
-      "armorClass": 11,
-      "shieldRegen": 11,
-      "speed": 96,
-      "score": 2200,
-      "baseCredit": 460,
-      "radius": 60,
-      "pattern": "bossAdvanceSweep",
-      "patternParams": {
-        "pause": 0.85,
-        "advance": 58,
-        "advanceTime": 0.7,
-        "sweepDuration": 2.4,
-        "retreatTime": 0.8,
-        "depth": 76
-      },
-      "isBoss": true,
-      "fireRate": 0.9,
-      "fireMode": "radial",
-      "fireCount": 21,
-      "bulletSpeed": 192,
-      "spriteScale": 0.75
+      "template": "level4:boss"
     }
   },
   "events": [

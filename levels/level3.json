@@ -8,102 +8,50 @@
   "completeOnBoss": true,
   "enemyTypes": {
     "scout": {
-      "sprite": "enemyBlue2",
       "hull": 24,
       "shield": 0,
       "armor": 0,
       "speed": 104,
       "score": 128,
       "baseCredit": 18,
-      "radius": 16,
-      "pattern": "zigzag",
       "patternParams": {
         "amplitude": 95,
         "frequency": 3.2
       }
     },
     "fighter": {
-      "sprite": "enemyRed3",
       "hull": 38,
       "shield": 0,
       "armor": 0,
       "speed": 94,
       "score": 188,
       "baseCredit": 26,
-      "radius": 20,
-      "pattern": "swoop",
       "patternParams": {
         "amplitude": 70,
         "frequency": 2.9
       }
     },
     "shieldkite": {
-      "sprite": "enemyGreen5",
       "hull": 20,
       "shield": 68,
-      "armor": 0,
       "speed": 64,
-      "score": 150,
-      "baseCredit": 16,
-      "radius": 18,
-      "pattern": "strafe",
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.8,
       "fireRate": 2.25,
       "shieldRegen": 13
     },
     "skitter": {
-      "sprite": "enemyBlue5",
       "hull": 24,
-      "shield": 0,
-      "armor": 0,
       "speed": 122,
       "score": 150,
-      "baseCredit": 18,
-      "radius": 18,
-      "ai": "skitter",
-      "aiParams": {
-        "dodgeRadius": 160,
-        "dodgeStrength": 1.75
-      },
       "fireRate": 1.95,
-      "fireMode": "spread",
-      "fireCount": 3,
-      "fireSpread": 0.56,
-      "bulletSpeed": 190
+      "fireSpread": 0.56
     },
     "plated": {
-      "sprite": "enemyBlack4",
-      "hull": 26,
-      "shield": 0,
       "armor": 74,
       "armorClass": 9,
-      "speed": 44,
-      "score": 190,
-      "baseCredit": 22,
-      "radius": 22,
-      "pattern": "drift",
-      "fireRate": 2.8
+      "speed": 44
     },
     "boss": {
-      "sprite": "assets/generated/boss_warden3.png",
-      "hull": 450,
-      "shield": 240,
-      "armor": 100,
-      "armorClass": 8,
-      "shieldRegen": 10,
-      "speed": 90,
-      "score": 1600,
-      "baseCredit": 320,
-      "radius": 54,
-      "pattern": "bossSweep",
-      "isBoss": true,
-      "fireRate": 1,
-      "fireMode": "radial",
-      "fireCount": 18,
-      "bulletSpeed": 184,
-      "spriteScale": 0.86
+      "template": "level3:boss"
     }
   },
   "events": [

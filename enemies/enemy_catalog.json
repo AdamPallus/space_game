@@ -15,7 +15,7 @@
         "baseCredit": 44,
         "radius": 34,
         "ai": "transport",
-        "fireRate": 3.0
+        "fireRate": 3
       }
     },
     "captain": {
@@ -29,7 +29,7 @@
         "baseCredit": 200,
         "radius": 38,
         "pattern": "strafe",
-        "fireRate": 1.0,
+        "fireRate": 1,
         "fireMode": "radial",
         "fireCount": 14,
         "bulletSpeed": 175
@@ -87,7 +87,7 @@
         "pattern": "spiral",
         "patternParams": {
           "amplitude": 200,
-          "frequency": 5.0
+          "frequency": 5
         },
         "fireRate": 0.8,
         "fireMode": "radial",
@@ -116,22 +116,20 @@
       }
     },
     "sentinel": {
-      "name": "Sentry Line Drone",
+      "name": "Sentinel Strafe Drone",
       "boss": false,
       "template": {
-        "sprite": "enemyBlack3",
-        "hull": 34,
-        "shield": 40,
-        "armor": 0,
-        "speed": 78,
-        "score": 180,
-        "baseCredit": 22,
-        "radius": 22,
-        "ai": "sentinel",
-        "aiParams": { "holdY": 150, "slideSpeed": 0.85, "keepOut": 150 },
-        "fireRate": 1.5,
-        "fireMode": "aim",
-        "bulletSpeed": 210
+        "sprite": "enemyBlue5",
+        "hp": 64,
+        "speed": 125,
+        "score": 380,
+        "baseCredit": 58,
+        "radius": 18,
+        "pattern": "strafe",
+        "fireRate": 1.3,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.1
       }
     },
     "skitter": {
@@ -147,7 +145,10 @@
         "baseCredit": 18,
         "radius": 18,
         "ai": "skitter",
-        "aiParams": { "dodgeRadius": 160, "dodgeStrength": 1.75 },
+        "aiParams": {
+          "dodgeRadius": 160,
+          "dodgeStrength": 1.75
+        },
         "fireRate": 2.1,
         "fireMode": "spread",
         "fireCount": 3,
@@ -169,7 +170,11 @@
         "baseCredit": 28,
         "radius": 20,
         "ai": "duelist",
-        "aiParams": { "holdY": 190, "standoff": 240, "strafeSpeed": 1.05 },
+        "aiParams": {
+          "holdY": 190,
+          "standoff": 240,
+          "strafeSpeed": 1.05
+        },
         "fireRate": 1.65,
         "fireMode": "aim",
         "bulletSpeed": 215
@@ -224,7 +229,7 @@
         "pattern": "swoop",
         "patternParams": {
           "amplitude": 90,
-          "frequency": 3.0
+          "frequency": 3
         },
         "fireRate": 1.1,
         "fireMode": "spread",
@@ -314,17 +319,21 @@
       "boss": true,
       "template": {
         "sprite": "assets/generated/boss_manta.png",
-        "hp": 380,
-        "speed": 70,
+        "hull": 310,
+        "shield": 110,
+        "armor": 0,
+        "armorClass": 0,
+        "shieldRegen": 8,
+        "speed": 74,
         "score": 900,
         "baseCredit": 180,
-        "radius": 42,
+        "radius": 44,
         "pattern": "bossSweep",
         "isBoss": true,
-        "fireRate": 1.4,
+        "fireRate": 1.3,
         "fireMode": "radial",
         "fireCount": 12,
-        "bulletSpeed": 160,
+        "bulletSpeed": 165,
         "spriteScale": 0.71
       }
     },
@@ -351,17 +360,20 @@
       "boss": true,
       "template": {
         "sprite": "assets/generated/boss_trident.png",
-        "hp": 520,
-        "speed": 80,
+        "hull": 400,
+        "shield": 0,
+        "armor": 190,
+        "armorClass": 10,
+        "speed": 82,
         "score": 1200,
-        "baseCredit": 240,
-        "radius": 46,
+        "baseCredit": 250,
+        "radius": 48,
         "pattern": "bossSweep",
         "isBoss": true,
-        "fireRate": 1.2,
+        "fireRate": 1.15,
         "fireMode": "radial",
-        "fireCount": 16,
-        "bulletSpeed": 170,
+        "fireCount": 15,
+        "bulletSpeed": 175,
         "spriteScale": 0.95
       }
     },
@@ -389,17 +401,21 @@
       "boss": true,
       "template": {
         "sprite": "assets/generated/boss_warden3.png",
-        "hp": 720,
+        "hull": 450,
+        "shield": 240,
+        "armor": 100,
+        "armorClass": 8,
+        "shieldRegen": 10,
         "speed": 90,
         "score": 1600,
         "baseCredit": 320,
-        "radius": 52,
+        "radius": 54,
         "pattern": "bossSweep",
         "isBoss": true,
-        "fireRate": 1.0,
+        "fireRate": 1,
         "fireMode": "radial",
         "fireCount": 18,
-        "bulletSpeed": 180,
+        "bulletSpeed": 184,
         "spriteScale": 0.86
       }
     },
@@ -408,17 +424,29 @@
       "boss": true,
       "template": {
         "sprite": "assets/generated/boss_serpent.png",
-        "hp": 980,
-        "speed": 100,
+        "hull": 560,
+        "shield": 320,
+        "armor": 280,
+        "armorClass": 11,
+        "shieldRegen": 11,
+        "speed": 96,
         "score": 2200,
         "baseCredit": 460,
-        "radius": 58,
-        "pattern": "bossSweep",
+        "radius": 60,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.85,
+          "advance": 58,
+          "advanceTime": 0.7,
+          "sweepDuration": 2.4,
+          "retreatTime": 0.8,
+          "depth": 76
+        },
         "isBoss": true,
         "fireRate": 0.9,
         "fireMode": "radial",
-        "fireCount": 20,
-        "bulletSpeed": 190,
+        "fireCount": 21,
+        "bulletSpeed": 192,
         "spriteScale": 0.75
       }
     },
@@ -427,18 +455,31 @@
       "boss": true,
       "template": {
         "sprite": "assets/generated/boss_warden5.png",
-        "hp": 1400,
-        "speed": 110,
+        "hull": 700,
+        "shield": 420,
+        "armor": 460,
+        "armorClass": 12,
+        "shieldRegen": 12,
+        "speed": 108,
         "score": 3000,
         "baseCredit": 700,
-        "radius": 64,
-        "pattern": "bossSweep",
+        "radius": 66,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.78,
+          "advance": 66,
+          "advanceTime": 0.64,
+          "sweepDuration": 2.25,
+          "retreatTime": 0.78,
+          "depth": 82
+        },
         "isBoss": true,
-        "fireRate": 0.75,
+        "fireRate": 0.76,
         "fireMode": "radial",
         "fireCount": 24,
-        "bulletSpeed": 200,
-        "spriteScale": 1.03
+        "bulletSpeed": 205,
+        "spriteScale": 1.03,
+        "empImmune": true
       }
     },
     "level6:boss": {
@@ -446,17 +487,30 @@
       "boss": true,
       "template": {
         "sprite": "assets/generated/boss_halo.png",
-        "hp": 1800,
-        "speed": 115,
+        "hull": 920,
+        "shield": 560,
+        "armor": 640,
+        "armorClass": 13,
+        "shieldRegen": 14,
+        "speed": 114,
         "score": 3800,
         "baseCredit": 850,
         "radius": 68,
-        "pattern": "bossSweep",
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.74,
+          "advance": 72,
+          "advanceTime": 0.62,
+          "sweepDuration": 2.1,
+          "retreatTime": 0.72,
+          "depth": 90
+        },
         "isBoss": true,
-        "fireRate": 0.65,
+        "empImmune": true,
+        "fireRate": 0.66,
         "fireMode": "radial",
-        "fireCount": 26,
-        "bulletSpeed": 210,
+        "fireCount": 27,
+        "bulletSpeed": 214,
         "spriteScale": 0.72
       }
     },
@@ -464,38 +518,62 @@
       "name": "Warden of Seventh Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/boss_trident.png",
-        "hp": 2200,
-        "speed": 120,
-        "score": 4500,
-        "baseCredit": 1000,
-        "radius": 72,
-        "pattern": "bossSweep",
+        "sprite": "assets/generated/boss_fortress.png",
+        "hull": 1280,
+        "shield": 760,
+        "armor": 900,
+        "armorClass": 14,
+        "shieldRegen": 16,
+        "speed": 118,
+        "score": 4600,
+        "baseCredit": 1080,
+        "radius": 76,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "warmupTime": 0.6,
+          "radiusX": 320,
+          "radiusY": 95,
+          "orbitSpeed": 0.78,
+          "wobble": 22
+        },
         "isBoss": true,
-        "fireRate": 0.55,
+        "empImmune": true,
+        "fireRate": 0.56,
         "fireMode": "radial",
-        "fireCount": 28,
-        "bulletSpeed": 220,
-        "spriteScale": 0.95
+        "fireCount": 30,
+        "bulletSpeed": 224,
+        "spriteScale": 0.96
       }
     },
     "level8:boss": {
       "name": "Warden of Eighth Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/boss_warden8.png",
-        "hp": 2800,
-        "speed": 125,
-        "score": 6000,
-        "baseCredit": 1400,
-        "radius": 78,
-        "pattern": "bossSweep",
+        "sprite": "assets/generated/boss_anvil.png",
+        "hull": 1680,
+        "shield": 1040,
+        "armor": 1240,
+        "armorClass": 16,
+        "shieldRegen": 20,
+        "speed": 124,
+        "score": 6200,
+        "baseCredit": 1450,
+        "radius": 82,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "warmupTime": 0.55,
+          "radiusX": 340,
+          "radiusY": 108,
+          "orbitSpeed": 0.86,
+          "wobble": 26
+        },
         "isBoss": true,
-        "fireRate": 0.45,
+        "empImmune": true,
+        "fireRate": 0.46,
         "fireMode": "radial",
-        "fireCount": 32,
-        "bulletSpeed": 235,
-        "spriteScale": 0.93
+        "fireCount": 34,
+        "bulletSpeed": 236,
+        "spriteScale": 0.92
       }
     },
     "level9:boss": {
@@ -551,7 +629,7 @@
           "amplitude": 230,
           "frequency": 5.4
         },
-        "fireRate": 1.0,
+        "fireRate": 1,
         "fireMode": "spread",
         "fireCount": 8,
         "fireSpread": 1.2
@@ -674,23 +752,6 @@
         }
       }
     },
-    "sentinel": {
-      "name": "Sentinel Strafe Drone",
-      "boss": false,
-      "template": {
-        "sprite": "enemyBlue5",
-        "hp": 64,
-        "speed": 125,
-        "score": 380,
-        "baseCredit": 58,
-        "radius": 18,
-        "pattern": "strafe",
-        "fireRate": 1.3,
-        "fireMode": "spread",
-        "fireCount": 7,
-        "fireSpread": 1.1
-      }
-    },
     "shieldkite": {
       "name": "Shield-Kite Drone",
       "boss": false,
@@ -796,6 +857,621 @@
         "fireMode": "spread",
         "fireCount": 11,
         "fireSpread": 1.4
+      }
+    },
+    "ai_demo:boss": {
+      "name": "AI Lab: Live Targets Boss",
+      "boss": true,
+      "template": {
+        "sprite": "ufoYellow",
+        "hull": 420,
+        "shield": 120,
+        "armor": 260,
+        "armorClass": 12,
+        "speed": 120,
+        "score": 2100,
+        "baseCredit": 560,
+        "radius": 82,
+        "spriteScale": 2.5,
+        "ai": "duelist",
+        "aiParams": {
+          "holdY": 180,
+          "standoff": 270,
+          "strafeSpeed": 1.15
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.85,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.35,
+        "bulletSpeed": 210
+      }
+    },
+    "level1_armored:boss": {
+      "name": "First Contact: Armored Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_manta.png",
+        "hull": 330,
+        "shield": 80,
+        "armor": 60,
+        "armorClass": 6,
+        "shieldRegen": 8,
+        "speed": 74,
+        "score": 900,
+        "baseCredit": 180,
+        "radius": 44,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.3,
+        "fireMode": "radial",
+        "fireCount": 12,
+        "bulletSpeed": 165,
+        "spriteScale": 0.71
+      }
+    },
+    "level1_swarm:boss": {
+      "name": "First Contact: Swarm Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_manta.png",
+        "hull": 310,
+        "shield": 110,
+        "armor": 0,
+        "armorClass": 0,
+        "shieldRegen": 8,
+        "speed": 74,
+        "score": 900,
+        "baseCredit": 180,
+        "radius": 44,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.3,
+        "fireMode": "radial",
+        "fireCount": 12,
+        "bulletSpeed": 165,
+        "spriteScale": 0.71
+      }
+    },
+    "level2_armored:boss": {
+      "name": "Orion Drift: Armored Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_trident.png",
+        "hull": 400,
+        "shield": 0,
+        "armor": 190,
+        "armorClass": 10,
+        "speed": 82,
+        "score": 1200,
+        "baseCredit": 250,
+        "radius": 48,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.15,
+        "fireMode": "radial",
+        "fireCount": 15,
+        "bulletSpeed": 175,
+        "spriteScale": 0.95
+      }
+    },
+    "level2_swarm:boss": {
+      "name": "Orion Drift: Swarm Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_trident.png",
+        "hull": 400,
+        "shield": 0,
+        "armor": 190,
+        "armorClass": 10,
+        "speed": 82,
+        "score": 1200,
+        "baseCredit": 250,
+        "radius": 48,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.15,
+        "fireMode": "radial",
+        "fireCount": 15,
+        "bulletSpeed": 175,
+        "spriteScale": 0.95
+      }
+    },
+    "level3_armored:boss": {
+      "name": "Nebula Run: Armored Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_warden3.png",
+        "hull": 450,
+        "shield": 240,
+        "armor": 100,
+        "armorClass": 8,
+        "shieldRegen": 10,
+        "speed": 90,
+        "score": 1600,
+        "baseCredit": 320,
+        "radius": 54,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1,
+        "fireMode": "radial",
+        "fireCount": 18,
+        "bulletSpeed": 184,
+        "spriteScale": 0.86
+      }
+    },
+    "level3_swarm:boss": {
+      "name": "Nebula Run: Swarm Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_warden3.png",
+        "hull": 450,
+        "shield": 240,
+        "armor": 100,
+        "armorClass": 8,
+        "shieldRegen": 10,
+        "speed": 90,
+        "score": 1600,
+        "baseCredit": 320,
+        "radius": 54,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1,
+        "fireMode": "radial",
+        "fireCount": 18,
+        "bulletSpeed": 184,
+        "spriteScale": 0.86
+      }
+    },
+    "level4_armored:boss": {
+      "name": "Void Cascade: Armored Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_serpent.png",
+        "hull": 560,
+        "shield": 320,
+        "armor": 280,
+        "armorClass": 11,
+        "shieldRegen": 11,
+        "speed": 96,
+        "score": 2200,
+        "baseCredit": 460,
+        "radius": 60,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.85,
+          "advance": 58,
+          "advanceTime": 0.7,
+          "sweepDuration": 2.4,
+          "retreatTime": 0.8,
+          "depth": 76
+        },
+        "isBoss": true,
+        "fireRate": 0.9,
+        "fireMode": "radial",
+        "fireCount": 21,
+        "bulletSpeed": 192,
+        "spriteScale": 0.75
+      }
+    },
+    "level4_swarm:boss": {
+      "name": "Void Cascade: Swarm Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_serpent.png",
+        "hull": 560,
+        "shield": 320,
+        "armor": 280,
+        "armorClass": 11,
+        "shieldRegen": 11,
+        "speed": 96,
+        "score": 2200,
+        "baseCredit": 460,
+        "radius": 60,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.85,
+          "advance": 58,
+          "advanceTime": 0.7,
+          "sweepDuration": 2.4,
+          "retreatTime": 0.8,
+          "depth": 76
+        },
+        "isBoss": true,
+        "fireRate": 0.9,
+        "fireMode": "radial",
+        "fireCount": 21,
+        "bulletSpeed": 192,
+        "spriteScale": 0.75
+      }
+    },
+    "level5_armored:boss": {
+      "name": "Annihilation Protocol: Armored Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_warden5.png",
+        "hull": 700,
+        "shield": 420,
+        "armor": 460,
+        "armorClass": 12,
+        "shieldRegen": 12,
+        "speed": 108,
+        "score": 3000,
+        "baseCredit": 700,
+        "radius": 66,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.78,
+          "advance": 66,
+          "advanceTime": 0.64,
+          "sweepDuration": 2.25,
+          "retreatTime": 0.78,
+          "depth": 82
+        },
+        "isBoss": true,
+        "fireRate": 0.76,
+        "fireMode": "radial",
+        "fireCount": 24,
+        "bulletSpeed": 205,
+        "spriteScale": 1.03,
+        "empImmune": true
+      }
+    },
+    "level5_swarm:boss": {
+      "name": "Annihilation Protocol: Swarm Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_warden5.png",
+        "hull": 700,
+        "shield": 420,
+        "armor": 460,
+        "armorClass": 12,
+        "shieldRegen": 12,
+        "speed": 108,
+        "score": 3000,
+        "baseCredit": 700,
+        "radius": 66,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.78,
+          "advance": 66,
+          "advanceTime": 0.64,
+          "sweepDuration": 2.25,
+          "retreatTime": 0.78,
+          "depth": 82
+        },
+        "isBoss": true,
+        "fireRate": 0.76,
+        "fireMode": "radial",
+        "fireCount": 24,
+        "bulletSpeed": 205,
+        "spriteScale": 1.03,
+        "empImmune": true
+      }
+    },
+    "level6_armored:boss": {
+      "name": "Crimson Fleet: Armored Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_halo.png",
+        "hull": 920,
+        "shield": 560,
+        "armor": 640,
+        "armorClass": 13,
+        "shieldRegen": 14,
+        "speed": 114,
+        "score": 3800,
+        "baseCredit": 850,
+        "radius": 68,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.74,
+          "advance": 72,
+          "advanceTime": 0.62,
+          "sweepDuration": 2.1,
+          "retreatTime": 0.72,
+          "depth": 90
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.66,
+        "fireMode": "radial",
+        "fireCount": 27,
+        "bulletSpeed": 214,
+        "spriteScale": 0.72
+      }
+    },
+    "level6_swarm:boss": {
+      "name": "Crimson Fleet: Swarm Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_halo.png",
+        "hull": 920,
+        "shield": 560,
+        "armor": 640,
+        "armorClass": 13,
+        "shieldRegen": 14,
+        "speed": 114,
+        "score": 3800,
+        "baseCredit": 850,
+        "radius": 68,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.74,
+          "advance": 72,
+          "advanceTime": 0.62,
+          "sweepDuration": 2.1,
+          "retreatTime": 0.72,
+          "depth": 90
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.66,
+        "fireMode": "radial",
+        "fireCount": 27,
+        "bulletSpeed": 214,
+        "spriteScale": 0.72
+      }
+    },
+    "level7_armored:boss": {
+      "name": "The Gauntlet: Armored Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_fortress.png",
+        "hull": 1280,
+        "shield": 760,
+        "armor": 900,
+        "armorClass": 14,
+        "shieldRegen": 16,
+        "speed": 118,
+        "score": 4600,
+        "baseCredit": 1080,
+        "radius": 76,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "warmupTime": 0.6,
+          "radiusX": 320,
+          "radiusY": 95,
+          "orbitSpeed": 0.78,
+          "wobble": 22
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.56,
+        "fireMode": "radial",
+        "fireCount": 30,
+        "bulletSpeed": 224,
+        "spriteScale": 0.96
+      }
+    },
+    "level7_swarm:boss": {
+      "name": "The Gauntlet: Swarm Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_fortress.png",
+        "hull": 1280,
+        "shield": 760,
+        "armor": 900,
+        "armorClass": 14,
+        "shieldRegen": 16,
+        "speed": 118,
+        "score": 4600,
+        "baseCredit": 1080,
+        "radius": 76,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "warmupTime": 0.6,
+          "radiusX": 320,
+          "radiusY": 95,
+          "orbitSpeed": 0.78,
+          "wobble": 22
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.56,
+        "fireMode": "radial",
+        "fireCount": 30,
+        "bulletSpeed": 224,
+        "spriteScale": 0.96
+      }
+    },
+    "level8_armored:boss": {
+      "name": "Last Light: Armored Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_anvil.png",
+        "hull": 1680,
+        "shield": 1040,
+        "armor": 1240,
+        "armorClass": 16,
+        "shieldRegen": 20,
+        "speed": 124,
+        "score": 6200,
+        "baseCredit": 1450,
+        "radius": 82,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "warmupTime": 0.55,
+          "radiusX": 340,
+          "radiusY": 108,
+          "orbitSpeed": 0.86,
+          "wobble": 26
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.46,
+        "fireMode": "radial",
+        "fireCount": 34,
+        "bulletSpeed": 236,
+        "spriteScale": 0.92
+      }
+    },
+    "level8_swarm:boss": {
+      "name": "Last Light: Swarm Boss",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/boss_anvil.png",
+        "hull": 1680,
+        "shield": 1040,
+        "armor": 1240,
+        "armorClass": 16,
+        "shieldRegen": 20,
+        "speed": 124,
+        "score": 6200,
+        "baseCredit": 1450,
+        "radius": 82,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "warmupTime": 0.55,
+          "radiusX": 340,
+          "radiusY": 108,
+          "orbitSpeed": 0.86,
+          "wobble": 26
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.46,
+        "fireMode": "radial",
+        "fireCount": 34,
+        "bulletSpeed": 236,
+        "spriteScale": 0.92
+      }
+    },
+    "shiftling": {
+      "name": "Shiftling",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlue3",
+        "hull": 18,
+        "shield": 14,
+        "armor": 0,
+        "speed": 120,
+        "score": 90,
+        "baseCredit": 14,
+        "radius": 16,
+        "pattern": "laneShift",
+        "patternParams": {
+          "shiftEvery": 0.85,
+          "shiftSpeed": 8,
+          "lanes": [
+            0.18,
+            0.38,
+            0.62,
+            0.82
+          ]
+        },
+        "fireRate": 1.8,
+        "fireMode": "aim",
+        "bulletSpeed": 200
+      }
+    },
+    "holdfast": {
+      "name": "Holdfast",
+      "boss": false,
+      "template": {
+        "sprite": "enemyBlack3",
+        "hull": 28,
+        "shield": 0,
+        "armor": 70,
+        "armorClass": 8,
+        "speed": 64,
+        "score": 150,
+        "baseCredit": 22,
+        "radius": 22,
+        "pattern": "stall",
+        "patternParams": {
+          "stallY": 140,
+          "stallDuration": 2.1,
+          "strafeAmp": 120,
+          "strafeFreq": 1.55,
+          "postSpeedMult": 1.05
+        },
+        "fireRate": 1.4,
+        "fireMode": "spread",
+        "fireCount": 4,
+        "fireSpread": 0.75,
+        "bulletSpeed": 185
+      }
+    },
+    "coil": {
+      "name": "Coil",
+      "boss": false,
+      "template": {
+        "sprite": "enemyRed2",
+        "hull": 24,
+        "shield": 0,
+        "armor": 0,
+        "speed": 86,
+        "score": 120,
+        "baseCredit": 18,
+        "radius": 18,
+        "pattern": "spiralIn",
+        "patternParams": {
+          "amplitude": 180,
+          "frequency": 4.6,
+          "decay": 0.28
+        },
+        "fireRate": 2.2,
+        "fireMode": "aim",
+        "bulletSpeed": 210
+      }
+    },
+    "orbiter": {
+      "name": "Orbiter",
+      "boss": false,
+      "template": {
+        "sprite": "ufoYellow",
+        "hull": 140,
+        "shield": 60,
+        "armor": 140,
+        "armorClass": 10,
+        "speed": 96,
+        "score": 650,
+        "baseCredit": 120,
+        "radius": 54,
+        "spriteScale": 1.8,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "radiusX": 330,
+          "radiusY": 75,
+          "orbitSpeed": 0.8
+        },
+        "fireRate": 0.95,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.25,
+        "bulletSpeed": 200
+      }
+    },
+    "patterns_demo:boss": {
+      "name": "Pattern Lab: Live Fire Boss",
+      "boss": true,
+      "template": {
+        "sprite": "ufoRed",
+        "hull": 520,
+        "shield": 160,
+        "armor": 520,
+        "armorClass": 14,
+        "speed": 105,
+        "score": 2500,
+        "baseCredit": 650,
+        "radius": 88,
+        "spriteScale": 2.7,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.85,
+          "advance": 60,
+          "advanceTime": 0.7,
+          "sweepDuration": 2.4,
+          "retreatTime": 0.85
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.7,
+        "fireMode": "radial",
+        "fireCount": 24,
+        "bulletSpeed": 200
       }
     }
   }

@@ -8,30 +8,24 @@
   "completeOnBoss": true,
   "enemyTypes": {
     "scout": {
-      "sprite": "enemyBlue2",
       "hull": 22,
       "shield": 0,
       "armor": 0,
       "speed": 96,
       "score": 108,
       "baseCredit": 14,
-      "radius": 16,
-      "pattern": "zigzag",
       "patternParams": {
         "amplitude": 95,
         "frequency": 3.2
       }
     },
     "fighter": {
-      "sprite": "enemyRed3",
       "hull": 34,
       "shield": 0,
       "armor": 0,
       "speed": 86,
       "score": 150,
       "baseCredit": 20,
-      "radius": 20,
-      "pattern": "swoop",
       "patternParams": {
         "amplitude": 70,
         "frequency": 2.9
@@ -57,20 +51,12 @@
       "bulletSpeed": 210
     },
     "plated": {
-      "sprite": "enemyBlack4",
       "hull": 24,
-      "shield": 0,
       "armor": 58,
       "armorClass": 8,
-      "speed": 42,
-      "score": 190,
-      "baseCredit": 22,
-      "radius": 22,
-      "pattern": "drift",
       "fireRate": 2.6
     },
     "hunter": {
-      "sprite": "enemyGreen4",
       "hull": 34,
       "shield": 0,
       "armor": 20,
@@ -79,26 +65,10 @@
       "score": 250,
       "baseCredit": 32,
       "radius": 20,
-      "ai": "hunter",
       "fireRate": 2
     },
     "boss": {
-      "sprite": "assets/generated/boss_trident.png",
-      "hull": 400,
-      "shield": 0,
-      "armor": 190,
-      "armorClass": 10,
-      "speed": 82,
-      "score": 1200,
-      "baseCredit": 250,
-      "radius": 48,
-      "pattern": "bossSweep",
-      "isBoss": true,
-      "fireRate": 1.15,
-      "fireMode": "radial",
-      "fireCount": 15,
-      "bulletSpeed": 175,
-      "spriteScale": 0.95
+      "template": "level2:boss"
     }
   },
   "events": [

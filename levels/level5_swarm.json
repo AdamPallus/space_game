@@ -14,14 +14,10 @@
   "completeOnBoss": true,
   "enemyTypes": {
     "gnat": {
-      "sprite": "enemyRed2",
       "hull": 12,
-      "shield": 0,
-      "armor": 0,
       "speed": 168,
       "score": 72,
       "baseCredit": 10,
-      "radius": 12,
       "pattern": "laneShift",
       "patternParams": {
         "amplitude": 205,
@@ -30,14 +26,9 @@
       }
     },
     "dart": {
-      "sprite": "enemyBlue2",
       "hull": 18,
-      "shield": 0,
-      "armor": 0,
       "speed": 156,
       "score": 108,
-      "baseCredit": 12,
-      "radius": 16,
       "pattern": "spiralIn",
       "patternParams": {
         "amplitude": 140,
@@ -46,58 +37,24 @@
       }
     },
     "spark": {
-      "sprite": "enemyGreen4",
       "hull": 15,
       "shield": 30,
-      "armor": 0,
       "speed": 148,
-      "score": 160,
-      "baseCredit": 18,
-      "radius": 18,
-      "pattern": "strafe",
-      "fireRate": 1.6,
-      "fireMode": "spread",
-      "fireCount": 5,
-      "fireSpread": 0.9,
-      "shieldRegen": 14
+      "fireRate": 1.6
     },
     "skitter": {
-      "sprite": "enemyBlue5",
       "hull": 24,
-      "shield": 0,
-      "armor": 0,
       "speed": 130,
       "score": 150,
-      "baseCredit": 18,
-      "radius": 18,
-      "ai": "skitter",
-      "aiParams": {
-        "dodgeRadius": 160,
-        "dodgeStrength": 1.75
-      },
       "fireRate": 1.8,
-      "fireMode": "spread",
-      "fireCount": 3,
-      "fireSpread": 0.56,
-      "bulletSpeed": 190
+      "fireSpread": 0.56
     },
     "stalker": {
-      "sprite": "enemyBlue5",
-      "hull": 34,
-      "shield": 22,
-      "armor": 0,
       "speed": 120,
       "score": 290,
-      "baseCredit": 34,
-      "radius": 18,
-      "ai": "stalker",
-      "aggroRadius": 240,
-      "fireRate": 1.65,
-      "fireMode": "aim",
-      "shieldRegen": 10
+      "fireRate": 1.65
     },
     "hunter": {
-      "sprite": "enemyGreen4",
       "hull": 40,
       "shield": 0,
       "armor": 20,
@@ -106,36 +63,10 @@
       "score": 250,
       "baseCredit": 32,
       "radius": 20,
-      "ai": "hunter",
       "fireRate": 1.85
     },
     "boss": {
-      "sprite": "assets/generated/boss_warden5.png",
-      "hull": 700,
-      "shield": 420,
-      "armor": 460,
-      "armorClass": 12,
-      "shieldRegen": 12,
-      "speed": 108,
-      "score": 3000,
-      "baseCredit": 700,
-      "radius": 66,
-      "pattern": "bossAdvanceSweep",
-      "patternParams": {
-        "pause": 0.78,
-        "advance": 66,
-        "advanceTime": 0.64,
-        "sweepDuration": 2.25,
-        "retreatTime": 0.78,
-        "depth": 82
-      },
-      "isBoss": true,
-      "fireRate": 0.76,
-      "fireMode": "radial",
-      "fireCount": 24,
-      "bulletSpeed": 205,
-      "spriteScale": 1.03,
-      "empImmune": true
+      "template": "level5_swarm:boss"
     }
   },
   "events": [

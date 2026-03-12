@@ -31,6 +31,7 @@ const shipStats = document.getElementById("ship-stats");
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
 const debriefPanel = document.getElementById("debrief");
+const hangarStatus = document.getElementById("hangar-status");
 
 const pilotRank = document.getElementById("pilot-rank");
 const availableCreditsEl = document.getElementById("available-credits");
@@ -100,6 +101,38 @@ const STORAGE_KEY = "mini-fighter-save";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
 const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
 let shouldAutoLaunchFreshPilotMission = false;
+const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
+  "template",
+  "sprite",
+  "spriteScale",
+  "color",
+  "hull",
+  "hp",
+  "shield",
+  "shieldRegen",
+  "armor",
+  "armorClass",
+  "speed",
+  "score",
+  "baseCredit",
+  "radius",
+  "pattern",
+  "patternParams",
+  "ai",
+  "aiParams",
+  "fireRate",
+  "fireMode",
+  "fireCount",
+  "fireSpread",
+  "bulletSpeed",
+  "bulletDamage",
+  "collisionDamage",
+  "damageScale",
+  "aggroRadius",
+  "empImmune",
+  "isBoss",
+  "hpScale",
+]);
 
 const upgrades = [
   {
@@ -648,6 +681,7 @@ let openShipNodeId = null;
 let openMissionInfoBaseId = null;
 let missionIntroActive = false;
 let debriefLaunchMode = null;
+let hangarStatusMessage = "";
 const cameraShake = {
   trauma: 0,
   kickX: 0,
@@ -787,24 +821,34 @@ function loadImageCached(src) {
 
 async function loadLevel(levelName) {
   try {
+    await ensureEnemyCatalogLoaded();
     const response = await fetch(`levels/${levelName}.json`, { cache: "no-store" });
     if (!response.ok) throw new Error("level load failed");
     const data = await response.json();
     data.id = data.id || levelName;
+    data.validationErrors = validateLevelData(data);
     return data;
   } catch (error) {
-    console.warn("Using fallback level data.");
-    return { ...levelFallback, id: levelName };
+    console.warn(`Level '${levelName}' failed to load.`, error);
+    return {
+      id: levelName,
+      name: levelName,
+      enemyTypes: {},
+      events: [],
+      validationErrors: ["Mission package could not be loaded."],
+    };
   }
 }
 
 // Strict fetch for discovery: returns null if the level file doesn't exist.
 async function loadLevelStrict(levelName) {
   try {
+    await ensureEnemyCatalogLoaded();
     const response = await fetch(`levels/${levelName}.json`, { cache: "no-store" });
     if (!response.ok) return null;
     const data = await response.json();
     data.id = data.id || levelName;
+    data.validationErrors = validateLevelData(data);
     return data;
   } catch (error) {
     return null;
@@ -852,6 +896,127 @@ async function ensureEnemyCatalogLoaded() {
 
 function getEnemyCatalogEntry(id) {
   return enemyCatalog?.entries?.[id] || null;
+}
+
+function setHangarStatusMessage(message = "") {
+  hangarStatusMessage = message || "";
+}
+
+function getLevelEnemyConfig(level, typeId) {
+  const enemyTypes = level?.enemyTypes;
+  if (!enemyTypes || typeof enemyTypes !== "object" || Array.isArray(enemyTypes)) return null;
+  const config = enemyTypes[typeId];
+  if (!config || typeof config !== "object" || Array.isArray(config)) return null;
+  return config;
+}
+
+function getLevelEnemyTemplateKey(level, typeId, config = null) {
+  const localConfig = config || getLevelEnemyConfig(level, typeId);
+  if (!localConfig) return null;
+  if (typeId === "boss") {
+    return typeof localConfig.template === "string" ? localConfig.template : null;
+  }
+  return getEnemyCatalogEntry(typeId)?.template ? typeId : null;
+}
+
+function mergeLevelEnemySpec(level, typeId, overrides = {}) {
+  const localConfig = getLevelEnemyConfig(level, typeId);
+  if (!localConfig) return null;
+  const templateKey = getLevelEnemyTemplateKey(level, typeId, localConfig);
+  if (!templateKey) return null;
+  const template = getEnemyCatalogEntry(templateKey)?.template;
+  if (!template) return null;
+  const merged = {
+    type: typeId,
+    ...template,
+    ...localConfig,
+    ...overrides,
+  };
+  delete merged.template;
+  return merged;
+}
+
+function validateLevelData(level) {
+  const errors = [];
+  if (!level || typeof level !== "object") {
+    return ["Mission package is not a valid object."];
+  }
+  const levelId = level.id || "unknown";
+  const enemyTypes = level.enemyTypes;
+  if (!enemyTypes || typeof enemyTypes !== "object" || Array.isArray(enemyTypes)) {
+    errors.push("Mission package is missing enemyTypes.");
+    return errors;
+  }
+  Object.entries(enemyTypes).forEach(([typeId, config]) => {
+    if (!config || typeof config !== "object" || Array.isArray(config)) {
+      errors.push(`Enemy '${typeId}' must be an object of overrides.`);
+      return;
+    }
+    Object.keys(config).forEach((key) => {
+      if (!LEVEL_ENEMY_OVERRIDE_KEYS.has(key)) {
+        errors.push(`Enemy '${typeId}' uses unsupported field '${key}'.`);
+      }
+    });
+    if (typeId === "boss") {
+      if (typeof config.template !== "string" || !config.template) {
+        errors.push(`Boss entry in '${levelId}' must declare a catalog template.`);
+        return;
+      }
+      if (!getEnemyCatalogEntry(config.template)?.template) {
+        errors.push(`Boss template '${config.template}' is missing from enemy catalog.`);
+      }
+      return;
+    }
+    if ("template" in config) {
+      errors.push(`Enemy '${typeId}' should not declare a template; use the catalog id as the key.`);
+    }
+    if (!getEnemyCatalogEntry(typeId)?.template) {
+      errors.push(`Enemy '${typeId}' is not defined in enemy catalog.`);
+    }
+  });
+  if (!Array.isArray(level.events)) {
+    errors.push(`Mission '${levelId}' is missing a valid events array.`);
+    return errors;
+  }
+  level.events.forEach((event, index) => {
+    if (!event || typeof event !== "object") {
+      errors.push(`Event ${index + 1} in '${levelId}' is invalid.`);
+      return;
+    }
+    if (typeof event.type !== "string" || !event.type) {
+      errors.push(`Event ${index + 1} in '${levelId}' is missing a type.`);
+      return;
+    }
+    if (!enemyTypes[event.type]) {
+      errors.push(`Event ${index + 1} in '${levelId}' references unknown enemy '${event.type}'.`);
+    }
+  });
+  return errors;
+}
+
+function buildMissionCanceledMessage(level) {
+  const missionName = level?.name || "the sortie";
+  return `Flight Control has scrubbed ${missionName}. The mission packet came back corrupted, so command recalled all pilots to the mothership until operations can rebuild the route.`;
+}
+
+function cancelMissionLaunch(level, errors = []) {
+  if (errors.length) {
+    console.warn(`Mission '${level?.id || "unknown"}' canceled due to validation errors:`, errors);
+  }
+  mission = null;
+  activeShipBuildOverride = null;
+  debriefLaunchMode = null;
+  hideMissionIntro();
+  closeShipModal();
+  paused = false;
+  overlay.hidden = false;
+  hangarPanel.hidden = false;
+  debriefPanel.hidden = true;
+  setHangarStatusMessage(buildMissionCanceledMessage(level));
+  setHangarTab("mission", { renderLevels: activeHangarTab === "mission" });
+  updateMobileControls();
+  setHangarMusic();
+  safeUpdateHangar();
 }
 
 async function ensureLevelLoaded() {
@@ -1095,7 +1260,7 @@ async function launchSelectedMission({ showIntro = false } = {}) {
       renderLevelSelect();
     }
   }
-  await startMission({ showIntro });
+  return startMission({ showIntro });
 }
 
 if (launchBtn) {
@@ -1718,7 +1883,11 @@ async function startMission({ showIntro = false } = {}) {
   }
   const level = await ensureLevelLoaded();
   if (directive && level?.id !== directive.missionId) {
-    return;
+    return false;
+  }
+  if (level?.validationErrors?.length) {
+    cancelMissionLaunch(level, level.validationErrors);
+    return false;
   }
   activeShipBuildOverride = null;
   if (directive?.forcedBuild) {
@@ -1773,6 +1942,7 @@ async function startMission({ showIntro = false } = {}) {
   player.damageBoostTimer = 0;
   player.damageBoostMult = 1;
   paused = false;
+  setHangarStatusMessage("");
 
   overlay.hidden = true;
   hangarPanel.hidden = true;
@@ -1784,6 +1954,7 @@ async function startMission({ showIntro = false } = {}) {
   if (showIntro) {
     showMissionIntro();
   }
+  return true;
 }
 
 function endMission({ ejected = false, completed = false } = {}) {
@@ -1934,6 +2105,10 @@ function updateHangar() {
   }
   if (debugSkipOnboarding) {
     debugSkipOnboarding.checked = !!state.debugSkipOnboarding;
+  }
+  if (hangarStatus) {
+    hangarStatus.hidden = !hangarStatusMessage;
+    hangarStatus.textContent = hangarStatusMessage || "";
   }
 
   const directive = getCurrentOnboardingMission();
@@ -2130,7 +2305,7 @@ function estimateLevelCredits(levelMeta) {
   let total = 0;
   levelMeta.events.forEach((ev) => {
     const count = ev.count ?? 1;
-    const spec = levelMeta.enemyTypes?.[ev.type] || {};
+    const spec = mergeLevelEnemySpec(levelMeta, ev.type) || {};
     const base = spec.baseCredit ?? 12;
     total += count * base;
   });
@@ -2261,7 +2436,7 @@ async function renderLevelSelectAsync() {
 
     const iconsHtml = iconTypes
       .map((typeId) => {
-        const spriteKey = metaData.enemyTypes?.[typeId]?.sprite;
+        const spriteKey = mergeLevelEnemySpec(metaData, typeId)?.sprite;
         const src = spriteSrcForKey(spriteKey);
         return `<span class="mission-icon">${src ? `<img src="${src}" alt="" />` : ""}</span>`;
       })
@@ -2555,7 +2730,7 @@ async function buildCompendium() {
       const levelId = level.id;
       const enemyTypes = level.enemyTypes || {};
       Object.keys(enemyTypes).forEach((typeId) => {
-        const spec = enemyTypes[typeId] || {};
+        const spec = mergeLevelEnemySpec(level, typeId) || {};
         const key = compendiumKeyFor(levelId, typeId, spec);
         const entry = byKey.get(key) || {
           key,
@@ -3881,20 +4056,8 @@ function scheduleLevelSpawns() {
 
 function resolveEnemySpec(type, overrides = {}) {
   const level = mission.level;
-  const baseLocal = level?.enemyTypes?.[type] || {};
-  const templateId = baseLocal?.template;
-  const baseTemplate =
-    (typeof templateId === "string" && getEnemyCatalogEntry(templateId)?.template) ||
-    getEnemyCatalogEntry(type)?.template ||
-    {};
-
-  const merged = {
-    type,
-    ...baseTemplate,
-    ...baseLocal,
-    ...overrides,
-  };
-  delete merged.template;
+  const merged = mergeLevelEnemySpec(level, type, overrides);
+  if (!merged) return null;
 
   const levelScale = level?.enemyScale || level?.scale || {};
   const hpScale = Math.max(
@@ -4347,6 +4510,11 @@ function update(delta) {
         const entry = mission.spawnQueue[i];
         if (mission.elapsed >= entry.spawnTime) {
           const spec = resolveEnemySpec(entry.type, entry.overrides);
+          if (!spec) {
+            console.warn(`Skipping unresolved enemy type '${entry.type}' in mission '${mission.level?.id || "unknown"}'.`);
+            mission.spawnQueue.splice(i, 1);
+            continue;
+          }
           spawnEnemyFromSpec(spec);
           mission.spawnQueue.splice(i, 1);
         }
@@ -5844,7 +6012,7 @@ function getBossSpawnTime(level) {
   if (!level?.events || !level.enemyTypes) return null;
   let earliest = null;
   level.events.forEach((event) => {
-    const def = level.enemyTypes[event.type];
+    const def = mergeLevelEnemySpec(level, event.type);
     if (def && def.isBoss) {
       if (earliest === null || event.time < earliest) {
         earliest = event.time;

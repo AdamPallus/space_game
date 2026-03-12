@@ -192,18 +192,6 @@ body {
   -webkit-user-drag: none;
 }
 
-.armory-weapon-art {
-  position: absolute;
-  left: 50%;
-  top: 35%;
-  width: min(16vw, 86px);
-  transform: translate(-50%, -50%);
-  filter: drop-shadow(0 10px 18px rgba(56, 189, 248, 0.32));
-  z-index: 3;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
 .armory-slot {
   position: absolute;
   width: 168px;
@@ -226,21 +214,15 @@ body {
 
 .armory-slot.is-clickable {
   cursor: pointer;
-  touch-action: none;
 }
 
 .armory-slot.is-clickable:hover,
-.armory-slot.is-clickable:focus-visible {
+.armory-slot.is-clickable:focus-visible,
+.armory-slot.is-selected {
   transform: translateY(-2px);
   border-color: rgba(103, 232, 249, 0.56);
   background: rgba(4, 16, 34, 0.84);
   box-shadow: 0 12px 30px rgba(6, 26, 48, 0.25);
-}
-
-.armory-slot.is-drop-target {
-  border-color: rgba(45, 212, 191, 0.88);
-  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.18), 0 18px 30px rgba(45, 212, 191, 0.18);
-  background: rgba(6, 26, 34, 0.9);
 }
 
 .armory-slot.is-locked {
@@ -357,87 +339,62 @@ body {
 
 .armory-inventory-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: 12px;
 }
 
-.armory-item {
+.armory-inventory-item {
   position: relative;
   overflow: hidden;
-  padding: 14px;
-  border-radius: 22px;
+  padding: 12px 10px;
+  border-radius: 18px;
   border: 1px solid rgba(95, 154, 218, 0.18);
   background:
     radial-gradient(circle at 20% 18%, rgba(56, 189, 248, 0.15), transparent 26%),
     linear-gradient(160deg, rgba(4, 13, 30, 0.96), rgba(7, 18, 38, 0.92));
   display: grid;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
   transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
-  touch-action: none;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
 }
 
-.armory-item:hover,
-.armory-item:focus-visible,
-.armory-item.is-selected {
+.armory-inventory-item:hover,
+.armory-inventory-item:focus-visible,
+.armory-inventory-item.is-preview {
   transform: translateY(-2px);
   border-color: rgba(103, 232, 249, 0.48);
   box-shadow: 0 18px 34px rgba(6, 26, 48, 0.26);
 }
 
-.armory-item.is-active {
+.armory-inventory-item.is-installed {
   border-color: rgba(45, 212, 191, 0.72);
   box-shadow: 0 18px 36px rgba(45, 212, 191, 0.14);
 }
 
-.armory-item.is-locked {
+.armory-inventory-item.is-locked {
   opacity: 0.56;
   filter: grayscale(0.3);
   cursor: default;
 }
 
-.armory-item.is-dragging {
-  opacity: 0.25;
-}
-
-.armory-item-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.armory-item-media {
-  width: 58px;
-  height: 58px;
-  padding: 10px;
-  border-radius: 18px;
+.armory-inventory-icon {
+  width: 64px;
+  height: 64px;
+  padding: 12px;
+  border-radius: 16px;
   border: 1px solid rgba(125, 190, 255, 0.14);
   background: rgba(3, 10, 25, 0.56);
   display: grid;
   place-items: center;
 }
 
-.armory-item-media img {
+.armory-inventory-icon img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-
-.armory-item-title {
-  display: grid;
-  gap: 3px;
-  flex: 1;
-}
-
-.armory-item-title h3 {
-  font-size: 14px;
-  line-height: 1.2;
-}
-
-.armory-item-title p {
-  font-size: 11px;
-  color: rgba(198, 220, 248, 0.75);
 }
 
 .armory-tags,
@@ -459,10 +416,10 @@ body {
   text-transform: uppercase;
 }
 
-.armory-item-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+.armory-inventory-name {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
 }
 
 .armory-stat {
@@ -487,10 +444,11 @@ body {
   color: rgba(224, 242, 254, 0.95);
 }
 
-.armory-item-foot {
-  font-size: 11px;
+.armory-inventory-status {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: rgba(155, 185, 221, 0.86);
-  line-height: 1.45;
 }
 
 .armory-inspector {
@@ -543,39 +501,6 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-}
-
-.armory-action-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-}
-
-#armory-drag-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 999;
-}
-
-.armory-drag-ghost {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 190px;
-  padding: 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(103, 232, 249, 0.56);
-  background:
-    radial-gradient(circle at 20% 18%, rgba(56, 189, 248, 0.18), transparent 26%),
-    linear-gradient(160deg, rgba(4, 13, 30, 0.96), rgba(7, 18, 38, 0.92));
-  box-shadow: 0 18px 40px rgba(2, 8, 24, 0.45);
-  transform: translate(-50%, -50%) scale(0.96);
-}
-
-body.armory-dragging {
-  cursor: grabbing;
 }
 
 .ship-stats {
@@ -1985,11 +1910,6 @@ button:disabled {
     width: min(56vw, 220px);
   }
 
-  .armory-weapon-art {
-    width: min(22vw, 78px);
-    top: 37%;
-  }
-
   .armory-slot {
     width: 146px;
     min-height: 100px;
@@ -2025,11 +1945,10 @@ button:disabled {
   }
 
   .armory-inventory-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .armory-inspector-stats,
-  .armory-item-stats {
+  .armory-inspector-stats {
     grid-template-columns: 1fr 1fr;
   }
 }

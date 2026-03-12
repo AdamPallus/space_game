@@ -30,7 +30,9 @@ const shipStats = document.getElementById("ship-stats");
 const armoryBench = document.getElementById("armory-bench");
 const armoryInspector = document.getElementById("armory-inspector");
 const weaponInventory = document.getElementById("weapon-inventory");
-const armoryDragLayer = document.getElementById("armory-drag-layer");
+const armoryRackTitle = document.getElementById("armory-rack-title");
+const armoryRackCopy = document.getElementById("armory-rack-copy");
+const armoryRackTip = document.getElementById("armory-rack-tip");
 
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
@@ -525,6 +527,99 @@ function getStarterLoadoutIdsForStage(stage, skipOnboarding = false) {
     .map((item) => item.id);
 }
 
+function getStarterDefenseModuleIdsForStage(stage, skipOnboarding = false) {
+  if (skipOnboarding || stage >= ONBOARDING_STAGE_TRAINING_COMPLETE) {
+    return defenseModules.map((item) => item.id);
+  }
+  if (stage >= 2) {
+    return ["shield_module", "armor_module"];
+  }
+  return ["shield_module"];
+}
+
+function getSupportModuleEntries() {
+  ensureAuxSelection();
+  const unlockedAux = state.unlocked?.aux || {};
+  return rmbWeapons.map((weapon) => ({
+    id: weapon.id,
+    slotType: "support",
+    name: weapon.name,
+    subtitle: weapon.unlockAt ? `Rank ${weapon.unlockAt}` : "Support",
+    description: weapon.desc,
+    notes: weapon.cost ? `Unlock cost: ${weapon.cost} credits.` : "Available to every pilot.",
+    icon: mobileAltIcons[weapon.id] || `${ASSET_ROOT}/Power-ups/powerupBlue.png`,
+    tags: ["support"],
+    unlockAt: weapon.unlockAt ?? 0,
+    cost: weapon.cost ?? 0,
+    owned: !!(state.debugUnlock || unlockedAux[weapon.id]),
+  }));
+}
+
+function getOwnedDefenseModuleIds(targetState = state) {
+  return targetState.armory?.ownedDefenseModuleIds || [];
+}
+
+function deriveDefenseSlotsFromBuild(build) {
+  const slots = Array.isArray(build?.defenseSlots) ? build.defenseSlots : ["shield", "none"];
+  return slots.slice(0, 2).map((slot) => {
+    if (slot === "shield") return "shield_module";
+    if (slot === "armor") return "armor_module";
+    return "none";
+  });
+}
+
+function composeShipBuildFromArmory(targetState) {
+  const base = createDefaultShipBuild();
+  const frame = starterWeaponLoadoutsById[targetState.armory?.equippedLoadoutId] || starterWeaponLoadouts[0];
+  const frameBuild = frame?.build || {};
+  const merged = {
+    ...cloneShipBuild(base),
+    ...cloneShipBuild(frameBuild),
+    effectUpgrades: {
+      ...cloneShipBuild(base.effectUpgrades),
+      ...cloneShipBuild(frameBuild.effectUpgrades || {}),
+    },
+    defenseSlots: ["none", "none"],
+    shieldMaxLevel: 0,
+    shieldRegenLevel: 0,
+    armorAmountLevel: 0,
+    armorClass: 10,
+    armorClassLevel: 0,
+  };
+
+  const equippedDefenseSlots = Array.isArray(targetState.armory?.equippedDefenseSlotIds)
+    ? targetState.armory.equippedDefenseSlotIds.slice(0, 2)
+    : ["shield_module", "none"];
+  while (equippedDefenseSlots.length < 2) equippedDefenseSlots.push("none");
+
+  equippedDefenseSlots.forEach((moduleId, index) => {
+    const module = defenseModulesById[moduleId];
+    if (!module) return;
+    if (module.defenseType === "shield") {
+      merged.defenseSlots[index] = "shield";
+      merged.shieldMaxLevel = Math.max(merged.shieldMaxLevel, module.build.shieldMaxLevel ?? 0);
+      merged.shieldRegenLevel = Math.max(
+        merged.shieldRegenLevel,
+        module.build.shieldRegenLevel ?? 0
+      );
+    }
+    if (module.defenseType === "armor") {
+      merged.defenseSlots[index] = "armor";
+      merged.armorAmountLevel = Math.max(
+        merged.armorAmountLevel,
+        module.build.armorAmountLevel ?? 0
+      );
+      merged.armorClass = Math.max(merged.armorClass, module.build.armorClass ?? 10);
+      merged.armorClassLevel = Math.max(
+        merged.armorClassLevel,
+        module.build.armorClassLevel ?? 0
+      );
+    }
+  });
+
+  return merged;
+}
+
 function findClosestStarterLoadoutId(build) {
   if (!build) return starterWeaponLoadouts[0].id;
   let bestId = starterWeaponLoadouts[0].id;
@@ -558,32 +653,55 @@ function findClosestStarterLoadoutId(build) {
 }
 
 function normalizeStarterArmoryState(targetState) {
+  const skipOnboarding = !!targetState.debugSkipOnboarding;
   const grantedIds = getStarterLoadoutIdsForStage(
     targetState.onboardingStage,
-    !!targetState.debugSkipOnboarding
+    skipOnboarding
+  );
+  const grantedDefenseIds = getStarterDefenseModuleIdsForStage(
+    targetState.onboardingStage,
+    skipOnboarding
   );
   const existingOwned = Array.isArray(targetState.armory?.ownedLoadoutIds)
     ? targetState.armory.ownedLoadoutIds
     : [];
+  const existingDefenseOwned = Array.isArray(targetState.armory?.ownedDefenseModuleIds)
+    ? targetState.armory.ownedDefenseModuleIds
+    : [];
   const ownedLoadoutIds = Array.from(new Set([...existingOwned, ...grantedIds])).filter(
     (id) => !!starterWeaponLoadoutsById[id]
   );
+  const ownedDefenseModuleIds = Array.from(
+    new Set([...existingDefenseOwned, ...grantedDefenseIds])
+  ).filter((id) => !!defenseModulesById[id]);
   const desiredEquippedId =
     targetState.armory?.equippedLoadoutId && ownedLoadoutIds.includes(targetState.armory.equippedLoadoutId)
       ? targetState.armory.equippedLoadoutId
       : ownedLoadoutIds.includes(findClosestStarterLoadoutId(targetState.shipBuild))
         ? findClosestStarterLoadoutId(targetState.shipBuild)
         : ownedLoadoutIds[0] || starterWeaponLoadouts[0].id;
+  const existingDefenseSlots = Array.isArray(targetState.armory?.equippedDefenseSlotIds)
+    ? targetState.armory.equippedDefenseSlotIds
+    : deriveDefenseSlotsFromBuild(targetState.shipBuild);
+  const equippedDefenseSlotIds = existingDefenseSlots.slice(0, 2).map((moduleId) => {
+    if (moduleId === "none") return "none";
+    return ownedDefenseModuleIds.includes(moduleId) ? moduleId : "none";
+  });
+  while (equippedDefenseSlotIds.length < 2) equippedDefenseSlotIds.push("none");
+  if (!ownedDefenseModuleIds.length) {
+    equippedDefenseSlotIds[0] = "none";
+    equippedDefenseSlotIds[1] = "none";
+  } else if (equippedDefenseSlotIds.every((id) => id === "none")) {
+    equippedDefenseSlotIds[0] = ownedDefenseModuleIds[0];
+  }
 
   targetState.armory = {
     ownedLoadoutIds,
+    ownedDefenseModuleIds,
     equippedLoadoutId: desiredEquippedId,
+    equippedDefenseSlotIds,
   };
-
-  const equipped = starterWeaponLoadoutsById[desiredEquippedId];
-  if (equipped) {
-    targetState.shipBuild = cloneShipBuild(equipped.build);
-  }
+  targetState.shipBuild = composeShipBuildFromArmory(targetState);
 }
 
 function getOwnedStarterLoadoutIds() {
@@ -599,9 +717,40 @@ function equipStarterLoadout(loadoutId) {
   const item = starterWeaponLoadoutsById[loadoutId];
   if (!item) return;
   if (!getOwnedStarterLoadoutIds().includes(loadoutId)) return;
-  state.armory = state.armory || { ownedLoadoutIds: [], equippedLoadoutId: loadoutId };
+  state.armory = state.armory || {
+    ownedLoadoutIds: [],
+    ownedDefenseModuleIds: [],
+    equippedLoadoutId: loadoutId,
+    equippedDefenseSlotIds: ["shield_module", "none"],
+  };
   state.armory.equippedLoadoutId = loadoutId;
-  state.shipBuild = cloneShipBuild(item.build);
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
+  saveState();
+}
+
+function equipDefenseModule(slotIndex, moduleId) {
+  if (![0, 1].includes(slotIndex)) return;
+  const normalizedId = moduleId || "none";
+  if (normalizedId !== "none" && !defenseModulesById[normalizedId]) return;
+  if (normalizedId !== "none" && !getOwnedDefenseModuleIds().includes(normalizedId)) return;
+  state.armory = state.armory || {
+    ownedLoadoutIds: [],
+    ownedDefenseModuleIds: [],
+    equippedLoadoutId: starterWeaponLoadouts[0]?.id || "fundamentals",
+    equippedDefenseSlotIds: ["none", "none"],
+  };
+  const slots = Array.isArray(state.armory.equippedDefenseSlotIds)
+    ? state.armory.equippedDefenseSlotIds.slice(0, 2)
+    : ["none", "none"];
+  while (slots.length < 2) slots.push("none");
+  if (normalizedId !== "none") {
+    const existingIndex = slots.findIndex((id) => id === normalizedId);
+    if (existingIndex !== -1) slots[existingIndex] = "none";
+  }
+  slots[slotIndex] = normalizedId;
+  state.armory.equippedDefenseSlotIds = slots;
+  state.shipBuild = composeShipBuildFromArmory(state);
   syncShipBuildToLegacy();
   saveState();
 }
@@ -697,8 +846,8 @@ const musicLibrary = new Map();
 const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
 let openUpgradeId = null;
 let enemyIdCounter = 1;
-let armorySelectedLoadoutId = null;
-let armoryDragState = null;
+let armorySelectedSlotId = "primary";
+let armoryPreviewItemId = null;
 
 const mobileAltIcons = {
   emp: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
@@ -744,6 +893,42 @@ const defenseVisuals = {
     note: "No module linked to this mount yet.",
   },
 };
+
+const defenseModules = [
+  {
+    id: "shield_module",
+    slotType: "defense",
+    defenseType: "shield",
+    name: "Phase Shield",
+    subtitle: "Barrier",
+    description: "Standard shield projector. Gives the drone a forgiving buffer while learning patterns.",
+    notes: "Reliable all-round defense. Best default pick if you want more margin for mistakes.",
+    icon: `${ASSET_ROOT}/Power-ups/powerupBlue_shield.png`,
+    tags: ["shield", "starter"],
+    build: {
+      shieldMaxLevel: 0,
+      shieldRegenLevel: 0,
+    },
+  },
+  {
+    id: "armor_module",
+    slotType: "defense",
+    defenseType: "armor",
+    name: "Heavy Plate",
+    subtitle: "Plating",
+    description: "Dense armor slab for soaking kinetic hits and surviving heavier volleys.",
+    notes: "Armor trades weapon tempo for resilience. Best when you expect heavy direct fire.",
+    icon: `${ASSET_ROOT}/Power-ups/shield_gold.png`,
+    tags: ["armor", "starter"],
+    build: {
+      armorAmountLevel: 1,
+      armorClass: 12,
+      armorClassLevel: 0,
+    },
+  },
+];
+
+const defenseModulesById = Object.fromEntries(defenseModules.map((item) => [item.id, item]));
 
 const starfield = Array.from({ length: 120 }, () => ({
   x: Math.random(),
@@ -1796,6 +1981,8 @@ function loadState() {
       armory: {
         ownedLoadoutIds: ["fundamentals"],
         equippedLoadoutId: "fundamentals",
+        ownedDefenseModuleIds: ["shield_module"],
+        equippedDefenseSlotIds: ["shield_module", "none"],
       },
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
@@ -1980,6 +2167,8 @@ function loadState() {
       armory: {
         ownedLoadoutIds: ["fundamentals"],
         equippedLoadoutId: "fundamentals",
+        ownedDefenseModuleIds: ["shield_module"],
+        equippedDefenseSlotIds: ["shield_module", "none"],
       },
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
@@ -3646,69 +3835,9 @@ function getArmoryFrameVisual(item) {
   return (
     armoryFrameVisuals[item?.id] || {
       icon: `${ASSET_ROOT}/Parts/gun04.png`,
-      shipOverlay: `${ASSET_ROOT}/Parts/gun04.png`,
-      accent: "#7dd3fc",
       hardpointName: item?.name || "Module",
     }
   );
-}
-
-function getDefenseSlotMeta(build, index) {
-  const slotType = Array.isArray(build?.defenseSlots) ? build.defenseSlots[index] || "none" : "none";
-  if (slotType === "shield") {
-    const shieldName =
-      (build?.shieldRegenLevel ?? 0) > 0
-        ? "Regen Shield"
-        : (build?.shieldMaxLevel ?? 0) > 0
-          ? "Fortified Shield"
-          : "Phase Shield";
-    return {
-      ...defenseVisuals.shield,
-      name: shieldName,
-      meta: `Bay ${index + 1}`,
-    };
-  }
-  if (slotType === "armor") {
-    const armorName =
-      (build?.armorClass ?? 10) > 10 || (build?.armorAmountLevel ?? 0) > 0
-        ? "Heavy Plate"
-        : "Light Plate";
-    return {
-      ...defenseVisuals.armor,
-      name: armorName,
-      meta: `Bay ${index + 1}`,
-    };
-  }
-  return {
-    ...defenseVisuals.none,
-    name: "Open Bay",
-    meta: `Bay ${index + 1}`,
-    note: "Reserved for future defense modules.",
-  };
-}
-
-function getSupportSlotMeta() {
-  const supportMap = {
-    cloak: {
-      icon: mobileAltIcons.cloak,
-      name: "Cloak Emitter",
-      meta: "Support link",
-      note: "Current support system. Ability tuning stays lightweight for now.",
-    },
-    emp: {
-      icon: mobileAltIcons.emp,
-      name: "EMP Pulse",
-      meta: "Support link",
-      note: "Disrupts nearby hostile systems when triggered.",
-    },
-    bulwark: {
-      icon: mobileAltIcons.bulwark,
-      name: "Bulwark Shield",
-      meta: "Support link",
-      note: "Temporary hardening layer for pressure moments.",
-    },
-  };
-  return supportMap[state.rmbWeapon] || supportMap.cloak;
 }
 
 function getArmoryUnlockText(item, owned) {
@@ -3716,350 +3845,363 @@ function getArmoryUnlockText(item, owned) {
   if (Number.isFinite(item?.starterUnlockStage)) {
     return `Flight School ${item.starterUnlockStage + 1}`;
   }
+  if (Number.isFinite(item?.unlockAt) && item.unlockAt > 0) {
+    return `Rank ${item.unlockAt}`;
+  }
   return "Locked";
 }
 
-function createArmoryDragGhost(item) {
-  if (!armoryDragLayer) return null;
-  const visual = getArmoryFrameVisual(item);
-  const ghost = document.createElement("div");
-  ghost.className = "armory-drag-ghost";
-  ghost.innerHTML = `
-    <div class="armory-item-head">
-      <div class="armory-item-media">
-        <img src="${visual.icon}" alt="" />
-      </div>
-      <div class="armory-item-title">
-        <h3>${item.name}</h3>
-        <p>${item.subtitle}</p>
-      </div>
-    </div>
-    <div class="armory-tags">
-      ${item.tags.slice(0, 2).map((tag) => `<span class="armory-tag">${tag}</span>`).join("")}
-    </div>
-  `;
-  armoryDragLayer.appendChild(ghost);
-  return ghost;
+function getEquippedDefenseSlotIds() {
+  const slotIds = Array.isArray(state.armory?.equippedDefenseSlotIds)
+    ? state.armory.equippedDefenseSlotIds.slice(0, 2)
+    : ["shield_module", "none"];
+  while (slotIds.length < 2) slotIds.push("none");
+  return slotIds;
 }
 
-function cleanupArmoryDrag() {
-  if (armoryDragState?.sourceEl) {
-    armoryDragState.sourceEl.classList.remove("is-dragging");
-  }
-  if (armoryBench) {
-    armoryBench.querySelectorAll("[data-armory-slot]").forEach((slot) => {
-      slot.classList.remove("is-drop-target");
-    });
-  }
-  if (armoryDragState?.ghost && armoryDragState.ghost.parentNode) {
-    armoryDragState.ghost.parentNode.removeChild(armoryDragState.ghost);
-  }
-  document.body.classList.remove("armory-dragging");
-  armoryDragState = null;
+function getSelectedSupportModule() {
+  const entries = getSupportModuleEntries();
+  return entries.find((entry) => entry.id === state.rmbWeapon) || entries[0] || null;
 }
 
-function updateArmoryDrag(event) {
-  if (!armoryDragState || event.pointerId !== armoryDragState.pointerId) return;
-  const delta = Math.hypot(event.clientX - armoryDragState.startX, event.clientY - armoryDragState.startY);
-  if (delta > 8) {
-    armoryDragState.moved = true;
-  }
-  if (armoryDragState.ghost) {
-    armoryDragState.ghost.style.left = `${event.clientX}px`;
-    armoryDragState.ghost.style.top = `${event.clientY}px`;
-  }
-  if (armoryBench) {
-    armoryBench.querySelectorAll("[data-armory-slot]").forEach((slot) => {
-      slot.classList.remove("is-drop-target");
-    });
-  }
-  const hoveredSlot = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-armory-slot]");
-  const slotId = hoveredSlot?.dataset.armorySlot || null;
-  armoryDragState.hoverSlotId = slotId;
-  if (slotId === "primary" && hoveredSlot) {
-    hoveredSlot.classList.add("is-drop-target");
-  }
+function getArmorySlotDefinitions() {
+  const equippedWeapon = getEquippedStarterLoadout();
+  const defenseSlotIds = getEquippedDefenseSlotIds();
+  const defenseA = defenseModulesById[defenseSlotIds[0]] || null;
+  const defenseB = defenseModulesById[defenseSlotIds[1]] || null;
+  const support = getSelectedSupportModule();
+  return [
+    {
+      id: "primary",
+      label: "Primary Hardpoint",
+      className: "armory-slot-primary",
+      installedId: equippedWeapon?.id || null,
+      name: equippedWeapon ? getArmoryFrameVisual(equippedWeapon).hardpointName : "Open Hardpoint",
+      meta: equippedWeapon?.name || "No weapon linked",
+      note: "Weapon modules change the projectile profile and hidden fire tuning.",
+      icon: equippedWeapon ? getArmoryFrameVisual(equippedWeapon).icon : `${ASSET_ROOT}/UI/buttonBlue.png`,
+    },
+    {
+      id: "defense-0",
+      label: "Defense A",
+      className: "armory-slot-defense-left",
+      installedId: defenseSlotIds[0],
+      name: defenseA?.name || "Open Bay",
+      meta: "Shield or armor",
+      note: defenseA?.description || "Install a defense module into this bay.",
+      icon: defenseA?.icon || defenseVisuals.none.icon,
+    },
+    {
+      id: "defense-1",
+      label: "Defense B",
+      className: "armory-slot-defense-right",
+      installedId: defenseSlotIds[1],
+      name: defenseB?.name || "Open Bay",
+      meta: "Shield or armor",
+      note: defenseB?.description || "Install a defense module into this bay.",
+      icon: defenseB?.icon || defenseVisuals.none.icon,
+    },
+    {
+      id: "support",
+      label: "Support",
+      className: "armory-slot-support",
+      installedId: support?.id || null,
+      name: support?.name || "No support linked",
+      meta: "Pilot system",
+      note: support?.description || "Install a support item for your alternate action.",
+      icon: support?.icon || mobileAltIcons.cloak,
+    },
+  ];
 }
 
-function beginArmoryDrag(event, item, sourceEl) {
-  if (!item || !sourceEl) return;
-  if (event.button !== undefined && event.button !== 0) return;
-  event.preventDefault();
-  cleanupArmoryDrag();
-  const ghost = createArmoryDragGhost(item);
-  armoryDragState = {
-    pointerId: event.pointerId,
-    loadoutId: item.id,
-    sourceEl,
-    ghost,
-    startX: event.clientX,
-    startY: event.clientY,
-    moved: false,
-    hoverSlotId: null,
+function getArmoryItemsForSlot(slotId) {
+  if (slotId === "primary") {
+    const ownedIds = new Set(getOwnedStarterLoadoutIds());
+    return starterWeaponLoadouts.map((item) => ({
+      ...item,
+      slotType: "primary",
+      icon: getArmoryFrameVisual(item).icon,
+      owned: ownedIds.has(item.id),
+      installed: state.armory?.equippedLoadoutId === item.id,
+    }));
+  }
+  if (slotId === "support") {
+    return getSupportModuleEntries().map((item) => ({
+      ...item,
+      installed: state.rmbWeapon === item.id,
+    }));
+  }
+  if (slotId.startsWith("defense-")) {
+    const ownedDefenseIds = new Set(getOwnedDefenseModuleIds());
+    const slotIndex = Number(slotId.split("-")[1] || 0);
+    const equippedIds = getEquippedDefenseSlotIds();
+    const emptyItem = {
+      id: "none",
+      slotType: "defense",
+      name: "Empty Bay",
+      subtitle: "Clear slot",
+      description: "Leave this bay open if you want a lighter frame and faster cooldowns.",
+      notes: "No defense module installed.",
+      icon: defenseVisuals.none.icon,
+      tags: ["empty"],
+      owned: true,
+      installed: equippedIds[slotIndex] === "none",
+    };
+    return [
+      emptyItem,
+      ...defenseModules.map((item) => ({
+        ...item,
+        owned: ownedDefenseIds.has(item.id),
+        installed: equippedIds[slotIndex] === item.id,
+      })),
+    ];
+  }
+  return [];
+}
+
+function getArmorySlotMeta(slotId) {
+  const meta = {
+    primary: {
+      title: "Primary Hardpoint",
+      copy: "Weapon modules from Flight School. Click an icon to install.",
+      tip: "Hover icon to preview",
+    },
+    support: {
+      title: "Support Link",
+      copy: "Alternate systems for cloak, EMP, and survivability tools.",
+      tip: "Click icon to equip",
+    },
+    "defense-0": {
+      title: "Defense Bay A",
+      copy: "Install a shield or armor module into the left defense bay.",
+      tip: "Click icon to equip",
+    },
+    "defense-1": {
+      title: "Defense Bay B",
+      copy: "Install a shield or armor module into the right defense bay.",
+      tip: "Click icon to equip",
+    },
   };
-  sourceEl.classList.add("is-dragging");
-  document.body.classList.add("armory-dragging");
-  if (ghost) {
-    ghost.style.left = `${event.clientX}px`;
-    ghost.style.top = `${event.clientY}px`;
+  return meta[slotId] || meta.primary;
+}
+
+function getArmoryPreviewItem(slotId) {
+  const items = getArmoryItemsForSlot(slotId);
+  const installed = items.find((item) => item.installed) || items[0] || null;
+  if (!armoryPreviewItemId) return installed;
+  return items.find((item) => item.id === armoryPreviewItemId) || installed;
+}
+
+function canInstallSupportItem(item) {
+  if (!item) return false;
+  if (item.owned || state.debugUnlock) return true;
+  const rankOk = (state.lifetimeCredits ?? 0) >= (item.unlockAt ?? 0) || state.debugUnlock;
+  return rankOk && state.credits >= (item.cost ?? 0);
+}
+
+function installSupportItem(itemId) {
+  const item = getSupportModuleEntries().find((entry) => entry.id === itemId);
+  if (!item) return;
+  if (!item.owned && !state.debugUnlock) {
+    const rankOk = (state.lifetimeCredits ?? 0) >= (item.unlockAt ?? 0);
+    if (!rankOk || state.credits < (item.cost ?? 0)) return;
+    state.credits -= item.cost ?? 0;
+    if (!state.unlocked.aux) state.unlocked.aux = {};
+    state.unlocked.aux[item.id] = true;
+  }
+  state.rmbWeapon = item.id;
+  saveState();
+}
+
+function handleArmorySlotInstall(slotId, itemId) {
+  if (slotId === "primary") {
+    equipStarterLoadout(itemId);
+    return;
+  }
+  if (slotId === "support") {
+    installSupportItem(itemId);
+    return;
+  }
+  if (slotId.startsWith("defense-")) {
+    const slotIndex = Number(slotId.split("-")[1] || 0);
+    equipDefenseModule(slotIndex, itemId);
   }
 }
 
-function finishArmoryDrag(event) {
-  if (!armoryDragState || event.pointerId !== armoryDragState.pointerId) return;
-  const { loadoutId, moved, hoverSlotId } = armoryDragState;
-  cleanupArmoryDrag();
-  if (hoverSlotId === "primary") {
-    armorySelectedLoadoutId = loadoutId;
-    equipStarterLoadout(loadoutId);
-    safeUpdateHangar();
+function renderArmoryInspector(slotId) {
+  if (!armoryInspector) return;
+  const item = getArmoryPreviewItem(slotId);
+  if (!item) {
+    armoryInspector.innerHTML = "";
     return;
   }
-  if (!moved) {
-    armorySelectedLoadoutId = loadoutId;
-    safeUpdateHangar();
-    return;
-  }
-  safeUpdateHangar();
-}
 
-document.addEventListener("pointermove", updateArmoryDrag);
-document.addEventListener("pointerup", finishArmoryDrag);
-document.addEventListener("pointercancel", finishArmoryDrag);
-
-function renderShipUpgradesPanel() {
-  const equipped = getEquippedStarterLoadout();
-  if (!equipped) return;
-  if (!armorySelectedLoadoutId || !starterWeaponLoadoutsById[armorySelectedLoadoutId]) {
-    armorySelectedLoadoutId = equipped.id;
-  }
-  const inspected = starterWeaponLoadoutsById[armorySelectedLoadoutId] || equipped;
-  const ownedIds = new Set(getOwnedStarterLoadoutIds());
-  const inspectedOwned = ownedIds.has(inspected.id);
-  const inspectedActive = equipped.id === inspected.id;
-  const build = getShipBuild();
-  const inspectedConfig = getPrimaryFireConfig(inspected.build);
-  const inspectedDamage = computePrimaryDamage({
-    ammo: inspectedConfig.ammo,
-    speed: inspectedConfig.bulletSpeed,
-    radius: inspectedConfig.projectileRadius,
-  });
-  const equippedVisual = getArmoryFrameVisual(equipped);
-  const inspectedVisual = getArmoryFrameVisual(inspected);
-  const defenseLeft = getDefenseSlotMeta(build, 0);
-  const defenseRight = getDefenseSlotMeta(build, 1);
-  const supportSlot = getSupportSlotMeta();
-
-  renderShipStatsPanel();
-  if (armoryBench) {
-    const installPrompt =
-      inspectedOwned && !inspectedActive
-        ? `Drop ${inspected.name} here or tap the slot to install it.`
-        : "Installed module feeds the current primary weapon profile.";
-    armoryBench.innerHTML = `
-      <div class="armory-drone">
-        <img class="armory-ship-base" src="${ASSET_ROOT}/playerShip2_blue.png" alt="" aria-hidden="true" />
-        <img class="armory-weapon-art" src="${equippedVisual.shipOverlay}" alt="" aria-hidden="true" />
-        <button
-          type="button"
-          class="armory-slot armory-slot-primary is-clickable${inspectedOwned && !inspectedActive ? " is-drop-target" : ""}"
-          data-armory-slot="primary"
-        >
-          <span class="armory-slot-label">Primary Hardpoint</span>
-          <span class="armory-slot-head">
-            <img class="armory-slot-icon" src="${equippedVisual.icon}" alt="" />
-            <span class="armory-slot-copy">
-              <span class="armory-slot-name">${equippedVisual.hardpointName}</span>
-              <span class="armory-slot-meta">${equipped.name}</span>
-            </span>
-            <span class="armory-slot-pill">${inspectedOwned && !inspectedActive ? "Install" : "Ready"}</span>
-          </span>
-          <span class="armory-slot-note">${installPrompt}</span>
-        </button>
-        <div class="armory-slot armory-slot-defense-left is-locked">
-          <span class="armory-slot-label">Defense A</span>
-          <span class="armory-slot-head">
-            <img class="armory-slot-icon" src="${defenseLeft.icon}" alt="" />
-            <span class="armory-slot-copy">
-              <span class="armory-slot-name">${defenseLeft.name}</span>
-              <span class="armory-slot-meta">${defenseLeft.meta}</span>
-            </span>
-            <span class="armory-slot-pill">Linked</span>
-          </span>
-          <span class="armory-slot-note">${defenseLeft.note}</span>
-        </div>
-        <div class="armory-slot armory-slot-defense-right is-locked">
-          <span class="armory-slot-label">Defense B</span>
-          <span class="armory-slot-head">
-            <img class="armory-slot-icon" src="${defenseRight.icon}" alt="" />
-            <span class="armory-slot-copy">
-              <span class="armory-slot-name">${defenseRight.name}</span>
-              <span class="armory-slot-meta">${defenseRight.meta}</span>
-            </span>
-            <span class="armory-slot-pill">Linked</span>
-          </span>
-          <span class="armory-slot-note">${defenseRight.note}</span>
-        </div>
-        <div class="armory-slot armory-slot-support is-locked">
-          <span class="armory-slot-label">Support</span>
-          <span class="armory-slot-head">
-            <img class="armory-slot-icon" src="${supportSlot.icon}" alt="" />
-            <span class="armory-slot-copy">
-              <span class="armory-slot-name">${supportSlot.name}</span>
-              <span class="armory-slot-meta">${supportSlot.meta}</span>
-            </span>
-            <span class="armory-slot-pill">Online</span>
-          </span>
-          <span class="armory-slot-note">${supportSlot.note}</span>
-        </div>
-      </div>
-    `;
-    const primarySlot = armoryBench.querySelector('[data-armory-slot="primary"]');
-    if (primarySlot) {
-      primarySlot.addEventListener("click", () => {
-        if (!inspectedOwned || inspectedActive) return;
-        equipStarterLoadout(inspected.id);
-        safeUpdateHangar();
-      });
-    }
-  }
-
-  if (armoryInspector) {
-    armoryInspector.innerHTML = `
-      <div class="armory-inspector-head">
-        <div class="armory-inspector-title">
-          <p class="armory-kicker">Selected Module</p>
-          <h3>${inspected.name}</h3>
-          <p>${inspected.subtitle}</p>
-        </div>
-        <span class="armory-chip">${inspectedActive ? "Installed" : getArmoryUnlockText(inspected, inspectedOwned)}</span>
-      </div>
-      <div class="armory-tags">
-        ${inspected.tags.map((tag) => `<span class="armory-tag">${tag}</span>`).join("")}
-      </div>
-      <p class="armory-summary">${inspected.description}</p>
-      <div class="armory-inspector-stats">
-        <div class="armory-stat">
-          <span class="armory-stat-label">Hit Damage</span>
-          <span class="armory-stat-value">${formatNumber(inspectedDamage, 1)}</span>
-        </div>
-        <div class="armory-stat">
-          <span class="armory-stat-label">Cooldown</span>
-          <span class="armory-stat-value">${formatNumber(inspectedConfig.cooldown, 2)}s</span>
-        </div>
-        <div class="armory-stat">
-          <span class="armory-stat-label">Projectile Speed</span>
-          <span class="armory-stat-value">${Math.round(inspectedConfig.bulletSpeed)}</span>
-        </div>
-        <div class="armory-stat">
-          <span class="armory-stat-label">Defense Fit</span>
-          <span class="armory-stat-value">${formatFrameDefenseSummary(inspected.build)}</span>
-        </div>
-      </div>
-      <div class="armory-defenses">
-        <span class="armory-defense">${capitalize(inspected.build.spread)} pattern</span>
-        <span class="armory-defense">${capitalize(inspected.build.ammo)} ammo</span>
-        <span class="armory-defense">${inspectedVisual.hardpointName}</span>
-      </div>
-      <div class="armory-action-row">
-        <button type="button" ${inspectedOwned && !inspectedActive ? "" : "disabled"} data-armory-action="equip">
-          ${inspectedActive ? "Installed" : inspectedOwned ? "Install To Hardpoint" : "Locked"}
-        </button>
-        <span class="muted">${inspectedOwned ? "Drag from the rack or tap the slot." : "Unlock through Flight School."}</span>
-      </div>
-      <div class="armory-note">${inspected.notes}</div>
-    `;
-    const equipBtn = armoryInspector.querySelector('[data-armory-action="equip"]');
-    if (equipBtn && inspectedOwned && !inspectedActive) {
-      equipBtn.addEventListener("click", () => {
-        equipStarterLoadout(inspected.id);
-        safeUpdateHangar();
-      });
-    }
-  }
-
-  if (!weaponInventory) return;
-  weaponInventory.innerHTML = "";
-
-  starterWeaponLoadouts.forEach((item) => {
-    const itemBuild = item.build;
-    const cfg = getPrimaryFireConfig(itemBuild);
+  let statRows = "";
+  if (slotId === "primary") {
+    const cfg = getPrimaryFireConfig(item.build);
     const hitDamage = computePrimaryDamage({
       ammo: cfg.ammo,
       speed: cfg.bulletSpeed,
       radius: cfg.projectileRadius,
     });
-    const card = document.createElement("div");
-    const owned = ownedIds.has(item.id);
-    const active = equipped.id === item.id;
-    const selected = inspected.id === item.id;
-    const visual = getArmoryFrameVisual(item);
-    card.className = `armory-item${active ? " is-active" : ""}${owned ? "" : " is-locked"}${selected ? " is-selected" : ""}`;
-    card.setAttribute("role", "button");
-    card.tabIndex = 0;
-    card.innerHTML = `
-      <div class="armory-item-head">
-        <div class="armory-item-media">
-          <img src="${visual.icon}" alt="" />
-        </div>
-        <div class="armory-item-title">
-          <h3>${item.name}</h3>
-          <p>${item.subtitle}</p>
-        </div>
-        <span class="armory-chip">${active ? "Installed" : getArmoryUnlockText(item, owned)}</span>
+    statRows = `
+      <div class="armory-inspector-stats">
+        <div class="armory-stat"><span class="armory-stat-label">Hit Damage</span><span class="armory-stat-value">${formatNumber(hitDamage, 1)}</span></div>
+        <div class="armory-stat"><span class="armory-stat-label">Cooldown</span><span class="armory-stat-value">${formatNumber(cfg.cooldown, 2)}s</span></div>
+        <div class="armory-stat"><span class="armory-stat-label">Projectile Speed</span><span class="armory-stat-value">${Math.round(cfg.bulletSpeed)}</span></div>
+        <div class="armory-stat"><span class="armory-stat-label">Defense Fit</span><span class="armory-stat-value">${formatFrameDefenseSummary(composeShipBuildFromArmory({ armory: { equippedLoadoutId: item.id, equippedDefenseSlotIds: getEquippedDefenseSlotIds() } }))}</span></div>
       </div>
-      <div class="armory-tags">
-        ${item.tags.map((tag) => `<span class="armory-tag">${tag}</span>`).join("")}
+      <div class="armory-defenses">
+        <span class="armory-defense">${capitalize(item.build.spread)} pattern</span>
+        <span class="armory-defense">${capitalize(item.build.ammo)} ammo</span>
+        <span class="armory-defense">${item.build.effect === "none" ? "No effect" : capitalize(item.build.effect)}</span>
       </div>
-      <div class="armory-item-stats">
-        <div class="armory-stat">
-          <span class="armory-stat-label">Hit Damage</span>
-          <span class="armory-stat-value">${formatNumber(hitDamage, 1)}</span>
-        </div>
-        <div class="armory-stat">
-          <span class="armory-stat-label">Cooldown</span>
-          <span class="armory-stat-value">${formatNumber(cfg.cooldown, 2)}s</span>
-        </div>
-        <div class="armory-stat">
-          <span class="armory-stat-label">Projectile Speed</span>
-          <span class="armory-stat-value">${Math.round(cfg.bulletSpeed)}</span>
-        </div>
-        <div class="armory-stat">
-          <span class="armory-stat-label">Defense Fit</span>
-          <span class="armory-stat-value">${formatFrameDefenseSummary(itemBuild)}</span>
-        </div>
-      </div>
-      <div class="armory-item-foot">${item.description}</div>
     `;
+  } else if (slotId.startsWith("defense-")) {
+    const shieldText =
+      item.build?.shieldMaxLevel !== undefined
+        ? `Shield level ${item.build.shieldMaxLevel + 1}`
+        : "No shield";
+    const armorText =
+      item.build?.armorAmountLevel !== undefined
+        ? `Armor level ${item.build.armorAmountLevel + 1}`
+        : `Armor class ${item.build?.armorClass ?? "-"}`;
+    statRows = `
+      <div class="armory-inspector-stats">
+        <div class="armory-stat"><span class="armory-stat-label">Type</span><span class="armory-stat-value">${item.id === "none" ? "Empty" : capitalize(item.defenseType)}</span></div>
+        <div class="armory-stat"><span class="armory-stat-label">Bay Effect</span><span class="armory-stat-value">${item.id === "none" ? "Clear" : item.defenseType === "shield" ? shieldText : armorText}</span></div>
+      </div>
+    `;
+  } else {
+    statRows = `
+      <div class="armory-inspector-stats">
+        <div class="armory-stat"><span class="armory-stat-label">Status</span><span class="armory-stat-value">${item.installed ? "Installed" : item.owned ? "Owned" : "Locked"}</span></div>
+        <div class="armory-stat"><span class="armory-stat-label">Unlock</span><span class="armory-stat-value">${item.owned ? "Ready" : item.unlockAt ? `Rank ${item.unlockAt}` : "Available"}</span></div>
+      </div>
+    `;
+  }
 
-    if (owned) {
-      card.addEventListener("pointerdown", (event) => {
-        beginArmoryDrag(event, item, card);
-      });
-    } else {
-      card.addEventListener("click", () => {
-        armorySelectedLoadoutId = item.id;
+  armoryInspector.innerHTML = `
+    <div class="armory-inspector-head">
+      <div class="armory-inspector-title">
+        <p class="armory-kicker">Selected Module</p>
+        <h3>${item.name}</h3>
+        <p>${item.subtitle || ""}</p>
+      </div>
+      <span class="armory-chip">${item.installed ? "Installed" : getArmoryUnlockText(item, !!item.owned)}</span>
+    </div>
+    <div class="armory-tags">
+      ${(item.tags || []).map((tag) => `<span class="armory-tag">${tag}</span>`).join("")}
+    </div>
+    <p class="armory-summary">${item.description}</p>
+    ${statRows}
+    <div class="armory-note">${item.notes || ""}</div>
+  `;
+}
+
+function renderShipUpgradesPanel() {
+  const equipped = getEquippedStarterLoadout();
+  if (!equipped) return;
+  if (!["primary", "defense-0", "defense-1", "support"].includes(armorySelectedSlotId)) {
+    armorySelectedSlotId = "primary";
+  }
+
+  renderShipStatsPanel();
+  const slotDefs = getArmorySlotDefinitions();
+  if (armoryBench) {
+    armoryBench.innerHTML = `
+      <div class="armory-drone">
+        <img class="armory-ship-base" src="${ASSET_ROOT}/playerShip2_blue.png" alt="" aria-hidden="true" />
+        ${slotDefs
+          .map(
+            (slot) => `
+          <button
+            type="button"
+            class="armory-slot ${slot.className} is-clickable${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
+            data-armory-slot="${slot.id}"
+          >
+            <span class="armory-slot-label">${slot.label}</span>
+            <span class="armory-slot-head">
+              <img class="armory-slot-icon" src="${slot.icon}" alt="" />
+              <span class="armory-slot-copy">
+                <span class="armory-slot-name">${slot.name}</span>
+                <span class="armory-slot-meta">${slot.meta}</span>
+              </span>
+              <span class="armory-slot-pill">${slot.installedId && slot.installedId !== "none" ? "Installed" : "Open"}</span>
+            </span>
+            <span class="armory-slot-note">${slot.note}</span>
+          </button>
+        `
+          )
+          .join("")}
+      </div>
+    `;
+    armoryBench.querySelectorAll("[data-armory-slot]").forEach((slotButton) => {
+      slotButton.addEventListener("click", () => {
+        armorySelectedSlotId = slotButton.dataset.armorySlot || "primary";
+        armoryPreviewItemId = null;
         safeUpdateHangar();
       });
-    }
-    card.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      armorySelectedLoadoutId = item.id;
-      if (owned && !active) {
-        equipStarterLoadout(item.id);
+    });
+  }
+
+  const rackMeta = getArmorySlotMeta(armorySelectedSlotId);
+  if (armoryRackTitle) armoryRackTitle.textContent = rackMeta.title;
+  if (armoryRackCopy) armoryRackCopy.textContent = rackMeta.copy;
+  if (armoryRackTip) armoryRackTip.textContent = rackMeta.tip;
+  renderArmoryInspector(armorySelectedSlotId);
+
+  if (!weaponInventory) return;
+  weaponInventory.innerHTML = "";
+  const inventoryItems = getArmoryItemsForSlot(armorySelectedSlotId);
+
+  inventoryItems.forEach((item) => {
+    const button = document.createElement("button");
+    const canInstall =
+      armorySelectedSlotId === "support"
+        ? canInstallSupportItem(item)
+        : !!item.owned;
+    button.type = "button";
+    button.className = `armory-inventory-item${item.installed ? " is-installed" : ""}${canInstall ? "" : " is-locked"}${armoryPreviewItemId === item.id ? " is-preview" : ""}`;
+    button.innerHTML = `
+      <span class="armory-inventory-icon"><img src="${item.icon}" alt="" /></span>
+      <span class="armory-inventory-name">${item.name}</span>
+      <span class="armory-inventory-status">${item.installed ? "Installed" : getArmoryUnlockText(item, canInstall || !!item.owned)}</span>
+    `;
+    button.addEventListener("mouseenter", () => {
+      armoryPreviewItemId = item.id;
+      renderArmoryInspector(armorySelectedSlotId);
+    });
+    button.addEventListener("mouseleave", () => {
+      armoryPreviewItemId = null;
+      renderArmoryInspector(armorySelectedSlotId);
+    });
+    button.addEventListener("focus", () => {
+      armoryPreviewItemId = item.id;
+      renderArmoryInspector(armorySelectedSlotId);
+    });
+    button.addEventListener("blur", () => {
+      armoryPreviewItemId = null;
+      renderArmoryInspector(armorySelectedSlotId);
+    });
+    button.addEventListener("click", () => {
+      armoryPreviewItemId = item.id;
+      if (item.installed) {
+        renderArmoryInspector(armorySelectedSlotId);
+        return;
       }
+      if (armorySelectedSlotId === "support" && !canInstallSupportItem(item)) {
+        renderArmoryInspector(armorySelectedSlotId);
+        return;
+      }
+      if (armorySelectedSlotId !== "support" && !item.owned) {
+        renderArmoryInspector(armorySelectedSlotId);
+        return;
+      }
+      handleArmorySlotInstall(armorySelectedSlotId, item.id);
       safeUpdateHangar();
     });
-    if (owned) {
-      card.addEventListener("dblclick", () => {
-        if (active) return;
-        armorySelectedLoadoutId = item.id;
-        equipStarterLoadout(item.id);
-        safeUpdateHangar();
-      });
-    }
-    weaponInventory.appendChild(card);
+    weaponInventory.appendChild(button);
   });
 }
 

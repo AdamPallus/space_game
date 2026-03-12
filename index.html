@@ -104,48 +104,29 @@
 
           <div class="tab-panel" id="tab-loadout" data-tab-panel="loadout">
             <div class="loadout">
-              <h2>Ship Upgrades</h2>
+              <h2>Starter Armory</h2>
               <p class="investments-desc">
-                Click a module to configure your ship. (Combat wiring comes in later overhaul steps.)
+                Flight School has opened your starter rack. Equip a prebuilt frame, compare the combat
+                profile, and launch.
               </p>
-              <div class="ship-upgrades" id="ship-upgrades-panel">
-                <div class="ship-upgrades-grid">
-                  <div class="ship-canvas" aria-label="Ship upgrade layout">
-                    <img
-                      class="ship-bg"
-                      src="assets/SpaceShooterRedux/PNG/playerShip2_blue.png"
-                      alt=""
-                      aria-hidden="true"
-                    />
-                    <button class="ship-node gun" type="button" data-ship-node="gun">
-                      <span class="ship-node-title">Gun</span>
-                      <span class="ship-node-value" id="ship-gun-value">-</span>
-                    </button>
-                    <button class="ship-node flow" type="button" data-ship-node="flow">
-                      <span class="ship-node-title">Flow</span>
-                      <span class="ship-node-value" id="ship-flow-value">-</span>
-                    </button>
-                    <button class="ship-node ammo" type="button" data-ship-node="ammo">
-                      <span class="ship-node-title">Ammo</span>
-                      <span class="ship-node-value" id="ship-ammo-value">-</span>
-                    </button>
-                    <button class="ship-node effects" type="button" data-ship-node="effects">
-                      <span class="ship-node-title">Effects</span>
-                      <span class="ship-node-value" id="ship-effects-value">-</span>
-                    </button>
-                    <button class="ship-node defenses" type="button" data-ship-node="defenses">
-                      <span class="ship-node-title">Defenses</span>
-                      <span class="ship-node-value" id="ship-defenses-value">-</span>
-                    </button>
-                  </div>
-                  <div class="ship-stats" id="ship-stats" aria-label="Ship stats"></div>
-                </div>
+              <div class="armory-layout">
+                <div class="armory-hero" id="armory-hero" aria-label="Equipped loadout"></div>
+                <div class="ship-stats" id="ship-stats" aria-label="Ship stats"></div>
               </div>
             </div>
 
             <div class="loadout">
-              <h2>Ability Slot</h2>
-              <p class="investments-desc">Choose your mission ability (RMB / ALT button).</p>
+              <h2>Weapon Inventory</h2>
+              <p class="investments-desc">
+                These frames package the hidden tuning work into readable combat roles. Additional gear
+                can slot into this inventory later.
+              </p>
+              <div class="armory-grid" id="weapon-inventory"></div>
+            </div>
+
+            <div class="loadout">
+              <h2>Pilot Ability</h2>
+              <p class="investments-desc">Keep one support system online. We can revisit this layer later.</p>
               <div class="tree-nodes" id="tree-aux-select"></div>
             </div>
 

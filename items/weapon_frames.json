@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "entries": {
+    "fundamentals": {
+      "name": "Cadet Kinetic Frame",
+      "subtitle": "Precision trainer",
+      "description": "Standard kinetic trainer. Stay on target and break formation before the warden arrives.",
+      "notes": "Balanced recoil, focused shots, and a shield slot make this the cleanest frame for learning lane control.",
+      "starterUnlockStage": 0,
+      "sortOrder": 10,
+      "tags": ["kinetic", "focused", "balanced"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "focused",
+        "ammo": "kinetic",
+        "effect": "none",
+        "flowRateLevel": 0,
+        "flowVelocityLevel": 0,
+        "flowSizeLevel": 0,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0
+      }
+    },
+    "area_control": {
+      "name": "Area Control Frame",
+      "subtitle": "Swarm breaker",
+      "description": "Wide plasma spread tuned for interceptor packs. Sweep lanes and keep pressure on clustered wings.",
+      "notes": "Micro-shots, plasma burn, and explosive impact tuning turn this into the anti-swarm testbed.",
+      "starterUnlockStage": 1,
+      "sortOrder": 20,
+      "tags": ["plasma", "wide", "explosive"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "wide",
+        "ammo": "plasma",
+        "effect": "explosive",
+        "flowRateLevel": 1,
+        "flowVelocityLevel": 0,
+        "flowSizeLevel": 1,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 1,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0
+      }
+    },
+    "armor_break": {
+      "name": "Armor Break Frame",
+      "subtitle": "Heavy punch",
+      "description": "Large focused kinetic slugs with pierce. Commit to heavy targets and push through plated lines.",
+      "notes": "This frame trades blanket coverage for control, shield support, and a plated backup module.",
+      "starterUnlockStage": 2,
+      "sortOrder": 30,
+      "tags": ["kinetic", "pierce", "anti-armor"],
+      "build": {
+        "gunDiameter": "large",
+        "spread": "focused",
+        "ammo": "kinetic",
+        "effect": "pierce",
+        "flowRateLevel": 0,
+        "flowVelocityLevel": 2,
+        "flowSizeLevel": 1,
+        "defenseSlots": ["shield", "armor"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 0,
+        "armorAmountLevel": 1,
+        "armorClass": 12,
+        "armorClassLevel": 0
+      }
+    }
+  }
+}

@@ -27,6 +27,8 @@ const missionIntroTitle = document.getElementById("mission-intro-title");
 const missionIntroText = document.getElementById("mission-intro-text");
 const shipNodeButtons = document.querySelectorAll("[data-ship-node]");
 const shipStats = document.getElementById("ship-stats");
+const armoryHero = document.getElementById("armory-hero");
+const weaponInventory = document.getElementById("weapon-inventory");
 
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
@@ -196,6 +198,90 @@ function createDefaultShipBuild() {
   };
 }
 
+const defaultStarterWeaponLoadouts = [
+  {
+    id: "fundamentals",
+    name: "Cadet Kinetic Frame",
+    subtitle: "Precision trainer",
+    description:
+      "Standard kinetic trainer. Stay on target and break formation before the warden arrives.",
+    notes:
+      "Balanced recoil, focused shots, and a shield slot make this the cleanest frame for learning lane control.",
+    starterUnlockStage: 0,
+    tags: ["kinetic", "focused", "balanced"],
+    build: {
+      gunDiameter: "medium",
+      spread: "focused",
+      ammo: "kinetic",
+      effect: "none",
+      flowRateLevel: 0,
+      flowVelocityLevel: 0,
+      flowSizeLevel: 0,
+      defenseSlots: ["shield", "none"],
+      shieldMaxLevel: 0,
+      shieldRegenLevel: 0,
+      armorAmountLevel: 0,
+      armorClass: 10,
+      armorClassLevel: 0,
+    },
+  },
+  {
+    id: "area_control",
+    name: "Area Control Frame",
+    subtitle: "Swarm breaker",
+    description:
+      "Wide plasma spread tuned for interceptor packs. Sweep lanes and keep pressure on clustered wings.",
+    notes:
+      "Micro-shots, plasma burn, and explosive impact tuning turn this into the anti-swarm testbed.",
+    starterUnlockStage: 1,
+    tags: ["plasma", "wide", "explosive"],
+    build: {
+      gunDiameter: "medium",
+      spread: "wide",
+      ammo: "plasma",
+      effect: "explosive",
+      flowRateLevel: 1,
+      flowVelocityLevel: 0,
+      flowSizeLevel: 1,
+      defenseSlots: ["shield", "none"],
+      shieldMaxLevel: 0,
+      shieldRegenLevel: 1,
+      armorAmountLevel: 0,
+      armorClass: 10,
+      armorClassLevel: 0,
+    },
+  },
+  {
+    id: "armor_break",
+    name: "Armor Break Frame",
+    subtitle: "Heavy punch",
+    description:
+      "Large focused kinetic slugs with pierce. Commit to heavy targets and push through plated lines.",
+    notes:
+      "This frame trades blanket coverage for control, shield support, and a plated backup module.",
+    starterUnlockStage: 2,
+    tags: ["kinetic", "pierce", "anti-armor"],
+    build: {
+      gunDiameter: "large",
+      spread: "focused",
+      ammo: "kinetic",
+      effect: "pierce",
+      flowRateLevel: 0,
+      flowVelocityLevel: 2,
+      flowSizeLevel: 1,
+      defenseSlots: ["shield", "armor"],
+      shieldMaxLevel: 1,
+      shieldRegenLevel: 0,
+      armorAmountLevel: 1,
+      armorClass: 12,
+      armorClassLevel: 0,
+    },
+  },
+];
+
+let starterWeaponLoadouts = [];
+let starterWeaponLoadoutsById = {};
+
 const consumables = [
   {
     id: "bomb",
@@ -289,77 +375,233 @@ const DEFAULT_SYSTEM_UNLOCKS = {
   compendium: false,
 };
 
-const onboardingTrainingMissions = [
+const onboardingTrainingMissionSpecs = [
   {
     missionId: "level1",
     title: "Flight School: Fundamentals",
-    briefing:
-      "Standard kinetic trainer. Stay on target and break formation before the warden arrives.",
-    forcedBuild: {
-      gunDiameter: "medium",
-      spread: "focused",
-      ammo: "kinetic",
-      effect: "none",
-      flowRateLevel: 0,
-      flowVelocityLevel: 0,
-      flowSizeLevel: 0,
-      defenseSlots: ["shield", "none"],
-      shieldMaxLevel: 0,
-      shieldRegenLevel: 0,
-      armorAmountLevel: 0,
-      armorClass: 10,
-      armorClassLevel: 0,
-    },
-    reward: "Swarm training frame unlocked.",
+    loadoutId: "fundamentals",
+    rewardLoadoutId: "area_control",
   },
   {
     missionId: "level1_swarm",
     title: "Flight School: Area Control",
-    briefing:
-      "Wide plasma spread tuned for interceptor packs. Sweep lanes and keep pressure on clustered wings.",
-    forcedBuild: {
-      gunDiameter: "medium",
-      spread: "wide",
-      ammo: "plasma",
-      effect: "explosive",
-      flowRateLevel: 1,
-      flowVelocityLevel: 0,
-      flowSizeLevel: 1,
-      defenseSlots: ["shield", "none"],
-      shieldMaxLevel: 0,
-      shieldRegenLevel: 1,
-      armorAmountLevel: 0,
-      armorClass: 10,
-      armorClassLevel: 0,
-    },
-    reward: "Armor-breaker training frame unlocked.",
+    loadoutId: "area_control",
+    rewardLoadoutId: "armor_break",
   },
   {
     missionId: "level1_armored",
     title: "Flight School: Armor Break",
-    briefing:
-      "Large focused kinetic slugs with pierce. Commit to heavy targets and push through plated lines.",
-    forcedBuild: {
-      gunDiameter: "large",
-      spread: "focused",
-      ammo: "kinetic",
-      effect: "pierce",
-      flowRateLevel: 0,
-      flowVelocityLevel: 2,
-      flowSizeLevel: 1,
-      defenseSlots: ["shield", "armor"],
-      shieldMaxLevel: 1,
-      shieldRegenLevel: 0,
-      armorAmountLevel: 1,
-      armorClass: 12,
-      armorClassLevel: 0,
-    },
-    reward: "Ship loadout systems unlocked.",
+    loadoutId: "armor_break",
+    rewardMessage: "Starter armory online.",
   },
 ];
 
 function cloneShipBuild(build) {
   return JSON.parse(JSON.stringify(build));
+}
+
+function buildWeaponFrameIndex(items) {
+  starterWeaponLoadouts = items.map((item) => ({
+    ...item,
+    build: cloneShipBuild(item.build),
+  }));
+  starterWeaponLoadoutsById = Object.fromEntries(
+    starterWeaponLoadouts.map((item) => [item.id, item])
+  );
+}
+
+function sanitizeWeaponFrameBuild(build, context = "weapon frame") {
+  if (!build || typeof build !== "object" || Array.isArray(build)) {
+    throw new Error(`${context} is missing a build definition`);
+  }
+  const base = createDefaultShipBuild();
+  const normalized = {
+    ...cloneShipBuild(base),
+    ...cloneShipBuild(build),
+    effectUpgrades: {
+      ...cloneShipBuild(base.effectUpgrades),
+      ...cloneShipBuild(build.effectUpgrades || {}),
+    },
+  };
+
+  if (!["small", "medium", "large"].includes(normalized.gunDiameter)) {
+    throw new Error(`${context} has invalid gunDiameter`);
+  }
+  if (!["focused", "burst", "wide"].includes(normalized.spread)) {
+    throw new Error(`${context} has invalid spread`);
+  }
+  if (!["kinetic", "plasma"].includes(normalized.ammo)) {
+    throw new Error(`${context} has invalid ammo`);
+  }
+  if (!["none", "homing", "explosive", "pierce"].includes(normalized.effect)) {
+    throw new Error(`${context} has invalid effect`);
+  }
+  if (!Array.isArray(normalized.defenseSlots)) {
+    throw new Error(`${context} has invalid defenseSlots`);
+  }
+  normalized.defenseSlots = normalized.defenseSlots.slice(0, 2);
+  while (normalized.defenseSlots.length < 2) normalized.defenseSlots.push("none");
+  normalized.defenseSlots.forEach((slot) => {
+    if (!["none", "shield", "armor"].includes(slot)) {
+      throw new Error(`${context} has invalid defense slot`);
+    }
+  });
+  return normalized;
+}
+
+function applyWeaponFrameCatalog(catalog) {
+  const entries = catalog?.entries;
+  if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
+    throw new Error("weapon frame catalog is missing entries");
+  }
+
+  const items = Object.entries(entries)
+    .map(([id, entry], index) => {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        throw new Error(`weapon frame ${id} is invalid`);
+      }
+      if (typeof entry.name !== "string" || !entry.name.trim()) {
+        throw new Error(`weapon frame ${id} is missing a name`);
+      }
+      if (typeof entry.description !== "string" || !entry.description.trim()) {
+        throw new Error(`weapon frame ${id} is missing a description`);
+      }
+      if (!Array.isArray(entry.tags)) {
+        throw new Error(`weapon frame ${id} is missing tags`);
+      }
+      return {
+        id,
+        name: entry.name.trim(),
+        subtitle: typeof entry.subtitle === "string" ? entry.subtitle.trim() : "",
+        description: entry.description.trim(),
+        notes: typeof entry.notes === "string" ? entry.notes.trim() : "",
+        starterUnlockStage: Number.isFinite(entry.starterUnlockStage)
+          ? Math.max(0, Math.floor(entry.starterUnlockStage))
+          : null,
+        tags: entry.tags
+          .map((tag) => String(tag).trim())
+          .filter((tag) => !!tag),
+        build: sanitizeWeaponFrameBuild(entry.build, `weapon frame ${id}`),
+        sortOrder: Number.isFinite(entry.sortOrder) ? entry.sortOrder : index,
+      };
+    })
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+
+  buildWeaponFrameIndex(items);
+  return starterWeaponLoadouts;
+}
+
+buildWeaponFrameIndex(defaultStarterWeaponLoadouts);
+
+function getOnboardingTrainingMissions() {
+  return onboardingTrainingMissionSpecs.map((spec) => {
+    const frame = starterWeaponLoadoutsById[spec.loadoutId];
+    const rewardFrame = spec.rewardLoadoutId
+      ? starterWeaponLoadoutsById[spec.rewardLoadoutId]
+      : null;
+    return {
+      missionId: spec.missionId,
+      title: spec.title,
+      loadoutId: spec.loadoutId,
+      briefing: frame?.description || "",
+      reward:
+        spec.rewardMessage ||
+        `${rewardFrame?.name || capitalize(spec.rewardLoadoutId || "frame")} added to armory.`,
+    };
+  });
+}
+
+function getStarterLoadoutIdsForStage(stage, skipOnboarding = false) {
+  const starterFrames = starterWeaponLoadouts.filter((item) =>
+    Number.isFinite(item.starterUnlockStage)
+  );
+  if (skipOnboarding || stage >= ONBOARDING_STAGE_TRAINING_COMPLETE) {
+    return starterFrames.map((item) => item.id);
+  }
+  return starterFrames
+    .filter((item) => item.starterUnlockStage <= stage)
+    .map((item) => item.id);
+}
+
+function findClosestStarterLoadoutId(build) {
+  if (!build) return starterWeaponLoadouts[0].id;
+  let bestId = starterWeaponLoadouts[0].id;
+  let bestScore = -1;
+  starterWeaponLoadouts.forEach((item) => {
+    const candidate = item.build;
+    let score = 0;
+    if (candidate.gunDiameter === build.gunDiameter) score += 3;
+    if (candidate.spread === build.spread) score += 3;
+    if (candidate.ammo === build.ammo) score += 3;
+    if (candidate.effect === build.effect) score += 3;
+    if ((candidate.flowRateLevel ?? 0) === (build.flowRateLevel ?? 0)) score += 2;
+    if ((candidate.flowVelocityLevel ?? 0) === (build.flowVelocityLevel ?? 0)) score += 2;
+    if ((candidate.flowSizeLevel ?? 0) === (build.flowSizeLevel ?? 0)) score += 2;
+    if (
+      JSON.stringify(candidate.defenseSlots || []) === JSON.stringify(build.defenseSlots || [])
+    ) {
+      score += 2;
+    }
+    if ((candidate.shieldMaxLevel ?? 0) === (build.shieldMaxLevel ?? 0)) score += 1;
+    if ((candidate.shieldRegenLevel ?? 0) === (build.shieldRegenLevel ?? 0)) score += 1;
+    if ((candidate.armorAmountLevel ?? 0) === (build.armorAmountLevel ?? 0)) score += 1;
+    if ((candidate.armorClass ?? 10) === (build.armorClass ?? 10)) score += 1;
+    if ((candidate.armorClassLevel ?? 0) === (build.armorClassLevel ?? 0)) score += 1;
+    if (score > bestScore) {
+      bestScore = score;
+      bestId = item.id;
+    }
+  });
+  return bestId;
+}
+
+function normalizeStarterArmoryState(targetState) {
+  const grantedIds = getStarterLoadoutIdsForStage(
+    targetState.onboardingStage,
+    !!targetState.debugSkipOnboarding
+  );
+  const existingOwned = Array.isArray(targetState.armory?.ownedLoadoutIds)
+    ? targetState.armory.ownedLoadoutIds
+    : [];
+  const ownedLoadoutIds = Array.from(new Set([...existingOwned, ...grantedIds])).filter(
+    (id) => !!starterWeaponLoadoutsById[id]
+  );
+  const desiredEquippedId =
+    targetState.armory?.equippedLoadoutId && ownedLoadoutIds.includes(targetState.armory.equippedLoadoutId)
+      ? targetState.armory.equippedLoadoutId
+      : ownedLoadoutIds.includes(findClosestStarterLoadoutId(targetState.shipBuild))
+        ? findClosestStarterLoadoutId(targetState.shipBuild)
+        : ownedLoadoutIds[0] || starterWeaponLoadouts[0].id;
+
+  targetState.armory = {
+    ownedLoadoutIds,
+    equippedLoadoutId: desiredEquippedId,
+  };
+
+  const equipped = starterWeaponLoadoutsById[desiredEquippedId];
+  if (equipped) {
+    targetState.shipBuild = cloneShipBuild(equipped.build);
+  }
+}
+
+function getOwnedStarterLoadoutIds() {
+  return state.armory?.ownedLoadoutIds || [];
+}
+
+function getEquippedStarterLoadout() {
+  const equippedId = state.armory?.equippedLoadoutId;
+  return starterWeaponLoadoutsById[equippedId] || starterWeaponLoadouts[0];
+}
+
+function equipStarterLoadout(loadoutId) {
+  const item = starterWeaponLoadoutsById[loadoutId];
+  if (!item) return;
+  if (!getOwnedStarterLoadoutIds().includes(loadoutId)) return;
+  state.armory = state.armory || { ownedLoadoutIds: [], equippedLoadoutId: loadoutId };
+  state.armory.equippedLoadoutId = loadoutId;
+  state.shipBuild = cloneShipBuild(item.build);
+  syncShipBuildToLegacy();
+  saveState();
 }
 
 function buildSystemUnlocksForStage(stage, skipOnboarding = false) {
@@ -400,17 +642,22 @@ function isOnboardingTrainingActive() {
 
 function getCurrentOnboardingMission() {
   if (!isOnboardingTrainingActive()) return null;
-  return onboardingTrainingMissions[state.onboardingStage] || null;
+  return getOnboardingTrainingMissions()[state.onboardingStage] || null;
 }
 
 function getOnboardingMissionForStage(stage) {
   if (!Number.isFinite(stage)) return null;
-  return onboardingTrainingMissions[Math.max(0, Math.floor(stage))] || null;
+  return getOnboardingTrainingMissions()[Math.max(0, Math.floor(stage))] || null;
 }
 
 function isSystemUnlocked(systemId) {
   if (isOnboardingSkipped()) return true;
   return !!state.systemUnlocks?.[systemId];
+}
+
+function syncStarterArmoryState() {
+  normalizeStarterArmoryState(state);
+  syncShipBuildToLegacy();
 }
 
 function refreshSystemUnlocks() {
@@ -869,6 +1116,28 @@ async function loadLevelMetaStrict(levelName) {
   const data = await loadLevelStrict(levelName);
   levelMetaStrictCache.set(levelName, data);
   return data;
+}
+
+const WEAPON_FRAME_CATALOG_PATH = "items/weapon_frames.json";
+let weaponFrameCatalogPromise = null;
+
+async function loadWeaponFrameCatalog() {
+  try {
+    const response = await fetch(WEAPON_FRAME_CATALOG_PATH, { cache: "no-store" });
+    if (!response.ok) throw new Error("weapon frame catalog load failed");
+    const data = await response.json();
+    applyWeaponFrameCatalog(data);
+    return starterWeaponLoadouts;
+  } catch (error) {
+    console.warn("Weapon frame catalog load failed; using embedded defaults.", error);
+    buildWeaponFrameIndex(defaultStarterWeaponLoadouts);
+    return starterWeaponLoadouts;
+  }
+}
+
+async function ensureWeaponFrameCatalogLoaded() {
+  if (!weaponFrameCatalogPromise) weaponFrameCatalogPromise = loadWeaponFrameCatalog();
+  return weaponFrameCatalogPromise;
 }
 
 const ENEMY_CATALOG_PATH = "enemies/enemy_catalog.json";
@@ -1456,6 +1725,7 @@ if (debugSkipOnboarding) {
       state.onboardingStage = Math.max(state.onboardingStage, ONBOARDING_STAGE_COMPLETE);
     }
     refreshSystemUnlocks();
+    syncStarterArmoryState();
     saveState();
     safeUpdateHangar();
     renderLevelSelect();
@@ -1480,6 +1750,10 @@ function loadState() {
       debugShowFullCompendium: false,
       encounteredEnemies: {},
       killsByEnemyKey: {},
+      armory: {
+        ownedLoadoutIds: ["fundamentals"],
+        equippedLoadoutId: "fundamentals",
+      },
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
         gunDiameter: { medium: true },
@@ -1597,6 +1871,7 @@ function loadState() {
     parsed.shipBuild.armorClass = parsed.shipBuild.armorClass ?? 10;
     parsed.shipBuild.armorAmountLevel = parsed.shipBuild.armorAmountLevel ?? 0;
     parsed.shipBuild.armorClassLevel = parsed.shipBuild.armorClassLevel ?? 0;
+    normalizeStarterArmoryState(parsed);
     parsed.missionCarouselIndex = parsed.missionCarouselIndex || {};
     parsed.shipUnlocked = parsed.shipUnlocked || {};
     parsed.shipUnlocked.gunDiameter = parsed.shipUnlocked.gunDiameter || { medium: true };
@@ -1659,6 +1934,10 @@ function loadState() {
       systemUnlocks: { ...DEFAULT_SYSTEM_UNLOCKS },
       debugUnlock: false,
       debugInvincible: false,
+      armory: {
+        ownedLoadoutIds: ["fundamentals"],
+        equippedLoadoutId: "fundamentals",
+      },
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
         gunDiameter: { medium: true },
@@ -1791,6 +2070,7 @@ function syncShipBuildToLegacy() {
 
   const ammo = build.ammo || "kinetic";
   state.weapon.payload = ammo === "plasma" ? "plasma" : "kinetic";
+  state.weapon.mount = "front";
 
   const effect = build.effect || "none";
   if (effect === "homing") state.weapon.modifier = "homing";
@@ -1875,6 +2155,7 @@ function initConsumablesForMission() {
 async function startMission({ showIntro = false } = {}) {
   closeShipModal();
   hideMissionIntro();
+  await ensureWeaponFrameCatalogLoaded();
   await ensureEnemyCatalogLoaded();
   const directive = getCurrentOnboardingMission();
   if (directive && selectedLevelId !== directive.missionId) {
@@ -1890,10 +2171,10 @@ async function startMission({ showIntro = false } = {}) {
     return false;
   }
   activeShipBuildOverride = null;
-  if (directive?.forcedBuild) {
+  if (directive?.loadoutId && starterWeaponLoadoutsById[directive.loadoutId]) {
     activeShipBuildOverride = {
       ...cloneShipBuild(createDefaultShipBuild()),
-      ...cloneShipBuild(directive.forcedBuild),
+      ...cloneShipBuild(starterWeaponLoadoutsById[directive.loadoutId].build),
       effectUpgrades: cloneShipBuild(createDefaultShipBuild().effectUpgrades),
     };
   }
@@ -2000,6 +2281,7 @@ function endMission({ ejected = false, completed = false } = {}) {
         state.onboardingStage + 1
       );
       refreshSystemUnlocks();
+      syncStarterArmoryState();
       continueTrainingAfterDebrief = !!getOnboardingMissionForStage(state.onboardingStage);
       onboardingMessage =
         state.onboardingStage >= ONBOARDING_STAGE_TRAINING_COMPLETE
@@ -2017,6 +2299,7 @@ function endMission({ ejected = false, completed = false } = {}) {
   ) {
     state.onboardingStage = ONBOARDING_STAGE_COMPLETE;
     refreshSystemUnlocks();
+    syncStarterArmoryState();
     onboardingMessage = "Economy systems unlocked. You now have full hangar access.";
   }
   saveState();
@@ -2082,6 +2365,7 @@ function startPlayerDeathSequence() {
 
 function updateHangar() {
   refreshSystemUnlocks();
+  syncStarterArmoryState();
   if (pilotRank) {
     pilotRank.textContent = getPilotRank(state.lifetimeCredits);
   }
@@ -3306,430 +3590,120 @@ function renderShipStatsPanel() {
   `;
 }
 
+function formatFrameDefenseSummary(build) {
+  const slots = Array.isArray(build?.defenseSlots) ? build.defenseSlots.filter((slot) => slot && slot !== "none") : [];
+  if (!slots.length) return "Unshielded";
+  const labels = slots.map((slot) => capitalize(slot));
+  return labels.join(" + ");
+}
+
 function renderShipUpgradesPanel() {
+  const equipped = getEquippedStarterLoadout();
+  if (!equipped) return;
   const build = getShipBuild();
+  const equippedConfig = getPrimaryFireConfig(build);
+  const equippedDamage = computePrimaryDamage({
+    ammo: equippedConfig.ammo,
+    speed: equippedConfig.bulletSpeed,
+    radius: equippedConfig.projectileRadius,
+  });
+
   renderShipStatsPanel();
-  if (shipGunValue) {
-    const diameter = build.gunDiameter ? capitalize(build.gunDiameter) : "Medium";
-    const spread = build.spread ? capitalize(build.spread) : "Focused";
-    shipGunValue.textContent = `${diameter} / ${spread}`;
-  }
-  if (shipFlowValue) {
-    shipFlowValue.textContent = `Rate Lv ${build.flowRateLevel} / Vel Lv ${build.flowVelocityLevel} / Size Lv ${build.flowSizeLevel ?? 0}`;
-  }
-  if (shipAmmoValue) {
-    shipAmmoValue.textContent = build.ammo ? capitalize(build.ammo) : "Kinetic";
-  }
-  if (shipEffectsValue) {
-    const effect = build.effect || "none";
-    if (effect === "none") {
-      shipEffectsValue.textContent = "None";
-    } else {
-      const level = build.effectUpgrades?.[effect] ?? 0;
-      shipEffectsValue.textContent = `${capitalize(effect)} Lv ${level}`;
-    }
-  }
-  if (shipDefensesValue) {
-    const slotA = build.defenseSlots?.[0] || "none";
-    const slotB = build.defenseSlots?.[1] || "none";
-    shipDefensesValue.textContent = `${capitalize(slotA)} / ${capitalize(slotB)}`;
+  if (armoryHero) {
+    armoryHero.innerHTML = `
+      <div class="armory-kicker">Equipped Frame</div>
+      <div class="armory-title-row">
+        <div>
+          <h3>${equipped.name}</h3>
+          <div class="muted">${equipped.subtitle}</div>
+        </div>
+        <span class="armory-chip">Ready</span>
+      </div>
+      <p class="armory-summary">${equipped.description}</p>
+      <div class="armory-tags">
+        ${equipped.tags.map((tag) => `<span class="armory-tag">${tag}</span>`).join("")}
+      </div>
+      <div class="armory-defenses">
+        <span class="armory-defense">${formatFrameDefenseSummary(build)}</span>
+        <span class="armory-defense">${capitalize(build.spread)} pattern</span>
+        <span class="armory-defense">${capitalize(build.ammo)} ammo</span>
+      </div>
+      <div class="armory-note">
+        Approx. hit damage ${formatNumber(equippedDamage, 1)} | Cooldown ${formatNumber(
+      equippedConfig.cooldown,
+      2
+    )}s | Hidden tuning is now packaged into gear instead of scattered upgrade menus.
+      </div>
+    `;
   }
 
-  if (!openShipNodeId || !shipModalBody || !shipModalTitle) return;
-  if (shipModal) shipModal.hidden = false;
+  if (!weaponInventory) return;
+  const ownedIds = new Set(getOwnedStarterLoadoutIds());
+  weaponInventory.innerHTML = "";
 
-  const clear = () => {
-    shipModalBody.innerHTML = "";
-  };
-
-  const addSection = (titleText) => {
-    const section = document.createElement("div");
-    section.className = "modal-section";
-    const title = document.createElement("div");
-    title.className = "tree-label";
-    title.textContent = titleText;
-    section.appendChild(title);
-    shipModalBody.appendChild(section);
-    return section;
-  };
-
-  const addOptionRow = ({ name, desc, right, onClick, disabled = false, active = false }) => {
-    const row = document.createElement("div");
-    row.className = "upgrade-item";
-    if (active) row.classList.add("active");
-    if (disabled) row.classList.add("locked");
-
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.innerHTML = `
-      <span class="name">${name}</span>
-      <span class="desc">${desc}</span>
+  starterWeaponLoadouts.forEach((item) => {
+    const itemBuild = item.build;
+    const cfg = getPrimaryFireConfig(itemBuild);
+    const hitDamage = computePrimaryDamage({
+      ammo: cfg.ammo,
+      speed: cfg.bulletSpeed,
+      radius: cfg.projectileRadius,
+    });
+    const card = document.createElement("div");
+    const owned = ownedIds.has(item.id);
+    const active = equipped.id === item.id;
+    card.className = `armory-card${active ? " active" : ""}${owned ? "" : " locked"}`;
+    card.innerHTML = `
+      <div class="armory-card-head">
+        <div class="armory-card-title">
+          <h3>${item.name}</h3>
+          <p>${item.description}</p>
+        </div>
+        <span class="armory-chip">${active ? "Equipped" : owned ? "Owned" : "Locked"}</span>
+      </div>
+      <div class="armory-tags">
+        ${item.tags.map((tag) => `<span class="armory-tag">${tag}</span>`).join("")}
+      </div>
+      <div class="armory-card-stats">
+        <div class="armory-stat">
+          <span class="armory-stat-label">Hit Damage</span>
+          <span class="armory-stat-value">${formatNumber(hitDamage, 1)}</span>
+        </div>
+        <div class="armory-stat">
+          <span class="armory-stat-label">Cooldown</span>
+          <span class="armory-stat-value">${formatNumber(cfg.cooldown, 2)}s</span>
+        </div>
+        <div class="armory-stat">
+          <span class="armory-stat-label">Projectile Speed</span>
+          <span class="armory-stat-value">${Math.round(cfg.bulletSpeed)}</span>
+        </div>
+        <div class="armory-stat">
+          <span class="armory-stat-label">Defense Fit</span>
+          <span class="armory-stat-value">${formatFrameDefenseSummary(itemBuild)}</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" ${owned && !active ? "" : "disabled"}>
+          ${active ? "Equipped" : owned ? "Equip Frame" : "Locked"}
+        </button>
+        <span class="muted">${item.subtitle}</span>
+      </div>
+      <div class="armory-card-foot">${item.notes}</div>
     `;
 
-    const button = document.createElement("button");
-    button.textContent = right;
-    button.disabled = disabled;
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (disabled) return;
-      onClick();
-    });
-
-    row.appendChild(meta);
-    row.appendChild(button);
-    shipModalBody.appendChild(row);
-  };
-
-  const spend = (cost) => {
-    if (state.credits < cost) return false;
-    state.credits -= cost;
-    return true;
-  };
-
-  const renderGun = () => {
-    shipModalTitle.textContent = "Gun";
-    clear();
-
-    addSection("Gun Diameter");
-    [
-      { id: "small", label: "Small", desc: "Smaller projectiles, faster bullets. Better vs armor with high velocity.", cost: 120 },
-      { id: "medium", label: "Medium", desc: "Standard issue. Balanced size and speed.", cost: 0 },
-      { id: "large", label: "Large", desc: "Bigger projectiles, slower bullets. Better shield burn + explosive radius.", cost: 180 },
-    ].forEach((opt) => {
-      const active = build.gunDiameter === opt.id;
-      const unlocked = opt.cost === 0 || isShipUnlocked("gunDiameter", opt.id);
-      const canAfford = state.credits >= opt.cost;
-      addOptionRow({
-        name: opt.label,
-        desc: opt.desc,
-        right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
-        active,
-        disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
-        onClick: () => {
-          if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("gunDiameter", opt.id, opt.cost)) return;
-          build.gunDiameter = opt.id;
-          state.shipBuild = build;
-          syncShipBuildToLegacy();
-          saveState();
-          safeUpdateHangar();
-        },
-      });
-    });
-
-    addSection("Spread Pattern");
-    [
-      { id: "focused", label: "Focused", desc: "Single full-size projectile. Best vs armor.", cost: 0 },
-      { id: "burst", label: "Burst", desc: "5 micro-shots with +/- 5 deg jitter. Longer cooldown.", cost: 220 },
-      { id: "wide", label: "Wide", desc: "5 micro-shots spread across angles. Great for clearing unarmored swarms.", cost: 220 },
-    ].forEach((opt) => {
-      const active = build.spread === opt.id;
-      const unlocked = opt.cost === 0 || isShipUnlocked("spread", opt.id);
-      const canAfford = state.credits >= opt.cost;
-      addOptionRow({
-        name: opt.label,
-        desc: opt.desc,
-        right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
-        active,
-        disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
-        onClick: () => {
-          if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("spread", opt.id, opt.cost)) return;
-          build.spread = opt.id;
-          state.shipBuild = build;
-          syncShipBuildToLegacy();
-          saveState();
-          safeUpdateHangar();
-        },
-      });
-    });
-  };
-
-  const renderFlow = () => {
-    shipModalTitle.textContent = "Flow Controller";
-    clear();
-    addSection("Flow Upgrades");
-
-    const rateCost = shipPanelUpgradeCost(180, build.flowRateLevel);
-    addOptionRow({
-      name: `Fire Rate (Lv ${build.flowRateLevel})`,
-      desc: "Cooldown x0.90 per level (armor modules add a penalty).",
-      right: `Upgrade ${rateCost}/${state.credits}`,
-      disabled: state.credits < rateCost,
-      onClick: () => {
-        if (!spend(rateCost)) return;
-        build.flowRateLevel += 1;
-        state.shipBuild = build;
-        saveState();
+    const button = card.querySelector("button");
+    if (button && owned && !active) {
+      button.addEventListener("click", () => {
+        equipStarterLoadout(item.id);
         safeUpdateHangar();
-      },
-    });
-
-    const velCost = shipPanelUpgradeCost(180, build.flowVelocityLevel);
-    addOptionRow({
-      name: `Projectile Velocity (Lv ${build.flowVelocityLevel})`,
-      desc: "Bullet speed +8% per level (kinetic damage scales with velocity).",
-      right: `Upgrade ${velCost}/${state.credits}`,
-      disabled: state.credits < velCost,
-      onClick: () => {
-        if (!spend(velCost)) return;
-        build.flowVelocityLevel += 1;
-        state.shipBuild = build;
-        saveState();
-        safeUpdateHangar();
-      },
-    });
-
-    const sizeCost = shipPanelUpgradeCost(220, build.flowSizeLevel ?? 0);
-    addOptionRow({
-      name: `Projectile Size (Lv ${build.flowSizeLevel ?? 0})`,
-      desc: "Projectile radius +12% per level (big impact on plasma + explosives).",
-      right: `Upgrade ${sizeCost}/${state.credits}`,
-      disabled: state.credits < sizeCost,
-      onClick: () => {
-        if (!spend(sizeCost)) return;
-        build.flowSizeLevel = (build.flowSizeLevel ?? 0) + 1;
-        state.shipBuild = build;
-        saveState();
-        safeUpdateHangar();
-      },
-    });
-  };
-
-  const renderAmmo = () => {
-    shipModalTitle.textContent = "Ammo Source";
-    clear();
-    addSection("Ammo Type");
-    [
-      { id: "kinetic", label: "Kinetic", desc: "Damage scales with velocity and projectile size.", cost: 0 },
-      { id: "plasma", label: "Plasma", desc: "Damage scales with projectile size. Applies a damage-over-time burn.", cost: 120 },
-    ].forEach((opt) => {
-      const active = build.ammo === opt.id;
-      const unlocked = opt.cost === 0 || isShipUnlocked("ammo", opt.id);
-      const canAfford = state.credits >= opt.cost;
-      addOptionRow({
-        name: opt.label,
-        desc: opt.desc,
-        right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
-        active,
-        disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
-        onClick: () => {
-          if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("ammo", opt.id, opt.cost)) return;
-          build.ammo = opt.id;
-          state.shipBuild = build;
-          syncShipBuildToLegacy();
-          saveState();
-          safeUpdateHangar();
-        },
-      });
-    });
-  };
-
-  const renderEffects = () => {
-    shipModalTitle.textContent = "Special Effects";
-    clear();
-    addSection("Effect Module");
-    [
-      { id: "none", label: "None", desc: "No special effect.", cost: 0 },
-      { id: "homing", label: "Homing", desc: "Projectiles curve toward targets.", cost: 320 },
-      { id: "explosive", label: "Explosive", desc: "Impact creates an AOE blast.", cost: 360 },
-      { id: "pierce", label: "Piercing", desc: "Projectiles travel through ships.", cost: 320 },
-    ].forEach((opt) => {
-      const active = build.effect === opt.id;
-      const unlocked = opt.cost === 0 || isShipUnlocked("effect", opt.id);
-      const canAfford = state.credits >= opt.cost;
-      addOptionRow({
-        name: opt.label,
-        desc: opt.desc,
-        right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
-        active,
-        disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
-        onClick: () => {
-          if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("effect", opt.id, opt.cost)) return;
-          build.effect = opt.id;
-          state.shipBuild = build;
-          syncShipBuildToLegacy();
-          saveState();
-          safeUpdateHangar();
-        },
-      });
-    });
-
-    if (build.effect && build.effect !== "none") {
-      const effectKey = build.effect;
-      const level = build.effectUpgrades?.[effectKey] ?? 0;
-      const cost = shipPanelUpgradeCost(220, level);
-      addSection("Effect Upgrades");
-      const nextLabel =
-        effectKey === "homing"
-          ? "Stronger homing"
-          : effectKey === "pierce"
-            ? "More pierce"
-            : "Bigger blast radius";
-      addOptionRow({
-        name: `${capitalize(effectKey)} Tuning (Lv ${level})`,
-        desc:
-          effectKey === "homing"
-            ? "Increases homing strength and angle limit."
-            : effectKey === "pierce"
-              ? "Increases how many ships each projectile can pass through."
-              : "Increases explosion radius (scales with projectile size).",
-        right: `Upgrade ${cost}/${state.credits}`,
-        disabled: state.credits < cost,
-        onClick: () => {
-          if (!spend(cost)) return;
-          if (!build.effectUpgrades) build.effectUpgrades = {};
-          build.effectUpgrades[effectKey] = level + 1;
-          state.shipBuild = build;
-          saveState();
-          safeUpdateHangar();
-        },
       });
     }
-  };
+    weaponInventory.appendChild(card);
+  });
+}
 
-  const renderDefenses = () => {
-    shipModalTitle.textContent = "Defenses";
-    clear();
-    addSection("Defense Slots");
-
-    const slotChoices = [
-      { id: "none", label: "Empty", desc: "No module installed.", cost: 0 },
-      { id: "shield", label: "Shields", desc: "Recharge after taking damage.", cost: 260 },
-      { id: "armor", label: "Armor", desc: "Damage reduction vs hull (Part 2).", cost: 320 },
-    ];
-
-    const setSlot = (index, value, cost) => {
-      if (cost > 0 && !isShipUnlocked("defense", value) && !unlockShipOption("defense", value, cost)) return;
-      build.defenseSlots[index] = value;
-      state.shipBuild = build;
-      saveState();
-      safeUpdateHangar();
-    };
-
-    for (let i = 0; i < 2; i += 1) {
-      const activeId = build.defenseSlots?.[i] || "none";
-      slotChoices.forEach((choice) => {
-        const active = activeId === choice.id;
-        const unlocked = choice.cost === 0 || isShipUnlocked("defense", choice.id);
-        const canAfford = state.credits >= choice.cost;
-        addOptionRow({
-          name: `Slot ${i + 1}: ${choice.label}`,
-          desc: choice.desc,
-          right: active ? "Equipped" : !unlocked && choice.cost ? `Unlock ${choice.cost}/${state.credits}` : "Equip",
-          active,
-          disabled: !active && !unlocked && choice.cost > 0 && !canAfford,
-          onClick: () => setSlot(i, choice.id, choice.cost),
-        });
-      });
-    }
-
-    const hasShield =
-      (build.defenseSlots?.[0] === "shield" || build.defenseSlots?.[1] === "shield");
-    if (hasShield) {
-      addSection("Shield Upgrades");
-      const maxCost = shipPanelUpgradeCost(200, build.shieldMaxLevel);
-      addOptionRow({
-        name: `Max Shield (Lv ${build.shieldMaxLevel})`,
-        desc: "Increase shield HP.",
-        right: `Upgrade ${maxCost}/${state.credits}`,
-        disabled: state.credits < maxCost,
-        onClick: () => {
-          if (!spend(maxCost)) return;
-          build.shieldMaxLevel += 1;
-          state.shipBuild = build;
-          saveState();
-          safeUpdateHangar();
-        },
-      });
-
-      const regenCost = shipPanelUpgradeCost(180, build.shieldRegenLevel);
-      addOptionRow({
-        name: `Shield Recharge (Lv ${build.shieldRegenLevel})`,
-        desc: "Increase recharge rate.",
-        right: `Upgrade ${regenCost}/${state.credits}`,
-        disabled: state.credits < regenCost,
-        onClick: () => {
-          if (!spend(regenCost)) return;
-          build.shieldRegenLevel += 1;
-          state.shipBuild = build;
-          saveState();
-          safeUpdateHangar();
-        },
-      });
-    }
-
-    const hasArmor =
-      (build.defenseSlots?.[0] === "armor" || build.defenseSlots?.[1] === "armor");
-    if (hasArmor) {
-      addSection("Armor Upgrades");
-
-      const amountLevel = build.armorAmountLevel ?? 0;
-      const amountCost = shipPanelUpgradeCost(220, amountLevel);
-      addOptionRow({
-        name: `Armor Plating (Lv ${amountLevel})`,
-        desc: "Max armor +18% per level.",
-        right: `Upgrade ${amountCost}/${state.credits}`,
-        disabled: state.credits < amountCost,
-        onClick: () => {
-          if (!spend(amountCost)) return;
-          build.armorAmountLevel = amountLevel + 1;
-          state.shipBuild = build;
-          saveState();
-          safeUpdateHangar();
-        },
-      });
-
-      const hardenLevel = build.armorClassLevel ?? 0;
-      const hardenCost = shipPanelUpgradeCost(260, hardenLevel);
-      addOptionRow({
-        name: `Armor Hardening (Lv ${hardenLevel})`,
-        desc: "Armor class +2 per level (per-hit damage reduction).",
-        right: `Upgrade ${hardenCost}/${state.credits}`,
-        disabled: state.credits < hardenCost,
-        onClick: () => {
-          if (!spend(hardenCost)) return;
-          build.armorClassLevel = hardenLevel + 1;
-          state.shipBuild = build;
-          saveState();
-          safeUpdateHangar();
-        },
-      });
-
-      addSection("Armor Class (Base)");
-      [
-        { value: 5, label: "Light Armor", desc: "Armor class 5 (Part 2).", cost: 0 },
-        { value: 10, label: "Medium Armor", desc: "Armor class 10 (Part 2).", cost: 120 },
-        { value: 15, label: "Heavy Armor", desc: "Armor class 15 (Part 2).", cost: 220 },
-      ].forEach((opt) => {
-        const active = build.armorClass === opt.value;
-        const unlocked = opt.cost === 0 || isShipUnlocked("armorClass", String(opt.value));
-        const canAfford = state.credits >= opt.cost;
-        addOptionRow({
-          name: opt.label,
-          desc: opt.desc,
-          right: active ? "Equipped" : !unlocked && opt.cost ? `Unlock ${opt.cost}/${state.credits}` : "Equip",
-          active,
-          disabled: !active && !unlocked && opt.cost > 0 && !canAfford,
-          onClick: () => {
-            if (!active && !unlocked && opt.cost > 0 && !unlockShipOption("armorClass", String(opt.value), opt.cost)) return;
-            build.armorClass = opt.value;
-            state.shipBuild = build;
-            saveState();
-            safeUpdateHangar();
-          },
-        });
-      });
-    }
-  };
-
-  if (openShipNodeId === "gun") renderGun();
-  else if (openShipNodeId === "flow") renderFlow();
-  else if (openShipNodeId === "ammo") renderAmmo();
-  else if (openShipNodeId === "effects") renderEffects();
-  else if (openShipNodeId === "defenses") renderDefenses();
-  else {
-    shipModalTitle.textContent = "Ship Module";
-    clear();
-  }
+if (shipModal) {
+  shipModal.hidden = true;
 }
 
 function getConsumableLabel(item) {
@@ -4142,8 +4116,8 @@ function getWeaponConfig() {
   };
 }
 
-function getPrimaryFireConfig() {
-  const build = getShipBuild();
+function getPrimaryFireConfig(buildOverride = null) {
+  const build = buildOverride || getShipBuild();
   const baseSpeed = 560;
   const baseCooldown = 0.28;
   const gunDiameter = build.gunDiameter || "medium";
@@ -6063,5 +6037,13 @@ function gameLoop(now) {
 }
 
 safeUpdateHangar();
+ensureWeaponFrameCatalogLoaded()
+  .then(() => {
+    if (mission?.active) return;
+    syncStarterArmoryState();
+    saveState();
+    safeUpdateHangar();
+  })
+  .catch(() => {});
 void autoLaunchFreshPilotMission();
 requestAnimationFrame(gameLoop);

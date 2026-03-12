@@ -103,25 +103,36 @@
           </div>
 
           <div class="tab-panel" id="tab-loadout" data-tab-panel="loadout">
-            <div class="loadout">
-              <h2>Starter Armory</h2>
-              <p class="investments-desc">
-                Flight School has opened your starter rack. Equip a prebuilt frame, compare the combat
-                profile, and launch.
-              </p>
-              <div class="armory-layout">
-                <div class="armory-hero" id="armory-hero" aria-label="Equipped loadout"></div>
-                <div class="ship-stats" id="ship-stats" aria-label="Ship stats"></div>
+            <div class="loadout armory-loadout">
+              <div class="armory-shell">
+                <div class="armory-main">
+                  <div class="armory-stage-panel">
+                    <div class="armory-stage-copy">
+                      <p class="armory-kicker">Combat Assembly</p>
+                      <h2>Drag A Module Into The Hardpoint</h2>
+                      <p class="investments-desc">
+                        Equip a starter weapon by dragging it from the rack into the primary slot on the
+                        drone. Tap a module to inspect it, then tap the hardpoint as a mobile fallback.
+                      </p>
+                    </div>
+                    <div class="armory-bench" id="armory-bench" aria-label="Drone assembly bench"></div>
+                    <div class="armory-rack">
+                      <div class="armory-rack-head">
+                        <div>
+                          <h3>Weapon Rack</h3>
+                          <p class="muted">Starter modules from Flight School. More gear can be added later.</p>
+                        </div>
+                        <span class="armory-rack-tip">Drag to install</span>
+                      </div>
+                      <div class="armory-inventory-grid" id="weapon-inventory"></div>
+                    </div>
+                  </div>
+                  <div class="armory-side">
+                    <div class="armory-inspector" id="armory-inspector" aria-label="Selected module"></div>
+                    <div class="ship-stats" id="ship-stats" aria-label="Ship stats"></div>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            <div class="loadout">
-              <h2>Weapon Inventory</h2>
-              <p class="investments-desc">
-                These frames package the hidden tuning work into readable combat roles. Additional gear
-                can slot into this inventory later.
-              </p>
-              <div class="armory-grid" id="weapon-inventory"></div>
             </div>
 
             <div class="loadout">
@@ -304,6 +315,8 @@
           </div>
         </div>
       </div>
+
+      <div id="armory-drag-layer" aria-hidden="true"></div>
     </div>
 
     <script src="main.js"></script>

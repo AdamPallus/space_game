@@ -21,6 +21,10 @@ const shipModal = document.getElementById("ship-modal");
 const shipModalTitle = document.getElementById("ship-modal-title");
 const shipModalBody = document.getElementById("ship-modal-body");
 const shipModalClose = document.getElementById("ship-modal-close");
+const missionIntroModal = document.getElementById("mission-intro-modal");
+const missionIntroConfirm = document.getElementById("mission-intro-confirm");
+const missionIntroTitle = document.getElementById("mission-intro-title");
+const missionIntroText = document.getElementById("mission-intro-text");
 const shipNodeButtons = document.querySelectorAll("[data-ship-node]");
 const shipStats = document.getElementById("ship-stats");
 
@@ -95,6 +99,7 @@ const compendiumShowBosses = document.getElementById("compendium-show-bosses");
 const STORAGE_KEY = "mini-fighter-save";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
 const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
+let shouldAutoLaunchFreshPilotMission = false;
 
 const upgrades = [
   {
@@ -363,6 +368,11 @@ function isOnboardingTrainingActive() {
 function getCurrentOnboardingMission() {
   if (!isOnboardingTrainingActive()) return null;
   return onboardingTrainingMissions[state.onboardingStage] || null;
+}
+
+function getOnboardingMissionForStage(stage) {
+  if (!Number.isFinite(stage)) return null;
+  return onboardingTrainingMissions[Math.max(0, Math.floor(stage))] || null;
 }
 
 function isSystemUnlocked(systemId) {
@@ -636,6 +646,8 @@ let activeHangarTab = "loadout";
 let hangarNeedsRefresh = false;
 let openShipNodeId = null;
 let openMissionInfoBaseId = null;
+let missionIntroActive = false;
+let debriefLaunchMode = null;
 const cameraShake = {
   trauma: 0,
   kickX: 0,
@@ -891,7 +903,7 @@ canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 window.addEventListener("keydown", (event) => {
   enableAudio();
   keyState.add(event.key.toLowerCase());
-  if (event.key.toLowerCase() === "p") {
+  if (event.key.toLowerCase() === "p" && mission && mission.active && !missionIntroActive) {
     paused = !paused;
   }
   if (event.key.toLowerCase() === "e" && mission && mission.active) {
@@ -1073,16 +1085,17 @@ if (compendiumShowBosses) {
   });
 }
 
-async function launchSelectedMission() {
+async function launchSelectedMission({ showIntro = false } = {}) {
   if (!isLevelUnlocked(selectedLevelId)) return;
   const directive = getCurrentOnboardingMission();
   if (directive && selectedLevelId !== directive.missionId) {
     selectedLevelId = directive.missionId;
     currentLevel = null;
-    renderLevelSelect();
-    return;
+    if (!hangarPanel.hidden && activeHangarTab === "mission") {
+      renderLevelSelect();
+    }
   }
-  await startMission();
+  await startMission({ showIntro });
 }
 
 if (launchBtn) {
@@ -1098,7 +1111,26 @@ if (selectMissionBtn) {
 }
 
 if (returnBtn) {
-  returnBtn.addEventListener("click", () => {
+  returnBtn.addEventListener("click", async () => {
+    if (debriefLaunchMode) {
+      const launchMode = debriefLaunchMode;
+      debriefLaunchMode = null;
+      returnBtn.textContent = "Return to Hangar";
+      debriefPanel.hidden = true;
+      hangarPanel.hidden = true;
+      overlay.hidden = true;
+      updateMobileControls();
+      try {
+        await launchSelectedMission({ showIntro: launchMode === "training" });
+      } catch (error) {
+        console.error("Failed to continue from debrief:", error);
+        overlay.hidden = false;
+        hangarPanel.hidden = false;
+        debriefPanel.hidden = true;
+        safeUpdateHangar();
+      }
+      return;
+    }
     debriefPanel.hidden = true;
     hangarPanel.hidden = false;
     overlay.hidden = false;
@@ -1124,9 +1156,46 @@ function closeShipModal() {
   if (shipModal) shipModal.hidden = true;
 }
 
+function hideMissionIntro() {
+  missionIntroActive = false;
+  if (missionIntroModal) missionIntroModal.hidden = true;
+}
+
+function showMissionIntro() {
+  if (!missionIntroModal) return;
+  const directive = getCurrentOnboardingMission();
+  if (directive) {
+    if (missionIntroTitle) missionIntroTitle.textContent = directive.title;
+    if (missionIntroText) missionIntroText.textContent = directive.briefing;
+  } else {
+    if (missionIntroTitle) missionIntroTitle.textContent = mission?.level?.name || "Mission";
+    if (missionIntroText) {
+      missionIntroText.textContent =
+        "Now's your chance! Prove your skills as a drone pilot and take down the massive boss ship!";
+    }
+  }
+  missionIntroActive = true;
+  paused = true;
+  missionIntroModal.hidden = false;
+}
+
+function resumeMissionFromIntro() {
+  hideMissionIntro();
+  if (mission && mission.active) {
+    paused = false;
+  }
+}
+
 if (shipModalClose) {
   shipModalClose.addEventListener("click", () => {
     closeShipModal();
+  });
+}
+
+if (missionIntroConfirm) {
+  missionIntroConfirm.addEventListener("click", () => {
+    enableAudio();
+    resumeMissionFromIntro();
   });
 }
 
@@ -1231,6 +1300,7 @@ if (debugSkipOnboarding) {
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
+    shouldAutoLaunchFreshPilotMission = true;
     return {
       credits: 0,
       lifetimeCredits: 0,
@@ -1295,6 +1365,7 @@ function loadState() {
   }
   try {
     const parsed = JSON.parse(stored);
+    shouldAutoLaunchFreshPilotMission = false;
     parsed.upgrades = {
       hull: parsed.upgrades?.hull ?? 0,
       shield: parsed.upgrades?.shield ?? 0,
@@ -1411,6 +1482,7 @@ function loadState() {
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
+    shouldAutoLaunchFreshPilotMission = true;
     return {
       credits: 0,
       lifetimeCredits: 0,
@@ -1635,8 +1707,9 @@ function initConsumablesForMission() {
   return { slots, uses, cooldowns };
 }
 
-async function startMission() {
+async function startMission({ showIntro = false } = {}) {
   closeShipModal();
+  hideMissionIntro();
   await ensureEnemyCatalogLoaded();
   const directive = getCurrentOnboardingMission();
   if (directive && selectedLevelId !== directive.missionId) {
@@ -1708,6 +1781,9 @@ async function startMission() {
   hudMission.textContent = level?.name
     ? `Mission ${state.missionCount + 1}: ${level.name}`
     : `Mission ${state.missionCount + 1}`;
+  if (showIntro) {
+    showMissionIntro();
+  }
 }
 
 function endMission({ ejected = false, completed = false } = {}) {
@@ -1715,6 +1791,8 @@ function endMission({ ejected = false, completed = false } = {}) {
   mission.active = false;
   activeShipBuildOverride = null;
   closeShipModal();
+  hideMissionIntro();
+  paused = false;
   setHangarMusic();
   setHangarTab("loadout", { renderLevels: false });
 
@@ -1742,6 +1820,7 @@ function endMission({ ejected = false, completed = false } = {}) {
     }
   }
   let onboardingMessage = "";
+  let continueTrainingAfterDebrief = false;
   const directive = getCurrentOnboardingMission();
   if (directive) {
     if (completed && mission.level?.id === directive.missionId) {
@@ -1750,11 +1829,13 @@ function endMission({ ejected = false, completed = false } = {}) {
         state.onboardingStage + 1
       );
       refreshSystemUnlocks();
+      continueTrainingAfterDebrief = !!getOnboardingMissionForStage(state.onboardingStage);
       onboardingMessage =
         state.onboardingStage >= ONBOARDING_STAGE_TRAINING_COMPLETE
           ? "Training complete. Ship Loadout and Drone Compendium unlocked."
           : directive.reward;
     } else {
+      continueTrainingAfterDebrief = true;
       onboardingMessage = `Training directive incomplete: clear ${directive.title} to continue.`;
     }
   } else if (
@@ -1768,6 +1849,10 @@ function endMission({ ejected = false, completed = false } = {}) {
     onboardingMessage = "Economy systems unlocked. You now have full hangar access.";
   }
   saveState();
+  debriefLaunchMode = continueTrainingAfterDebrief ? "training" : null;
+  if (returnBtn) {
+    returnBtn.textContent = continueTrainingAfterDebrief ? "Continue" : "Return to Hangar";
+  }
 
   // Build debrief message with breakdown
   let debriefMsg = "";
@@ -1910,6 +1995,29 @@ function safeUpdateHangar() {
     updateHangar();
   } catch (error) {
     console.error("Hangar render failed:", error);
+  }
+}
+
+async function autoLaunchFreshPilotMission() {
+  const shouldAutoLaunch =
+    shouldAutoLaunchFreshPilotMission &&
+    !isOnboardingSkipped() &&
+    state.missionCount === 0 &&
+    state.onboardingStage === 0;
+  if (!shouldAutoLaunch) return;
+  shouldAutoLaunchFreshPilotMission = false;
+  overlay.hidden = true;
+  hangarPanel.hidden = true;
+  debriefPanel.hidden = true;
+  updateMobileControls();
+  try {
+    await launchSelectedMission({ showIntro: true });
+  } catch (error) {
+    console.error("Failed to auto-launch intro mission:", error);
+    overlay.hidden = false;
+    hangarPanel.hidden = false;
+    debriefPanel.hidden = true;
+    safeUpdateHangar();
   }
 }
 
@@ -5772,7 +5880,7 @@ function gameLoop(now) {
   update(delta);
   render();
 
-  if (mission && mission.active && paused) {
+  if (mission && mission.active && paused && !missionIntroActive) {
     ctx.save();
     ctx.fillStyle = "rgba(3, 10, 25, 0.7)";
     ctx.fillRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
@@ -5787,4 +5895,5 @@ function gameLoop(now) {
 }
 
 safeUpdateHangar();
+void autoLaunchFreshPilotMission();
 requestAnimationFrame(gameLoop);

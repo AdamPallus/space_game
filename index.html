@@ -105,33 +105,31 @@
           <div class="tab-panel" id="tab-loadout" data-tab-panel="loadout">
             <div class="loadout armory-loadout">
               <div class="armory-shell">
-                <div class="armory-main">
-                  <div class="armory-stage-panel">
-                    <div class="armory-stage-copy">
-                      <p class="armory-kicker">Combat Assembly</p>
-                      <h2>Click A Hardpoint To Open Its Inventory</h2>
-                      <p class="investments-desc">
-                        Select a slot on the drone, browse compatible modules in the rack, and click an
-                        icon to install it. Hovering an icon previews the full readout.
-                      </p>
-                    </div>
-                    <div class="armory-bench" id="armory-bench" aria-label="Drone assembly bench"></div>
-                    <div class="armory-rack">
-                      <div class="armory-rack-head">
-                        <div>
-                          <h3 id="armory-rack-title">Primary Hardpoint</h3>
-                          <p class="muted" id="armory-rack-copy">
-                            Starter modules from Flight School. More gear can be added later.
-                          </p>
-                        </div>
-                        <span class="armory-rack-tip" id="armory-rack-tip">Click icon to install</span>
-                      </div>
-                      <div class="armory-inventory-grid" id="weapon-inventory"></div>
-                    </div>
+                <div class="armory-stage-panel">
+                  <div class="armory-stage-copy">
+                    <p class="armory-kicker">Combat Assembly</p>
+                    <h2>Inspect A Slot, Then Open Its Inventory</h2>
+                    <p class="investments-desc">
+                      Hover a hardpoint to inspect it. Click <span class="armory-inline">Change</span> to
+                      open that slot's inventory, then choose a module from the icon grid.
+                    </p>
                   </div>
-                  <div class="armory-side">
-                    <div class="armory-inspector" id="armory-inspector" aria-label="Selected module"></div>
-                    <div class="ship-stats" id="ship-stats" aria-label="Ship stats"></div>
+                  <div class="armory-bench" id="armory-bench" aria-label="Drone assembly bench"></div>
+                  <div class="armory-rack">
+                    <div class="armory-rack-head">
+                      <div>
+                        <h3 id="armory-rack-title">Module Inventory</h3>
+                        <p class="muted" id="armory-rack-copy">
+                          Select a hardpoint to open a compatible inventory grid.
+                        </p>
+                      </div>
+                      <div class="armory-rack-actions">
+                        <button type="button" class="ghost small" id="armory-toggle-stats">Show Stats</button>
+                        <span class="armory-rack-tip" id="armory-rack-tip">No slot selected</span>
+                      </div>
+                    </div>
+                    <div class="armory-inventory-grid" id="weapon-inventory"></div>
+                    <div class="ship-stats" id="ship-stats" aria-label="Ship stats" hidden></div>
                   </div>
                 </div>
               </div>

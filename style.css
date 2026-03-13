@@ -111,9 +111,22 @@ body {
   box-shadow: inset 0 1px 0 rgba(160, 214, 255, 0.04), 0 24px 60px rgba(2, 8, 24, 0.38);
 }
 
+.armory-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  gap: 18px;
+  align-items: start;
+}
+
 .armory-stage-panel {
   display: grid;
   gap: 16px;
+}
+
+.armory-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
 }
 
 .armory-stage-copy h2 {
@@ -300,10 +313,6 @@ body {
   color: rgba(198, 220, 248, 0.78);
 }
 
-.armory-inline {
-  color: #a7f3d0;
-}
-
 .armory-slot-pill {
   padding: 4px 8px;
   border-radius: 999px;
@@ -355,24 +364,15 @@ body {
 
 .armory-inventory-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
-  gap: 12px;
-}
-
-.armory-empty-state {
-  padding: 20px;
-  border-radius: 20px;
-  border: 1px dashed rgba(125, 190, 255, 0.2);
-  background: rgba(4, 13, 30, 0.46);
-  color: rgba(198, 220, 248, 0.8);
-  text-align: center;
+  grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
+  gap: 10px;
 }
 
 .armory-inventory-item {
   position: relative;
   overflow: hidden;
-  padding: 12px 10px;
-  border-radius: 18px;
+  padding: 10px 8px;
+  border-radius: 16px;
   border: 1px solid rgba(95, 154, 218, 0.18);
   background:
     radial-gradient(circle at 20% 18%, rgba(56, 189, 248, 0.15), transparent 26%),
@@ -406,10 +406,10 @@ body {
 }
 
 .armory-inventory-icon {
-  width: 64px;
-  height: 64px;
-  padding: 12px;
-  border-radius: 16px;
+  width: 56px;
+  height: 56px;
+  padding: 10px;
+  border-radius: 14px;
   border: 1px solid rgba(125, 190, 255, 0.14);
   background: rgba(3, 10, 25, 0.56);
   display: grid;
@@ -442,18 +442,15 @@ body {
 }
 
 .armory-inventory-name {
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.2;
   font-weight: 700;
 }
 
-.armory-bench-popup {
-  position: absolute;
-  z-index: 5;
-  width: min(320px, calc(100% - 32px));
-  padding: 16px;
-  border-radius: 22px;
-  border: 1px solid rgba(95, 154, 218, 0.28);
+.armory-inspector {
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(95, 154, 218, 0.22);
   background:
     radial-gradient(circle at 18% 18%, rgba(56, 189, 248, 0.14), transparent 28%),
     linear-gradient(165deg, rgba(5, 14, 34, 0.98), rgba(4, 11, 28, 0.96));
@@ -462,41 +459,25 @@ body {
   gap: 12px;
 }
 
-.armory-bench-popup.is-primary {
-  right: 28px;
-  top: 32px;
-}
-
-.armory-bench-popup.is-defense-left {
-  left: 24px;
-  top: 24px;
-}
-
-.armory-bench-popup.is-defense-right {
-  right: 24px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.armory-bench-popup.is-support {
-  right: 24px;
-  bottom: 24px;
-}
-
-.armory-bench-popup-head {
+.armory-inspector-head {
   display: flex;
   justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
 }
 
-.armory-bench-popup-head h3 {
-  font-size: 24px;
-  line-height: 1;
-  margin-top: 4px;
+.armory-inspector-title {
+  display: grid;
+  gap: 4px;
 }
 
-.armory-bench-popup-stats {
+.armory-inspector-title h3 {
+  font-size: 28px;
+  line-height: 0.95;
+  margin: 2px 0 0;
+}
+
+.armory-inspector-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -528,14 +509,6 @@ body {
   font-size: 14px;
   line-height: 1.6;
   color: rgba(224, 242, 254, 0.9);
-}
-
-.armory-note {
-  padding-top: 10px;
-  border-top: 1px solid rgba(125, 190, 255, 0.12);
-  font-size: 12px;
-  line-height: 1.5;
-  color: rgba(155, 185, 221, 0.92);
 }
 
 .ship-stats {
@@ -1932,6 +1905,10 @@ button:disabled {
     border-radius: 22px;
   }
 
+  .armory-main {
+    grid-template-columns: 1fr;
+  }
+
   .armory-bench {
     min-height: 560px;
     padding: 16px;
@@ -1979,27 +1956,11 @@ button:disabled {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .armory-bench-popup {
-    width: min(280px, calc(100% - 24px));
-    padding: 14px;
+  .armory-inspector {
+    padding: 16px;
   }
 
-  .armory-bench-popup.is-primary,
-  .armory-bench-popup.is-defense-right,
-  .armory-bench-popup.is-support {
-    right: 12px;
-  }
-
-  .armory-bench-popup.is-defense-left {
-    left: 12px;
-  }
-
-  .armory-bench-popup.is-defense-right {
-    top: 18px;
-    transform: none;
-  }
-
-  .armory-bench-popup-stats {
+  .armory-inspector-stats {
     grid-template-columns: 1fr 1fr;
   }
 }

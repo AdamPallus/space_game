@@ -28,6 +28,7 @@ const missionIntroText = document.getElementById("mission-intro-text");
 const shipNodeButtons = document.querySelectorAll("[data-ship-node]");
 const shipStats = document.getElementById("ship-stats");
 const armoryBench = document.getElementById("armory-bench");
+const armoryInspector = document.getElementById("armory-inspector");
 const weaponInventory = document.getElementById("weapon-inventory");
 const armoryRackTitle = document.getElementById("armory-rack-title");
 const armoryRackCopy = document.getElementById("armory-rack-copy");
@@ -846,8 +847,7 @@ const musicLibrary = new Map();
 const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
 let openUpgradeId = null;
 let enemyIdCounter = 1;
-let armorySelectedSlotId = null;
-let armoryHoveredSlotId = null;
+let armorySelectedSlotId = "primary";
 let armoryPreviewItemId = null;
 let armoryStatsExpanded = false;
 
@@ -3965,30 +3965,30 @@ function getArmorySlotMeta(slotId) {
   if (!slotId) {
     return {
       title: "Module Inventory",
-      copy: "Select a hardpoint to open a compatible inventory grid.",
-      tip: "No slot selected",
+      copy: "Click a hardpoint to open a compatible inventory grid.",
+      tip: "Click icon to install",
     };
   }
   const meta = {
     primary: {
       title: "Primary Hardpoint",
-      copy: "Weapon modules from Flight School. Click an icon to install.",
-      tip: "Hover icon to preview",
+      copy: "Weapon frames from Flight School. Hover icons to compare, then click one to install it.",
+      tip: "Click icon to install",
     },
     support: {
       title: "Support Link",
       copy: "Alternate systems for cloak, EMP, and survivability tools.",
-      tip: "Click icon to equip",
+      tip: "Click icon to install",
     },
     "defense-0": {
       title: "Defense Bay A",
       copy: "Install a shield or armor module into the left defense bay.",
-      tip: "Click icon to equip",
+      tip: "Click icon to install",
     },
     "defense-1": {
       title: "Defense Bay B",
       copy: "Install a shield or armor module into the right defense bay.",
-      tip: "Click icon to equip",
+      tip: "Click icon to install",
     },
   };
   return meta[slotId] || meta.primary;
@@ -4003,21 +4003,6 @@ function getArmoryPreviewItem(slotId) {
 
 function getInstalledArmoryItem(slotId) {
   return getArmoryItemsForSlot(slotId).find((item) => item.installed) || null;
-}
-
-function getArmoryPopupSlotId() {
-  if (armorySelectedSlotId && armoryPreviewItemId) return armorySelectedSlotId;
-  if (armoryHoveredSlotId) return armoryHoveredSlotId;
-  if (armorySelectedSlotId) return armorySelectedSlotId;
-  return null;
-}
-
-function getArmoryPopupPositionClass(slotId) {
-  if (slotId === "primary") return "is-primary";
-  if (slotId === "defense-0") return "is-defense-left";
-  if (slotId === "defense-1") return "is-defense-right";
-  if (slotId === "support") return "is-support";
-  return "is-primary";
 }
 
 function canInstallSupportItem(item) {
@@ -4056,12 +4041,8 @@ function handleArmorySlotInstall(slotId, itemId) {
   }
 }
 
-function renderArmoryBenchPopup() {
-  if (!armoryBench) return;
-  const existing = armoryBench.querySelector(".armory-bench-popup");
-  if (existing) existing.remove();
-  const slotId = getArmoryPopupSlotId();
-  if (!slotId) return;
+function renderArmoryInspector(slotId) {
+  if (!armoryInspector || !slotId) return;
   const item = getArmoryPreviewItem(slotId) || getInstalledArmoryItem(slotId);
   if (!item) return;
 
@@ -4074,7 +4055,7 @@ function renderArmoryBenchPopup() {
       radius: cfg.projectileRadius,
     });
     statRows = `
-      <div class="armory-bench-popup-stats">
+      <div class="armory-inspector-stats">
         <div class="armory-stat"><span class="armory-stat-label">Damage</span><span class="armory-stat-value">${formatNumber(hitDamage, 1)}</span></div>
         <div class="armory-stat"><span class="armory-stat-label">Cooldown</span><span class="armory-stat-value">${formatNumber(cfg.cooldown, 2)}s</span></div>
       </div>
@@ -4085,66 +4066,46 @@ function renderArmoryBenchPopup() {
     `;
   } else if (slotId.startsWith("defense-")) {
     statRows = `
-      <div class="armory-bench-popup-stats">
+      <div class="armory-inspector-stats">
         <div class="armory-stat"><span class="armory-stat-label">Type</span><span class="armory-stat-value">${item.id === "none" ? "Empty" : capitalize(item.defenseType)}</span></div>
         <div class="armory-stat"><span class="armory-stat-label">Effect</span><span class="armory-stat-value">${item.id === "none" ? "Clear" : item.defenseType === "shield" ? "Shielding" : "Armor"}</span></div>
       </div>
     `;
   } else {
     statRows = `
-      <div class="armory-bench-popup-stats">
+      <div class="armory-inspector-stats">
         <div class="armory-stat"><span class="armory-stat-label">Status</span><span class="armory-stat-value">${item.installed ? "Installed" : item.owned ? "Owned" : "Locked"}</span></div>
       </div>
     `;
   }
-
-  const popup = document.createElement("div");
-  popup.className = `armory-bench-popup ${getArmoryPopupPositionClass(slotId)}`;
-  const isPreview = !!(armorySelectedSlotId && armoryPreviewItemId);
-  const actionLabel =
-    isPreview && item.installed
+  const statusLabel = armoryPreviewItemId
+    ? item.installed
       ? "Installed"
-      : isPreview
-        ? "Install"
-        : armorySelectedSlotId === slotId
-          ? "Choosing"
-          : "Change";
-  popup.innerHTML = `
-    <div class="armory-bench-popup-head">
-      <div>
+      : "Preview"
+    : item.installed
+      ? "Installed"
+      : item.owned
+        ? "Owned"
+        : getArmoryUnlockText(item, false);
+  armoryInspector.innerHTML = `
+    <div class="armory-inspector-head">
+      <div class="armory-inspector-title">
         <p class="armory-kicker">${slotId === "primary" ? "Primary Hardpoint" : slotId === "support" ? "Support Link" : slotId === "defense-0" ? "Defense Bay A" : "Defense Bay B"}</p>
         <h3>${item.name}</h3>
         <p class="muted">${item.subtitle || getArmoryUnlockText(item, !!item.owned)}</p>
       </div>
-      <button type="button" class="ghost small" data-armory-popup-action>${actionLabel}</button>
+      <span class="armory-chip">${statusLabel}</span>
     </div>
     <p class="armory-summary">${item.description}</p>
     ${statRows}
   `;
-  armoryBench.appendChild(popup);
-  const actionBtn = popup.querySelector("[data-armory-popup-action]");
-  if (actionBtn) {
-    actionBtn.disabled = actionLabel === "Installed" || actionLabel === "Choosing";
-    actionBtn.addEventListener("click", () => {
-      if (isPreview) {
-        if (slotId === "support" && !canInstallSupportItem(item)) return;
-        if (slotId !== "support" && !item.owned) return;
-        handleArmorySlotInstall(slotId, item.id);
-        safeUpdateHangar();
-        return;
-      }
-      armorySelectedSlotId = slotId;
-      armoryPreviewItemId = null;
-      safeUpdateHangar();
-    });
-  }
 }
 
 function renderShipUpgradesPanel() {
   const equipped = getEquippedStarterLoadout();
   if (!equipped) return;
-  if (armorySelectedSlotId && !["primary", "defense-0", "defense-1", "support"].includes(armorySelectedSlotId)) {
-    armorySelectedSlotId = null;
+  if (!["primary", "defense-0", "defense-1", "support"].includes(armorySelectedSlotId)) {
+    armorySelectedSlotId = "primary";
   }
 
   renderShipStatsPanel();
@@ -4178,24 +4139,6 @@ function renderShipUpgradesPanel() {
     `;
     armoryBench.querySelectorAll("[data-armory-slot]").forEach((slotButton) => {
       const slotId = slotButton.dataset.armorySlot || null;
-      slotButton.addEventListener("mouseenter", () => {
-        armoryHoveredSlotId = slotId;
-        armoryPreviewItemId = null;
-        renderArmoryBenchPopup();
-      });
-      slotButton.addEventListener("mouseleave", () => {
-        armoryHoveredSlotId = null;
-        renderArmoryBenchPopup();
-      });
-      slotButton.addEventListener("focus", () => {
-        armoryHoveredSlotId = slotId;
-        armoryPreviewItemId = null;
-        renderArmoryBenchPopup();
-      });
-      slotButton.addEventListener("blur", () => {
-        armoryHoveredSlotId = null;
-        renderArmoryBenchPopup();
-      });
       slotButton.addEventListener("click", () => {
         armorySelectedSlotId = slotId;
         armoryPreviewItemId = null;
@@ -4208,7 +4151,7 @@ function renderShipUpgradesPanel() {
   if (armoryRackTitle) armoryRackTitle.textContent = rackMeta.title;
   if (armoryRackCopy) armoryRackCopy.textContent = rackMeta.copy;
   if (armoryRackTip) armoryRackTip.textContent = rackMeta.tip;
-  renderArmoryBenchPopup();
+  renderArmoryInspector(armorySelectedSlotId);
   if (armoryToggleStats) {
     armoryToggleStats.textContent = armoryStatsExpanded ? "Hide Stats" : "Show Stats";
     armoryToggleStats.onclick = () => {
@@ -4223,10 +4166,6 @@ function renderShipUpgradesPanel() {
 
   if (!weaponInventory) return;
   weaponInventory.innerHTML = "";
-  if (!armorySelectedSlotId) {
-    weaponInventory.innerHTML = `<div class="armory-empty-state">Select a hardpoint above, then choose <span class="armory-inline">Change</span> to open its inventory.</div>`;
-    return;
-  }
   const inventoryItems = getArmoryItemsForSlot(armorySelectedSlotId);
 
   inventoryItems.forEach((item) => {
@@ -4243,32 +4182,32 @@ function renderShipUpgradesPanel() {
     `;
     button.addEventListener("mouseenter", () => {
       armoryPreviewItemId = item.id;
-      renderArmoryBenchPopup();
+      renderArmoryInspector(armorySelectedSlotId);
     });
     button.addEventListener("mouseleave", () => {
       armoryPreviewItemId = null;
-      renderArmoryBenchPopup();
+      renderArmoryInspector(armorySelectedSlotId);
     });
     button.addEventListener("focus", () => {
       armoryPreviewItemId = item.id;
-      renderArmoryBenchPopup();
+      renderArmoryInspector(armorySelectedSlotId);
     });
     button.addEventListener("blur", () => {
       armoryPreviewItemId = null;
-      renderArmoryBenchPopup();
+      renderArmoryInspector(armorySelectedSlotId);
     });
     button.addEventListener("click", () => {
       armoryPreviewItemId = item.id;
       if (item.installed) {
-        renderArmoryBenchPopup();
+        renderArmoryInspector(armorySelectedSlotId);
         return;
       }
       if (armorySelectedSlotId === "support" && !canInstallSupportItem(item)) {
-        renderArmoryBenchPopup();
+        renderArmoryInspector(armorySelectedSlotId);
         return;
       }
       if (armorySelectedSlotId !== "support" && !item.owned) {
-        renderArmoryBenchPopup();
+        renderArmoryInspector(armorySelectedSlotId);
         return;
       }
       handleArmorySlotInstall(armorySelectedSlotId, item.id);

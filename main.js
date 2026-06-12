@@ -95,6 +95,7 @@ const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
 const GENERATED_ROOT = "assets/generated";
 const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
 const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
+const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 let shouldAutoLaunchFreshPilotMission = false;
 const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "template",
@@ -2154,7 +2155,14 @@ const assets = {
   altArc: loadImage(`${ASSET_ROOT}/Lasers/laserBlue16.png`),
   enemyBullet: loadImage(`${ASSET_ROOT}/Lasers/laserRed02.png`),
   shield: loadImage(`${ASSET_ROOT}/Effects/shield3.png`),
-  salvagePod: loadImage(`${ASSET_ROOT}/Power-ups/powerupBlue.png`),
+  salvagePod: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_certified.png`),
+  salvagePodFallback: loadImage(`${ASSET_ROOT}/Power-ups/powerupBlue.png`),
+  salvagePods: {
+    scrap: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_scrap.png`),
+    certified: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_certified.png`),
+    prototype: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_prototype.png`),
+    preFounding: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_pre_founding.png`),
+  },
   explosionCore: loadImage(`${ASSET_ROOT}/Effects/star2.png`),
   explosionFlare: loadImage(`${ASSET_ROOT}/Effects/star3.png`),
   explosionFire: Array.from({ length: 20 }, (_, i) =>
@@ -7542,6 +7550,10 @@ function drawBullet(bullet, color = "#e0f2fe") {
 function drawSalvagePod(pod) {
   const rarityConfig = getRarityConfig(pod.rarity);
   const pulse = 1 + Math.sin((pod.age || 0) * 5.5) * 0.08;
+  const sprite =
+    assets.salvagePods?.[pod.rarity] ||
+    assets.salvagePod ||
+    assets.salvagePodFallback;
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   ctx.globalAlpha = pod.rejected ? 0.42 : 0.72;
@@ -7554,14 +7566,13 @@ function drawSalvagePod(pod) {
   ctx.fill();
   ctx.globalCompositeOperation = "source-over";
   ctx.globalAlpha = pod.rejected ? 0.55 : 1;
-  if (assets.salvagePod.loaded) {
-    drawSpriteCentered(assets.salvagePod, pod.x, pod.y, 0.58 * pulse);
-    ctx.globalCompositeOperation = "lighter";
-    ctx.globalAlpha = pod.rejected ? 0.25 : 0.42;
-    ctx.fillStyle = rarityConfig.color;
-    ctx.beginPath();
-    ctx.arc(pod.x, pod.y, 18 * pulse, 0, Math.PI * 2);
-    ctx.fill();
+  if (sprite?.loaded || assets.salvagePodFallback?.loaded) {
+    drawSpriteCentered(
+      sprite?.loaded ? sprite : assets.salvagePodFallback,
+      pod.x,
+      pod.y,
+      0.58 * pulse
+    );
   } else {
     ctx.fillStyle = rarityConfig.color;
     ctx.beginPath();

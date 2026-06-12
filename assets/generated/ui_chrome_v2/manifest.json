@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "salvage_pod_scrap", "cell": 0, "size": [96, 96], "componentMinArea": 10 },
+    { "name": "salvage_pod_certified", "cell": 1, "size": [96, 96], "componentMinArea": 10 },
+    { "name": "salvage_pod_prototype", "cell": 2, "size": [96, 96], "componentMinArea": 10 },
+    { "name": "salvage_pod_pre_founding", "cell": 3, "size": [96, 96], "componentMinArea": 10 },
+    { "name": "stamp_frame", "cell": 4, "size": [160, 96], "componentMinArea": 10 },
+    { "name": "ledger_seal", "cell": 5, "size": [88, 88], "componentMinArea": 10 },
+    { "name": "hotspot_armory", "cell": 6, "size": [72, 72], "componentMinArea": 10 },
+    { "name": "hotspot_mission", "cell": 7, "size": [72, 72], "componentMinArea": 10 },
+    { "name": "hotspot_ledger", "cell": 8, "size": [72, 72], "componentMinArea": 10 },
+    { "name": "hotspot_archive", "cell": 9, "size": [72, 72], "componentMinArea": 10 },
+    { "name": "panel_corner_ornament", "cell": 10, "size": [72, 72], "componentMinArea": 10 },
+    { "name": "tier_pip_lit", "cell": 11, "size": [36, 18], "componentMinArea": 4 },
+    { "name": "tier_pip_unlit", "cell": 12, "size": [36, 18], "componentMinArea": 4 },
+    { "name": "cargo_pip_ring", "cell": 13, "size": [32, 32], "componentMinArea": 4 },
+    { "name": "credit_chip", "cell": 14, "size": [32, 32], "componentMinArea": 4 },
+    { "name": "warning_chevron_strip", "cell": 15, "size": [96, 36], "componentMinArea": 4 }
+  ]
+}

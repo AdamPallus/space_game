@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "button_primary", "cell": 0, "size": [196, 92], "componentMinArea": 16 },
+    { "name": "button_primary_hover", "cell": 1, "size": [196, 92], "componentMinArea": 16 },
+    { "name": "button_primary_pressed", "cell": 2, "size": [196, 92], "componentMinArea": 16 },
+    { "name": "button_primary_disabled", "cell": 3, "size": [196, 92], "componentMinArea": 16 },
+    { "name": "button_secondary", "cell": 4, "size": [210, 84], "componentMinArea": 16 },
+    { "name": "button_secondary_hover", "cell": 5, "size": [210, 84], "componentMinArea": 16 },
+    { "name": "button_compact", "cell": 6, "size": [170, 72], "componentMinArea": 16 },
+    { "name": "button_compact_hover", "cell": 7, "size": [170, 72], "componentMinArea": 16 },
+    { "name": "tab_inactive", "cell": 8, "size": [186, 82], "componentMinArea": 16 },
+    { "name": "tab_active", "cell": 9, "size": [186, 82], "componentMinArea": 16 },
+    { "name": "icon_button", "cell": 10, "size": [104, 104], "componentMinArea": 16 },
+    { "name": "icon_button_hover", "cell": 11, "size": [104, 104], "componentMinArea": 16 },
+    { "name": "button_launch", "cell": 12, "size": [210, 104], "componentMinArea": 16 },
+    { "name": "button_launch_hover", "cell": 13, "size": [210, 104], "componentMinArea": 16 },
+    { "name": "button_close", "cell": 14, "size": [170, 68], "componentMinArea": 16 },
+    { "name": "button_close_hover", "cell": 15, "size": [170, 68], "componentMinArea": 16 }
+  ]
+}

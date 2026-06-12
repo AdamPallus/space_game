@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "pilot_contact_sheet_clean.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "player_interceptor", "cell": 0, "size": [112, 112], "componentMode": "largest" },
+    { "name": "enemy_scout", "cell": 1, "size": [104, 104], "componentMode": "largest", "rotateDegrees": 180 },
+    { "name": "enemy_fighter", "cell": 2, "size": [104, 104], "componentMode": "largest", "rotateDegrees": 180 },
+    { "name": "enemy_bruiser", "cell": 3, "size": [104, 104], "componentMode": "largest", "rotateDegrees": 180 },
+    { "name": "enemy_hunter", "cell": 4, "size": [104, 104], "componentMode": "largest", "rotateDegrees": 180 },
+    { "name": "enemy_ace", "cell": 5, "size": [104, 104], "componentMode": "largest", "rotateDegrees": 180 },
+    { "name": "ufo_transport", "cell": 6, "size": [112, 112], "componentMode": "largest" },
+    { "name": "boss_manta", "cell": 7, "size": [256, 256], "componentMode": "largest" },
+    { "name": "laser_player_cyan", "cell": 8, "size": [24, 64], "componentMode": "largest" },
+    { "name": "laser_enemy_orange", "cell": 9, "size": [24, 64], "componentMode": "largest" },
+    { "name": "rocket_amber", "cell": 10, "size": [48, 96], "componentMode": "largest" },
+    { "name": "shield_powerup", "cell": 11, "size": [96, 96], "componentMode": "largest" },
+    { "name": "fire_00", "cell": 12, "size": [32, 64], "componentMinArea": 8 },
+    { "name": "fire_01", "cell": 13, "size": [40, 96], "componentMinArea": 8 },
+    { "name": "explosion_flash", "cell": 14, "size": [128, 128], "componentMinArea": 18 },
+    { "name": "impact_spark", "cell": 15, "size": [96, 96], "componentMinArea": 10 }
+  ]
+}

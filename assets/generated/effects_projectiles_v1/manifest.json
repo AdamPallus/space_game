@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 10,
+  "sprites": [
+    { "name": "player_kinetic_bolt", "cell": 0, "size": [32, 96], "componentMinArea": 8 },
+    { "name": "player_plasma_bolt", "cell": 1, "size": [36, 96], "componentMinArea": 8 },
+    { "name": "player_pierce_lance", "cell": 2, "size": [28, 104], "componentMinArea": 8 },
+    { "name": "player_rocket", "cell": 3, "size": [56, 112], "componentMinArea": 8 },
+    { "name": "enemy_red_bolt", "cell": 4, "size": [30, 88], "componentMinArea": 8 },
+    { "name": "enemy_purple_orb", "cell": 5, "size": [64, 64], "componentMinArea": 8 },
+    { "name": "enemy_spread_shard", "cell": 6, "size": [80, 80], "componentMinArea": 8 },
+    { "name": "enemy_radial_ember", "cell": 7, "size": [44, 44], "componentMinArea": 8 },
+    { "name": "impact_spark", "cell": 8, "size": [96, 96], "componentMinArea": 8 },
+    { "name": "shield_hit_ring", "cell": 9, "size": [128, 128], "componentMinArea": 8 },
+    { "name": "explosion_00", "cell": 10, "size": [80, 80], "componentMinArea": 8 },
+    { "name": "explosion_01", "cell": 11, "size": [112, 112], "componentMinArea": 8 },
+    { "name": "explosion_02", "cell": 12, "size": [144, 144], "componentMinArea": 8 },
+    { "name": "explosion_03", "cell": 13, "size": [160, 160], "componentMinArea": 8 },
+    { "name": "explosion_smoke", "cell": 14, "size": [144, 144], "componentMinArea": 8 },
+    { "name": "player_death_core", "cell": 15, "size": [192, 192], "componentMinArea": 8 }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "id": "generated_sprite_lab",
+  "name": "Generated Sprite Lab",
+  "background": "generatedTealRift",
+  "visualTheme": "generated_v1",
+  "music": "space_battle_bpm130.ogg",
+  "difficulty": "Prototype",
+  "description": "Short visual test mission using generated ships, projectiles, explosions, and a generated scrolling background.",
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "dart": {
+      "sprite": "assets/generated/pilot_sprites/enemy_scout.png",
+      "spriteScale": 0.78,
+      "hull": 18,
+      "speed": 150,
+      "fireRate": 2.2,
+      "fireMode": "aim",
+      "bulletSpeed": 210
+    },
+    "fighter": {
+      "sprite": "assets/generated/pilot_sprites/enemy_fighter.png",
+      "spriteScale": 0.78,
+      "hull": 30,
+      "speed": 82,
+      "fireRate": 1.7,
+      "fireMode": "aim",
+      "bulletSpeed": 225
+    },
+    "hunter": {
+      "sprite": "assets/generated/pilot_sprites/enemy_hunter.png",
+      "spriteScale": 0.78,
+      "hull": 34,
+      "speed": 128,
+      "fireRate": 1.8,
+      "fireMode": "spread",
+      "fireCount": 3,
+      "fireSpread": 0.55,
+      "bulletSpeed": 190
+    },
+    "escort": {
+      "sprite": "assets/generated/pilot_sprites/enemy_bruiser.png",
+      "spriteScale": 0.82,
+      "hull": 44,
+      "armor": 120,
+      "speed": 58,
+      "fireRate": 2.6,
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.8,
+      "bulletSpeed": 170
+    },
+    "elite": {
+      "sprite": "assets/generated/pilot_sprites/enemy_ace.png",
+      "spriteScale": 0.84,
+      "hull": 90,
+      "shield": 60,
+      "speed": 116,
+      "fireRate": 2.8,
+      "fireMode": "radial",
+      "fireCount": 10,
+      "bulletSpeed": 155
+    },
+    "transport": {
+      "sprite": "assets/generated/pilot_sprites/ufo_transport.png",
+      "spriteScale": 0.82,
+      "hull": 70,
+      "armor": 80,
+      "speed": 48,
+      "fireRate": 3.0,
+      "fireMode": "radial",
+      "fireCount": 8,
+      "bulletSpeed": 145
+    },
+    "boss": {
+      "template": "level1:boss",
+      "sprite": "assets/generated/pilot_sprites/boss_manta.png",
+      "spriteScale": 0.92,
+      "hull": 420,
+      "shield": 180,
+      "armor": 120,
+      "radius": 58,
+      "fireRate": 1.4,
+      "fireMode": "spread",
+      "fireCount": 7,
+      "fireSpread": 1.0,
+      "bulletSpeed": 205
+    }
+  },
+  "events": [
+    { "time": 1, "type": "dart", "count": 6, "interval": 0.5 },
+    { "time": 5, "type": "fighter", "count": 4, "interval": 0.8 },
+    { "time": 9, "type": "hunter", "count": 4, "interval": 0.7 },
+    { "time": 14, "type": "escort", "count": 3, "interval": 1.2 },
+    { "time": 20, "type": "transport", "count": 2, "interval": 1.6 },
+    { "time": 27, "type": "elite", "count": 2, "interval": 1.4 },
+    { "time": 36, "type": "boss", "count": 1 }
+  ]
+}

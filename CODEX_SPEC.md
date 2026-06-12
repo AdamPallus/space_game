@@ -110,6 +110,15 @@ works inside the new shell. Mobile touch paths still work.
    marked `TODO(adam)` until then).
 3. Aux abilities (cloak/EMP/bulwark) become items in the pool so they can
    drop, be bought, and be sold.
+4. **Kinetic flow model** (ECONOMY_DESIGN.md §3): kinetic damage =
+   `size × velocity^k` (k in ECONOMY config, start 1.5) under a per-gun
+   impulse budget (size trades against muzzle velocity; rarity raises the
+   budget). Plasma keeps its own model. Ship alongside a
+   `scripts/balance_report.js` that prints a time-to-kill matrix (each frame
+   and a sample of rolled items vs each catalog enemy class) so tuning is a
+   report, not replays. Acceptance: TTK matrix has no infinities (chip floor
+   holds) and no build kills the toughest plated enemy faster than a
+   dedicated anti-armor build.
 
 **Acceptance:** Same base item can roll different affixes; stat effects
 verifiably apply in combat; relic lore line displays once and is recorded in

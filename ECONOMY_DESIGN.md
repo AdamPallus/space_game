@@ -133,6 +133,39 @@ Example item: **"Certified Scatter Array — Vampiric trace"** (Spread base,
 The existing `items/weapon_frames.json` frames become the **base item set**;
 guaranteed starter gear, never lost.
 
+### Storage between runs: unbounded, on purpose
+
+The 3-slot cargo hold is the only inventory cap. Salvage that survives the
+flight home is kept forever — no stash limits, no inventory-management
+chores, nothing that fights the accumulation fantasy. Selling pressure comes
+from the market (credits are useful; bulletins reward timing), and holding
+inventory for a demand spike is a legitimate strategy. If hoarding ever turns
+degenerate, the remedy is a small per-cycle "Ledger warehousing fee" receipt
+line — never a hard cap.
+
+### Kinetic flow model (Phase 4+; do not implement earlier)
+
+Kinetic damage derives from projectile physics instead of flat numbers:
+`damage ∝ size × velocity^k` (k tunable in config, start ~1.5 — never start
+at 2), where each gun has an **impulse budget**: larger projectiles leave the
+barrel slower unless item quality raises the budget. Rarity/affixes raise the
+budget rather than adding "+1 damage."
+
+Consequences this buys:
+- **Armor counters become emergent, not tagged.** ArmorClass already
+  punishes low per-hit damage, so heavy slow slugs are anti-armor and fast
+  small shots are anti-swarm *by physics*. Contract telegraphs ("plated")
+  read off a dial players intuitively understand.
+- **Affixes become contextual:** +velocity is worth more on a big-bore base,
+  +size on a fast one. Same affix, different value per base = build depth.
+- **Plasma ignores the physics** (energy model: DOT, own shield/armor
+  interactions), so kinetic vs plasma differ in *model*, not color.
+- **Power is visible:** better kinetic gear throws visibly bigger, faster
+  slugs. The upgrade is on screen every frame.
+
+The existing `flowVelocityLevel` / `flowSizeLevel` / `gunDiameter` fields are
+the inputs; this model is the physics they were waiting for.
+
 ---
 
 ## 4. The Ledger market

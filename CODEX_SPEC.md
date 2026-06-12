@@ -37,6 +37,12 @@ everywhere — never block gameplay code on generated assets.
    fees (red), net; then each pod "identified" (item name + rarity revealed,
    sequential reveal is fine as plain DOM for now). Collected items land in
    the armory inventory.
+7. **Minimum chip-damage floor.** Armor reduction can never zero out a hit:
+   every hit deals at least `max(1, baseDamage * ECONOMY.minDamageFloor)`
+   (start at 0.2). This is the one permitted combat-balance change — see
+   ECONOMY_DESIGN.md §2 "Armor, gear checks". Verify a wide/micro build can
+   slowly kill a plated enemy and that boss kills are possible with any
+   starter frame.
 
 **Acceptance:** Launch level 1 → kill transport wave → collect 2 pods → RTB →
 debrief shows itemized credits + 2 identified items → items appear in armory
@@ -120,8 +126,8 @@ a collection list.
   can tune by editing one block.
 - **Validation:** extend `scripts/validate_levels.js` (or a sibling script)
   to validate `items/item_pool.json` ids/affixes.
-- **Don't touch:** combat feel, level JSON format, enemy catalog stats,
-  existing investment costs.
+- **Don't touch:** combat feel (sole exception: the Phase 1 chip-damage
+  floor), level JSON format, enemy catalog stats, existing investment costs.
 - Commit + push after each phase (Adam playtests on Vercel).
 
 ## Open items owned by Adam (do not block; use placeholders)

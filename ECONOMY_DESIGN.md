@@ -70,6 +70,30 @@ to credits only through the Ledger (at the Ledger's spread).
   > "Pattern flagged: elevated early-recall frequency. Review concluded. No
   > action taken. The Ledger thanks you for your efficiency."
 
+### Armor, gear checks, and the "unkillable wave" problem
+
+Loadout-vs-contract matching is the strategy layer, so gear checks are
+intended — but they must cost **efficiency, never possibility**. Three rules:
+
+1. **Armor reduces, never nullifies.** Minimum chip-damage floor on every hit
+   (tune ~15–25% of base damage, min 1). The wrong loadout makes plated
+   enemies slow and wasteful to kill, never invincible. (Resolves the
+   existing TODO_NEXT.md armor-vs-micro-shots issue.)
+2. **Contracts telegraph threat composition.** Mission briefs state it
+   plainly ("Escort wing: plated. Pierce-rated munitions recommended."). The
+   Ledger publishes accurate intel — it profits from your salvage either
+   way. Bringing the wrong loadout is a misread contract, not a trap.
+3. **Armor gates loot, not exits.** In mixed waves, armored enemies are the
+   salvage carriers — skippable priority targets. Can't crack them? Fight
+   the soft targets and RTB with a lighter haul: lost reward, not lost
+   progress. Strict corollary: **a level boss is never hard-gated behind one
+   damage type** — every boss has a shield or hull phase that any viable
+   build can damage.
+
+Forced early extraction because you brought the wrong tool is valid gameplay
+("wrong tool, half a haul"); an enemy that ignores your damage entirely is a
+design bug.
+
 ---
 
 ## 3. Items

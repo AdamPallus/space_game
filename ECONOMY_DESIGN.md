@@ -275,7 +275,31 @@ signed, not a mission entry fee — the "no entry/lease fees" cut stands.
 - A new player should afford their first Certified item within ~3 missions and
   first investment tier within ~5.
 
-## 9. Explicitly cut
+## 9. Deferred design sketches (designed, not scheduled)
+
+### Surface layer targets (Raptor air/ground split)
+Rides on the layered parallax decal system (ASSET_GENERATION.md): the
+"ground" is a decal layer, and surface targets are decals with HP. Rules of
+the sketch:
+- **Surface targets are loot, not threats** — depots, cargo crawlers, comm
+  arrays. Mostly defenseless or lightly turreted; they exist so the screen
+  always offers value, not danger. They feed the salvage economy (surface
+  pods) rather than the bounty counter.
+- **Weapon split as a loadout dimension:** some weapons/affixes are
+  surface-rated; primaries are air-only by default. Contracts flag surface
+  salvage rights ("surface-rated munitions recommended"), feeding the
+  loadout-vs-contract decision like the armor telegraphs do.
+- Gate: requires Phase 3 decal layers + a Codex phase of its own. Do not
+  implement piecemeal.
+
+### Flight school → certification contracts
+Onboarding must never chain missions without a hangar/debrief visit — the
+extraction loop is the real tutorial (first RTB with cargo teaches the
+game). Recommendation: first launch lands in a soft Level 1; flight-school
+levels become optional one-time "certification contracts" on the mission
+board with small payouts. Adam undecided; decision pending playtest.
+
+## 10. Explicitly cut
 
 - Modular weapon **crafting** UI (components → affixes on dropped items).
 - Specialization trees (slot scarcity + affixes already force builds).

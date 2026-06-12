@@ -56,6 +56,24 @@
       "fireMode": "aim",
       "shieldRegen": 10
     },
+    "transport": {
+      "hull": 28,
+      "shield": 0,
+      "armor": 0,
+      "speed": 18,
+      "score": 420,
+      "baseCredit": 62,
+      "radius": 30,
+      "pattern": "stall",
+      "patternParams": {
+        "stallY": 145,
+        "stallDuration": 8,
+        "strafeAmp": 72,
+        "strafeFreq": 1.1,
+        "postSpeedMult": 0.8
+      },
+      "ai": "transport"
+    },
     "boss": {
       "template": "level1:boss"
     }
@@ -90,6 +108,12 @@
       "type": "lurker",
       "count": 2,
       "interval": 1.3
+    },
+    {
+      "time": 16,
+      "type": "transport",
+      "count": 2,
+      "interval": 1.4
     },
     {
       "time": 24,

@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "affixes": {
+    "pierce_trace": {
+      "name": "Pierce trace",
+      "description": "Rounds punch through one additional target.",
+      "tags": ["pierce", "anti-armor"],
+      "slotTypes": ["primary"],
+      "exclusiveGroup": "weapon-effect",
+      "build": {
+        "effect": "pierce",
+        "effectUpgrades": {
+          "pierce": 1
+        }
+      }
+    },
+    "vampiric_trace": {
+      "name": "Vampiric trace",
+      "description": "Confirmed kills return a small amount of hull integrity.",
+      "tags": ["vampiric", "sustain"],
+      "slotTypes": ["primary"],
+      "exclusiveGroup": "weapon-effect",
+      "build": {
+        "effect": "vampiric",
+        "effectUpgrades": {
+          "vampiric": 1
+        }
+      }
+    },
+    "flow_rate_plus": {
+      "name": "+Flow rate",
+      "description": "Improves weapon cycling speed.",
+      "tags": ["flow-rate"],
+      "slotTypes": ["primary"],
+      "buildAdd": {
+        "flowRateLevel": 1
+      }
+    },
+    "shield_regen_plus": {
+      "name": "+Shield regen",
+      "description": "Improves shield recovery rate.",
+      "tags": ["shield", "regen"],
+      "slotTypes": ["defense", "aux"],
+      "buildAdd": {
+        "shieldRegenLevel": 1
+      }
+    }
+  },
+  "entries": {
+    "frame_fundamentals": {
+      "slotType": "primary",
+      "sourceId": "fundamentals",
+      "name": "Cadet Kinetic Frame",
+      "subtitle": "Precision trainer",
+      "description": "Standard kinetic trainer with balanced recoil and focused shots.",
+      "notes": "Starter-frame salvage pattern. Guaranteed starter gear remains separate and is never lost.",
+      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun03.png",
+      "tags": ["kinetic", "focused", "balanced"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "focused",
+        "ammo": "kinetic",
+        "effect": "none",
+        "flowRateLevel": 0,
+        "flowVelocityLevel": 0,
+        "flowSizeLevel": 0,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0
+      }
+    },
+    "frame_area_control": {
+      "slotType": "primary",
+      "sourceId": "area_control",
+      "name": "Area Control Frame",
+      "subtitle": "Swarm breaker",
+      "description": "Wide plasma spread tuned for interceptor packs.",
+      "notes": "Micro-shot salvage pattern for broad lane pressure.",
+      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun08.png",
+      "tags": ["plasma", "wide", "explosive"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "wide",
+        "ammo": "plasma",
+        "effect": "explosive",
+        "flowRateLevel": 1,
+        "flowVelocityLevel": 0,
+        "flowSizeLevel": 1,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 1,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0
+      }
+    },
+    "frame_armor_break": {
+      "slotType": "primary",
+      "sourceId": "armor_break",
+      "name": "Armor Break Frame",
+      "subtitle": "Heavy punch",
+      "description": "Large focused kinetic slugs built for plated targets.",
+      "notes": "Pierce-capable salvage pattern for hard targets.",
+      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun10.png",
+      "tags": ["kinetic", "pierce", "anti-armor"],
+      "build": {
+        "gunDiameter": "large",
+        "spread": "focused",
+        "ammo": "kinetic",
+        "effect": "pierce",
+        "flowRateLevel": 0,
+        "flowVelocityLevel": 2,
+        "flowSizeLevel": 1,
+        "defenseSlots": ["shield", "armor"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 0,
+        "armorAmountLevel": 1,
+        "armorClass": 12,
+        "armorClassLevel": 0
+      }
+    },
+    "defense_phase_shield": {
+      "slotType": "defense",
+      "defenseType": "shield",
+      "sourceId": "shield_module",
+      "name": "Phase Shield",
+      "subtitle": "Barrier",
+      "description": "Standard shield projector for a forgiving buffer.",
+      "notes": "Recovered shield hardware suitable for either defense bay.",
+      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
+      "tags": ["shield", "defense"],
+      "build": {
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 0
+      }
+    },
+    "defense_heavy_plate": {
+      "slotType": "defense",
+      "defenseType": "armor",
+      "sourceId": "armor_module",
+      "name": "Heavy Plate",
+      "subtitle": "Plating",
+      "description": "Dense armor slab for soaking direct fire.",
+      "notes": "Recovered armor hardware suitable for either defense bay.",
+      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/shield_gold.png",
+      "tags": ["armor", "defense"],
+      "build": {
+        "armorAmountLevel": 1,
+        "armorClass": 12,
+        "armorClassLevel": 0
+      }
+    },
+    "aux_cloak": {
+      "slotType": "aux",
+      "ability": "cloak",
+      "sourceId": "cloak",
+      "name": "Cloaking Device",
+      "subtitle": "Pilot system",
+      "description": "Break enemy lock-on and reposition.",
+      "notes": "Recovered auxiliary system. Equips to the support link.",
+      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
+      "tags": ["aux", "cloak", "evasion"],
+      "build": {}
+    },
+    "aux_emp": {
+      "slotType": "aux",
+      "ability": "emp",
+      "sourceId": "emp",
+      "name": "EMP Burst",
+      "subtitle": "Pilot system",
+      "description": "Disable enemy fire and slow ships briefly.",
+      "notes": "Recovered auxiliary system. Equips to the support link.",
+      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
+      "tags": ["aux", "emp", "control"],
+      "build": {}
+    },
+    "aux_bulwark": {
+      "slotType": "aux",
+      "ability": "bulwark",
+      "sourceId": "bulwark",
+      "name": "Bulwark Field",
+      "subtitle": "Pilot system",
+      "description": "Temporary super-shield buffer.",
+      "notes": "Recovered auxiliary system. Equips to the support link.",
+      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupYellow_shield.png",
+      "tags": ["aux", "shield", "bulwark"],
+      "build": {}
+    }
+  }
+}

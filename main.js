@@ -10,6 +10,8 @@ const hudTime = document.getElementById("hud-time");
 const hudMission = document.getElementById("hud-mission");
 const bossLabel = document.getElementById("boss-label");
 const bossProgressFill = document.getElementById("boss-progress-fill");
+const hudCargoPips = document.getElementById("hud-cargo-pips");
+const hudCargoStatus = document.getElementById("hud-cargo-status");
 const hudItem1 = document.getElementById("hud-item-1");
 const hudItem2 = document.getElementById("hud-item-2");
 const shipGunValue = document.getElementById("ship-gun-value");
@@ -67,6 +69,11 @@ const consumableSlot1 = document.getElementById("consumable-slot-1");
 const consumableSlot2 = document.getElementById("consumable-slot-2");
 const clearSlot1 = document.getElementById("clear-slot-1");
 const clearSlot2 = document.getElementById("clear-slot-2");
+const investmentTreeMap = document.getElementById("investment-tree-map");
+const investmentTreeLines = document.getElementById("investment-tree-lines");
+const investmentTreeInspector = document.getElementById("investment-tree-inspector");
+const economyTreeCredits = document.getElementById("economy-tree-credits");
+const economyTreeProgress = document.getElementById("economy-tree-progress");
 
 // Investment UI elements
 const engineeringTier = document.getElementById("engineering-tier");
@@ -91,6 +98,8 @@ const debriefText = document.getElementById("debrief-text");
 const debriefTime = document.getElementById("debrief-time");
 const debriefKills = document.getElementById("debrief-kills");
 const debriefCredits = document.getElementById("debrief-credits");
+const debriefLedger = document.getElementById("debrief-ledger");
+const debriefSalvage = document.getElementById("debrief-salvage");
 const mobileAltBtn = document.getElementById("mobile-alt");
 const mobileAltIcon = document.getElementById("mobile-alt-icon");
 const mobileAltLabel = document.getElementById("mobile-alt-label");
@@ -107,6 +116,9 @@ const compendiumShowBosses = document.getElementById("compendium-show-bosses");
 const STORAGE_KEY = "mini-fighter-save";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
 const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
+const GENERATED_ROOT = "assets/generated";
+const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
+const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 let shouldAutoLaunchFreshPilotMission = false;
 const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "template",
@@ -140,6 +152,94 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "isBoss",
   "hpScale",
 ]);
+
+const ECONOMY = {
+  cargoSize: 3,
+  salvagePodSpeed: 40,
+  cargoFullFlashSeconds: 1.1,
+  minDamageFloor: 0.2,
+  deathBountyWritedownRate: 0.25,
+  recoveryBonusRate: {
+    min: 0.1,
+    max: 0.25,
+  },
+  dropSources: {
+    ordinary: {
+      chance: 0.02,
+      rarityWeights: { scrap: 1 },
+    },
+    transport: {
+      chance: 1,
+      rarityWeights: { scrap: 0.82, certified: 0.18 },
+    },
+    captain: {
+      chance: 0.6,
+      minBaseCredit: 150,
+      rarityWeights: { scrap: 0.25, certified: 0.65, prototype: 0.1 },
+    },
+    boss: {
+      chance: 1,
+      rarityWeights: { certified: 0.25, prototype: 0.7, preFounding: 0.05 },
+    },
+    eliteBonusChance: 0.15,
+  },
+  rarityOrder: ["scrap", "certified", "prototype", "preFounding"],
+  rarities: {
+    scrap: {
+      label: "Scrap-grade",
+      shortLabel: "SCRAP",
+      color: "#94a3b8",
+      glow: "rgba(148, 163, 184, 0.76)",
+      affixCount: 0,
+      valueRange: [40, 80],
+    },
+    certified: {
+      label: "Certified",
+      shortLabel: "CERT",
+      color: "#60a5fa",
+      glow: "rgba(96, 165, 250, 0.82)",
+      affixCount: 1,
+      valueRange: [150, 300],
+    },
+    prototype: {
+      label: "Prototype",
+      shortLabel: "PROTO",
+      color: "#a78bfa",
+      glow: "rgba(167, 139, 250, 0.88)",
+      affixCount: 2,
+      valueRange: [500, 900],
+    },
+    preFounding: {
+      label: "Pre-Founding",
+      shortLabel: "RELIC",
+      color: "#facc15",
+      glow: "rgba(250, 204, 21, 0.92)",
+      affixCount: 2,
+      valueRange: [1500, 3000],
+    },
+  },
+  market: {
+    sellRate: 0.4,
+    handlingFeeRate: 0.6,
+    stockLots: 5,
+    bulletinCadence: 3,
+    bulletinBonusRate: 0.4,
+    mispricedLotChance: 0.125,
+    mispricedValueRange: [0.35, 0.5],
+  },
+};
+
+const LEDGER_COPY = {
+  cargoFull: "CARGO FULL",
+  rtbComplete: "RTB complete. Bounty and cargo secured.",
+  bossComplete: "Contract settled. Recovery crew attached boss salvage.",
+  droneDestroyed: "Drone destroyed. Hull writedown applied; cargo claim voided.",
+  hullWritedown: "Hull writedown",
+  recoveryBonus: "Recovery bonus",
+  fleetDividends: "Fleet dividends",
+  noCargo: "No salvage pods recovered.",
+  bossPod: "Boss recovery pod",
+};
 
 const upgrades = [
   {
@@ -188,11 +288,12 @@ function createDefaultShipBuild() {
     flowVelocityLevel: 0,
     flowSizeLevel: 0,
     ammo: "kinetic", // kinetic | plasma
-    effect: "none", // none | homing | explosive | pierce
+    effect: "none", // none | homing | explosive | pierce | vampiric
     effectUpgrades: {
       homing: 0,
       explosive: 0,
       pierce: 0,
+      vampiric: 0,
     },
     defenseSlots: ["shield", "none"], // shield | armor | none
     shieldMaxLevel: 0,
@@ -356,6 +457,63 @@ const investments = {
     ],
   },
 };
+
+const investmentTreeBranches = {
+  engineering: {
+    icon: "🔧",
+    subtitle: "Unlock consumables and repair infrastructure.",
+    accent: "cyan",
+    nodes: [
+      { x: 42, y: 40 },
+      { x: 31, y: 31 },
+      { x: 24, y: 18 },
+      { x: 39, y: 14 },
+      { x: 52, y: 24 },
+    ],
+  },
+  operations: {
+    icon: "📡",
+    subtitle: "Open mission variants, objectives, and risk modifiers.",
+    accent: "violet",
+    nodes: [
+      { x: 59, y: 45 },
+      { x: 70, y: 37 },
+      { x: 81, y: 45 },
+      { x: 76, y: 25 },
+      { x: 88, y: 15 },
+    ],
+  },
+  shares: {
+    icon: "⬡",
+    subtitle: "Buy into fleet operations for passive credit returns.",
+    accent: "amber",
+    nodes: [
+      { x: 45, y: 61 },
+      { x: 34, y: 70 },
+      { x: 25, y: 83 },
+      { x: 51, y: 77 },
+      { x: 63, y: 88 },
+    ],
+  },
+};
+
+const investmentTreeConnections = [
+  ["root", "engineering-0"],
+  ["engineering-0", "engineering-1"],
+  ["engineering-1", "engineering-2"],
+  ["engineering-1", "engineering-3"],
+  ["engineering-0", "engineering-4"],
+  ["root", "operations-0"],
+  ["operations-0", "operations-1"],
+  ["operations-1", "operations-2"],
+  ["operations-1", "operations-3"],
+  ["operations-3", "operations-4"],
+  ["root", "shares-0"],
+  ["shares-0", "shares-1"],
+  ["shares-1", "shares-2"],
+  ["shares-0", "shares-3"],
+  ["shares-3", "shares-4"],
+];
 
 function getSharesDividendRate() {
   const tier = state.investments?.shares ?? 0;
@@ -569,9 +727,21 @@ function deriveDefenseSlotsFromBuild(build) {
   });
 }
 
+function getPrimaryArmoryItem(targetState = state) {
+  const equippedItem = findInventoryItem(targetState.armory?.equippedPrimaryItemId, targetState);
+  if (equippedItem?.slotType === "primary") return equippedItem;
+  const equippedId = targetState.armory?.equippedLoadoutId;
+  return starterWeaponLoadoutsById[equippedId] || starterWeaponLoadouts[0];
+}
+
+function getDefenseArmoryItemById(moduleId, targetState = state) {
+  if (!moduleId || moduleId === "none") return null;
+  return defenseModulesById[moduleId] || findInventoryItem(moduleId, targetState);
+}
+
 function composeShipBuildFromArmory(targetState) {
   const base = createDefaultShipBuild();
-  const frame = starterWeaponLoadoutsById[targetState.armory?.equippedLoadoutId] || starterWeaponLoadouts[0];
+  const frame = getPrimaryArmoryItem(targetState);
   const frameBuild = frame?.build || {};
   const merged = {
     ...cloneShipBuild(base),
@@ -594,7 +764,7 @@ function composeShipBuildFromArmory(targetState) {
   while (equippedDefenseSlots.length < 2) equippedDefenseSlots.push("none");
 
   equippedDefenseSlots.forEach((moduleId, index) => {
-    const module = defenseModulesById[moduleId];
+    const module = getDefenseArmoryItemById(moduleId, targetState);
     if (!module) return;
     if (module.defenseType === "shield") {
       merged.defenseSlots[index] = "shield";
@@ -617,6 +787,15 @@ function composeShipBuildFromArmory(targetState) {
       );
     }
   });
+
+  const supportItem = findInventoryItem(targetState.armory?.equippedSupportItemId, targetState);
+  if (supportItem && isSupportSlotType(supportItem.slotType) && supportItem.build) {
+    ["flowRateLevel", "flowVelocityLevel", "flowSizeLevel", "shieldMaxLevel", "shieldRegenLevel", "armorAmountLevel", "armorClassLevel"].forEach((key) => {
+      if (Number.isFinite(supportItem.build[key])) {
+        merged[key] = Math.max(merged[key] ?? 0, supportItem.build[key]);
+      }
+    });
+  }
 
   return merged;
 }
@@ -655,6 +834,18 @@ function findClosestStarterLoadoutId(build) {
 
 function normalizeStarterArmoryState(targetState) {
   const skipOnboarding = !!targetState.debugSkipOnboarding;
+  const existingArmory = targetState.armory || {};
+  const existingInventory = Array.isArray(existingArmory.inventory)
+    ? existingArmory.inventory
+        .filter((item) => item && typeof item === "object" && typeof item.id === "string")
+        .map((item) => ({
+          ...cloneItem(item),
+          slotType: normalizeArmorySlotType(item.slotType),
+          build: cloneShipBuild(item.build || {}),
+          tags: Array.isArray(item.tags) ? item.tags : [],
+          affixes: Array.isArray(item.affixes) ? item.affixes : [],
+        }))
+    : [];
   const grantedIds = getStarterLoadoutIdsForStage(
     targetState.onboardingStage,
     skipOnboarding
@@ -675,32 +866,60 @@ function normalizeStarterArmoryState(targetState) {
   const ownedDefenseModuleIds = Array.from(
     new Set([...existingDefenseOwned, ...grantedDefenseIds])
   ).filter((id) => !!defenseModulesById[id]);
+  const existingPrimaryItemId =
+    typeof existingArmory.equippedPrimaryItemId === "string"
+      ? existingArmory.equippedPrimaryItemId
+      : null;
+  const equippedPrimaryItemId = existingInventory.some(
+    (item) => item.id === existingPrimaryItemId && item.slotType === "primary"
+  )
+    ? existingPrimaryItemId
+    : null;
   const desiredEquippedId =
-    targetState.armory?.equippedLoadoutId && ownedLoadoutIds.includes(targetState.armory.equippedLoadoutId)
-      ? targetState.armory.equippedLoadoutId
+    existingArmory.equippedLoadoutId && ownedLoadoutIds.includes(existingArmory.equippedLoadoutId)
+      ? existingArmory.equippedLoadoutId
       : ownedLoadoutIds.includes(findClosestStarterLoadoutId(targetState.shipBuild))
         ? findClosestStarterLoadoutId(targetState.shipBuild)
         : ownedLoadoutIds[0] || starterWeaponLoadouts[0].id;
-  const existingDefenseSlots = Array.isArray(targetState.armory?.equippedDefenseSlotIds)
-    ? targetState.armory.equippedDefenseSlotIds
+  const inventoryDefenseIds = new Set(
+    existingInventory.filter((item) => item.slotType === "defense").map((item) => item.id)
+  );
+  const existingDefenseSlots = Array.isArray(existingArmory.equippedDefenseSlotIds)
+    ? existingArmory.equippedDefenseSlotIds
     : deriveDefenseSlotsFromBuild(targetState.shipBuild);
   const equippedDefenseSlotIds = existingDefenseSlots.slice(0, 2).map((moduleId) => {
     if (moduleId === "none") return "none";
-    return ownedDefenseModuleIds.includes(moduleId) ? moduleId : "none";
+    return ownedDefenseModuleIds.includes(moduleId) || inventoryDefenseIds.has(moduleId)
+      ? moduleId
+      : "none";
   });
   while (equippedDefenseSlotIds.length < 2) equippedDefenseSlotIds.push("none");
   if (!ownedDefenseModuleIds.length) {
-    equippedDefenseSlotIds[0] = "none";
-    equippedDefenseSlotIds[1] = "none";
+    if (!inventoryDefenseIds.size) {
+      equippedDefenseSlotIds[0] = "none";
+      equippedDefenseSlotIds[1] = "none";
+    }
   } else if (equippedDefenseSlotIds.every((id) => id === "none")) {
     equippedDefenseSlotIds[0] = ownedDefenseModuleIds[0];
   }
+  const existingSupportItemId =
+    typeof existingArmory.equippedSupportItemId === "string"
+      ? existingArmory.equippedSupportItemId
+      : null;
+  const equippedSupportItemId = existingInventory.some(
+    (item) => item.id === existingSupportItemId && isSupportSlotType(item.slotType)
+  )
+    ? existingSupportItemId
+    : null;
 
   targetState.armory = {
     ownedLoadoutIds,
     ownedDefenseModuleIds,
     equippedLoadoutId: desiredEquippedId,
+    equippedPrimaryItemId,
     equippedDefenseSlotIds,
+    equippedSupportItemId,
+    inventory: existingInventory,
   };
   targetState.shipBuild = composeShipBuildFromArmory(targetState);
 }
@@ -710,8 +929,7 @@ function getOwnedStarterLoadoutIds() {
 }
 
 function getEquippedStarterLoadout() {
-  const equippedId = state.armory?.equippedLoadoutId;
-  return starterWeaponLoadoutsById[equippedId] || starterWeaponLoadouts[0];
+  return getPrimaryArmoryItem(state);
 }
 
 function equipStarterLoadout(loadoutId) {
@@ -725,6 +943,23 @@ function equipStarterLoadout(loadoutId) {
     equippedDefenseSlotIds: ["shield_module", "none"],
   };
   state.armory.equippedLoadoutId = loadoutId;
+  state.armory.equippedPrimaryItemId = null;
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
+  saveState();
+}
+
+function equipPrimaryInventoryItem(itemId) {
+  const item = findInventoryItem(itemId);
+  if (!item || item.slotType !== "primary") return;
+  state.armory = state.armory || {
+    ownedLoadoutIds: [],
+    ownedDefenseModuleIds: [],
+    equippedLoadoutId: starterWeaponLoadouts[0]?.id || "fundamentals",
+    equippedDefenseSlotIds: ["shield_module", "none"],
+    inventory: [],
+  };
+  state.armory.equippedPrimaryItemId = item.id;
   state.shipBuild = composeShipBuildFromArmory(state);
   syncShipBuildToLegacy();
   saveState();
@@ -733,13 +968,22 @@ function equipStarterLoadout(loadoutId) {
 function equipDefenseModule(slotIndex, moduleId) {
   if (![0, 1].includes(slotIndex)) return;
   const normalizedId = moduleId || "none";
-  if (normalizedId !== "none" && !defenseModulesById[normalizedId]) return;
-  if (normalizedId !== "none" && !getOwnedDefenseModuleIds().includes(normalizedId)) return;
+  const inventoryItem = findInventoryItem(normalizedId);
+  const isInventoryDefense = inventoryItem?.slotType === "defense";
+  if (normalizedId !== "none" && !defenseModulesById[normalizedId] && !isInventoryDefense) return;
+  if (
+    normalizedId !== "none" &&
+    !isInventoryDefense &&
+    !getOwnedDefenseModuleIds().includes(normalizedId)
+  ) {
+    return;
+  }
   state.armory = state.armory || {
     ownedLoadoutIds: [],
     ownedDefenseModuleIds: [],
     equippedLoadoutId: starterWeaponLoadouts[0]?.id || "fundamentals",
     equippedDefenseSlotIds: ["none", "none"],
+    inventory: [],
   };
   const slots = Array.isArray(state.armory.equippedDefenseSlotIds)
     ? state.armory.equippedDefenseSlotIds.slice(0, 2)
@@ -846,6 +1090,7 @@ let activeMusic = null;
 const musicLibrary = new Map();
 const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
 let openUpgradeId = null;
+let selectedInvestmentNode = null;
 let enemyIdCounter = 1;
 let armorySelectedSlotId = "primary";
 let armoryPreviewItemId = null;
@@ -932,6 +1177,325 @@ const defenseModules = [
 
 const defenseModulesById = Object.fromEntries(defenseModules.map((item) => [item.id, item]));
 
+const ITEM_POOL_PATH = "items/item_pool.json";
+let itemPoolCatalog = null;
+let itemPoolCatalogPromise = null;
+
+function normalizeArmorySlotType(slotType) {
+  if (slotType === "support") return "aux";
+  if (slotType === "weapon") return "primary";
+  return slotType || "primary";
+}
+
+function isSupportSlotType(slotType) {
+  const normalized = normalizeArmorySlotType(slotType);
+  return normalized === "aux";
+}
+
+function getRarityConfig(rarity) {
+  return ECONOMY.rarities[rarity] || ECONOMY.rarities.scrap;
+}
+
+function getRarityLabel(rarity) {
+  return getRarityConfig(rarity).label;
+}
+
+function getRarityStyle(rarity) {
+  const config = getRarityConfig(rarity);
+  return `--rarity-color: ${config.color}; --rarity-glow: ${config.glow};`;
+}
+
+function randomIntInclusive(min, max) {
+  return Math.round(min + Math.random() * (max - min));
+}
+
+function rollWeighted(weights) {
+  const entries = Object.entries(weights || {}).filter(([, weight]) => weight > 0);
+  if (!entries.length) return "scrap";
+  const total = entries.reduce((sum, [, weight]) => sum + weight, 0);
+  let roll = Math.random() * total;
+  for (const [id, weight] of entries) {
+    roll -= weight;
+    if (roll <= 0) return id;
+  }
+  return entries[entries.length - 1][0];
+}
+
+function normalizeItemPoolCatalog(catalog) {
+  const entries = catalog?.entries && typeof catalog.entries === "object" ? catalog.entries : {};
+  const affixes = catalog?.affixes && typeof catalog.affixes === "object" ? catalog.affixes : {};
+  return {
+    version: catalog?.version || 1,
+    entries,
+    affixes,
+  };
+}
+
+function buildRuntimeItemPoolFromExistingGear() {
+  const entries = {};
+  starterWeaponLoadouts.forEach((item) => {
+    entries[`runtime_frame_${item.id}`] = {
+      slotType: "primary",
+      sourceId: item.id,
+      name: item.name,
+      subtitle: item.subtitle || "Weapon frame",
+      description: item.description,
+      notes: item.notes || "",
+      icon: getArmoryFrameVisual(item).icon,
+      tags: item.tags || [],
+      build: cloneShipBuild(item.build),
+    };
+  });
+  defenseModules.forEach((item) => {
+    entries[`runtime_defense_${item.id}`] = {
+      slotType: "defense",
+      defenseType: item.defenseType,
+      sourceId: item.id,
+      name: item.name,
+      subtitle: item.subtitle || "Defense",
+      description: item.description,
+      notes: item.notes || "",
+      icon: item.icon,
+      tags: item.tags || [],
+      build: cloneShipBuild(item.build || {}),
+    };
+  });
+  rmbWeapons.forEach((item) => {
+    entries[`runtime_aux_${item.id}`] = {
+      slotType: "aux",
+      ability: item.id,
+      sourceId: item.id,
+      name: item.name,
+      subtitle: "Pilot system",
+      description: item.desc,
+      notes: "Recovered auxiliary system. Equips to the support link.",
+      icon: mobileAltIcons[item.id] || `${ASSET_ROOT}/Power-ups/powerupBlue.png`,
+      tags: ["aux", item.id],
+      build: {},
+    };
+  });
+  return { version: 1, entries, affixes: {} };
+}
+
+async function loadItemPoolCatalog() {
+  try {
+    const response = await fetch(ITEM_POOL_PATH, { cache: "no-store" });
+    if (!response.ok) throw new Error("item pool load failed");
+    const data = await response.json();
+    return normalizeItemPoolCatalog(data);
+  } catch (error) {
+    console.warn("Item pool catalog load failed; using runtime gear fallback.", error);
+    return buildRuntimeItemPoolFromExistingGear();
+  }
+}
+
+async function ensureItemPoolLoaded() {
+  if (itemPoolCatalog) return itemPoolCatalog;
+  if (!itemPoolCatalogPromise) itemPoolCatalogPromise = loadItemPoolCatalog();
+  itemPoolCatalog = await itemPoolCatalogPromise;
+  return itemPoolCatalog;
+}
+
+function cloneItem(item) {
+  return JSON.parse(JSON.stringify(item));
+}
+
+function applyBuildPatch(build, patch = {}) {
+  Object.entries(patch).forEach(([key, value]) => {
+    if (key === "effectUpgrades") {
+      build.effectUpgrades = {
+        ...(build.effectUpgrades || {}),
+        ...cloneShipBuild(value || {}),
+      };
+      return;
+    }
+    if (Array.isArray(value)) {
+      build[key] = value.slice();
+      return;
+    }
+    if (value && typeof value === "object") {
+      build[key] = {
+        ...(build[key] && typeof build[key] === "object" ? build[key] : {}),
+        ...cloneShipBuild(value),
+      };
+      return;
+    }
+    build[key] = value;
+  });
+}
+
+function applyBuildAdd(build, patch = {}) {
+  Object.entries(patch).forEach(([key, value]) => {
+    if (!Number.isFinite(value)) return;
+    build[key] = (Number.isFinite(build[key]) ? build[key] : 0) + value;
+  });
+}
+
+function getApplicableAffixes(slotType, baseBuild = {}) {
+  const catalog = itemPoolCatalog || { affixes: {} };
+  const normalizedSlot = normalizeArmorySlotType(slotType);
+  const baseEffect = baseBuild.effect && baseBuild.effect !== "none" ? "weapon-effect" : null;
+  return Object.entries(catalog.affixes || {})
+    .map(([id, affix]) => ({ id, ...affix }))
+    .filter((affix) => {
+      const allowedSlots = Array.isArray(affix.slotTypes) ? affix.slotTypes : [];
+      if (!allowedSlots.map(normalizeArmorySlotType).includes(normalizedSlot)) return false;
+      if (baseEffect && affix.exclusiveGroup === baseEffect) return false;
+      return true;
+    });
+}
+
+function pickAffixesForItem(slotType, baseBuild, count) {
+  const selected = [];
+  const usedGroups = new Set();
+  const candidates = getApplicableAffixes(slotType, baseBuild);
+  while (selected.length < count && candidates.length) {
+    const index = Math.floor(Math.random() * candidates.length);
+    const affix = candidates.splice(index, 1)[0];
+    if (affix.exclusiveGroup && usedGroups.has(affix.exclusiveGroup)) continue;
+    selected.push(affix);
+    if (affix.exclusiveGroup) usedGroups.add(affix.exclusiveGroup);
+  }
+  return selected;
+}
+
+function generateItemInstanceId() {
+  return `loot_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createRolledItem(baseId, baseEntry, rarity) {
+  const rarityConfig = getRarityConfig(rarity);
+  const affixCount = rarityConfig.affixCount ?? 0;
+  const build = cloneShipBuild(baseEntry.build || {});
+  build.effectUpgrades = {
+    ...cloneShipBuild(createDefaultShipBuild().effectUpgrades),
+    ...cloneShipBuild(build.effectUpgrades || {}),
+  };
+  const affixes = pickAffixesForItem(baseEntry.slotType, build, affixCount);
+  affixes.forEach((affix) => {
+    applyBuildPatch(build, affix.build || {});
+    applyBuildAdd(build, affix.buildAdd || {});
+  });
+
+  const affixNames = affixes.map((affix) => affix.name).filter(Boolean);
+  const rarityLabel = rarityConfig.label;
+  const name = `${rarityLabel} ${baseEntry.name}${affixNames.length ? ` - ${affixNames.join(", ")}` : ""}`;
+  const value = randomIntInclusive(rarityConfig.valueRange[0], rarityConfig.valueRange[1]);
+  const tags = Array.from(
+    new Set([
+      ...(Array.isArray(baseEntry.tags) ? baseEntry.tags : []),
+      ...affixes.flatMap((affix) => (Array.isArray(affix.tags) ? affix.tags : [])),
+      rarity,
+    ])
+  );
+
+  return {
+    id: generateItemInstanceId(),
+    baseId,
+    sourceId: baseEntry.sourceId || baseId,
+    slotType: normalizeArmorySlotType(baseEntry.slotType),
+    defenseType: baseEntry.defenseType || null,
+    ability: baseEntry.ability || null,
+    name,
+    baseName: baseEntry.name,
+    subtitle: baseEntry.subtitle || "",
+    description: baseEntry.description || "",
+    notes: baseEntry.notes || "",
+    icon: baseEntry.icon || `${ASSET_ROOT}/Power-ups/powerupBlue.png`,
+    tags,
+    build,
+    rarity,
+    value,
+    affixes: affixes.map((affix) => ({
+      id: affix.id,
+      name: affix.name,
+      tags: Array.isArray(affix.tags) ? affix.tags : [],
+    })),
+  };
+}
+
+function rollItemForRarity(rarity) {
+  const catalog = itemPoolCatalog || { entries: {} };
+  const entries = Object.entries(catalog.entries || {}).filter(([, entry]) => {
+    const slotType = normalizeArmorySlotType(entry.slotType);
+    return ["primary", "defense", "aux"].includes(slotType);
+  });
+  if (!entries.length) return null;
+  const [baseId, baseEntry] = entries[Math.floor(Math.random() * entries.length)];
+  return createRolledItem(baseId, baseEntry, rarity);
+}
+
+function shiftRarityWeightsUp(weights) {
+  const shifted = {};
+  Object.entries(weights || {}).forEach(([rarity, weight]) => {
+    const index = ECONOMY.rarityOrder.indexOf(rarity);
+    const next = ECONOMY.rarityOrder[Math.min(ECONOMY.rarityOrder.length - 1, index + 1)] || rarity;
+    shifted[next] = (shifted[next] || 0) + weight;
+  });
+  return shifted;
+}
+
+function missionHasEliteModifier() {
+  const level = mission?.level;
+  if (!level) return false;
+  if (level.elite || level.modifier === "elite" || level.variant === "elite") return true;
+  if (Array.isArray(level.modifiers) && level.modifiers.includes("elite")) return true;
+  return /elite/i.test(`${level.id || ""} ${level.name || ""}`);
+}
+
+function getDropSourceKey(enemy) {
+  if (enemy.isBoss) return "boss";
+  const transportIds = new Set(["transport", "bulwark"]);
+  if (transportIds.has(enemy.type) || enemy.ai === "transport") return "transport";
+  const captainConfig = ECONOMY.dropSources.captain;
+  if ((enemy.baseCredit || 0) >= captainConfig.minBaseCredit) return "captain";
+  return "ordinary";
+}
+
+function rollSalvageDrop(enemy, { force = false, forceSource = null } = {}) {
+  if (!itemPoolCatalog) return null;
+  const sourceKey = forceSource || getDropSourceKey(enemy);
+  const sourceConfig = ECONOMY.dropSources[sourceKey] || ECONOMY.dropSources.ordinary;
+  const elite = missionHasEliteModifier();
+  const chance = Math.min(
+    1,
+    (sourceConfig.chance ?? 0) + (elite && sourceKey !== "boss" ? ECONOMY.dropSources.eliteBonusChance : 0)
+  );
+  if (!force && Math.random() > chance) return null;
+  const weights = elite && sourceKey !== "boss"
+    ? shiftRarityWeightsUp(sourceConfig.rarityWeights)
+    : sourceConfig.rarityWeights;
+  const rarity = rollWeighted(weights);
+  const item = rollItemForRarity(rarity);
+  if (!item) return null;
+  item.dropSource = sourceKey;
+  return {
+    rarity,
+    item,
+  };
+}
+
+function getArmoryInventory(targetState = state) {
+  if (!targetState.armory) targetState.armory = {};
+  if (!Array.isArray(targetState.armory.inventory)) targetState.armory.inventory = [];
+  return targetState.armory.inventory;
+}
+
+function findInventoryItem(itemId, targetState = state) {
+  if (!itemId) return null;
+  return getArmoryInventory(targetState).find((item) => item.id === itemId) || null;
+}
+
+function addItemsToArmoryInventory(items) {
+  const inventory = getArmoryInventory(state);
+  const existingIds = new Set(inventory.map((item) => item.id));
+  items.forEach((item) => {
+    if (!item?.id || existingIds.has(item.id)) return;
+    inventory.push(cloneItem(item));
+    existingIds.add(item.id);
+  });
+}
+
 const starfield = Array.from({ length: 120 }, () => ({
   x: Math.random(),
   y: Math.random(),
@@ -940,7 +1504,58 @@ const starfield = Array.from({ length: 120 }, () => ({
 }));
 
 let activeShipBuildOverride = null;
+const devParams = new URLSearchParams(window.location.search);
+function getDevParam(name) {
+  const directValue = devParams.get(name);
+  if (directValue !== null) {
+    return directValue;
+  }
+  const normalizedName = name.toLowerCase();
+  for (const [key, value] of devParams.entries()) {
+    if (key.toLowerCase() === normalizedName) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function getAnyDevParam(names) {
+  for (const name of names) {
+    const value = getDevParam(name);
+    if (value) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function isDevFlagEnabled(name) {
+  return ["1", "true", "yes", "on"].includes(getDevParam(name).toLowerCase());
+}
+
+const devSkipOnboarding = isDevFlagEnabled("devSkip");
+const devRequestedLevelId = getDevParam("level");
+const devRequestedBackground = getDevParam("bg");
+const devInvincible = isDevFlagEnabled("devInvincible");
+const devAutoFire = isDevFlagEnabled("devAutoFire");
+const devUiSkin = getAnyDevParam(["uiSkin", "skin", "buttonSkin", "buttons"]).toLowerCase();
+const devGeneratedUiSkin = ["generated", "1", "true", "yes", "on"].includes(devUiSkin);
+if (devGeneratedUiSkin) {
+  document.body.classList.add("generated-ui-skin");
+  document.body.dataset.uiSkin = "generated";
+}
 const state = loadState();
+if (devSkipOnboarding) {
+  shouldAutoLaunchFreshPilotMission = false;
+  state.debugSkipOnboarding = true;
+  state.debugUnlock = true;
+  state.onboardingStage = ONBOARDING_STAGE_COMPLETE;
+  state.unlockedLevels = Math.max(state.unlockedLevels || 1, 99);
+  state.systemUnlocks = { loadout: true, economy: true, compendium: true };
+}
+if (devInvincible) {
+  state.debugInvincible = true;
+}
 refreshSystemUnlocks();
 syncShipBuildToLegacy();
 saveState();
@@ -984,9 +1599,11 @@ const player = {
 const bullets = [];
 const enemyBullets = [];
 const enemies = [];
+const salvagePods = [];
 const floatingTexts = [];
 const explosions = [];
 let backgroundScroll = 0;
+let cargoHudMessageTimer = 0;
 
 const assets = {
   background: loadImage(`${BG_ROOT}/blue.png`),
@@ -1008,6 +1625,9 @@ const assets = {
     nb_crimsonstorm: loadImage(`${BG_ROOT}/nb_crimsonstorm.png`),
     nb_aurorawave: loadImage(`${BG_ROOT}/nb_aurorawave.png`),
     nb_wreckfield: loadImage(`${BG_ROOT}/nb_wreckfield.png`),
+    generatedTealRift: loadImage(`${GENERATED_ROOT}/backgrounds_v1/teal_rift_native_1024.png`),
+    generatedAmberDust: loadImage(`${GENERATED_ROOT}/backgrounds_v1/amber_dust_native_1024.png`),
+    generatedAmberDustLooped: loadImage(`${GENERATED_ROOT}/backgrounds_v1/amber_dust_looped_1024.png`),
   },
   player: loadImage(`${ASSET_ROOT}/playerShip2_blue.png`),
   playerBullet: loadImage(`${ASSET_ROOT}/Lasers/laserBlue02.png`),
@@ -1016,6 +1636,7 @@ const assets = {
   altArc: loadImage(`${ASSET_ROOT}/Lasers/laserBlue16.png`),
   enemyBullet: loadImage(`${ASSET_ROOT}/Lasers/laserRed02.png`),
   shield: loadImage(`${ASSET_ROOT}/Effects/shield3.png`),
+  salvagePod: loadImage(`${ASSET_ROOT}/Power-ups/powerupBlue.png`),
   explosionCore: loadImage(`${ASSET_ROOT}/Effects/star2.png`),
   explosionFlare: loadImage(`${ASSET_ROOT}/Effects/star3.png`),
   explosionFire: Array.from({ length: 20 }, (_, i) =>
@@ -1038,6 +1659,46 @@ const assets = {
     ufoGreen: loadImage(`${ASSET_ROOT}/ufoGreen.png`),
     ufoYellow: loadImage(`${ASSET_ROOT}/ufoYellow.png`),
   },
+  visualThemes: {
+    generated_v1: {
+      playerBullet: loadImage(`${GENERATED_EFFECT_ROOT}/player_kinetic_bolt.png`),
+      playerPlasma: loadImage(`${GENERATED_EFFECT_ROOT}/player_plasma_bolt.png`),
+      playerPierce: loadImage(`${GENERATED_EFFECT_ROOT}/player_pierce_lance.png`),
+      playerRocket: loadImage(`${GENERATED_EFFECT_ROOT}/player_rocket.png`),
+      enemyBullet: loadImage(`${GENERATED_EFFECT_ROOT}/enemy_red_bolt.png`),
+      enemyPurpleOrb: loadImage(`${GENERATED_EFFECT_ROOT}/enemy_purple_orb.png`),
+      enemySpreadShard: loadImage(`${GENERATED_EFFECT_ROOT}/enemy_spread_shard.png`),
+      enemyRadialEmber: loadImage(`${GENERATED_EFFECT_ROOT}/enemy_radial_ember.png`),
+      impactSpark: loadImage(`${GENERATED_EFFECT_ROOT}/impact_spark.png`),
+      shieldHitRing: loadImage(`${GENERATED_EFFECT_ROOT}/shield_hit_ring.png`),
+      explosionFrames: [
+        loadImage(`${GENERATED_EFFECT_ROOT}/explosion_00.png`),
+        loadImage(`${GENERATED_EFFECT_ROOT}/explosion_01.png`),
+        loadImage(`${GENERATED_EFFECT_ROOT}/explosion_02.png`),
+        loadImage(`${GENERATED_EFFECT_ROOT}/explosion_03.png`),
+        loadImage(`${GENERATED_EFFECT_ROOT}/explosion_smoke.png`),
+      ],
+      playerDeathCore: loadImage(`${GENERATED_EFFECT_ROOT}/player_death_core.png`),
+    },
+    bio_v1: {
+      enemyBullet: loadImage(`${GENERATED_BIO_ROOT}/acid_glob.png`),
+      enemyBulletWidth: 18,
+      enemyBulletHeight: 38,
+      enemyPurpleOrb: loadImage(`${GENERATED_BIO_ROOT}/spore_orb.png`),
+      enemyPurpleOrbSize: 30,
+      enemySpreadShard: loadImage(`${GENERATED_BIO_ROOT}/thorn_shard.png`),
+      enemySpreadShardSize: 34,
+      enemyRadialEmber: loadImage(`${GENERATED_BIO_ROOT}/bio_ember.png`),
+      enemyRadialEmberSize: 26,
+      impactSpark: loadImage(`${GENERATED_BIO_ROOT}/impact_splat.png`),
+      explosionFrames: [
+        loadImage(`${GENERATED_BIO_ROOT}/impact_splat.png`),
+        loadImage(`${GENERATED_BIO_ROOT}/bio_explosion_00.png`),
+        loadImage(`${GENERATED_BIO_ROOT}/bio_explosion_01.png`),
+        loadImage(`${GENERATED_BIO_ROOT}/bio_explosion_02.png`),
+      ],
+    },
+  },
 };
 
 const enemySpriteMap = {
@@ -1058,6 +1719,11 @@ const enemySpriteMap = {
   ufoYellow: assets.enemies.ufoYellow,
 };
 
+function getLevelVisualTheme() {
+  const key = mission?.level?.visualTheme;
+  return key ? assets.visualThemes?.[key] || null : null;
+}
+
 const availableLevels = [
   { id: "level1", label: "Mission 1" },
   { id: "level2", label: "Mission 2" },
@@ -1073,6 +1739,8 @@ const availableLevels = [
   { id: "overhaul_demo", label: "Overhaul Demo", test: true },
   { id: "patterns_demo", label: "Pattern Lab", test: true },
   { id: "ai_demo", label: "AI Lab", test: true },
+  { id: "generated_sprite_lab", label: "Generated Sprite Lab", test: true },
+  { id: "biological_hive_lab", label: "Biological Hive Lab", test: true },
   // Variant missions (Operations Center unlocks - not yet integrated)
   // { id: "level1_patrol", label: "Mission 1: Patrol Alpha" },
   // { id: "level2_skirmish", label: "Mission 2: Skirmish" },
@@ -1150,9 +1818,9 @@ const levelFallback = {
 
 let currentLevel = null;
 let levelLoadPromise = null;
-let selectedLevelId = "level1";
+let selectedLevelId = devSkipOnboarding && devRequestedLevelId ? devRequestedLevelId : "level1";
 let lastLoadedLevelId = null;
-let activeHangarTab = "loadout";
+let activeHangarTab = devSkipOnboarding ? "mission" : "loadout";
 let hangarNeedsRefresh = false;
 let openShipNodeId = null;
 let openMissionInfoBaseId = null;
@@ -1980,11 +2648,15 @@ function loadState() {
       debugShowFullCompendium: false,
       encounteredEnemies: {},
       killsByEnemyKey: {},
+      cargo: [],
       armory: {
         ownedLoadoutIds: ["fundamentals"],
         equippedLoadoutId: "fundamentals",
+        equippedPrimaryItemId: null,
         ownedDefenseModuleIds: ["shield_module"],
         equippedDefenseSlotIds: ["shield_module", "none"],
+        equippedSupportItemId: null,
+        inventory: [],
       },
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
@@ -2062,6 +2734,7 @@ function loadState() {
     parsed.debugShowFullCompendium = parsed.debugShowFullCompendium ?? false;
     parsed.encounteredEnemies = parsed.encounteredEnemies || {};
     parsed.killsByEnemyKey = parsed.killsByEnemyKey || {};
+    parsed.cargo = Array.isArray(parsed.cargo) ? parsed.cargo : [];
     const hadShipBuild = !!parsed.shipBuild;
     parsed.shipBuild = parsed.shipBuild || createDefaultShipBuild();
     if (!hadShipBuild) {
@@ -2078,8 +2751,10 @@ function loadState() {
           ? "homing"
           : parsed.weapon?.modifier === "pierce"
             ? "pierce"
-            : parsed.weapon?.modifier === "explosive"
-              ? "explosive"
+          : parsed.weapon?.modifier === "explosive"
+            ? "explosive"
+            : parsed.weapon?.modifier === "vampiric"
+              ? "vampiric"
               : "none";
       parsed.shipBuild.effect = effectFromLegacy;
     }
@@ -2094,6 +2769,7 @@ function loadState() {
     parsed.shipBuild.effectUpgrades.homing = parsed.shipBuild.effectUpgrades.homing ?? 0;
     parsed.shipBuild.effectUpgrades.explosive = parsed.shipBuild.effectUpgrades.explosive ?? 0;
     parsed.shipBuild.effectUpgrades.pierce = parsed.shipBuild.effectUpgrades.pierce ?? 0;
+    parsed.shipBuild.effectUpgrades.vampiric = parsed.shipBuild.effectUpgrades.vampiric ?? 0;
     parsed.shipBuild.defenseSlots = Array.isArray(parsed.shipBuild.defenseSlots)
       ? parsed.shipBuild.defenseSlots.slice(0, 2)
       : ["shield", "none"];
@@ -2166,11 +2842,18 @@ function loadState() {
       systemUnlocks: { ...DEFAULT_SYSTEM_UNLOCKS },
       debugUnlock: false,
       debugInvincible: false,
+      debugShowFullCompendium: false,
+      encounteredEnemies: {},
+      killsByEnemyKey: {},
+      cargo: [],
       armory: {
         ownedLoadoutIds: ["fundamentals"],
         equippedLoadoutId: "fundamentals",
+        equippedPrimaryItemId: null,
         ownedDefenseModuleIds: ["shield_module"],
         equippedDefenseSlotIds: ["shield_module", "none"],
+        equippedSupportItemId: null,
+        inventory: [],
       },
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
@@ -2231,7 +2914,12 @@ function getShipBuild() {
     state.shipBuild = createDefaultShipBuild();
   }
   if (!state.shipBuild.effectUpgrades) {
-    state.shipBuild.effectUpgrades = { homing: 0, explosive: 0, pierce: 0 };
+    state.shipBuild.effectUpgrades = cloneShipBuild(createDefaultShipBuild().effectUpgrades);
+  } else {
+    state.shipBuild.effectUpgrades = {
+      ...cloneShipBuild(createDefaultShipBuild().effectUpgrades),
+      ...state.shipBuild.effectUpgrades,
+    };
   }
   return state.shipBuild;
 }
@@ -2310,6 +2998,7 @@ function syncShipBuildToLegacy() {
   if (effect === "homing") state.weapon.modifier = "homing";
   else if (effect === "pierce") state.weapon.modifier = "pierce";
   else if (effect === "explosive") state.weapon.modifier = "explosive";
+  else if (effect === "vampiric") state.weapon.modifier = "vampiric";
   else state.weapon.modifier = "none";
 
   // Ensure these are considered unlocked in old state for internal consistency.
@@ -2391,6 +3080,7 @@ async function startMission({ showIntro = false } = {}) {
   hideMissionIntro();
   await ensureWeaponFrameCatalogLoaded();
   await ensureEnemyCatalogLoaded();
+  await ensureItemPoolLoaded();
   const directive = getCurrentOnboardingMission();
   if (directive && selectedLevelId !== directive.missionId) {
     selectedLevelId = directive.missionId;
@@ -2414,6 +3104,7 @@ async function startMission({ showIntro = false } = {}) {
   }
   applyUpgrades();
   const consumablesState = initConsumablesForMission();
+  state.cargo = [];
   mission = {
     active: true,
     startTime: performance.now(),
@@ -2433,6 +3124,8 @@ async function startMission({ showIntro = false } = {}) {
     consumableSlots: consumablesState.slots,
     consumableUses: consumablesState.uses,
     consumableCooldowns: consumablesState.cooldowns,
+    cargo: state.cargo,
+    bossSalvage: [],
     onboardingStage: state.onboardingStage,
     onboardingMissionId: directive?.missionId || null,
     onboardingTitle: directive?.title || "",
@@ -2441,8 +3134,10 @@ async function startMission({ showIntro = false } = {}) {
   bullets.length = 0;
   enemyBullets.length = 0;
   enemies.length = 0;
+  salvagePods.length = 0;
   floatingTexts.length = 0;
   explosions.length = 0;
+  cargoHudMessageTimer = 0;
   player.x = canvas.width / window.devicePixelRatio / 2;
   player.y = canvas.height / window.devicePixelRatio - 120;
   pointer.x = player.x;
@@ -2482,14 +3177,39 @@ function endMission({ ejected = false, completed = false } = {}) {
   setHangarMusic();
   setHangarTab("loadout", { renderLevels: false });
 
-  const creditReward = creditRewardFor(mission);
-  const completionBonus = completed ? 0.1 + Math.random() * 0.15 : 0;
-  const penaltyRate = completed || ejected ? 0 : 0.1 + Math.random() * 0.4;
-  const baseReward = Math.round(creditReward * (1 - penaltyRate) * (1 + completionBonus));
-  
-  // Calculate fleet share dividends
-  const dividends = calculateDividends(baseReward);
-  const finalReward = baseReward + dividends;
+  const grossBounty = creditRewardFor(mission);
+  const recoveryRate = completed
+    ? ECONOMY.recoveryBonusRate.min +
+      Math.random() * (ECONOMY.recoveryBonusRate.max - ECONOMY.recoveryBonusRate.min)
+    : 0;
+  const recoveryBonus = completed ? Math.round(grossBounty * recoveryRate) : 0;
+  const hullWritedown = completed || ejected
+    ? 0
+    : Math.round(grossBounty * ECONOMY.deathBountyWritedownRate);
+  const bountyKept = grossBounty - hullWritedown;
+  const subtotal = bountyKept + recoveryBonus;
+  const dividends = calculateDividends(subtotal);
+  const finalReward = subtotal + dividends;
+  const cargoAtEnd = Array.isArray(state.cargo) ? state.cargo.map(cloneItem) : [];
+  if (completed && !mission.bossSalvage?.length) {
+    const fallbackBossDrop = rollSalvageDrop(
+      { isBoss: true, baseCredit: 200, type: "boss", ai: "boss" },
+      { force: true, forceSource: "boss" }
+    );
+    if (fallbackBossDrop?.item) {
+      mission.bossSalvage = [fallbackBossDrop.item];
+    }
+  }
+  const bossSalvage = completed && Array.isArray(mission.bossSalvage)
+    ? mission.bossSalvage.map(cloneItem)
+    : [];
+  const keptCargo = completed || ejected ? cargoAtEnd : [];
+  const lostCargo = completed || ejected ? [] : cargoAtEnd;
+  const identifiedItems = [...keptCargo, ...bossSalvage];
+  if (identifiedItems.length) {
+    addItemsToArmoryInventory(identifiedItems);
+  }
+  state.cargo = [];
 
   state.credits += finalReward;
   state.lifetimeCredits += finalReward;
@@ -2542,26 +3262,23 @@ function endMission({ ejected = false, completed = false } = {}) {
     returnBtn.textContent = continueTrainingAfterDebrief ? "Continue" : "Return to Hangar";
   }
 
-  // Build debrief message with breakdown
-  let debriefMsg = "";
-  if (completed) {
-    debriefMsg = `Mission complete! Recovery bonus: +${Math.round(completionBonus * 100)}%`;
-  } else if (ejected) {
-    debriefMsg = "Ejection successful. Full credits secured.";
+  if (ejected) {
     playSfx("eject", 0.5);
-  } else {
-    debriefMsg = `Ship destroyed. Credit loss: -${Math.round(penaltyRate * 100)}%`;
   }
-  
-  // Add dividend info if player has fleet shares
-  if (dividends > 0) {
-    debriefMsg += ` | Fleet dividends: +${dividends}`;
-  }
-  if (onboardingMessage) {
-    debriefMsg += ` | ${onboardingMessage}`;
-  }
-  
-  debriefText.textContent = debriefMsg;
+  renderDebriefSummary({
+    outcome: completed ? "boss" : ejected ? "rtb" : "death",
+    grossBounty,
+    bountyKept,
+    recoveryBonus,
+    recoveryRate,
+    dividends,
+    hullWritedown,
+    finalReward,
+    identifiedItems,
+    lostCargo,
+    bossSalvageCount: bossSalvage.length,
+    onboardingMessage,
+  });
   debriefTime.textContent = formatTime(mission.elapsed);
   debriefKills.textContent = mission.kills.toString();
   debriefCredits.textContent = finalReward.toString();
@@ -2571,6 +3288,111 @@ function endMission({ ejected = false, completed = false } = {}) {
   hangarPanel.hidden = true;
   updateMobileControls();
   hangarNeedsRefresh = true;
+}
+
+function formatCredits(value) {
+  return `${Math.round(value)} cr`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderDebriefSummary(summary) {
+  const outcomeCopy =
+    summary.outcome === "boss"
+      ? LEDGER_COPY.bossComplete
+      : summary.outcome === "rtb"
+        ? LEDGER_COPY.rtbComplete
+        : LEDGER_COPY.droneDestroyed;
+  const message = summary.onboardingMessage
+    ? `${outcomeCopy} ${summary.onboardingMessage}`
+    : outcomeCopy;
+  if (debriefText) debriefText.textContent = message;
+
+  if (debriefLedger) {
+    const rows = [
+      { label: "Bounty", amount: summary.grossBounty },
+      {
+        label: LEDGER_COPY.recoveryBonus,
+        amount: summary.recoveryBonus,
+        note: summary.recoveryBonus > 0 ? `${Math.round(summary.recoveryRate * 100)}%` : "",
+      },
+      { label: LEDGER_COPY.fleetDividends, amount: summary.dividends },
+      { label: LEDGER_COPY.hullWritedown, amount: -summary.hullWritedown, fee: true },
+      { label: "Net", amount: summary.finalReward, total: true },
+    ];
+    debriefLedger.innerHTML = `
+      <div class="ledger-title">Claims Receipt</div>
+      <div class="ledger-lines">
+        ${rows
+          .map(
+            (row) => `
+          <div class="ledger-line${row.fee ? " fee" : ""}${row.total ? " total" : ""}">
+            <span>${escapeHtml(row.label)}${row.note ? ` <em>${escapeHtml(row.note)}</em>` : ""}</span>
+            <strong>${row.amount < 0 ? "-" : ""}${formatCredits(Math.abs(row.amount))}</strong>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  if (!debriefSalvage) return;
+  const identified = summary.identifiedItems || [];
+  const lost = summary.lostCargo || [];
+  if (!identified.length && !lost.length) {
+    debriefSalvage.innerHTML = `<div class="salvage-empty">${LEDGER_COPY.noCargo}</div>`;
+    return;
+  }
+
+  const identifiedHtml = identified.length
+    ? `
+      <div class="salvage-title">Pod Identification</div>
+      <div class="salvage-list">
+        ${identified
+          .map((item, index) => {
+            const rarity = item.rarity || "scrap";
+            const affixes = Array.isArray(item.affixes) && item.affixes.length
+              ? item.affixes.map((affix) => affix.name || affix.id).join(", ")
+              : "No affix trace";
+            const sourceLabel =
+              index >= identified.length - (summary.bossSalvageCount || 0)
+                ? LEDGER_COPY.bossPod
+                : `Cargo pod ${index + 1}`;
+            return `
+              <div class="salvage-item rarity-${rarity}" style="${getRarityStyle(rarity)}">
+                <div class="salvage-item-icon">
+                  <img src="${escapeHtml(item.icon || `${ASSET_ROOT}/Power-ups/powerupBlue.png`)}" alt="" />
+                </div>
+                <div>
+                  <div class="salvage-item-kicker">${escapeHtml(sourceLabel)} identified</div>
+                  <div class="salvage-item-name">${escapeHtml(item.name)}</div>
+                  <div class="salvage-item-meta">${escapeHtml(getRarityLabel(rarity))} | ${formatCredits(item.value || 0)} | ${escapeHtml(affixes)}</div>
+                </div>
+              </div>
+            `;
+          })
+          .join("")}
+      </div>
+    `
+    : "";
+
+  const lostHtml = lost.length
+    ? `
+      <div class="salvage-lost">
+        ${lost.length} cargo pod${lost.length === 1 ? "" : "s"} voided by hull loss.
+      </div>
+    `
+    : "";
+
+  debriefSalvage.innerHTML = `${identifiedHtml}${lostHtml}`;
 }
 
 function startPlayerDeathSequence() {
@@ -2715,73 +3537,195 @@ async function autoLaunchFreshPilotMission() {
 }
 
 function renderInvestments() {
-  if (!engineeringTier) return; // UI elements not present
+  if (!investmentTreeMap || !investmentTreeInspector) return;
 
-  const renderCategory = (key, tierEl, benefitsEl, investBtn, costEl, categoryEl) => {
-    const tier = state.investments[key];
-    const data = investments[key];
-    const maxTier = data.tiers.length;
-    const isMaxed = tier >= maxTier;
+  const branchKeys = Object.keys(investmentTreeBranches);
+  const totalPurchased = branchKeys.reduce((sum, key) => sum + (state.investments[key] ?? 0), 0);
+  const totalTiers = branchKeys.reduce((sum, key) => sum + investments[key].tiers.length, 0);
+  const nodePositions = { root: { x: 50, y: 52 } };
 
-    tierEl.textContent = `Tier ${tier}/${maxTier}`;
-    
-    // Render benefits list
-    benefitsEl.innerHTML = "";
-    data.tiers.forEach((t, i) => {
-      const item = document.createElement("div");
-      item.className = "benefit-item";
-      if (i < tier) {
-        item.classList.add("active");
-        item.innerHTML = `<span class="benefit-check">✓</span> ${t.benefit}`;
-      } else if (i === tier) {
-        item.innerHTML = `<span class="benefit-check">→</span> ${t.benefit}`;
-      } else {
-        item.classList.add("locked");
-        item.innerHTML = `<span class="benefit-check">○</span> ${t.benefit}`;
-      }
-      benefitsEl.appendChild(item);
+  branchKeys.forEach((key) => {
+    investmentTreeBranches[key].nodes.forEach((position, tierIndex) => {
+      nodePositions[`${key}-${tierIndex}`] = position;
     });
+  });
 
-    // Update button state
-    if (isMaxed) {
-      investBtn.disabled = true;
-      investBtn.classList.add("maxed");
-      investBtn.innerHTML = `<span class="invest-label">Maxed</span>`;
-      categoryEl?.classList.add("maxed");
-    } else {
-      const cost = data.tiers[tier].cost;
-      const canAfford = state.credits >= cost;
-      investBtn.disabled = !canAfford;
-      investBtn.classList.remove("maxed");
-      investBtn.innerHTML = `<span class="invest-label">Invest</span><span class="invest-cost">${cost}</span>`;
-      categoryEl?.classList.remove("maxed");
-    }
-  };
+  normalizeSelectedInvestmentNode(branchKeys);
 
-  renderCategory(
-    "engineering",
-    engineeringTier,
-    engineeringBenefits,
-    engineeringInvest,
-    engineeringCost,
-    document.getElementById("engineering-bay")
-  );
-  renderCategory(
-    "operations",
-    operationsTier,
-    operationsBenefits,
-    operationsInvest,
-    operationsCost,
-    document.getElementById("operations-center")
-  );
-  renderCategory(
-    "shares",
-    sharesTier,
-    sharesBenefits,
-    sharesInvest,
-    sharesCost,
-    document.getElementById("fleet-shares")
-  );
+  if (economyTreeCredits) {
+    economyTreeCredits.textContent = state.credits.toString();
+  }
+  if (economyTreeProgress) {
+    economyTreeProgress.textContent = `${totalPurchased}/${totalTiers}`;
+  }
+
+  if (investmentTreeLines) {
+    investmentTreeLines.innerHTML = "";
+    investmentTreeConnections.forEach(([fromId, toId]) => {
+      const from = nodePositions[fromId];
+      const to = nodePositions[toId];
+      if (!from || !to) return;
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", from.x);
+      line.setAttribute("y1", from.y);
+      line.setAttribute("x2", to.x);
+      line.setAttribute("y2", to.y);
+      line.classList.add("economy-tree-link", getInvestmentNodeStatus(toId));
+      investmentTreeLines.appendChild(line);
+    });
+  }
+
+  investmentTreeMap.querySelectorAll(".investment-tree-node").forEach((node) => node.remove());
+
+  const rootNode = document.createElement("div");
+  rootNode.className = "investment-tree-node root purchased";
+  rootNode.style.left = `${nodePositions.root.x}%`;
+  rootNode.style.top = `${nodePositions.root.y}%`;
+  rootNode.innerHTML = `
+    <span class="investment-node-icon">✦</span>
+    <span class="investment-node-tier">Fleet</span>
+  `;
+  investmentTreeMap.appendChild(rootNode);
+
+  branchKeys.forEach((key) => {
+    const branch = investmentTreeBranches[key];
+    const currentTier = state.investments[key] ?? 0;
+    const data = investments[key];
+    branch.nodes.forEach((position, tierIndex) => {
+      const tier = data.tiers[tierIndex];
+      const nodeId = `${key}-${tierIndex}`;
+      const purchased = tierIndex < currentTier;
+      const available = tierIndex === currentTier;
+      const affordable = available && state.credits >= tier.cost;
+      const locked = tierIndex > currentTier;
+      const selected =
+        selectedInvestmentNode?.key === key && selectedInvestmentNode?.tierIndex === tierIndex;
+      const node = document.createElement("button");
+      node.type = "button";
+      node.className = [
+        "investment-tree-node",
+        branch.accent,
+        purchased ? "purchased" : "",
+        available ? "available" : "",
+        affordable ? "affordable" : "",
+        locked ? "locked" : "",
+        selected ? "selected" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      node.style.left = `${position.x}%`;
+      node.style.top = `${position.y}%`;
+      node.setAttribute("aria-pressed", selected ? "true" : "false");
+      node.setAttribute(
+        "aria-label",
+        `${data.name} tier ${tierIndex + 1}: ${tier.benefit}`
+      );
+      node.dataset.investmentKey = key;
+      node.dataset.tierIndex = tierIndex.toString();
+      node.innerHTML = `
+        <span class="investment-node-icon">${branch.icon}</span>
+        <span class="investment-node-tier">${tierIndex + 1}</span>
+        <span class="investment-node-cost">${tier.cost}</span>
+      `;
+      node.addEventListener("click", () => {
+        selectedInvestmentNode = { key, tierIndex };
+        renderInvestments();
+      });
+      investmentTreeMap.appendChild(node);
+    });
+  });
+
+  renderInvestmentInspector();
+}
+
+function normalizeSelectedInvestmentNode(branchKeys = Object.keys(investmentTreeBranches)) {
+  if (!selectedInvestmentNode || !investments[selectedInvestmentNode.key]) {
+    const firstIncomplete = branchKeys.find(
+      (key) => (state.investments[key] ?? 0) < investments[key].tiers.length
+    );
+    const key = firstIncomplete || branchKeys[0];
+    selectedInvestmentNode = {
+      key,
+      tierIndex: Math.min(state.investments[key] ?? 0, investments[key].tiers.length - 1),
+    };
+    return;
+  }
+
+  const maxIndex = investments[selectedInvestmentNode.key].tiers.length - 1;
+  selectedInvestmentNode.tierIndex = Math.max(0, Math.min(selectedInvestmentNode.tierIndex, maxIndex));
+}
+
+function getInvestmentNodeStatus(nodeId) {
+  if (nodeId === "root") return "purchased";
+  const [key, tierText] = nodeId.split("-");
+  const tierIndex = Number(tierText);
+  const currentTier = state.investments[key] ?? 0;
+  if (tierIndex < currentTier) return "purchased";
+  if (tierIndex === currentTier) {
+    return state.credits >= investments[key].tiers[tierIndex].cost ? "affordable" : "available";
+  }
+  return "locked";
+}
+
+function renderInvestmentInspector() {
+  if (!investmentTreeInspector) return;
+  normalizeSelectedInvestmentNode();
+  const { key, tierIndex } = selectedInvestmentNode;
+  const data = investments[key];
+  const branch = investmentTreeBranches[key];
+  const tier = data.tiers[tierIndex];
+  const currentTier = state.investments[key] ?? 0;
+  const maxTier = data.tiers.length;
+  const purchased = tierIndex < currentTier;
+  const available = tierIndex === currentTier;
+  const locked = tierIndex > currentTier;
+  const affordable = available && state.credits >= tier.cost;
+  const status = purchased
+    ? "Installed"
+    : locked
+      ? `Requires Tier ${tierIndex}`
+      : affordable
+        ? "Ready to install"
+        : "Not enough credits";
+  const buttonLabel = purchased
+    ? "Installed"
+    : locked
+      ? "Locked"
+      : affordable
+        ? "Purchase Node"
+        : "Need Credits";
+
+  investmentTreeInspector.className = `economy-tree-inspector ${branch.accent}`;
+  investmentTreeInspector.innerHTML = `
+    <div class="economy-inspector-kicker">${data.name}</div>
+    <div class="economy-inspector-title">
+      <span>${branch.icon}</span>
+      <strong>Tier ${tierIndex + 1}/${maxTier}</strong>
+    </div>
+    <p>${branch.subtitle}</p>
+    <div class="economy-inspector-benefit">${tier.benefit}</div>
+    <div class="economy-inspector-stats">
+      <span>Status</span><strong>${status}</strong>
+      <span>Upgrade Cost</span><strong>${state.credits}/${tier.cost}</strong>
+      <span>Track Progress</span><strong>${currentTier}/${maxTier}</strong>
+    </div>
+    <button type="button" class="invest-btn economy-tree-buy" ${affordable ? "" : "disabled"}>
+      ${buttonLabel}
+    </button>
+  `;
+
+  const buyButton = investmentTreeInspector.querySelector(".economy-tree-buy");
+  if (buyButton && affordable) {
+    buyButton.addEventListener("click", () => {
+      handleInvestment(key);
+      const nextTier = state.investments[key] ?? 0;
+      selectedInvestmentNode = {
+        key,
+        tierIndex: Math.min(nextTier, maxTier - 1),
+      };
+      safeUpdateHangar();
+    });
+  }
 }
 
 function handleInvestment(key) {
@@ -3726,6 +4670,12 @@ function renderShipStatsPanel() {
           maxAngleDeg: ((0.6 + (cfg.effectTune ?? 0) * 0.14) * 180) / Math.PI,
         }
       : null;
+  const vampiric =
+    cfg.effect === "vampiric"
+      ? {
+          hullOnKill: 2 + (cfg.effectTune ?? 0) * 1.5,
+        }
+      : null;
 
   const hullLevel = state.upgrades?.hull ?? 0;
   const maxHull = Math.round(100 * (1 + hullLevel * 0.08));
@@ -3783,6 +4733,9 @@ function renderShipStatsPanel() {
   const homingTip = homing
     ? `Homing strength = 0.05 + 0.018*tune = ${formatNumber(homing.strength, 3)}.\nMax angle offset = ${(0.6 + (cfg.effectTune ?? 0) * 0.14).toFixed(2)} rad (±${Math.round(homing.maxAngleDeg)}deg).`
     : "Not equipped.";
+  const vampiricTip = vampiric
+    ? `Hull restored on kill = 2 + 1.5*tune = ${formatNumber(vampiric.hullOnKill, 1)}.`
+    : "Not equipped.";
 
   const shieldTip =
     maxShield > 0
@@ -3790,7 +4743,7 @@ function renderShipStatsPanel() {
       : "No shield modules installed.";
   const armorTip =
     maxArmor > 0
-      ? `Max Armor = ${maxArmor}. Armor Class (AC) = ${armorClass}.\nArmor applies per-hit reduction: max(0, damage - AC).\nArmor modules also increase cooldown: x${formatNumber(cfg.armorPenalty, 2)}.`
+      ? `Max Armor = ${maxArmor}. Armor Class (AC) = ${armorClass}.\nPlayer armor applies per-hit reduction: max(0, damage - AC).\nArmor modules also increase cooldown: x${formatNumber(cfg.armorPenalty, 2)}.`
       : "No armor modules installed.";
 
   shipStats.innerHTML = `
@@ -3809,6 +4762,7 @@ function renderShipStatsPanel() {
         ${statRow("Explosive", explosive ? `${Math.round(explosive.radius)}px` : "-", explosiveTip)}
         ${statRow("Pierce", pierce ? `${pierce.hits}` : "-", pierceTip)}
         ${statRow("Homing", homing ? `${Math.round(homing.maxAngleDeg)}deg` : "-", homingTip)}
+        ${statRow("Vampiric", vampiric ? `${formatNumber(vampiric.hullOnKill, 1)}` : "-", vampiricTip)}
       </div>
       <div class="stat-section">
         <div class="stat-section-title">Defense</div>
@@ -3819,7 +4773,7 @@ function renderShipStatsPanel() {
       </div>
     </div>
     <div class="stat-footnote">
-      <span class="muted">${formula}. ${rateNote}.</span>
+      <span class="muted">${formula}. ${rateNote}. Enemy armor has a chip floor of max(1, hit damage * ${ECONOMY.minDamageFloor}).</span>
     </div>
   `;
 }
@@ -3836,7 +4790,7 @@ function formatFrameDefenseSummary(build) {
 function getArmoryFrameVisual(item) {
   return (
     armoryFrameVisuals[item?.id] || {
-      icon: `${ASSET_ROOT}/Parts/gun04.png`,
+      icon: item?.icon || `${ASSET_ROOT}/Parts/gun04.png`,
       hardpointName: item?.name || "Module",
     }
   );
@@ -3862,6 +4816,8 @@ function getEquippedDefenseSlotIds() {
 }
 
 function getSelectedSupportModule() {
+  const equippedItem = findInventoryItem(state.armory?.equippedSupportItemId);
+  if (equippedItem && isSupportSlotType(equippedItem.slotType)) return equippedItem;
   const entries = getSupportModuleEntries();
   return entries.find((entry) => entry.id === state.rmbWeapon) || entries[0] || null;
 }
@@ -3869,8 +4825,8 @@ function getSelectedSupportModule() {
 function getArmorySlotDefinitions() {
   const equippedWeapon = getEquippedStarterLoadout();
   const defenseSlotIds = getEquippedDefenseSlotIds();
-  const defenseA = defenseModulesById[defenseSlotIds[0]] || null;
-  const defenseB = defenseModulesById[defenseSlotIds[1]] || null;
+  const defenseA = getDefenseArmoryItemById(defenseSlotIds[0]) || null;
+  const defenseB = getDefenseArmoryItemById(defenseSlotIds[1]) || null;
   const support = getSelectedSupportModule();
   return [
     {
@@ -3917,21 +4873,38 @@ function getArmorySlotDefinitions() {
 }
 
 function getArmoryItemsForSlot(slotId) {
+  const inventory = getArmoryInventory();
   if (slotId === "primary") {
     const ownedIds = new Set(getOwnedStarterLoadoutIds());
-    return starterWeaponLoadouts.map((item) => ({
+    const starterItems = starterWeaponLoadouts.map((item) => ({
       ...item,
       slotType: "primary",
       icon: getArmoryFrameVisual(item).icon,
       owned: ownedIds.has(item.id),
-      installed: state.armory?.equippedLoadoutId === item.id,
+      installed: !state.armory?.equippedPrimaryItemId && state.armory?.equippedLoadoutId === item.id,
     }));
+    const lootItems = inventory
+      .filter((item) => item.slotType === "primary")
+      .map((item) => ({
+        ...item,
+        owned: true,
+        installed: state.armory?.equippedPrimaryItemId === item.id,
+      }));
+    return [...starterItems, ...lootItems];
   }
   if (slotId === "support") {
-    return getSupportModuleEntries().map((item) => ({
+    const baseItems = getSupportModuleEntries().map((item) => ({
       ...item,
-      installed: state.rmbWeapon === item.id,
+      installed: !state.armory?.equippedSupportItemId && state.rmbWeapon === item.id,
     }));
+    const lootItems = inventory
+      .filter((item) => isSupportSlotType(item.slotType))
+      .map((item) => ({
+        ...item,
+        owned: true,
+        installed: state.armory?.equippedSupportItemId === item.id,
+      }));
+    return [...baseItems, ...lootItems];
   }
   if (slotId.startsWith("defense-")) {
     const ownedDefenseIds = new Set(getOwnedDefenseModuleIds());
@@ -3956,6 +4929,13 @@ function getArmoryItemsForSlot(slotId) {
         owned: ownedDefenseIds.has(item.id),
         installed: equippedIds[slotIndex] === item.id,
       })),
+      ...inventory
+        .filter((item) => item.slotType === "defense")
+        .map((item) => ({
+          ...item,
+          owned: true,
+          installed: equippedIds[slotIndex] === item.id,
+        })),
     ];
   }
   return [];
@@ -4013,6 +4993,22 @@ function canInstallSupportItem(item) {
 }
 
 function installSupportItem(itemId) {
+  const inventoryItem = findInventoryItem(itemId);
+  if (inventoryItem && isSupportSlotType(inventoryItem.slotType)) {
+    state.armory = state.armory || {
+      ownedLoadoutIds: [],
+      ownedDefenseModuleIds: [],
+      equippedLoadoutId: starterWeaponLoadouts[0]?.id || "fundamentals",
+      equippedDefenseSlotIds: ["shield_module", "none"],
+      inventory: [],
+    };
+    state.armory.equippedSupportItemId = inventoryItem.id;
+    state.rmbWeapon = inventoryItem.ability || inventoryItem.sourceId || "cloak";
+    state.shipBuild = composeShipBuildFromArmory(state);
+    syncShipBuildToLegacy();
+    saveState();
+    return;
+  }
   const item = getSupportModuleEntries().find((entry) => entry.id === itemId);
   if (!item) return;
   if (!item.owned && !state.debugUnlock) {
@@ -4023,12 +5019,19 @@ function installSupportItem(itemId) {
     state.unlocked.aux[item.id] = true;
   }
   state.rmbWeapon = item.id;
+  if (state.armory) state.armory.equippedSupportItemId = null;
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
   saveState();
 }
 
 function handleArmorySlotInstall(slotId, itemId) {
   if (slotId === "primary") {
-    equipStarterLoadout(itemId);
+    if (starterWeaponLoadoutsById[itemId]) {
+      equipStarterLoadout(itemId);
+    } else {
+      equipPrimaryInventoryItem(itemId);
+    }
     return;
   }
   if (slotId === "support") {
@@ -4087,6 +5090,17 @@ function renderArmoryInspector(slotId) {
       : item.owned
         ? "Owned"
         : getArmoryUnlockText(item, false);
+  const rarityMeta = item.rarity
+    ? `<span class="armory-defense" style="${getRarityStyle(item.rarity)}">${getRarityLabel(item.rarity)}</span>`
+    : "";
+  const valueMeta = Number.isFinite(item.value)
+    ? `<span class="armory-defense">${formatCredits(item.value)}</span>`
+    : "";
+  const affixMeta = Array.isArray(item.affixes) && item.affixes.length
+    ? item.affixes
+        .map((affix) => `<span class="armory-defense">${escapeHtml(affix.name || affix.id)}</span>`)
+        .join("")
+    : "";
   armoryInspector.innerHTML = `
     <div class="armory-inspector-head">
       <div class="armory-inspector-title">
@@ -4097,6 +5111,7 @@ function renderArmoryInspector(slotId) {
       <span class="armory-chip">${statusLabel}</span>
     </div>
     <p class="armory-summary">${item.description}</p>
+    ${rarityMeta || valueMeta || affixMeta ? `<div class="armory-defenses">${rarityMeta}${valueMeta}${affixMeta}</div>` : ""}
     ${statRows}
   `;
 }
@@ -4175,7 +5190,10 @@ function renderShipUpgradesPanel() {
         ? canInstallSupportItem(item)
         : !!item.owned;
     button.type = "button";
-    button.className = `armory-inventory-item${item.installed ? " is-installed" : ""}${canInstall ? "" : " is-locked"}${armoryPreviewItemId === item.id ? " is-preview" : ""}`;
+    button.className = `armory-inventory-item${item.installed ? " is-installed" : ""}${canInstall ? "" : " is-locked"}${armoryPreviewItemId === item.id ? " is-preview" : ""}${item.rarity ? ` rarity-${item.rarity}` : ""}`;
+    if (item.rarity) {
+      button.setAttribute("style", getRarityStyle(item.rarity));
+    }
     button.innerHTML = `
       <span class="armory-inventory-icon"><img src="${item.icon}" alt="" /></span>
       <span class="armory-inventory-name">${item.name}</span>
@@ -4589,7 +5607,63 @@ function spawnPlayerBullet({ x, y, vx, vy, damage, image }) {
     width: 10,
     height: 32,
     rotation,
+    age: 0,
+    animation: "bolt",
   });
+}
+
+function spawnSalvagePod(x, y, drop) {
+  if (!drop?.item || !mission?.active) return;
+  salvagePods.push({
+    x,
+    y,
+    radius: 18,
+    vy: ECONOMY.salvagePodSpeed,
+    rarity: drop.rarity || drop.item.rarity || "scrap",
+    item: drop.item,
+    age: 0,
+    rejected: false,
+  });
+}
+
+function grantBossSalvage(enemy) {
+  if (!mission) return;
+  const drop = rollSalvageDrop(enemy, { force: true, forceSource: "boss" });
+  if (!drop?.item) return;
+  if (!Array.isArray(mission.bossSalvage)) mission.bossSalvage = [];
+  mission.bossSalvage.push(drop.item);
+}
+
+function getCargoItems() {
+  if (!Array.isArray(state.cargo)) state.cargo = [];
+  return state.cargo;
+}
+
+function collectSalvagePod(pod) {
+  const cargo = getCargoItems();
+  if (cargo.length >= ECONOMY.cargoSize) {
+    pod.rejected = true;
+    cargoHudMessageTimer = ECONOMY.cargoFullFlashSeconds;
+    spawnFloatingText(player.x, player.y - 32, LEDGER_COPY.cargoFull, "#f97316");
+    return false;
+  }
+  cargo.push(cloneItem(pod.item));
+  if (mission) mission.cargo = cargo;
+  spawnFloatingText(pod.x, pod.y, getRarityConfig(pod.rarity).shortLabel, getRarityConfig(pod.rarity).color);
+  return true;
+}
+
+function handleSalvagePodCollisions() {
+  if (!mission?.active) return;
+  for (let i = salvagePods.length - 1; i >= 0; i -= 1) {
+    const pod = salvagePods[i];
+    if (pod.rejected) continue;
+    if (distance(player.x, player.y, pod.x, pod.y) < player.radius + pod.radius) {
+      if (collectSalvagePod(pod)) {
+        salvagePods.splice(i, 1);
+      }
+    }
+  }
 }
 
 function getWeaponConfig() {
@@ -4712,11 +5786,13 @@ function computePrimaryDamage({ ammo, speed, radius }) {
 function firePlayerBullet() {
   const cfg = getPrimaryFireConfig();
   const mount = state.weapon.mount || "front";
+  const visualTheme = getLevelVisualTheme();
   playSfx("laserSmall", 0.25);
 
   const resolveBulletImage = (ammo) => {
-    if (ammo === "plasma") return assets.spreadBullet;
-    return assets.playerBullet;
+    if (cfg.effect === "pierce" && visualTheme?.playerPierce) return visualTheme.playerPierce;
+    if (ammo === "plasma") return visualTheme?.playerPlasma || assets.spreadBullet;
+    return visualTheme?.playerBullet || assets.playerBullet;
   };
 
   const spawnBullet = (vx, vy, extra = {}) => {
@@ -4739,9 +5815,17 @@ function firePlayerBullet() {
       homingMaxOffset: 0.6,
       homingStrength: 0.05,
       payload: cfg.ammo,
+      age: 0,
+      animation:
+        extra.animation ||
+        (cfg.effect === "pierce"
+          ? "lance"
+          : cfg.ammo === "plasma"
+            ? "plasma"
+            : "bolt"),
       ...extra,
     };
-    if (cfg.ammo === "plasma") {
+    if (cfg.ammo === "plasma" && !visualTheme?.playerPlasma?.loaded) {
       bullet.shape = "orb";
       bullet.color = "rgba(34, 197, 94, 0.95)";
     }
@@ -4754,6 +5838,8 @@ function firePlayerBullet() {
       bullet.pierce = 1 + tune;
     } else if (cfg.effect === "explosive") {
       bullet.explosive = true;
+    } else if (cfg.effect === "vampiric") {
+      bullet.vampiric = 2 + tune * 1.5;
     }
     if (bullet.pierce && !bullet.hitIds) bullet.hitIds = new Set();
     if (bullet.explosive) {
@@ -4885,6 +5971,8 @@ function fireEnemyBullet(enemy, angleOverride, speedOverride) {
       color: style.color || "#fb7185",
       shape: "orb",
       damage,
+      age: 0,
+      animation: style.animation || "orb",
     });
     return;
   }
@@ -4900,6 +5988,9 @@ function fireEnemyBullet(enemy, angleOverride, speedOverride) {
     height: style.height || 32,
     rotation: angle + Math.PI / 2,
     damage,
+    age: 0,
+    animation: style.animation || "bolt",
+    spinRate: style.spinRate || 0,
   });
 }
 
@@ -4927,19 +6018,46 @@ function fireEnemyRadial(enemy, count = 16) {
 }
 
 function getEnemyBulletStyle(enemy) {
+  const visualTheme = getLevelVisualTheme();
   if (enemy.fireMode === "radial") {
-    return { shape: "orb", color: "#f97316", radius: 6 };
+    if (visualTheme?.enemyRadialEmber) {
+      const size = visualTheme.enemyRadialEmberSize || 24;
+      return { image: visualTheme.enemyRadialEmber, width: size, height: size, animation: "ember", spinRate: 5.8 };
+    }
+    return { shape: "orb", color: "#f97316", radius: 6, animation: "orb" };
   }
   if (enemy.fireMode === "spread") {
-    return { image: assets.altArc, width: 12, height: 30 };
+    return visualTheme?.enemySpreadShard
+      ? {
+        image: visualTheme.enemySpreadShard,
+        width: visualTheme.enemySpreadShardSize || 28,
+        height: visualTheme.enemySpreadShardSize || 28,
+        animation: "shard",
+        spinRate: 2.2
+      }
+      : { image: assets.altArc, width: 12, height: 30, animation: "shard" };
   }
   if (enemy.ai === "stalker") {
-    return { shape: "orb", color: "#a855f7", radius: 5 };
+    if (visualTheme?.enemyPurpleOrb) {
+      const size = visualTheme.enemyPurpleOrbSize || 26;
+      return { image: visualTheme.enemyPurpleOrb, width: size, height: size, animation: "orb", spinRate: 3.4 };
+    }
+    return { shape: "orb", color: "#a855f7", radius: 5, animation: "orb" };
   }
   if (enemy.ai === "hunter") {
-    return { image: assets.enemyBullet, width: 10, height: 32 };
+    return {
+      image: visualTheme?.enemyBullet || assets.enemyBullet,
+      width: visualTheme?.enemyBulletWidth || 10,
+      height: visualTheme?.enemyBulletHeight || 32,
+      animation: "bolt"
+    };
   }
-  return { image: assets.enemyBullet, width: 10, height: 32 };
+  return {
+    image: visualTheme?.enemyBullet || assets.enemyBullet,
+    width: visualTheme?.enemyBulletWidth || 10,
+    height: visualTheme?.enemyBulletHeight || 32,
+    animation: "bolt"
+  };
 }
 
 function update(delta) {
@@ -4952,6 +6070,7 @@ function update(delta) {
   cameraShake.kickX *= kickDamp;
   cameraShake.kickY *= kickDamp;
   screenFlash = Math.max(0, screenFlash - delta * 6.0);
+  cargoHudMessageTimer = Math.max(0, cargoHudMessageTimer - delta);
 
   if (!mission || !mission.active || paused) return;
 
@@ -5060,7 +6179,7 @@ function update(delta) {
     const primaryConfig = getPrimaryFireConfig();
     player.fireCooldown -= delta;
     player.altCooldown -= delta;
-    if (pointerButtons.left && player.fireCooldown <= 0) {
+    if ((pointerButtons.left || devAutoFire) && player.fireCooldown <= 0) {
       firePlayerBullet();
       player.fireCooldown = primaryConfig.cooldown;
     }
@@ -5091,6 +6210,7 @@ function update(delta) {
   }
 
   bullets.forEach((bullet) => {
+    bullet.age = (bullet.age || 0) + delta;
     if (bullet.orbiting) {
       bullet.orbitAngle += bullet.orbitSpeed * delta;
       bullet.orbitLife -= delta;
@@ -5134,8 +6254,13 @@ function update(delta) {
     bullet.y += bullet.vy * delta;
   });
   enemyBullets.forEach((bullet) => {
+    bullet.age = (bullet.age || 0) + delta;
     bullet.x += bullet.vx * delta;
     bullet.y += bullet.vy * delta;
+  });
+  salvagePods.forEach((pod) => {
+    pod.age = (pod.age || 0) + delta;
+    pod.y += (pod.vy || ECONOMY.salvagePodSpeed) * delta;
   });
 
   if (player.healthBarTimer > 0) {
@@ -5152,7 +6277,7 @@ function update(delta) {
     if (enemy.dotTimer > 0) {
       enemy.dotTimer -= delta;
       revealEnemyHealth(enemy);
-      applyDamageToEnemy(enemy, enemy.dotDps * delta);
+      applyDamageToEnemy(enemy, enemy.dotDps * delta, { chipFloor: false });
     }
     if (enemy.empHitTimer > 0) {
       enemy.empHitTimer = Math.max(0, enemy.empHitTimer - delta);
@@ -5542,6 +6667,7 @@ function update(delta) {
       bullet.x > width + 40
   );
   cleanArrays(enemyBullets, (bullet) => bullet.y > height + 20 || bullet.x < -40 || bullet.x > width + 40);
+  cleanArrays(salvagePods, (pod) => pod.y > height + 48);
   cleanArrays(enemies, (enemy) => enemy.y > height + 60);
   cleanArrays(floatingTexts, (text) => text.life <= 0);
   cleanArrays(explosions, (boom) => boom.elapsed >= boom.duration);
@@ -5660,6 +6786,8 @@ function handleCollisions() {
       applyDamage(base, { sourceX: bullet.x, sourceY: bullet.y });
     }
   }
+
+  handleSalvagePodCollisions();
 }
 
 function handleEnemyDestroyed(enemy, bullet) {
@@ -5676,7 +6804,13 @@ function handleEnemyDestroyed(enemy, bullet) {
   const baseTrauma = Math.min(0.22, 0.03 + enemy.radius / 260);
   addCameraShake(enemy.isBoss ? 0.42 : baseTrauma, enemy.x, enemy.y);
   if (enemy.isBoss) {
+    grantBossSalvage(enemy);
     screenFlash = Math.min(0.6, screenFlash + 0.35);
+  } else {
+    const drop = rollSalvageDrop(enemy);
+    if (drop) {
+      spawnSalvagePod(enemy.x, enemy.y, drop);
+    }
   }
   if (enemy.isBoss && mission.level?.completeOnBoss) {
     endMission({ completed: true });
@@ -5773,6 +6907,7 @@ function render() {
     bullets.forEach(drawBullet);
     enemyBullets.forEach((bullet) => drawBullet(bullet, "#f97316"));
     enemies.forEach(drawEnemy);
+    salvagePods.forEach(drawSalvagePod);
     explosions.forEach(drawExplosion);
     floatingTexts.forEach(drawFloatingText);
     if (!(mission && mission.deathTimer > 0)) {
@@ -5799,8 +6934,12 @@ function drawBackground(width, height) {
   ctx.fillStyle = "#02030d";
   ctx.fillRect(0, 0, width, height);
 
+  const backgroundKey =
+    devRequestedBackground && assets.backgrounds[devRequestedBackground]
+      ? devRequestedBackground
+      : mission?.level?.background;
   const background =
-    (mission && mission.level && assets.backgrounds[mission.level.background]) ||
+    (backgroundKey && assets.backgrounds[backgroundKey]) ||
     assets.backgrounds.blue ||
     assets.background;
 
@@ -5840,20 +6979,6 @@ function drawPlayer() {
     ctx.lineTo(-16, 20);
     ctx.closePath();
     ctx.fill();
-  }
-
-  if (player.shield > 0) {
-    const shieldRatio = Math.max(0.2, player.shield / player.maxShield);
-    ctx.fillStyle = `rgba(34, 211, 238, ${0.18 + shieldRatio * 0.22})`;
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.radius + 6, 0, Math.PI * 2);
-    ctx.fill();
-  } else {
-    ctx.strokeStyle = "rgba(248, 113, 113, 0.8)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.radius + 8, 0, Math.PI * 2);
-    ctx.stroke();
   }
 
   if (player.hitTimer > 0) {
@@ -5929,9 +7054,28 @@ function drawRmbIndicator() {
 }
 
 function drawBullet(bullet, color = "#e0f2fe") {
+  const age = bullet.age || 0;
+  const speed = Math.hypot(bullet.vx || 0, bullet.vy || 0) || 1;
+  const ux = (bullet.vx || 0) / speed;
+  const uy = (bullet.vy || -1) / speed;
   if (bullet.shape === "orb") {
     ctx.save();
-    const r = bullet.radius || 6;
+    const pulse = 1 + Math.sin(age * 18) * 0.16;
+    const r = (bullet.radius || 6) * pulse;
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = bullet.color || color;
+    for (let i = 2; i >= 1; i -= 1) {
+      ctx.beginPath();
+      ctx.arc(
+        bullet.x - ux * r * i * 1.8,
+        bullet.y - uy * r * i * 1.8,
+        r * (1.1 - i * 0.22),
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
     const gradient = ctx.createRadialGradient(bullet.x, bullet.y, 0, bullet.x, bullet.y, r * 1.4);
     gradient.addColorStop(0, "rgba(236, 254, 255, 0.85)");
     gradient.addColorStop(0.35, bullet.color || color);
@@ -5951,16 +7095,83 @@ function drawBullet(bullet, color = "#e0f2fe") {
   if (bullet.image && bullet.image.loaded) {
     const width = bullet.width || 10;
     const height = bullet.height || 28;
-    const rotation = bullet.rotation || 0;
-    if (drawSprite(bullet.image, bullet.x - width / 2, bullet.y - height / 2, width, height, rotation)) {
+    const animation = bullet.animation || "bolt";
+    const pulse = animation === "shard"
+      ? 1 + Math.sin(age * 16) * 0.07
+      : animation === "ember" || animation === "orb"
+        ? 1 + Math.sin(age * 20) * 0.11
+        : 1 + Math.sin(age * 24) * 0.055;
+    const stretch = animation === "lance" ? 1.09 : animation === "plasma" ? 1.04 : 1;
+    const sway = animation === "bolt" || animation === "lance" ? Math.sin(age * 32) * 0.025 : 0;
+    const rotation = (bullet.rotation || 0) + sway + age * (bullet.spinRate || 0);
+    const trailCount = animation === "lance" ? 4 : animation === "ember" || animation === "orb" ? 2 : 3;
+    const trailStep = Math.max(5, Math.min(16, speed * 0.032));
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = trailCount; i >= 1; i -= 1) {
+      const alpha = 0.09 + (trailCount - i) * 0.045;
+      const scale = 1 - i * 0.08;
+      ctx.globalAlpha = alpha;
+      drawSprite(
+        bullet.image,
+        bullet.x - ux * trailStep * i - (width * scale) / 2,
+        bullet.y - uy * trailStep * i - (height * stretch * scale) / 2,
+        width * scale,
+        height * stretch * scale,
+        rotation
+      );
+    }
+    ctx.globalAlpha = 1;
+    const drew = drawSprite(
+      bullet.image,
+      bullet.x - (width * pulse) / 2,
+      bullet.y - (height * stretch * pulse) / 2,
+      width * pulse,
+      height * stretch * pulse,
+      rotation
+    );
+    ctx.restore();
+    if (drew) {
       return;
     }
   }
   ctx.save();
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+  ctx.arc(bullet.x, bullet.y, bullet.radius * (1 + Math.sin(age * 20) * 0.1), 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
+}
+
+function drawSalvagePod(pod) {
+  const rarityConfig = getRarityConfig(pod.rarity);
+  const pulse = 1 + Math.sin((pod.age || 0) * 5.5) * 0.08;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = pod.rejected ? 0.42 : 0.72;
+  const glow = ctx.createRadialGradient(pod.x, pod.y, 0, pod.x, pod.y, 34 * pulse);
+  glow.addColorStop(0, rarityConfig.glow);
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(pod.x, pod.y, 34 * pulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.globalAlpha = pod.rejected ? 0.55 : 1;
+  if (assets.salvagePod.loaded) {
+    drawSpriteCentered(assets.salvagePod, pod.x, pod.y, 0.58 * pulse);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = pod.rejected ? 0.25 : 0.42;
+    ctx.fillStyle = rarityConfig.color;
+    ctx.beginPath();
+    ctx.arc(pod.x, pod.y, 18 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = rarityConfig.color;
+    ctx.beginPath();
+    ctx.arc(pod.x, pod.y, 14 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -5977,11 +7188,6 @@ function drawEnemy(enemy) {
     ctx.closePath();
     ctx.fill();
   }
-
-  ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
-  ctx.beginPath();
-  ctx.arc(enemy.x, enemy.y, enemy.radius + 6, 0, Math.PI * 2);
-  ctx.fill();
 
   if (mission && mission.empTimer > 0) {
     const alpha = Math.min(1, mission.empTimer / player.empDuration);
@@ -6002,15 +7208,6 @@ function drawEnemy(enemy) {
       ctx.stroke();
     }
   }
-  if (enemy.dotTimer > 0) {
-    const alpha = Math.min(1, enemy.dotTimer / 3);
-    ctx.strokeStyle = `rgba(34, 197, 94, ${0.2 + alpha * 0.4})`;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(enemy.x, enemy.y, enemy.radius + 10, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
   if (enemy.healthBarTimer > 0) {
     drawEnemyHealth(enemy);
   }
@@ -6164,7 +7361,31 @@ function updateHud() {
     hudCredits.textContent = `${state.credits} (+${runCredits})`;
     updateBossProgress();
   }
+  updateCargoHud();
   updateConsumableHud();
+}
+
+function updateCargoHud() {
+  if (!hudCargoPips) return;
+  const cargo = getCargoItems();
+  hudCargoPips.innerHTML = "";
+  for (let i = 0; i < ECONOMY.cargoSize; i += 1) {
+    const item = cargo[i];
+    const rarity = item?.rarity || null;
+    const pip = document.createElement("span");
+    pip.className = `cargo-pip${rarity ? ` filled rarity-${rarity}` : ""}`;
+    if (rarity) {
+      pip.title = getRarityLabel(rarity);
+      pip.setAttribute("style", getRarityStyle(rarity));
+    } else {
+      pip.title = "Empty cargo slot";
+    }
+    hudCargoPips.appendChild(pip);
+  }
+  if (hudCargoStatus) {
+    hudCargoStatus.hidden = cargoHudMessageTimer <= 0;
+    hudCargoStatus.textContent = LEDGER_COPY.cargoFull;
+  }
 }
 
 function updateConsumableHud() {
@@ -6280,10 +7501,15 @@ function capitalize(value) {
 }
 
 function spawnCreditPopup(x, y, amount) {
+  spawnFloatingText(x, y, `+${amount}`, "#7dd3fc");
+}
+
+function spawnFloatingText(x, y, value, color = "#7dd3fc") {
   floatingTexts.push({
     x,
     y,
-    value: `+${amount}`,
+    value,
+    color,
     life: 1.1,
     maxLife: 1.1,
     vy: 30,
@@ -6294,7 +7520,7 @@ function drawFloatingText(text) {
   const alpha = Math.max(0, text.life / text.maxLife);
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.fillStyle = "#7dd3fc";
+  ctx.fillStyle = text.color || "#7dd3fc";
   ctx.font = "14px Space Grotesk, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(text.value, text.x, text.y);
@@ -6313,11 +7539,12 @@ function revealPlayerHealth() {
   player.healthBarTimer = Math.max(player.healthBarTimer || 0, 1.8);
 }
 
-function applyDamageToEnemy(enemy, damage) {
+function applyDamageToEnemy(enemy, damage, { chipFloor = true } = {}) {
   // Shields absorb full damage; armor reduces per-hit damage by armorClass.
   // Returns the total applied to any pool (for analytics/feel), but callers
   // should still treat "interaction" as happening even if applied is 0.
-  let remaining = Math.max(0, damage);
+  const baseDamage = Math.max(0, damage);
+  let remaining = baseDamage;
   let applied = 0;
   if (enemy.maxShield > 0 && enemy.shield > 0 && remaining > 0) {
     const absorbed = Math.min(enemy.shield, remaining);
@@ -6328,7 +7555,10 @@ function applyDamageToEnemy(enemy, damage) {
   }
   if (remaining <= 0) return applied;
   if (enemy.maxArmor > 0 && enemy.armor > 0) {
-    const effective = Math.max(0, remaining - (enemy.armorClass || 0));
+    const floorDamage = chipFloor
+      ? Math.max(1, baseDamage * ECONOMY.minDamageFloor)
+      : 0;
+    const effective = Math.max(floorDamage, remaining - (enemy.armorClass || 0));
     if (effective <= 0) return applied;
     const toArmor = Math.min(enemy.armor, effective);
     enemy.armor -= toArmor;
@@ -6409,6 +7639,16 @@ function drawExplosion(boom) {
   const alpha = 1 - progress;
   const intensity = boom.intensity ?? 1;
   const style = boom.style || "default";
+  const visualTheme = getLevelVisualTheme();
+
+  const drawThemeExplosionFrame = (scaleBase) => {
+    const frames = visualTheme?.explosionFrames || [];
+    const frame = frames[Math.min(frames.length - 1, Math.floor(progress * frames.length))];
+    if (!frame?.loaded) return false;
+    ctx.globalAlpha = Math.min(1, 0.88 * alpha * intensity);
+    drawSpriteCentered(frame, boom.x, boom.y, scaleBase * (1 + progress * 0.22));
+    return true;
+  };
 
   ctx.save();
   ctx.globalCompositeOperation = boom.blend || "source-over";
@@ -6427,15 +7667,24 @@ function drawExplosion(boom) {
     ctx.arc(boom.x, boom.y, ringR, 0, Math.PI * 2);
     ctx.stroke();
 
-    const frames = assets.explosionFire || [];
-    const idx = Math.min(frames.length - 1, Math.floor(progress * frames.length));
-    const frame = frames[idx];
     ctx.globalAlpha = Math.min(1, 0.95 * alpha * intensity);
-    if (frame && frame.loaded) {
-      const scale = (boom.deathScale ?? 3.2) * (1 + progress * 0.2);
-      drawSpriteCentered(frame, boom.x, boom.y, scale);
-    } else if (assets.explosionCore.loaded) {
-      drawSpriteCentered(assets.explosionCore, boom.x, boom.y, 2.6 + progress * 2.2);
+    if (visualTheme?.playerDeathCore?.loaded) {
+      drawSpriteCentered(
+        visualTheme.playerDeathCore,
+        boom.x,
+        boom.y,
+        (boom.deathScale ?? 3.2) * (1 + progress * 0.25)
+      );
+    } else {
+      const frames = assets.explosionFire || [];
+      const idx = Math.min(frames.length - 1, Math.floor(progress * frames.length));
+      const frame = frames[idx];
+      if (frame && frame.loaded) {
+        const scale = (boom.deathScale ?? 3.2) * (1 + progress * 0.2);
+        drawSpriteCentered(frame, boom.x, boom.y, scale);
+      } else if (assets.explosionCore.loaded) {
+        drawSpriteCentered(assets.explosionCore, boom.x, boom.y, 2.6 + progress * 2.2);
+      }
     }
     ctx.restore();
     return;
@@ -6454,7 +7703,18 @@ function drawExplosion(boom) {
     ctx.beginPath();
     ctx.arc(boom.x, boom.y, ringR, 0, Math.PI * 2);
     ctx.stroke();
+    const impactSprite = visualTheme?.shieldHitRing?.loaded
+      ? visualTheme.shieldHitRing
+      : visualTheme?.impactSpark;
+    if (impactSprite?.loaded) {
+      ctx.globalAlpha = Math.min(1, 0.7 * alpha * intensity);
+      drawSpriteCentered(impactSprite, boom.x, boom.y, Math.max(0.45, boom.radius / 36) * (1 + progress * 0.35));
+    }
   } else {
+    if (drawThemeExplosionFrame(Math.max(0.55, boom.radius / 42))) {
+      ctx.restore();
+      return;
+    }
     const gradient = ctx.createRadialGradient(boom.x, boom.y, 0, boom.x, boom.y, maxRadius);
     // Keep these big, but slightly lower alpha so stacked explosions don't saturate to a solid disk.
     gradient.addColorStop(0, `rgba(255, 244, 214, ${0.22 * alpha * intensity})`);

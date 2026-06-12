@@ -6,6 +6,7 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const LEVELS_DIR = path.join(ROOT, "levels");
 const CATALOG_PATH = path.join(ROOT, "enemies", "enemy_catalog.json");
+const ITEM_POOL_PATH = path.join(ROOT, "items", "item_pool.json");
 
 const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "template",
@@ -41,6 +42,24 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
 ]);
 
 const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8")).entries || {};
+const allowedItemSlotTypes = new Set(["primary", "defense", "aux", "support"]);
+const allowedItemEffects = new Set(["none", "homing", "explosive", "pierce", "vampiric"]);
+const allowedItemBuildKeys = new Set([
+  "gunDiameter",
+  "spread",
+  "ammo",
+  "effect",
+  "effectUpgrades",
+  "defenseSlots",
+  "flowRateLevel",
+  "flowVelocityLevel",
+  "flowSizeLevel",
+  "shieldMaxLevel",
+  "shieldRegenLevel",
+  "armorAmountLevel",
+  "armorClass",
+  "armorClassLevel",
+]);
 
 function listLevelFiles(dir) {
   return fs
@@ -108,6 +127,97 @@ function validateLevel(level) {
   return errors;
 }
 
+function validateItemBuild(build, context, errors) {
+  if (!build || typeof build !== "object" || Array.isArray(build)) {
+    errors.push(`${context} is missing build object.`);
+    return;
+  }
+  for (const key of Object.keys(build)) {
+    if (!allowedItemBuildKeys.has(key)) {
+      errors.push(`${context} uses unsupported build field '${key}'.`);
+    }
+  }
+  if (build.effect && !allowedItemEffects.has(build.effect)) {
+    errors.push(`${context} has invalid effect '${build.effect}'.`);
+  }
+}
+
+function validateItemPool() {
+  const errors = [];
+  if (!fs.existsSync(ITEM_POOL_PATH)) {
+    errors.push("items/item_pool.json is missing.");
+    return errors;
+  }
+  const pool = JSON.parse(fs.readFileSync(ITEM_POOL_PATH, "utf8"));
+  if (!pool || typeof pool !== "object" || Array.isArray(pool)) {
+    return ["item pool root must be an object."];
+  }
+  const entries = pool.entries;
+  const affixes = pool.affixes || {};
+  if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
+    errors.push("item pool must define entries.");
+  }
+  if (typeof affixes !== "object" || Array.isArray(affixes)) {
+    errors.push("item pool affixes must be an object.");
+  }
+
+  const affixIds = new Set(Object.keys(affixes || {}));
+  for (const [id, affix] of Object.entries(affixes || {})) {
+    if (!/^[a-z0-9_:-]+$/.test(id)) {
+      errors.push(`Affix '${id}' must use a stable lowercase id.`);
+    }
+    if (!affix || typeof affix !== "object" || Array.isArray(affix)) {
+      errors.push(`Affix '${id}' must be an object.`);
+      continue;
+    }
+    if (typeof affix.name !== "string" || !affix.name.trim()) {
+      errors.push(`Affix '${id}' is missing name.`);
+    }
+    if (!Array.isArray(affix.slotTypes) || !affix.slotTypes.length) {
+      errors.push(`Affix '${id}' must declare slotTypes.`);
+    } else {
+      affix.slotTypes.forEach((slotType) => {
+        if (!allowedItemSlotTypes.has(slotType)) {
+          errors.push(`Affix '${id}' has invalid slotType '${slotType}'.`);
+        }
+      });
+    }
+    if (affix.build) validateItemBuild(affix.build, `Affix '${id}'`, errors);
+    if (affix.buildAdd) validateItemBuild(affix.buildAdd, `Affix '${id}' buildAdd`, errors);
+  }
+
+  for (const [id, entry] of Object.entries(entries || {})) {
+    if (!/^[a-z0-9_:-]+$/.test(id)) {
+      errors.push(`Item '${id}' must use a stable lowercase id.`);
+    }
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      errors.push(`Item '${id}' must be an object.`);
+      continue;
+    }
+    if (!allowedItemSlotTypes.has(entry.slotType)) {
+      errors.push(`Item '${id}' has invalid slotType '${entry.slotType}'.`);
+    }
+    if (typeof entry.name !== "string" || !entry.name.trim()) {
+      errors.push(`Item '${id}' is missing name.`);
+    }
+    if (typeof entry.description !== "string" || !entry.description.trim()) {
+      errors.push(`Item '${id}' is missing description.`);
+    }
+    if (!Array.isArray(entry.tags)) {
+      errors.push(`Item '${id}' is missing tags.`);
+    }
+    validateItemBuild(entry.build || {}, `Item '${id}'`, errors);
+    if (Array.isArray(entry.affixes)) {
+      entry.affixes.forEach((affixId) => {
+        if (!affixIds.has(affixId)) {
+          errors.push(`Item '${id}' references unknown affix '${affixId}'.`);
+        }
+      });
+    }
+  }
+  return errors;
+}
+
 const failures = [];
 for (const file of listLevelFiles(LEVELS_DIR)) {
   const level = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -115,6 +225,10 @@ for (const file of listLevelFiles(LEVELS_DIR)) {
   if (errors.length) {
     failures.push({ file, errors });
   }
+}
+const itemPoolErrors = validateItemPool();
+if (itemPoolErrors.length) {
+  failures.push({ file: ITEM_POOL_PATH, errors: itemPoolErrors });
 }
 
 if (failures.length) {
@@ -125,4 +239,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Validated ${listLevelFiles(LEVELS_DIR).length} level files.`);
+console.log(`Validated ${listLevelFiles(LEVELS_DIR).length} level files and item pool.`);

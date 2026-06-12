@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=economy-tree-5" />
   </head>
   <body>
     <div id="app">
@@ -30,6 +30,11 @@
             <div class="boss-bar">
               <div id="boss-progress-fill"></div>
             </div>
+          </div>
+          <div class="cargo-hud" aria-label="Cargo hold">
+            <span class="cargo-label">Cargo</span>
+            <div class="cargo-pips" id="hud-cargo-pips"></div>
+            <div class="cargo-status" id="hud-cargo-status" hidden>CARGO FULL</div>
           </div>
         </div>
         <div class="hud-right">
@@ -169,45 +174,32 @@
               <p class="investments-desc">
                 Invest in mothership infrastructure for long-term benefits. Returns compound over time.
               </p>
-              <div class="investment-categories">
-                <div class="investment-category" id="engineering-bay">
-                  <div class="category-header">
-                    <span class="category-icon">🔧</span>
-                    <span class="category-name">Engineering Bay</span>
-                    <span class="category-tier" id="engineering-tier">Tier 0/5</span>
+              <div class="economy-tree-shell">
+                <div class="economy-tree-hud">
+                  <div>
+                    <span class="economy-hud-label">Available Credits</span>
+                    <strong id="economy-tree-credits">0</strong>
                   </div>
-                  <p class="category-desc">Unlock consumables and reduce repair costs.</p>
-                  <div class="category-benefits" id="engineering-benefits"></div>
-                  <button class="invest-btn" id="engineering-invest" disabled>
-                    <span class="invest-label">Invest</span>
-                    <span class="invest-cost" id="engineering-cost">200</span>
-                  </button>
+                  <div>
+                    <span class="economy-hud-label">Network Progress</span>
+                    <strong id="economy-tree-progress">0/15</strong>
+                  </div>
                 </div>
-                <div class="investment-category" id="operations-center">
-                  <div class="category-header">
-                    <span class="category-icon">📡</span>
-                    <span class="category-name">Operations Center</span>
-                    <span class="category-tier" id="operations-tier">Tier 0/5</span>
+                <div class="economy-tree-layout">
+                  <div class="economy-tree-map" id="investment-tree-map" aria-label="Fleet investment upgrade tree">
+                    <svg
+                      class="economy-tree-lines"
+                      id="investment-tree-lines"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    ></svg>
                   </div>
-                  <p class="category-desc">Unlock mission variants and bonus objectives.</p>
-                  <div class="category-benefits" id="operations-benefits"></div>
-                  <button class="invest-btn" id="operations-invest" disabled>
-                    <span class="invest-label">Invest</span>
-                    <span class="invest-cost" id="operations-cost">200</span>
-                  </button>
-                </div>
-                <div class="investment-category" id="fleet-shares">
-                  <div class="category-header">
-                    <span class="category-icon">💰</span>
-                    <span class="category-name">Fleet Shares</span>
-                    <span class="category-tier" id="shares-tier">Tier 0/5</span>
-                  </div>
-                  <p class="category-desc">Earn passive dividends from fleet operations.</p>
-                  <div class="category-benefits" id="shares-benefits"></div>
-                  <button class="invest-btn" id="shares-invest" disabled>
-                    <span class="invest-label">Invest</span>
-                    <span class="invest-cost" id="shares-cost">300</span>
-                  </button>
+                  <aside
+                    class="economy-tree-inspector"
+                    id="investment-tree-inspector"
+                    aria-live="polite"
+                  ></aside>
                 </div>
               </div>
             </div>
@@ -260,6 +252,8 @@
               <div id="debrief-credits">0</div>
             </div>
           </div>
+          <div class="debrief-ledger" id="debrief-ledger"></div>
+          <div class="debrief-salvage" id="debrief-salvage"></div>
           <div class="actions">
             <button id="return-btn">Return to Hangar</button>
           </div>
@@ -270,7 +264,7 @@
         <span>Move: Mouse</span>
         <span>Fire: LMB</span>
         <span>Alt: RMB</span>
-        <span>Eject: E</span>
+        <span>Recall: E</span>
         <span>Pause: P</span>
       </div>
 
@@ -281,7 +275,7 @@
           <img class="mobile-icon" id="mobile-alt-icon" alt="" />
           <span class="mobile-label" id="mobile-alt-label"></span>
         </button>
-        <button class="mobile-btn eject" id="mobile-eject">Eject</button>
+        <button class="mobile-btn eject" id="mobile-eject">RTB</button>
         <button class="mobile-btn launch" id="mobile-launch">Launch</button>
       </div>
 
@@ -317,6 +311,6 @@
 
     </div>
 
-    <script src="main.js"></script>
+    <script src="main.js?v=economy-tree-5"></script>
   </body>
 </html>

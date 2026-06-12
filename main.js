@@ -1817,7 +1817,6 @@ function buyLedgerLot(lotId) {
       { label: "Credits paid", amount: -lot.price, total: true, fee: true },
     ],
   });
-  activeLedgerMode = "claims";
   saveState();
   safeUpdateHangar();
 }
@@ -1847,7 +1846,6 @@ function sellInventoryItem(itemId) {
     title: "Sale Receipt",
     lines,
   });
-  activeLedgerMode = "claims";
   saveState();
   safeUpdateHangar();
 }

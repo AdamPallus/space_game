@@ -2112,9 +2112,12 @@ body {
 
 .claims-report-scene {
   display: grid;
-  align-content: start;
-  gap: 16px;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  align-content: stretch;
+  gap: 14px;
+  height: 100vh;
   padding: 48px min(6vw, 72px);
+  overflow: hidden;
   background:
     radial-gradient(circle at 68% 18%, rgba(248, 113, 113, 0.11), transparent 30%),
     linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(39, 31, 24, 0.98));
@@ -2135,6 +2138,11 @@ body {
 .claims-report-scene .scene-head {
   border-bottom: 1px solid rgba(251, 191, 36, 0.18);
   padding-bottom: 14px;
+}
+
+.claims-report-scene > #debrief-text {
+  max-width: 940px;
+  margin: 0;
 }
 
 .debrief-stamp {
@@ -2164,11 +2172,36 @@ body {
 .claims-report-scene .stats-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   max-width: 760px;
+  margin-bottom: 0;
+}
+
+.debrief-scroll {
+  min-height: 0;
+  width: 100%;
+  max-width: 940px;
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding-right: 12px;
+  scrollbar-color: rgba(251, 191, 36, 0.38) rgba(2, 6, 16, 0.24);
 }
 
 .claims-report-scene .debrief-ledger,
 .claims-report-scene .debrief-salvage {
   max-width: 940px;
+  margin: 0;
+}
+
+.claims-report-scene .actions {
+  width: 100%;
+  max-width: 940px;
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(251, 191, 36, 0.18);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0), rgba(15, 23, 42, 0.5));
 }
 
 @keyframes printLine {
@@ -2902,11 +2935,16 @@ button:disabled {
   }
 
   .claims-report-scene {
-    padding: 22px 12px 88px;
+    gap: 10px;
+    padding: 18px 12px;
   }
 
   .claims-report-scene .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .debrief-scroll {
+    padding-right: 6px;
   }
 
   .armory-shell {

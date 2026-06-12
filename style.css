@@ -388,6 +388,10 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   justify-items: center;
   text-align: center;
   padding-top: 10px;
+  background:
+    linear-gradient(rgba(10, 14, 22, 0.62), rgba(10, 14, 22, 0.84)),
+    url("assets/generated/scene_backdrops_v1/hangar_hub.png") center / cover;
+  background-color: var(--panel-2);
 }
 .hub-copy { display: flex; flex-direction: column; gap: 4px; }
 .hub-drone {
@@ -452,6 +456,10 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   min-height: 0;
   overflow: hidden;
   padding: var(--pad);
+  background:
+    linear-gradient(rgba(10, 14, 22, 0.58), rgba(10, 14, 22, 0.82)),
+    url("assets/generated/scene_backdrops_v1/armory_bench.png") center / cover;
+  background-color: var(--panel-2);
 }
 .armory-bench, .armory-drone {
   position: relative;
@@ -663,7 +671,10 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   flex-direction: column;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--panel);
+  background:
+    linear-gradient(rgba(10, 14, 22, 0.78), rgba(10, 14, 22, 0.9)),
+    url("assets/generated/scene_backdrops_v1/ledger_terminal.png") center / cover;
+  background-color: var(--panel);
   overflow: hidden;
 }
 .ledger-bezel {
@@ -859,6 +870,12 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   gap: var(--gap);
   align-content: start;
   padding-right: 4px;
+}
+.mission-board-scene {
+  background:
+    linear-gradient(rgba(10, 14, 22, 0.66), rgba(10, 14, 22, 0.86)),
+    url("assets/generated/scene_backdrops_v1/mission_board.png") center / cover;
+  background-color: var(--panel-2);
 }
 .mission-card {
   position: relative;
@@ -1078,6 +1095,12 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 /* ==========================================================================
    DEBRIEF (claims report)
    ========================================================================== */
+#debrief {
+  background:
+    linear-gradient(rgba(10, 14, 22, 0.72), rgba(10, 14, 22, 0.9)),
+    url("assets/generated/scene_backdrops_v1/debrief_desk.png") center / cover;
+  background-color: var(--panel-2);
+}
 .claims-report-scene { justify-content: flex-start; }
 .debrief-stamp {
   font-family: var(--mono);

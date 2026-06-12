@@ -1,7 +1,7 @@
 {
   "id": "level7",
   "name": "The Gauntlet",
-  "background": "nb_wreckfield",
+  "background": "generatedDerelictDebris",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Hell",
   "description": "Endurance mission with mixed doctrine overlap and orbital boss pressure.",

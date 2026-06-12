@@ -3,7 +3,7 @@
   "baseLevel": "level1",
   "variant": "swarm",
   "name": "First Contact: Swarm",
-  "background": "blue",
+  "background": "generatedDeepVoid",
   "music": "01_lift_off_b.ogg",
   "difficulty": "Easy",
   "description": "Fast interceptor cloud with light shields. Clear lanes before they stack.",

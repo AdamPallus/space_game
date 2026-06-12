@@ -3,7 +3,7 @@
   "baseLevel": "level8",
   "variant": "armored",
   "name": "Last Light: Armored",
-  "background": "nb_crimsonstorm",
+  "background": "generatedAmberDustLooped",
   "music": "space_boss_battle_bpm175.ogg",
   "difficulty": "Ultimate+",
   "description": "Siege doctrine final exam. Heavy AC and stacked armor bars across all waves.",

@@ -1,7 +1,7 @@
 {
   "id": "level2_skirmish",
   "name": "Orion Drift: Skirmish",
-  "background": "purple",
+  "background": "generatedTealRift",
   "difficulty": "Medium",
   "variant": "skirmish",
   "baseLevel": "level2",

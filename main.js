@@ -93,11 +93,23 @@ const STORAGE_KEY = "mini-fighter-save";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
 const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
 const GENERATED_ROOT = "assets/generated";
+const GENERATED_BACKGROUND_ROOT = `${GENERATED_ROOT}/backgrounds_v1`;
 const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
 const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
 const GENERATED_PILOT_ROOT = `${GENERATED_ROOT}/pilot_sprites`;
+const GENERATED_BACKGROUND_URLS = {
+  generatedTealRift: `${GENERATED_BACKGROUND_ROOT}/teal_rift_native_1024.png`,
+  generatedAmberDust: `${GENERATED_BACKGROUND_ROOT}/amber_dust_native_1024.png`,
+  generatedAmberDustLooped: `${GENERATED_BACKGROUND_ROOT}/amber_dust_looped_1024.png`,
+  generatedDerelictDebris: `${GENERATED_BACKGROUND_ROOT}/derelict_debris_native_1024.png`,
+  generatedDerelictDebrisLooped: `${GENERATED_BACKGROUND_ROOT}/derelict_debris_looped_1024.png`,
+  generatedBioNebula: `${GENERATED_BACKGROUND_ROOT}/bio_nebula_native_1024.png`,
+  generatedBioNebulaLooped: `${GENERATED_BACKGROUND_ROOT}/bio_nebula_looped_1024.png`,
+  generatedDeepVoid: `${GENERATED_BACKGROUND_ROOT}/deep_void_native_1024.png`,
+  generatedDeepVoidLooped: `${GENERATED_BACKGROUND_ROOT}/deep_void_looped_1024.png`,
+};
 let shouldAutoLaunchFreshPilotMission = false;
 const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "template",
@@ -2157,9 +2169,15 @@ const assets = {
     nb_crimsonstorm: loadImage(`${BG_ROOT}/nb_crimsonstorm.png`),
     nb_aurorawave: loadImage(`${BG_ROOT}/nb_aurorawave.png`),
     nb_wreckfield: loadImage(`${BG_ROOT}/nb_wreckfield.png`),
-    generatedTealRift: loadImage(`${GENERATED_ROOT}/backgrounds_v1/teal_rift_native_1024.png`),
-    generatedAmberDust: loadImage(`${GENERATED_ROOT}/backgrounds_v1/amber_dust_native_1024.png`),
-    generatedAmberDustLooped: loadImage(`${GENERATED_ROOT}/backgrounds_v1/amber_dust_looped_1024.png`),
+    generatedTealRift: loadImage(GENERATED_BACKGROUND_URLS.generatedTealRift),
+    generatedAmberDust: loadImage(GENERATED_BACKGROUND_URLS.generatedAmberDust),
+    generatedAmberDustLooped: loadImage(GENERATED_BACKGROUND_URLS.generatedAmberDustLooped),
+    generatedDerelictDebris: loadImage(GENERATED_BACKGROUND_URLS.generatedDerelictDebris),
+    generatedDerelictDebrisLooped: loadImage(GENERATED_BACKGROUND_URLS.generatedDerelictDebrisLooped),
+    generatedBioNebula: loadImage(GENERATED_BACKGROUND_URLS.generatedBioNebula),
+    generatedBioNebulaLooped: loadImage(GENERATED_BACKGROUND_URLS.generatedBioNebulaLooped),
+    generatedDeepVoid: loadImage(GENERATED_BACKGROUND_URLS.generatedDeepVoid),
+    generatedDeepVoidLooped: loadImage(GENERATED_BACKGROUND_URLS.generatedDeepVoidLooped),
   },
   player: loadImage(`${ASSET_ROOT}/playerShip2_blue.png`),
   playerBullet: loadImage(`${ASSET_ROOT}/Lasers/laserBlue02.png`),
@@ -4266,6 +4284,9 @@ function renderLevelSelect() {
 
 function levelBackgroundUrl(levelMeta) {
   const bg = levelMeta?.background || "blue";
+  if (GENERATED_BACKGROUND_URLS[bg]) {
+    return GENERATED_BACKGROUND_URLS[bg];
+  }
   return `${BG_ROOT}/${bg}.png`;
 }
 

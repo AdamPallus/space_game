@@ -1,7 +1,7 @@
 {
   "id": "patterns_demo",
   "name": "Pattern Lab: Live Fire",
-  "background": "warpGrid",
+  "background": "generatedDeepVoid",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Prototype",
   "description": "Training range populated with experimental drones. Expect lane-shifts, stalls, tightening spirals, and two boss-grade maneuvers.",

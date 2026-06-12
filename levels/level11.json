@@ -1,7 +1,7 @@
 {
   "id": "level11",
   "name": "Crossfire Corridor",
-  "background": "warpGrid",
+  "background": "generatedDerelictDebris",
   "music": "space_boss_battle_bpm175.ogg",
   "difficulty": "Mixed",
   "description": "A balanced combined-arms push: fast skirmishers, shield kites, and plated heavies.",

@@ -36,6 +36,12 @@ records seam stats and can make a fallback looped version. For the lab, the
 native generated image is currently selected because its repeat preview looked
 cleaner than the feathered fallback.
 
+Batch E adds three OpenAI-generated combat tiles in the same pack:
+`derelict_debris`, `bio_nebula`, and `deep_void`. Their native repeat previews
+had cleaner visible joins than the rolled fallback outputs, so campaign levels
+use the native 1024 versions while the looped variants remain committed as QA
+artifacts.
+
 To jump straight into the visual test mission:
 
 ```text

@@ -1,7 +1,7 @@
 {
   "id": "level6",
   "name": "Crimson Fleet",
-  "background": "nb_aurorawave",
+  "background": "generatedDeepVoid",
   "music": "space_adventure_bpm140.ogg",
   "difficulty": "Very Hard",
   "description": "Tactical mixed fleet using lane shifts and stalls to force movement errors.",

@@ -1,7 +1,7 @@
 {
   "id": "biological_hive_lab",
   "name": "Biological Hive Lab",
-  "background": "generatedAmberDustLooped",
+  "background": "generatedBioNebula",
   "visualTheme": "bio_v1",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Prototype",

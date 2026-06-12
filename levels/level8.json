@@ -1,7 +1,7 @@
 {
   "id": "level8",
   "name": "Last Light",
-  "background": "nb_crimsonstorm",
+  "background": "generatedAmberDustLooped",
   "music": "space_boss_battle_bpm175.ogg",
   "difficulty": "Ultimate",
   "description": "Final combined-arms assault. Survive layered threats to reach the command core.",

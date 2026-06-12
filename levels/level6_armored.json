@@ -3,7 +3,7 @@
   "baseLevel": "level6",
   "variant": "armored",
   "name": "Crimson Fleet: Armored",
-  "background": "nb_aurorawave",
+  "background": "generatedDeepVoid",
   "music": "space_adventure_bpm140.ogg",
   "difficulty": "Very Hard+",
   "description": "Slow pressure from fortified columns. Every kill requires commitment.",

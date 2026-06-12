@@ -3,7 +3,7 @@
   "baseLevel": "level4",
   "variant": "swarm",
   "name": "Void Cascade: Swarm",
-  "background": "asteroidBelt",
+  "background": "generatedDerelictDebris",
   "music": "04_emergency_no_alarm.ogg",
   "difficulty": "Extreme",
   "description": "Unstable skirmisher waves and ambush stalkers. Little time to breathe.",

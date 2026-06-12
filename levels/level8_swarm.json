@@ -3,7 +3,7 @@
   "baseLevel": "level8",
   "variant": "swarm",
   "name": "Last Light: Swarm",
-  "background": "nb_crimsonstorm",
+  "background": "generatedAmberDustLooped",
   "music": "space_boss_battle_bpm175.ogg",
   "difficulty": "Ultimate",
   "description": "All-out skirmisher storm. Peak movement pressure and projectile density.",

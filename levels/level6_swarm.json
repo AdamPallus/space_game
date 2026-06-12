@@ -3,7 +3,7 @@
   "baseLevel": "level6",
   "variant": "swarm",
   "name": "Crimson Fleet: Swarm",
-  "background": "nb_aurorawave",
+  "background": "generatedDeepVoid",
   "music": "space_adventure_bpm140.ogg",
   "difficulty": "Very Hard",
   "description": "Relentless fast movers with lane-hop behavior and evasive skirmish AI.",

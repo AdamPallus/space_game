@@ -3,7 +3,7 @@
   "baseLevel": "level1",
   "variant": "armored",
   "name": "First Contact: Armored",
-  "background": "blue",
+  "background": "generatedDeepVoid",
   "music": "01_lift_off_b.ogg",
   "difficulty": "Easy+",
   "description": "Few targets, thick plating. Focus fire and avoid chip-damage builds.",

@@ -1,7 +1,7 @@
 {
   "id": "level4",
   "name": "Void Cascade",
-  "background": "asteroidBelt",
+  "background": "generatedDerelictDebris",
   "music": "04_emergency_no_alarm.ogg",
   "difficulty": "Extreme",
   "description": "Combined-defense taskforce. Duelists flank while escorts pin lanes.",

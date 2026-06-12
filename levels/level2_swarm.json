@@ -3,7 +3,7 @@
   "baseLevel": "level2",
   "variant": "swarm",
   "name": "Orion Drift: Swarm",
-  "background": "purple",
+  "background": "generatedTealRift",
   "music": "02_stillness_of_space.ogg",
   "difficulty": "Medium",
   "description": "Dense skirmisher packs supported by agile sentry drones.",

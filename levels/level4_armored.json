@@ -3,7 +3,7 @@
   "baseLevel": "level4",
   "variant": "armored",
   "name": "Void Cascade: Armored",
-  "background": "asteroidBelt",
+  "background": "generatedDerelictDebris",
   "music": "04_emergency_no_alarm.ogg",
   "difficulty": "Extreme+",
   "description": "Armor wall doctrine: escorts, duelists, and heavy carriers in sequence.",

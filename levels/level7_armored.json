@@ -3,7 +3,7 @@
   "baseLevel": "level7",
   "variant": "armored",
   "name": "The Gauntlet: Armored",
-  "background": "nb_wreckfield",
+  "background": "generatedDerelictDebris",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Hell+",
   "description": "Fortress spearhead. Heavy AC values test sustained per-shot damage.",

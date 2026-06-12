@@ -3,7 +3,7 @@
   "baseLevel": "level2",
   "variant": "armored",
   "name": "Orion Drift: Armored",
-  "background": "purple",
+  "background": "generatedTealRift",
   "music": "02_stillness_of_space.ogg",
   "difficulty": "Medium+",
   "description": "Plated convoy with flank gunships and one armored command rig.",

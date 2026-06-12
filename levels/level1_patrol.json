@@ -1,7 +1,7 @@
 {
   "id": "level1_patrol",
   "name": "First Contact: Patrol Alpha",
-  "background": "blue",
+  "background": "generatedDeepVoid",
   "difficulty": "Easy",
   "variant": "patrol",
   "baseLevel": "level1",

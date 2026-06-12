@@ -1,7 +1,7 @@
 {
   "id": "level2",
   "name": "Orion Drift",
-  "background": "purple",
+  "background": "generatedTealRift",
   "music": "02_stillness_of_space.ogg",
   "difficulty": "Medium",
   "description": "Armor appears in force. Sentinel lines pin your movement while plated hulls soak shots.",

@@ -3,7 +3,7 @@
   "baseLevel": "level5",
   "variant": "armored",
   "name": "Annihilation Protocol: Armored",
-  "background": "ionStorm",
+  "background": "generatedAmberDustLooped",
   "music": "05_building_a_colony_loop_1.ogg",
   "difficulty": "Nightmare+",
   "description": "Heavy armor battlegroup with layered escorts and reinforced haulers.",

@@ -3,7 +3,7 @@
   "baseLevel": "level3",
   "variant": "armored",
   "name": "Nebula Run: Armored",
-  "background": "darkPurple",
+  "background": "generatedBioNebula",
   "music": "03_racing_through_asteroids_loop.ogg",
   "difficulty": "Hard+",
   "description": "Layered armor screens with disciplined flanking escorts.",

@@ -1,7 +1,7 @@
 {
   "id": "ai_demo",
   "name": "AI Lab: Live Targets",
-  "background": "nb_tealrift",
+  "background": "generatedTealRift",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Prototype",
   "description": "Experimental drones with reactive behaviors: sentinels hold firing lines, skitters dodge, duelists flank.",

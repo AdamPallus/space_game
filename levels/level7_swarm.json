@@ -3,7 +3,7 @@
   "baseLevel": "level7",
   "variant": "swarm",
   "name": "The Gauntlet: Swarm",
-  "background": "nb_wreckfield",
+  "background": "generatedDerelictDebris",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Hell",
   "description": "Maximum density skirmisher push. Precision and area control are mandatory.",

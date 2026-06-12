@@ -3,7 +3,7 @@
   "baseLevel": "level3",
   "variant": "swarm",
   "name": "Nebula Run: Swarm",
-  "background": "darkPurple",
+  "background": "generatedBioNebula",
   "music": "03_racing_through_asteroids_loop.ogg",
   "difficulty": "Hard",
   "description": "High-velocity wing packs with evasive behavior and light shields.",

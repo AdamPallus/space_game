@@ -1143,17 +1143,27 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 }
 .claims-report-scene { justify-content: flex-start; }
 .debrief-stamp {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
   font-family: var(--mono);
   font-weight: 700;
   font-size: 16px;
+  line-height: 1;
   letter-spacing: 0.18em;
   color: var(--stamp);
-  border: 2px solid var(--stamp);
-  border-radius: 4px;
-  padding: 6px 14px;
+  border: 0;
+  border-radius: 0;
+  padding: 14px 24px;
   background: url("assets/generated/ui_chrome_v2/stamp_frame.png") center / 100% 100% no-repeat;
   transform: rotate(-6deg);
   text-transform: uppercase;
+}
+.scene-head > .debrief-stamp {
+  flex: 0 0 auto;
+  min-width: 0;
 }
 .stats-grid {
   flex: 0 0 auto;

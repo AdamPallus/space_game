@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_weapons_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet_weapons.png",
+  "defaultPadding": 10,
+  "sprites": [
+    { "name": "cadet_kinetic_cannon", "cell": 0, "size": [112, 112], "componentMode": "largest" },
+    { "name": "plasma_scatter_array", "cell": 1, "size": [112, 112], "componentMode": "largest" },
+    { "name": "breaker_rail", "cell": 2, "size": [128, 112], "componentMode": "largest" },
+    { "name": "kinetic_slug_module", "cell": 3, "size": [112, 112], "componentMode": "largest" },
+    { "name": "plasma_cell_module", "cell": 4, "size": [112, 112], "componentMode": "largest" },
+    { "name": "pierce_tip_modifier", "cell": 5, "size": [112, 112], "componentMode": "largest" },
+    { "name": "vampiric_trace_modifier", "cell": 6, "size": [112, 112], "componentMode": "largest" },
+    { "name": "weapon_frame_chassis", "cell": 7, "size": [112, 112], "componentMode": "largest" },
+    { "name": "weapon_variant_dual_cannon", "cell": 8, "size": [112, 112], "componentMode": "largest" },
+    { "name": "weapon_variant_cartridge_rack", "cell": 9, "size": [112, 112], "componentMode": "largest" },
+    { "name": "weapon_variant_sensor_block", "cell": 10, "size": [112, 112], "componentMode": "largest" },
+    { "name": "weapon_variant_twin_emitter", "cell": 11, "size": [112, 112], "componentMode": "largest" },
+    { "name": "weapon_variant_red_cluster", "cell": 12, "size": [112, 112], "componentMode": "largest" },
+    { "name": "weapon_variant_coil_mount", "cell": 13, "size": [112, 112], "componentMode": "largest" },
+    { "name": "weapon_variant_round_core", "cell": 14, "size": [112, 112], "componentMode": "largest" },
+    { "name": "weapon_variant_vented_housing", "cell": 15, "size": [112, 112], "componentMode": "largest" }
+  ]
+}

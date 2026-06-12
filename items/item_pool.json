@@ -148,7 +148,7 @@
       "subtitle": "Precision trainer",
       "description": "Standard kinetic trainer with balanced recoil and focused shots.",
       "notes": "Starter-frame salvage pattern. Guaranteed starter gear remains separate and is never lost.",
-      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun03.png",
+      "icon": "assets/generated/item_icons_v1/cadet_kinetic_cannon.png",
       "tags": ["kinetic", "focused", "balanced"],
       "build": {
         "gunDiameter": "medium",
@@ -173,7 +173,7 @@
       "subtitle": "Swarm breaker",
       "description": "Wide plasma spread tuned for interceptor packs.",
       "notes": "Micro-shot salvage pattern for broad lane pressure.",
-      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun08.png",
+      "icon": "assets/generated/item_icons_v1/plasma_scatter_array.png",
       "tags": ["plasma", "wide", "explosive"],
       "build": {
         "gunDiameter": "medium",
@@ -198,7 +198,7 @@
       "subtitle": "Heavy punch",
       "description": "Large focused kinetic slugs built for plated targets.",
       "notes": "Pierce-capable salvage pattern for hard targets.",
-      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun10.png",
+      "icon": "assets/generated/item_icons_v1/breaker_rail.png",
       "tags": ["kinetic", "pierce", "anti-armor"],
       "build": {
         "gunDiameter": "large",
@@ -224,7 +224,7 @@
       "subtitle": "Barrier",
       "description": "Standard shield projector for a forgiving buffer.",
       "notes": "Recovered shield hardware suitable for either defense bay.",
-      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
+      "icon": "assets/generated/item_icons_v1/phase_shield_projector.png",
       "tags": ["shield", "defense"],
       "build": {
         "shieldMaxLevel": 0,
@@ -239,7 +239,7 @@
       "subtitle": "Plating",
       "description": "Dense armor slab for soaking direct fire.",
       "notes": "Recovered armor hardware suitable for either defense bay.",
-      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/shield_gold.png",
+      "icon": "assets/generated/item_icons_v1/plated_armor_module.png",
       "tags": ["armor", "defense"],
       "build": {
         "armorAmountLevel": 1,
@@ -255,7 +255,7 @@
       "subtitle": "Pilot system",
       "description": "Break enemy lock-on and reposition.",
       "notes": "Recovered auxiliary system. Equips to the support link.",
-      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
+      "icon": "assets/generated/item_icons_v1/cloaking_device.png",
       "tags": ["aux", "cloak", "evasion"],
       "build": {}
     },
@@ -267,7 +267,7 @@
       "subtitle": "Pilot system",
       "description": "Disable enemy fire and slow ships briefly.",
       "notes": "Recovered auxiliary system. Equips to the support link.",
-      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
+      "icon": "assets/generated/item_icons_v1/emp_burst_module.png",
       "tags": ["aux", "emp", "control"],
       "build": {}
     },
@@ -279,7 +279,7 @@
       "subtitle": "Pilot system",
       "description": "Temporary super-shield buffer.",
       "notes": "Recovered auxiliary system. Equips to the support link.",
-      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupYellow_shield.png",
+      "icon": "assets/generated/item_icons_v1/bulwark_field_module.png",
       "tags": ["aux", "shield", "bulwark"],
       "build": {}
     }
@@ -292,7 +292,7 @@
       "subtitle": "Pre-Founding hardpoint",
       "description": "A sealed kinetic driver with an undocumented recoil governor.",
       "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
-      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun10.png",
+      "icon": "assets/generated/item_icons_v1/breaker_rail.png",
       "tags": ["relic", "kinetic", "focused", "pierce", "anti-armor"],
       "build": {
         "gunDiameter": "large",
@@ -333,7 +333,7 @@
       "subtitle": "Pre-Founding hardpoint",
       "description": "A plasma emitter that blooms into controlled micro-shot sheets.",
       "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
-      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun08.png",
+      "icon": "assets/generated/item_icons_v1/plasma_scatter_array.png",
       "tags": ["relic", "plasma", "wide", "explosive", "swarm"],
       "build": {
         "gunDiameter": "medium",
@@ -370,7 +370,7 @@
       "subtitle": "Pre-Founding barrier",
       "description": "A quiet shield lattice with impossible recovery discipline.",
       "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
-      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
+      "icon": "assets/generated/item_icons_v1/phase_shield_projector.png",
       "tags": ["relic", "shield", "defense", "regen"],
       "build": {
         "shieldMaxLevel": 2,
@@ -396,7 +396,7 @@
       "subtitle": "Pre-Founding plating",
       "description": "Dense old-world armor marked with an unreadable registry stamp.",
       "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
-      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/shield_gold.png",
+      "icon": "assets/generated/item_icons_v1/plated_armor_module.png",
       "tags": ["relic", "armor", "defense", "plating"],
       "build": {
         "armorAmountLevel": 3,
@@ -422,7 +422,7 @@
       "subtitle": "Pre-Founding pilot system",
       "description": "An EMP projector that sings through inactive fleet channels.",
       "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
-      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
+      "icon": "assets/generated/item_icons_v1/emp_burst_module.png",
       "tags": ["relic", "aux", "emp", "control"],
       "build": {
         "flowVelocityLevel": 1,

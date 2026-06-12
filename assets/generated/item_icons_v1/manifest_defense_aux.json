@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_defense_aux_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet_defense_aux.png",
+  "defaultPadding": 10,
+  "sprites": [
+    { "name": "phase_shield_projector", "cell": 0, "size": [112, 112], "componentMode": "largest" },
+    { "name": "plated_armor_module", "cell": 1, "size": [112, 112], "componentMode": "largest" },
+    { "name": "cloaking_device", "cell": 2, "size": [112, 112], "componentMode": "largest" },
+    { "name": "emp_burst_module", "cell": 3, "size": [112, 112], "componentMode": "largest" },
+    { "name": "bulwark_field_module", "cell": 4, "size": [112, 112], "componentMode": "largest" },
+    { "name": "scrap_grade_housing", "cell": 5, "size": [112, 112], "componentMode": "largest" },
+    { "name": "prototype_housing", "cell": 6, "size": [112, 112], "componentMode": "largest" },
+    { "name": "relic_housing", "cell": 7, "size": [112, 112], "componentMode": "largest" },
+    { "name": "module_variant_vented_crate", "cell": 8, "size": [112, 112], "componentMode": "largest" },
+    { "name": "module_variant_cylinder_rack", "cell": 9, "size": [112, 112], "componentMode": "largest" },
+    { "name": "module_variant_twin_sensor", "cell": 10, "size": [112, 112], "componentMode": "largest" },
+    { "name": "module_variant_empty_tray", "cell": 11, "size": [112, 112], "componentMode": "largest" },
+    { "name": "module_variant_long_case", "cell": 12, "size": [112, 112], "componentMode": "largest" },
+    { "name": "module_variant_round_fan", "cell": 13, "size": [112, 112], "componentMode": "largest" },
+    { "name": "module_variant_canister_pair", "cell": 14, "size": [112, 112], "componentMode": "largest" },
+    { "name": "module_variant_vented_housing", "cell": 15, "size": [112, 112], "componentMode": "largest" }
+  ]
+}

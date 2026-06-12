@@ -96,6 +96,7 @@ const GENERATED_ROOT = "assets/generated";
 const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
 const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
+const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
 let shouldAutoLaunchFreshPilotMission = false;
 const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "template",
@@ -718,7 +719,7 @@ function getSupportModuleEntries() {
     subtitle: weapon.unlockAt ? `Rank ${weapon.unlockAt}` : "Support",
     description: weapon.desc,
     notes: weapon.cost ? `Unlock cost: ${weapon.cost} credits.` : "Available to every pilot.",
-    icon: mobileAltIcons[weapon.id] || `${ASSET_ROOT}/Power-ups/powerupBlue.png`,
+    icon: mobileAltIcons[weapon.id] || getDefaultItemIcon("certified"),
     tags: ["support"],
     unlockAt: weapon.unlockAt ?? 0,
     cost: weapon.cost ?? 0,
@@ -1121,27 +1122,27 @@ let armoryPreviewItemId = null;
 let armoryStatsExpanded = false;
 
 const mobileAltIcons = {
-  emp: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
-  bulwark: "assets/SpaceShooterRedux/PNG/Power-ups/powerupYellow_shield.png",
-  cloak: "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
+  emp: `${GENERATED_ITEM_ICON_ROOT}/emp_burst_module.png`,
+  bulwark: `${GENERATED_ITEM_ICON_ROOT}/bulwark_field_module.png`,
+  cloak: `${GENERATED_ITEM_ICON_ROOT}/cloaking_device.png`,
 };
 
 const armoryFrameVisuals = {
   fundamentals: {
-    icon: `${ASSET_ROOT}/Parts/gun03.png`,
-    shipOverlay: `${ASSET_ROOT}/Parts/gun03.png`,
+    icon: `${GENERATED_ITEM_ICON_ROOT}/cadet_kinetic_cannon.png`,
+    shipOverlay: `${GENERATED_ITEM_ICON_ROOT}/cadet_kinetic_cannon.png`,
     accent: "#7dd3fc",
     hardpointName: "Cadet Driver",
   },
   area_control: {
-    icon: `${ASSET_ROOT}/Parts/gun08.png`,
-    shipOverlay: `${ASSET_ROOT}/Parts/gun08.png`,
+    icon: `${GENERATED_ITEM_ICON_ROOT}/plasma_scatter_array.png`,
+    shipOverlay: `${GENERATED_ITEM_ICON_ROOT}/plasma_scatter_array.png`,
     accent: "#f59e0b",
     hardpointName: "Plasma Scatter Array",
   },
   armor_break: {
-    icon: `${ASSET_ROOT}/Parts/gun10.png`,
-    shipOverlay: `${ASSET_ROOT}/Parts/gun10.png`,
+    icon: `${GENERATED_ITEM_ICON_ROOT}/breaker_rail.png`,
+    shipOverlay: `${GENERATED_ITEM_ICON_ROOT}/breaker_rail.png`,
     accent: "#facc15",
     hardpointName: "Breaker Rail",
   },
@@ -1149,17 +1150,17 @@ const armoryFrameVisuals = {
 
 const defenseVisuals = {
   shield: {
-    icon: `${ASSET_ROOT}/Power-ups/powerupBlue_shield.png`,
+    icon: `${GENERATED_ITEM_ICON_ROOT}/phase_shield_projector.png`,
     name: "Shield Module",
     note: "Absorbs pressure and recovers between hits.",
   },
   armor: {
-    icon: `${ASSET_ROOT}/Power-ups/shield_gold.png`,
+    icon: `${GENERATED_ITEM_ICON_ROOT}/plated_armor_module.png`,
     name: "Armor Module",
     note: "Trades speed for heavier kinetic protection.",
   },
   none: {
-    icon: `${ASSET_ROOT}/UI/buttonBlue.png`,
+    icon: `${GENERATED_ITEM_ICON_ROOT}/module_variant_empty_tray.png`,
     name: "Open Slot",
     note: "No module linked to this mount yet.",
   },
@@ -1174,7 +1175,7 @@ const defenseModules = [
     subtitle: "Barrier",
     description: "Standard shield projector. Gives the drone a forgiving buffer while learning patterns.",
     notes: "Reliable all-round defense. Best default pick if you want more margin for mistakes.",
-    icon: `${ASSET_ROOT}/Power-ups/powerupBlue_shield.png`,
+    icon: `${GENERATED_ITEM_ICON_ROOT}/phase_shield_projector.png`,
     tags: ["shield", "starter"],
     build: {
       shieldMaxLevel: 0,
@@ -1189,7 +1190,7 @@ const defenseModules = [
     subtitle: "Plating",
     description: "Dense armor slab for soaking kinetic hits and surviving heavier volleys.",
     notes: "Armor trades weapon tempo for resilience. Best when you expect heavy direct fire.",
-    icon: `${ASSET_ROOT}/Power-ups/shield_gold.png`,
+    icon: `${GENERATED_ITEM_ICON_ROOT}/plated_armor_module.png`,
     tags: ["armor", "starter"],
     build: {
       armorAmountLevel: 1,
@@ -1227,6 +1228,17 @@ function getRarityLabel(rarity) {
 function getRarityStyle(rarity) {
   const config = getRarityConfig(rarity);
   return `--rarity-color: ${config.color}; --rarity-glow: ${config.glow};`;
+}
+
+const defaultItemIconByRarity = {
+  scrap: `${GENERATED_ITEM_ICON_ROOT}/scrap_grade_housing.png`,
+  certified: `${GENERATED_ITEM_ICON_ROOT}/weapon_frame_chassis.png`,
+  prototype: `${GENERATED_ITEM_ICON_ROOT}/prototype_housing.png`,
+  preFounding: `${GENERATED_ITEM_ICON_ROOT}/relic_housing.png`,
+};
+
+function getDefaultItemIcon(rarity = "certified") {
+  return defaultItemIconByRarity[rarity] || defaultItemIconByRarity.certified;
 }
 
 function randomIntInclusive(min, max) {
@@ -1295,7 +1307,7 @@ function buildRuntimeItemPoolFromExistingGear() {
       subtitle: "Pilot system",
       description: item.desc,
       notes: "Recovered auxiliary system. Equips to the support link.",
-      icon: mobileAltIcons[item.id] || `${ASSET_ROOT}/Power-ups/powerupBlue.png`,
+      icon: mobileAltIcons[item.id] || getDefaultItemIcon("certified"),
       tags: ["aux", item.id],
       build: {},
     };
@@ -1492,7 +1504,7 @@ function createRolledItem(baseId, baseEntry, rarity) {
     subtitle: baseEntry.subtitle || "",
     description: baseEntry.description || "",
     notes: baseEntry.notes || "",
-    icon: baseEntry.icon || `${ASSET_ROOT}/Power-ups/powerupBlue.png`,
+    icon: baseEntry.icon || getDefaultItemIcon(rarity),
     tags,
     build,
     rarity,
@@ -4011,7 +4023,7 @@ function renderDebriefSummary(summary) {
             return `
               <div class="salvage-item rarity-${rarity}" style="${getRarityStyle(rarity)}; --reveal-index: ${index}">
                 <div class="salvage-item-icon">
-                  <img src="${escapeHtml(item.icon || `${ASSET_ROOT}/Power-ups/powerupBlue.png`)}" alt="" />
+                  <img src="${escapeHtml(item.icon || getDefaultItemIcon(rarity))}" alt="" />
                 </div>
                 <div>
                   <div class="salvage-item-kicker">${escapeHtml(sourceLabel)} identified</div>
@@ -5143,7 +5155,7 @@ function formatFrameDefenseSummary(build) {
 function getArmoryFrameVisual(item) {
   return (
     armoryFrameVisuals[item?.id] || {
-      icon: item?.icon || `${ASSET_ROOT}/Parts/gun04.png`,
+      icon: item?.icon || getDefaultItemIcon(item?.rarity),
       hardpointName: item?.name || "Module",
     }
   );
@@ -5190,7 +5202,7 @@ function getArmorySlotDefinitions() {
       name: equippedWeapon ? getArmoryFrameVisual(equippedWeapon).hardpointName : "Open Hardpoint",
       meta: equippedWeapon?.name || "No weapon linked",
       note: "Weapon modules change the projectile profile and hidden fire tuning.",
-      icon: equippedWeapon ? getArmoryFrameVisual(equippedWeapon).icon : `${ASSET_ROOT}/UI/buttonBlue.png`,
+      icon: equippedWeapon ? getArmoryFrameVisual(equippedWeapon).icon : getDefaultItemIcon("certified"),
     },
     {
       id: "defense-0",
@@ -5676,7 +5688,7 @@ function renderLedgerStock(ledger) {
     entry.setAttribute("style", getRarityStyle(rarity));
     entry.innerHTML = `
       <div class="ledger-item-icon">
-        <img src="${escapeHtml(item.icon || `${ASSET_ROOT}/Power-ups/powerupBlue.png`)}" alt="" />
+        <img src="${escapeHtml(item.icon || getDefaultItemIcon(rarity))}" alt="" />
       </div>
       <div class="ledger-item-main">
         <div class="ledger-item-kicker">${escapeHtml(lot.id)}${lot.clericalAdjustment ? ` - ${LEDGER_COPY.clericalAdjustment}` : ""}</div>
@@ -5713,7 +5725,7 @@ function renderLedgerInventory(ledger) {
     entry.setAttribute("style", getRarityStyle(rarity));
     entry.innerHTML = `
       <div class="ledger-item-icon">
-        <img src="${escapeHtml(item.icon || `${ASSET_ROOT}/Power-ups/powerupBlue.png`)}" alt="" />
+        <img src="${escapeHtml(item.icon || getDefaultItemIcon(rarity))}" alt="" />
       </div>
       <div class="ledger-item-main">
         <div class="ledger-item-kicker">${escapeHtml(getRarityLabel(rarity))}${installed ? " | Installed" : ""}</div>

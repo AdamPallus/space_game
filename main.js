@@ -62,7 +62,8 @@ const treeAuxSelect = document.getElementById("tree-aux-select");
 const treeAuxUpgrades = document.getElementById("tree-aux-upgrades");
 const treeShipUpgrades = document.getElementById("tree-ship-upgrades");
 const hangarTabButtons = document.querySelectorAll(".tab-btn");
-const hangarTabPanels = document.querySelectorAll(".tab-panel");
+const hangarSceneButtons = document.querySelectorAll("[data-scene-target]");
+const hangarTabPanels = document.querySelectorAll("[data-tab-panel]");
 const consumableStore = document.getElementById("consumable-store");
 const consumableEquipList = document.getElementById("consumable-equip-list");
 const consumableSlot1 = document.getElementById("consumable-slot-1");
@@ -78,6 +79,8 @@ const ledgerBulletin = document.getElementById("ledger-bulletin");
 const ledgerStockList = document.getElementById("ledger-stock-list");
 const ledgerInventoryList = document.getElementById("ledger-inventory-list");
 const ledgerReceipt = document.getElementById("ledger-receipt");
+const ledgerModeButtons = document.querySelectorAll("[data-ledger-mode]");
+const ledgerModePanels = document.querySelectorAll("[data-ledger-panel]");
 
 // Investment UI elements
 const engineeringTier = document.getElementById("engineering-tier");
@@ -104,6 +107,7 @@ const debriefKills = document.getElementById("debrief-kills");
 const debriefCredits = document.getElementById("debrief-credits");
 const debriefLedger = document.getElementById("debrief-ledger");
 const debriefSalvage = document.getElementById("debrief-salvage");
+const debriefStamp = document.getElementById("debrief-stamp");
 const mobileAltBtn = document.getElementById("mobile-alt");
 const mobileAltIcon = document.getElementById("mobile-alt-icon");
 const mobileAltLabel = document.getElementById("mobile-alt-label");
@@ -1813,6 +1817,7 @@ function buyLedgerLot(lotId) {
       { label: "Credits paid", amount: -lot.price, total: true, fee: true },
     ],
   });
+  activeLedgerMode = "claims";
   saveState();
   safeUpdateHangar();
 }
@@ -1842,6 +1847,7 @@ function sellInventoryItem(itemId) {
     title: "Sale Receipt",
     lines,
   });
+  activeLedgerMode = "claims";
   saveState();
   safeUpdateHangar();
 }
@@ -2203,7 +2209,8 @@ let currentLevel = null;
 let levelLoadPromise = null;
 let selectedLevelId = devSkipOnboarding && devRequestedLevelId ? devRequestedLevelId : "level1";
 let lastLoadedLevelId = null;
-let activeHangarTab = devSkipOnboarding ? "mission" : "loadout";
+let activeHangarTab = devSkipOnboarding ? "mission" : "hub";
+let activeLedgerMode = "market";
 let hangarNeedsRefresh = false;
 let openShipNodeId = null;
 let openMissionInfoBaseId = null;
@@ -2563,7 +2570,7 @@ function cancelMissionLaunch(level, errors = []) {
   hangarPanel.hidden = false;
   debriefPanel.hidden = true;
   setHangarStatusMessage(buildMissionCanceledMessage(level));
-  setHangarTab("mission", { renderLevels: activeHangarTab === "mission" });
+  setHangarTab("mission", { renderLevels: true });
   updateMobileControls();
   setHangarMusic();
   safeUpdateHangar();
@@ -2618,6 +2625,16 @@ canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 window.addEventListener("keydown", (event) => {
   enableAudio();
   keyState.add(event.key.toLowerCase());
+  if (event.key === "Escape" && (!mission || !mission.active) && overlay && !overlay.hidden) {
+    if (debriefPanel && !debriefPanel.hidden) {
+      if (returnBtn) returnBtn.click();
+      return;
+    }
+    if (hangarPanel && !hangarPanel.hidden && activeHangarTab !== "hub") {
+      setHangarTab("hub");
+      return;
+    }
+  }
   if (event.key.toLowerCase() === "p" && mission && mission.active && !missionIntroActive) {
     paused = !paused;
   }
@@ -2729,9 +2746,11 @@ bindMobileButton(mobileLaunchBtn, () => {
 }, () => {});
 
 updateMobileControls();
+bindSharedUiFeedback();
 
 function getTabAvailability() {
   return {
+    hub: true,
     mission: true,
     loadout: isSystemUnlocked("loadout"),
     economy: isSystemUnlocked("economy"),
@@ -2755,19 +2774,33 @@ function refreshHangarTabLocks() {
     button.classList.toggle("locked", !unlocked);
     button.title = unlocked ? "" : getTabLockReason(tab);
   });
+  hangarSceneButtons.forEach((button) => {
+    const scene = button.dataset.sceneTarget;
+    if (!scene || scene === "hub") return;
+    const unlocked = availability[scene] ?? true;
+    button.disabled = !unlocked;
+    button.classList.toggle("locked", !unlocked);
+    button.title = unlocked ? "" : getTabLockReason(scene);
+  });
 }
 
 function setHangarTab(tabId, { renderLevels = true } = {}) {
   const availability = getTabAvailability();
   if (!(availability[tabId] ?? true)) {
-    tabId = "mission";
+    tabId = "hub";
   }
   activeHangarTab = tabId;
+  if (hangarPanel) hangarPanel.dataset.activeScene = tabId;
   refreshHangarTabLocks();
   hangarTabButtons.forEach((button) => {
     const isActive = button.dataset.tab === tabId;
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+  hangarSceneButtons.forEach((button) => {
+    const isActive = button.dataset.sceneTarget === tabId;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-current", isActive ? "true" : "false");
   });
   hangarTabPanels.forEach((panel) => {
     panel.hidden = panel.dataset.tabPanel !== tabId;
@@ -2787,7 +2820,32 @@ hangarTabButtons.forEach((button) => {
   });
 });
 
+hangarSceneButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    if (button.disabled) return;
+    setHangarTab(button.dataset.sceneTarget);
+  });
+});
+
+function setLedgerMode(mode) {
+  activeLedgerMode = ["market", "investments", "claims"].includes(mode) ? mode : "market";
+  ledgerModeButtons.forEach((button) => {
+    const active = button.dataset.ledgerMode === activeLedgerMode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+  ledgerModePanels.forEach((panel) => {
+    panel.hidden = panel.dataset.ledgerPanel !== activeLedgerMode;
+    panel.classList.toggle("active", panel.dataset.ledgerPanel === activeLedgerMode);
+  });
+}
+
+ledgerModeButtons.forEach((button) => {
+  button.addEventListener("click", () => setLedgerMode(button.dataset.ledgerMode));
+});
+
 setHangarTab(activeHangarTab, { renderLevels: false });
+setLedgerMode(activeLedgerMode);
 
 if (compendiumSearch) {
   compendiumSearch.addEventListener("input", () => {
@@ -2849,11 +2907,40 @@ if (returnBtn) {
     debriefPanel.hidden = true;
     hangarPanel.hidden = false;
     overlay.hidden = false;
-    setHangarTab("loadout");
+    setHangarTab("hub");
     updateMobileControls();
     if (hangarNeedsRefresh) {
       hangarNeedsRefresh = false;
       safeUpdateHangar();
+    }
+  });
+}
+
+if (debriefSalvage) {
+  debriefSalvage.addEventListener("click", (event) => {
+    const sellButton = event.target.closest("[data-debrief-sell]");
+    const keepButton = event.target.closest("[data-debrief-keep]");
+    if (sellButton) {
+      const itemId = sellButton.dataset.debriefSell;
+      if (!findInventoryItem(itemId)) {
+        sellButton.textContent = "Sold";
+        sellButton.disabled = true;
+        return;
+      }
+      sellInventoryItem(itemId);
+      sellButton.textContent = "Sold";
+      sellButton.disabled = true;
+      const itemPanel = sellButton.closest(".salvage-item");
+      itemPanel?.classList.add("is-sold");
+      itemPanel?.querySelectorAll("[data-debrief-keep]").forEach((button) => {
+        button.textContent = "Ledgered";
+        button.disabled = true;
+      });
+      return;
+    }
+    if (keepButton) {
+      keepButton.textContent = "Kept";
+      keepButton.disabled = true;
     }
   });
 }
@@ -3562,7 +3649,7 @@ function endMission({ ejected = false, completed = false } = {}) {
   hideMissionIntro();
   paused = false;
   setHangarMusic();
-  setHangarTab("loadout", { renderLevels: false });
+  setHangarTab("hub", { renderLevels: false });
 
   const grossBounty = creditRewardFor(mission);
   const recoveryRate = completed
@@ -3672,9 +3759,10 @@ function endMission({ ejected = false, completed = false } = {}) {
     consecutiveEarlyRecalls: ledgerMissionSummary.consecutiveEarlyRecalls,
     onboardingMessage,
   });
+  playUiSfx("stamp");
   debriefTime.textContent = formatTime(mission.elapsed);
   debriefKills.textContent = mission.kills.toString();
-  debriefCredits.textContent = finalReward.toString();
+  setCountedNumber(debriefCredits, finalReward, { duration: 620 });
 
   overlay.hidden = false;
   debriefPanel.hidden = false;
@@ -3707,6 +3795,18 @@ function renderDebriefSummary(summary) {
     ? `${outcomeCopy} ${summary.onboardingMessage}`
     : outcomeCopy;
   if (debriefText) debriefText.textContent = message;
+  if (debriefPanel) {
+    debriefPanel.classList.remove("outcome-boss", "outcome-rtb", "outcome-death");
+    debriefPanel.classList.add(`outcome-${summary.outcome}`);
+  }
+  if (debriefStamp) {
+    debriefStamp.textContent =
+      summary.outcome === "death"
+        ? "CLAIM ADJUSTED"
+        : summary.outcome === "rtb"
+          ? "RTB SETTLED"
+          : "SETTLED";
+  }
 
   if (debriefLedger) {
     const rows = [
@@ -3740,8 +3840,8 @@ function renderDebriefSummary(summary) {
       <div class="ledger-lines">
         ${rows
           .map(
-            (row) => `
-          <div class="ledger-line${row.fee ? " fee" : ""}${row.total ? " total" : ""}${row.memo ? " memo" : ""}">
+            (row, index) => `
+          <div class="ledger-line${row.fee ? " fee" : ""}${row.total ? " total" : ""}${row.memo ? " memo" : ""}" style="--line-index: ${index}">
             <span>${escapeHtml(row.label)}${row.note ? ` <em>${escapeHtml(row.note)}</em>` : ""}</span>
             <strong>${row.text ? escapeHtml(row.text) : `${row.amount < 0 ? "-" : ""}${formatCredits(Math.abs(row.amount))}`}</strong>
           </div>
@@ -3775,7 +3875,7 @@ function renderDebriefSummary(summary) {
                 ? LEDGER_COPY.bossPod
                 : `Cargo pod ${index + 1}`;
             return `
-              <div class="salvage-item rarity-${rarity}" style="${getRarityStyle(rarity)}">
+              <div class="salvage-item rarity-${rarity}" style="${getRarityStyle(rarity)}; --reveal-index: ${index}">
                 <div class="salvage-item-icon">
                   <img src="${escapeHtml(item.icon || `${ASSET_ROOT}/Power-ups/powerupBlue.png`)}" alt="" />
                 </div>
@@ -3783,6 +3883,10 @@ function renderDebriefSummary(summary) {
                   <div class="salvage-item-kicker">${escapeHtml(sourceLabel)} identified</div>
                   <div class="salvage-item-name">${escapeHtml(item.name)}</div>
                   <div class="salvage-item-meta">${escapeHtml(getRarityLabel(rarity))} | ${formatCredits(item.value || 0)} | ${escapeHtml(affixes)}</div>
+                  <div class="salvage-actions">
+                    <button type="button" class="ghost small" data-debrief-keep="${escapeHtml(item.id)}">Keep</button>
+                    <button type="button" class="small" data-debrief-sell="${escapeHtml(item.id)}">Sell</button>
+                  </div>
                 </div>
               </div>
             `;
@@ -3834,10 +3938,10 @@ function updateHangar() {
     pilotRank.textContent = getPilotRank(state.lifetimeCredits);
   }
   if (availableCreditsEl) {
-    availableCreditsEl.textContent = state.credits.toString();
+    setCountedNumber(availableCreditsEl, state.credits);
   }
   if (lifetimeCreditsEl) {
-    lifetimeCreditsEl.textContent = state.lifetimeCredits.toString();
+    setCountedNumber(lifetimeCreditsEl, state.lifetimeCredits);
   }
   if (lastMissionEl) {
     lastMissionEl.textContent = state.lastMissionSummary;
@@ -3897,6 +4001,7 @@ function updateHangar() {
   renderConsumableStore();
   renderLedgerMarket();
   renderInvestments();
+  setLedgerMode(activeLedgerMode);
   if (activeHangarTab === "mission") {
     renderLevelSelect();
   }
@@ -3908,7 +4013,7 @@ function updateHangar() {
   }
   refreshHangarTabLocks();
   if (!getTabAvailability()[activeHangarTab]) {
-    setHangarTab("mission", { renderLevels: activeHangarTab === "mission" });
+    setHangarTab("hub", { renderLevels: activeHangarTab === "mission" });
     return;
   }
   updateMobileControls();
@@ -3962,7 +4067,7 @@ function renderInvestments() {
   normalizeSelectedInvestmentNode(branchKeys);
 
   if (economyTreeCredits) {
-    economyTreeCredits.textContent = state.credits.toString();
+    setCountedNumber(economyTreeCredits, state.credits);
   }
   if (economyTreeProgress) {
     economyTreeProgress.textContent = `${totalPurchased}/${totalTiers}`;
@@ -7999,12 +8104,68 @@ function playSfx(name, volume = 0.4) {
   instance.play().catch(() => {});
 }
 
+function playUiSfx(kind = "click") {
+  const map = {
+    hover: ["hit", 0.025],
+    click: ["cloak", 0.045],
+    stamp: ["hullHit", 0.075],
+    error: ["hit", 0.075],
+    credit: ["laserSmall", 0.035],
+  };
+  const [name, volume] = map[kind] || map.click;
+  playSfx(name, volume);
+}
+
+function setCountedNumber(element, nextValue, { duration = 520 } = {}) {
+  if (!element || !Number.isFinite(nextValue)) return;
+  const next = Math.round(nextValue);
+  const current = Number(element.dataset.countValue ?? element.textContent);
+  if (!Number.isFinite(current) || current === next || duration <= 0) {
+    element.textContent = next.toString();
+    element.dataset.countValue = next.toString();
+    return;
+  }
+  const start = performance.now();
+  const from = current;
+  element.dataset.countValue = next.toString();
+  const animate = (now) => {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    element.textContent = Math.round(from + (next - from) * eased).toString();
+    if (t < 1 && element.dataset.countValue === next.toString()) {
+      requestAnimationFrame(animate);
+    } else {
+      element.textContent = next.toString();
+    }
+  };
+  requestAnimationFrame(animate);
+}
+
+function bindSharedUiFeedback() {
+  if (!overlay) return;
+  overlay.addEventListener("pointerover", (event) => {
+    const target = event.target.closest("button, .scene-hotspot, .investment-tree-node");
+    if (!target || target.disabled || target.dataset.hoverSoundBound === "true") return;
+    target.dataset.hoverSoundBound = "true";
+    playUiSfx("hover");
+    window.setTimeout(() => {
+      if (target) target.dataset.hoverSoundBound = "false";
+    }, 140);
+  });
+  overlay.addEventListener("click", (event) => {
+    const target = event.target.closest("button, .scene-hotspot, .investment-tree-node");
+    if (!target) return;
+    enableAudio();
+    playUiSfx(target.disabled ? "error" : "click");
+  });
+}
+
 function updateMobileControls() {
   if (!mobileControls) return;
   const inMission = mission && mission.active;
   const inHangar = !inMission && overlay && !overlay.hidden && hangarPanel && !hangarPanel.hidden;
   const inMissionTab = activeHangarTab === "mission";
-  mobileControls.hidden = !(inMission || inHangar);
+  mobileControls.hidden = !(inMission || (inHangar && inMissionTab));
 
   const hasAlt = state.rmbWeapon !== "none";
   if (mobileLaunchBtn) {

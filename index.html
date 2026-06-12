@@ -47,67 +47,89 @@
 
       <div id="overlay">
         <div class="panel" id="hangar">
-          <h1>Mothership Hangar</h1>
-          <p>
-            The mothership carries millions of mini fighters, but elite pilots earn the right to fly
-            advanced tech. Survive longer to earn credits and refit your ship.
-          </p>
-          <div id="hangar-status" class="hangar-status" hidden></div>
-          <div class="stats-grid">
-            <div>
-              <div class="label">Pilot Rank</div>
-              <div id="pilot-rank">Rookie</div>
+          <div class="hangar-stage" id="hangar-stage">
+            <div class="hangar-hud-strip">
+              <div>
+                <p class="armory-kicker">Mothership Hangar</p>
+                <h1>Mini Fighter Program</h1>
+              </div>
+              <div class="hangar-metrics">
+                <div>
+                  <span class="label">Pilot Rank</span>
+                  <strong id="pilot-rank">Rookie</strong>
+                </div>
+                <div>
+                  <span class="label">Available Credits</span>
+                  <strong id="available-credits">0</strong>
+                </div>
+                <div>
+                  <span class="label">Lifetime Credits</span>
+                  <strong id="lifetime-credits">0</strong>
+                </div>
+                <div>
+                  <span class="label">Last Mission</span>
+                  <strong id="last-mission">N/A</strong>
+                </div>
+              </div>
+              <div class="debug-station">
+                <div class="label">Debug</div>
+                <label class="toggle">
+                  <input type="checkbox" id="debug-unlock" />
+                  <span>Unlock All Levels</span>
+                </label>
+                <label class="toggle">
+                  <input type="checkbox" id="debug-invincible" />
+                  <span>Invincible</span>
+                </label>
+                <label class="toggle">
+                  <input type="checkbox" id="debug-show-compendium" />
+                  <span>Show Full Compendium</span>
+                </label>
+                <label class="toggle">
+                  <input type="checkbox" id="debug-skip-onboarding" />
+                  <span>Skip Onboarding</span>
+                </label>
+                <button id="reset-btn" class="ghost small">Reset Progress</button>
+              </div>
             </div>
-            <div>
-              <div class="label">Available Credits</div>
-              <div id="available-credits">0</div>
-            </div>
-            <div>
-              <div class="label">Lifetime Credits</div>
-              <div id="lifetime-credits">0</div>
-            </div>
-            <div>
-              <div class="label">Last Mission</div>
-              <div id="last-mission">N/A</div>
-            </div>
-            <div>
-              <div class="label">Debug</div>
-              <label class="toggle">
-                <input type="checkbox" id="debug-unlock" />
-                <span>Unlock All Levels</span>
-              </label>
-              <label class="toggle">
-                <input type="checkbox" id="debug-invincible" />
-                <span>Invincible</span>
-              </label>
-              <label class="toggle">
-                <input type="checkbox" id="debug-show-compendium" />
-                <span>Show Full Compendium</span>
-              </label>
-              <label class="toggle">
-                <input type="checkbox" id="debug-skip-onboarding" />
-                <span>Skip Onboarding</span>
-              </label>
-              <button id="reset-btn" class="ghost small">Reset Progress</button>
-            </div>
-          </div>
-          <div id="onboarding-banner" class="onboarding-banner" hidden></div>
-          <div class="tab-bar" role="tablist" aria-label="Hangar tabs">
-            <button class="tab-btn active" data-tab="loadout" role="tab" aria-selected="true">
-              Ship Loadout
-            </button>
-            <button class="tab-btn" data-tab="economy" role="tab" aria-selected="false">
-              Economy
-            </button>
-            <button class="tab-btn" data-tab="mission" role="tab" aria-selected="false">
-              Mission Select
-            </button>
-            <button class="tab-btn" data-tab="compendium" role="tab" aria-selected="false">
-              Drone Compendium
-            </button>
-          </div>
+            <div id="hangar-status" class="hangar-status" hidden></div>
+            <div id="onboarding-banner" class="onboarding-banner" hidden></div>
 
-          <div class="tab-panel" id="tab-loadout" data-tab-panel="loadout">
+            <div class="tab-panel hangar-scene hub-scene" id="scene-hub" data-tab-panel="hub">
+              <div class="hub-copy">
+                <p class="armory-kicker">Cradle 07</p>
+                <h2>Choose A Station</h2>
+                <p>Move through the mothership from the hangar floor. Each station keeps its own equipment, records, and launch path.</p>
+              </div>
+              <div class="hub-drone">
+                <img src="assets/SpaceShooterRedux/PNG/playerShip2_blue.png" alt="" />
+              </div>
+              <button class="scene-hotspot hotspot-armory" type="button" data-scene-target="loadout">
+                <span>Armory Bench</span>
+                <strong>Refit</strong>
+              </button>
+              <button class="scene-hotspot hotspot-ledger" type="button" data-scene-target="economy">
+                <span>Ledger Terminal</span>
+                <strong>Market</strong>
+              </button>
+              <button class="scene-hotspot hotspot-mission" type="button" data-scene-target="mission">
+                <span>Mission Board</span>
+                <strong>Launch</strong>
+              </button>
+              <button class="scene-hotspot hotspot-archive" type="button" data-scene-target="compendium">
+                <span>Intel Archive</span>
+                <strong>Drone Records</strong>
+              </button>
+            </div>
+
+          <div class="tab-panel hangar-scene station-scene armory-scene" id="tab-loadout" data-tab-panel="loadout" hidden>
+            <div class="scene-head">
+              <button class="scene-back ghost small" type="button" data-scene-target="hub">Back To Hangar</button>
+              <div>
+                <p class="armory-kicker">Armory Bench</p>
+                <h2>Drone Workbench</h2>
+              </div>
+            </div>
             <div class="loadout armory-loadout">
               <div class="armory-shell">
                 <div class="armory-stage-copy">
@@ -168,79 +190,117 @@
             </div>
           </div>
 
-          <div class="tab-panel" id="tab-economy" data-tab-panel="economy" hidden>
-            <div class="loadout ledger-market-section">
-              <div class="ledger-market-head">
-                <div>
-                  <p class="armory-kicker">Ledger Exchange</p>
-                  <h2>Market Lots & Salvage Sales</h2>
-                  <p class="investments-desc">
-                    Buy rotating lots, sell recovered inventory, and watch for quiet pricing errors.
-                  </p>
-                </div>
-                <div class="ledger-bulletin" id="ledger-bulletin"></div>
-              </div>
-              <div class="ledger-market-grid">
-                <section class="ledger-market-pane">
-                  <div class="ledger-pane-head">
-                    <h3>Available Lots</h3>
-                    <span class="ledger-pane-note">Rerolls after every mission</span>
-                  </div>
-                  <div class="ledger-market-list" id="ledger-stock-list"></div>
-                </section>
-                <section class="ledger-market-pane">
-                  <div class="ledger-pane-head">
-                    <h3>Inventory Claims</h3>
-                    <span class="ledger-pane-note">Standard sell rate: 40%</span>
-                  </div>
-                  <div class="ledger-market-list" id="ledger-inventory-list"></div>
-                </section>
-              </div>
-              <div class="ledger-receipt" id="ledger-receipt"></div>
-            </div>
-            <div class="loadout investments-section">
-              <h2>Fleet Investments</h2>
-              <p class="investments-desc">
-                Invest in mothership infrastructure for long-term benefits. Returns compound over time.
-              </p>
-              <div class="economy-tree-shell">
-                <div class="economy-tree-hud">
-                  <div>
-                    <span class="economy-hud-label">Available Credits</span>
-                    <strong id="economy-tree-credits">0</strong>
-                  </div>
-                  <div>
-                    <span class="economy-hud-label">Network Progress</span>
-                    <strong id="economy-tree-progress">0/15</strong>
-                  </div>
-                </div>
-                <div class="economy-tree-layout">
-                  <div class="economy-tree-map" id="investment-tree-map" aria-label="Fleet investment upgrade tree">
-                    <svg
-                      class="economy-tree-lines"
-                      id="investment-tree-lines"
-                      viewBox="0 0 100 100"
-                      preserveAspectRatio="none"
-                      aria-hidden="true"
-                    ></svg>
-                  </div>
-                  <aside
-                    class="economy-tree-inspector"
-                    id="investment-tree-inspector"
-                    aria-live="polite"
-                  ></aside>
-                </div>
+          <div class="tab-panel hangar-scene station-scene ledger-scene" id="tab-economy" data-tab-panel="economy" hidden>
+            <div class="scene-head">
+              <button class="scene-back ghost small" type="button" data-scene-target="hub">Back To Hangar</button>
+              <div>
+                <p class="armory-kicker">Ledger Terminal</p>
+                <h2>Exchange Kiosk</h2>
               </div>
             </div>
-            <div class="loadout">
-              <h2>Hangar Store</h2>
-              <p class="investments-desc">Purchase consumables for your next mission.</p>
-              <div class="upgrade-list" id="consumable-store"></div>
+            <div class="ledger-terminal">
+              <div class="ledger-bezel">
+                <button class="ledger-mode-button active" type="button" data-ledger-mode="market">Market</button>
+                <button class="ledger-mode-button" type="button" data-ledger-mode="investments">Investments</button>
+                <button class="ledger-mode-button" type="button" data-ledger-mode="claims">Claims</button>
+              </div>
+              <div class="ledger-screen">
+                <div class="ledger-screen-header">
+                  <div>
+                    <span>LEDGER TERMINAL</span>
+                    <strong>MK-IV CLAIMS INTERFACE</strong>
+                  </div>
+                  <div class="ledger-bulletin" id="ledger-bulletin"></div>
+                </div>
+                <section class="ledger-mode-panel active" data-ledger-panel="market">
+                  <div class="loadout ledger-market-section">
+                    <div class="ledger-market-head">
+                      <div>
+                        <p class="armory-kicker">Ledger Exchange</p>
+                        <h2>Market Lots & Salvage Sales</h2>
+                        <p class="investments-desc">
+                          Buy rotating lots, sell recovered inventory, and watch for quiet pricing errors.
+                        </p>
+                      </div>
+                    </div>
+                    <div class="ledger-market-grid">
+                      <section class="ledger-market-pane">
+                        <div class="ledger-pane-head">
+                          <h3>Available Lots</h3>
+                          <span class="ledger-pane-note">Rerolls after every mission</span>
+                        </div>
+                        <div class="ledger-market-list" id="ledger-stock-list"></div>
+                      </section>
+                      <section class="ledger-market-pane">
+                        <div class="ledger-pane-head">
+                          <h3>Inventory Claims</h3>
+                          <span class="ledger-pane-note">Standard sell rate: 40%</span>
+                        </div>
+                        <div class="ledger-market-list" id="ledger-inventory-list"></div>
+                      </section>
+                    </div>
+                  </div>
+                </section>
+                <section class="ledger-mode-panel" data-ledger-panel="investments" hidden>
+                  <div class="loadout investments-section">
+                    <h2>Fleet Investments</h2>
+                    <p class="investments-desc">
+                      Invest in mothership infrastructure for long-term benefits. Returns compound over time.
+                    </p>
+                    <div class="economy-tree-shell">
+                      <div class="economy-tree-hud">
+                        <div>
+                          <span class="economy-hud-label">Available Credits</span>
+                          <strong id="economy-tree-credits">0</strong>
+                        </div>
+                        <div>
+                          <span class="economy-hud-label">Network Progress</span>
+                          <strong id="economy-tree-progress">0/15</strong>
+                        </div>
+                      </div>
+                      <div class="economy-tree-layout">
+                        <div class="economy-tree-map" id="investment-tree-map" aria-label="Fleet investment upgrade tree">
+                          <svg
+                            class="economy-tree-lines"
+                            id="investment-tree-lines"
+                            viewBox="0 0 100 100"
+                            preserveAspectRatio="none"
+                            aria-hidden="true"
+                          ></svg>
+                        </div>
+                        <aside
+                          class="economy-tree-inspector"
+                          id="investment-tree-inspector"
+                          aria-live="polite"
+                        ></aside>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="loadout">
+                    <h2>Hangar Store</h2>
+                    <p class="investments-desc">Purchase consumables for your next mission.</p>
+                    <div class="upgrade-list" id="consumable-store"></div>
+                  </div>
+                </section>
+                <section class="ledger-mode-panel" data-ledger-panel="claims" hidden>
+                  <div class="loadout claims-section">
+                    <p class="armory-kicker">Claims Printer</p>
+                    <h2>Last Posted Receipt</h2>
+                    <div class="ledger-receipt" id="ledger-receipt"></div>
+                  </div>
+                </section>
+              </div>
             </div>
           </div>
 
-          <div class="tab-panel" id="tab-mission" data-tab-panel="mission" hidden>
-            <h2>Mission Briefing</h2>
+          <div class="tab-panel hangar-scene station-scene mission-board-scene" id="tab-mission" data-tab-panel="mission" hidden>
+            <div class="scene-head">
+              <button class="scene-back ghost small" type="button" data-scene-target="hub">Back To Hangar</button>
+              <div>
+                <p class="armory-kicker">Mission Board</p>
+                <h2>Contracts Wall</h2>
+              </div>
+            </div>
             <p id="mission-briefing-text">Select a mission profile. Each sortie increases in difficulty.</p>
             <div class="mission-grid" id="level-list"></div>
             <div class="actions">
@@ -248,8 +308,14 @@
             </div>
           </div>
 
-          <div class="tab-panel" id="tab-compendium" data-tab-panel="compendium" hidden>
-            <h2>Enemy Drone Compendium</h2>
+          <div class="tab-panel hangar-scene station-scene archive-scene" id="tab-compendium" data-tab-panel="compendium" hidden>
+            <div class="scene-head">
+              <button class="scene-back ghost small" type="button" data-scene-target="hub">Back To Hangar</button>
+              <div>
+                <p class="armory-kicker">Intel Archive</p>
+                <h2>Enemy Drone Compendium</h2>
+              </div>
+            </div>
             <p class="investments-desc">
               Field intel on hostile drones. (In the full game, entries unlock as you encounter them.)
             </p>
@@ -262,10 +328,17 @@
             </div>
             <div class="compendium-grid" id="compendium-list"></div>
           </div>
+          </div>
         </div>
 
-        <div class="panel" id="debrief" hidden>
-          <h1>Mission Debrief</h1>
+        <div class="panel claims-report-scene" id="debrief" hidden>
+          <div class="scene-head">
+            <div>
+              <p class="armory-kicker">Claims Report</p>
+              <h1>Mission Debrief</h1>
+            </div>
+            <div class="debrief-stamp" id="debrief-stamp">SETTLED</div>
+          </div>
           <p id="debrief-text">Your ship was destroyed. Escape pod recovered.</p>
           <div class="stats-grid">
             <div>

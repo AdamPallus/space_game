@@ -195,6 +195,15 @@ cluster, slug = massive single bore, seeker = finned pods, rail = long thin).
 
 ---
 
+## Phase 4c — Item communication (Diablo-style tooltips & stats)
+
+Full spec in [ITEM_UX_SPEC.md](ITEM_UX_SPEC.md). Summary: one
+`getItemDisplayStats` source of truth; shared hover tooltip (armory, market,
+debrief) with headline-stat comparison deltas vs equipped; player-language
+stat lines (no formulas — math moves behind a DEV "Show math" toggle);
+rarity border/glow/name-color restored on every item surface. Can run
+before, after, or parallel to Phase 4b.
+
 ## Phase 5 — Ownership & family tier (design locked, do NOT build before Adam green-lights)
 
 Design lives in ECONOMY_DESIGN.md §6–7. Summary: leased-vs-owned hulls (25%

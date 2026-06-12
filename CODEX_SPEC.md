@@ -115,6 +115,14 @@ works inside the new shell. Mobile touch paths still work.
 verifiably apply in combat; relic lore line displays once and is recorded in
 a collection list.
 
+## Phase 5 — Ownership & family tier (design locked, do NOT build before Adam green-lights)
+
+Design lives in ECONOMY_DESIGN.md §6–7. Summary: leased-vs-owned hulls (25%
+writedown becomes the lessor's claim; owned hull = flat refit cost + mod
+bay), and family tier as a signed upgrade with per-mission remittance +
+gray-market perks. No implementation work in Phases 1–4 beyond keeping the
+death-penalty code path renameable/configurable.
+
 ---
 
 ## Cross-cutting constraints

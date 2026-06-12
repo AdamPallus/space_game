@@ -176,17 +176,63 @@ Keep the existing three tracks and costs (200–6000¢). Reframe effects to fit:
   Ledger's leash: the moment passive income exceeds mission income, why fly?
   Late-story beat, not a mechanic, for now.
 
-## 6. Family tier (narrative layer, v1-light)
+## 6. Hull ownership (design locked; build after Phase 4)
 
-Lifetime credits move the family up survival tiers (thresholds: 1k / 5k / 15k /
-40k). v1 is purely a status panel in the hangar with flavor text per tier and a
-one-line Ledger notice when a tier changes — including the conditional-clause
-fine print from the story premise. No mechanical effect yet. (Hooks exist for
-later: tier-slip pressure, family requests.)
+Per STORY-PREMISE.md, pilots start as labor flying other people's capital
+("deploy a drone, often leased/owned by others early on"). Ownership is its
+own axis — it answers *who carries the risk*, not what you carry (gear) or
+what services you buy (investments).
+
+- **Leased hull (start).** The existing death penalty *is* the lease: the 25%
+  bounty writedown is itemized as the lessor's claim. Leasing punishes
+  success — 25% of a bigger bounty is a bigger number — which is deliberate.
+- **First owned hull:** ~3,500¢ + 5% Ledger title-registration fee (itemized,
+  naturally). Two effects:
+  1. Death costs a **flat refit (~150¢, scales with hull class)** instead of
+     the 25% writedown. Variable downside traded for fixed downside.
+  2. **Mod bay** — owned hulls accept modifications (lessors forbid them):
+     fit a module granting +1 defense slot OR +1 cargo slot. Ownership is the
+     gateway to build depth.
+- **Later:** multiple owned hulls with distinct slot layouts, swapped per
+  contract at the hangar (6,000–12,000¢ range).
+- **Endgame hook (not v1, write nothing yet):** lease spare hulls out —
+  diegetic passive income; the player becomes the entrepreneur from the
+  story premise. Late-story material.
+
+## 7. Family tier (gray-market track; build after Phase 4)
+
+**Eligibility unlocks at lifetime-credit thresholds, but the player must
+sign the upgrade** — the Chapter 1 story beat ("you chose this, then the
+bill arrived") as a mechanic. This also de-duplicates family tier from pilot
+rank: rank is automatic, family tier is a signed liability.
+
+Each tier adds a **per-mission remittance** (a red line on every receipt:
+"Habitation remittance — Tier 3: −40¢") and a **gray-market perk** — family
+members get jobs as their tier rises, and family helps you around the
+Ledger's rake. Fleet Shares pays a percentage; family bends prices. No
+overlap.
+
+| Tier | Eligible at (lifetime ¢) | Remittance /mission | Perk |
+|---|---|---|---|
+| 1 | — | 0 | Free-tier life. Flavor only. |
+| 2 | 1,000 | 15¢ | Cousin in the salvage yard — sell rate 40% → 45% |
+| 3 | 5,000 | 40¢ | Sister in fleet comms — next demand bulletin visible one cycle early |
+| 4 | 15,000 | 100¢ | Family workshop — one "family lot" per market refresh at honest value (no Ledger markup) |
+| 5 | 40,000 | 250¢ | Sell rate 50%; family lots may include relics |
+
+Tier 3 is the keystone perk: early bulletin knowledge makes "hold inventory
+and time the market" a real strategy delivered by a *person*, not a menu.
+
+The conditional clause (tier slips if you stop performing) stays
+narrative-only fine print for now; the remittance applies pressure without
+punishment. Downgrade mechanics are a future story decision.
+
+Note on §8: the remittance is an opt-in recurring liability the player
+signed, not a mission entry fee — the "no entry/lease fees" cut stands.
 
 ---
 
-## 7. Tuning targets (first pass, expect iteration)
+## 8. Tuning targets (first pass, expect iteration)
 
 - A full clear of an early mission: ~300–600¢ bounty + 1–2 pods.
 - A short-loop farm (launch → transport wave → RTB): ~28–40% of a full clear's
@@ -196,7 +242,7 @@ later: tier-slip pressure, family requests.)
 - A new player should afford their first Certified item within ~3 missions and
   first investment tier within ~5.
 
-## 8. Explicitly cut
+## 9. Explicitly cut
 
 - Modular weapon **crafting** UI (components → affixes on dropped items).
 - Specialization trees (slot scarcity + affixes already force builds).

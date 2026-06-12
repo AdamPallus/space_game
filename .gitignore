@@ -2,3 +2,7 @@
 .env
 __pycache__/
 *.pyc
+
+# Test/QA artifacts
+output/
+.playwright-cli/

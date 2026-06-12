@@ -124,6 +124,77 @@ works inside the new shell. Mobile touch paths still work.
 verifiably apply in combat; relic lore line displays once and is recorded in
 a collection list.
 
+## Phase 4b — Base weapon archetypes (the variety pass)
+
+**Why:** Phase 1 built the drop pool "from the existing frames" and Phase 4
+deepened affixes — but no phase ever expanded the *base* set, so every drop
+is a re-dressed flight-school frame. The parameter space
+(`gunDiameter` × `spread` × `ammo` × `effect` × flow levels × impulse
+budget) is fully implemented; it is sampled at exactly 3 points. This phase
+samples it properly. **No new combat mechanics** — only new
+`items/item_pool.json` entries, drop/stock tier gating, and icons.
+
+### New weapon bases (9)
+
+Builds mirror the `frame_fundamentals` entry shape. Effects must stay within
+the implemented set: pierce, homing, explosive, vampiric, none.
+
+| id | Name | Bore | Spread | Ammo | Effect | Flow R/V/S | Extra | Role |
+|---|---|---|---|---|---|---|---|---|
+| `needle_storm` | Needle Storm | small | wide | kinetic | none | 2/1/0 | — | Multi-shot kinetic hose. Shreds swarms; chip-floor-weak vs armor *by physics*. |
+| `twin_driver` | Twin Driver | medium | focused | kinetic | none | 1/1/0 | — | Workhorse upgrade of the Cadet line. |
+| `ember_spray` | Ember Spray | small | wide | plasma | none | 2/0/0 | — | Plasma hose; stacks burn on crowds. |
+| `slug_cannon` | Slug Cannon | large | focused | kinetic | none | 0/0/2 | `kineticImpulseBudget: +0.15` | The physics showcase: huge slow slugs, top per-hit damage, anti-armor without pierce. |
+| `plasma_lance` | Plasma Lance | large | focused | plasma | none | 0/1/1 | — | Single big plasma bolt; heavy payload per hit. |
+| `seeker_array` | Seeker Array | medium | wide | plasma | homing | 1/0/0 | — | Homing plasma swarm; fire-and-maneuver. |
+| `demolition_bore` | Demolition Bore | large | focused | kinetic | explosive | 0/0/1 | — | Splash slugs; armor-cracker with collateral. |
+| `lash_driver` | Lash Driver | medium | wide | kinetic | vampiric | 1/0/0 | — | Spray-and-heal berserker line. |
+| `longbow_rail` | Longbow Rail | large | focused | kinetic | pierce | 0/2/0 | `kineticImpulseBudget: +0.10` | Sniper evolution of the Breaker; lances whole columns. |
+
+All entries get honest `tags` (ammo, spread, effect, role words) — **tags
+feed the demand-bulletin system**, so more bases automatically makes the
+market game richer.
+
+### New defense bases (2)
+
+| id | Name | Build focus | Role |
+|---|---|---|---|
+| `surge_shield` | Surge Shield | low shieldMax, shieldRegen +2 | Regen tempo play; pairs with hit-and-run. |
+| `ablative_plate` | Ablative Plate | armorAmount +2, armorClass 11 | Bulk armor; heavier than Heavy Plate, no shield slot synergy. |
+
+### Tier gating (drops AND market stock draw from the same pools)
+
+- **Tier 1 (always):** the 3 starter frames, Phase Shield, Heavy Plate.
+- **Tier 2 (mission 2+ cleared):** Needle Storm, Twin Driver, Ember Spray, Surge Shield.
+- **Tier 3 (mission 4+):** Slug Cannon, Plasma Lance, Seeker Array, Ablative Plate.
+- **Tier 4 (mission 6+ / guaranteed boss pods):** Demolition Bore, Lash Driver, Longbow Rail.
+
+Gate by highest campaign mission cleared. Rarity rolls stay independent of
+base tier (a scrap-grade Slug Cannon and a prototype Needle Storm are both
+valid and interesting).
+
+### Icons
+
+Generate one `assets/generated/item_icons_v2/` 4x4 chroma-key sheet (same
+shared style block as CODEX_ASSET_RUN.md): the 9 new weapons + 2 defenses +
+5 spare generic housings. Distinct silhouettes per role (hose = multi-barrel
+cluster, slug = massive single bore, seeker = finned pods, rail = long thin).
+
+### Acceptance
+
+1. `node scripts/balance_report.js` shows real role separation: Slug Cannon
+   and Longbow Rail beat Needle Storm/Ember Spray against plated targets by
+   ≥2.5x TTK, and the relationship inverts against swarm-class enemies. No
+   infinities anywhere (chip floor holds).
+2. Playing mission 4+, drops and market stock include tier-2/3 bases;
+   mission 1 drops never contain tier-3+ bases.
+3. Armory inspector shows visibly different fire stats per base; in combat,
+   Needle Storm vs Slug Cannon *look and feel* like different weapons.
+4. Demand bulletins can roll the new tags.
+5. Validators pass; zero console errors.
+
+---
+
 ## Phase 5 — Ownership & family tier (design locked, do NOT build before Adam green-lights)
 
 Design lives in ECONOMY_DESIGN.md §6–7. Summary: leased-vs-owned hulls (25%

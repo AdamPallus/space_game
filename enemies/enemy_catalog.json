@@ -5,7 +5,7 @@
       "name": "Bulwark Heavy Hauler",
       "boss": false,
       "template": {
-        "sprite": "ufoBlue",
+        "sprite": "assets/generated/fleet_gaps_v1/tank_bulwark.png",
         "hull": 40,
         "shield": 0,
         "armor": 240,
@@ -15,14 +15,15 @@
         "baseCredit": 44,
         "radius": 34,
         "ai": "transport",
-        "fireRate": 3
+        "fireRate": 3,
+        "spriteScale": 0.76
       }
     },
     "captain": {
       "name": "Captain-Class Corvette",
       "boss": false,
       "template": {
-        "sprite": "ufoYellow",
+        "sprite": "assets/generated/fleet_gaps_v1/captain_corvette.png",
         "hp": 320,
         "speed": 75,
         "score": 1100,
@@ -32,14 +33,15 @@
         "fireRate": 1,
         "fireMode": "radial",
         "fireCount": 14,
-        "bulletSpeed": 175
+        "bulletSpeed": 175,
+        "spriteScale": 0.82
       }
     },
     "dart": {
       "name": "Dart Skirmisher",
       "boss": false,
       "template": {
-        "sprite": "enemyBlue2",
+        "sprite": "assets/generated/fleet_gaps_v1/dart_skirmisher.png",
         "hull": 16,
         "shield": 0,
         "armor": 0,
@@ -51,14 +53,15 @@
         "patternParams": {
           "amplitude": 120,
           "frequency": 5.4
-        }
+        },
+        "spriteScale": 0.64
       }
     },
     "drone": {
       "name": "Training Drone",
       "boss": false,
       "template": {
-        "sprite": "enemyBlue2",
+        "sprite": "assets/generated/pilot_sprites/enemy_scout.png",
         "hull": 28,
         "shield": 22,
         "armor": 0,
@@ -71,14 +74,15 @@
           "amplitude": 80,
           "frequency": 3.1
         },
-        "shieldRegen": 10
+        "shieldRegen": 10,
+        "spriteScale": 0.76
       }
     },
     "elite": {
       "name": "Elite Vortex Drone",
       "boss": false,
       "template": {
-        "sprite": "enemyBlack3",
+        "sprite": "assets/generated/fleet_gaps_v1/elite_vortex.png",
         "hp": 140,
         "speed": 150,
         "score": 900,
@@ -92,14 +96,15 @@
         "fireRate": 0.8,
         "fireMode": "radial",
         "fireCount": 12,
-        "bulletSpeed": 170
+        "bulletSpeed": 170,
+        "spriteScale": 0.78
       }
     },
     "escort": {
       "name": "Escort Gunship",
       "boss": false,
       "template": {
-        "sprite": "enemyBlack3",
+        "sprite": "assets/generated/fleet_gaps_v1/escort_gunship.png",
         "hull": 32,
         "shield": 0,
         "armor": 90,
@@ -112,14 +117,15 @@
         "fireMode": "spread",
         "fireCount": 5,
         "fireSpread": 0.9,
-        "fireRate": 1.9
+        "fireRate": 1.9,
+        "spriteScale": 0.72
       }
     },
     "sentinel": {
       "name": "Sentinel Strafe Drone",
       "boss": false,
       "template": {
-        "sprite": "enemyBlue5",
+        "sprite": "assets/generated/fleet_gaps_v1/sentinel_strafer.png",
         "hp": 64,
         "speed": 125,
         "score": 380,
@@ -129,14 +135,15 @@
         "fireRate": 1.3,
         "fireMode": "spread",
         "fireCount": 7,
-        "fireSpread": 1.1
+        "fireSpread": 1.1,
+        "spriteScale": 0.72
       }
     },
     "skitter": {
       "name": "Skitter Evasion Drone",
       "boss": false,
       "template": {
-        "sprite": "enemyBlue5",
+        "sprite": "assets/generated/fleet_gaps_v1/dart_skirmisher.png",
         "hull": 22,
         "shield": 0,
         "armor": 0,
@@ -153,14 +160,15 @@
         "fireMode": "spread",
         "fireCount": 3,
         "fireSpread": 0.55,
-        "bulletSpeed": 190
+        "bulletSpeed": 190,
+        "spriteScale": 0.62
       }
     },
     "duelist": {
       "name": "Duelist Flank Drone",
       "boss": false,
       "template": {
-        "sprite": "enemyRed5",
+        "sprite": "assets/generated/fleet_gaps_v1/duelist_flanker.png",
         "hull": 30,
         "shield": 0,
         "armor": 70,
@@ -177,14 +185,15 @@
         },
         "fireRate": 1.65,
         "fireMode": "aim",
-        "bulletSpeed": 215
+        "bulletSpeed": 215,
+        "spriteScale": 0.72
       }
     },
     "fighter": {
       "name": "Redline Fighter",
       "boss": false,
       "template": {
-        "sprite": "enemyRed3",
+        "sprite": "assets/generated/pilot_sprites/enemy_fighter.png",
         "hp": 84,
         "speed": 135,
         "score": 400,
@@ -194,14 +203,15 @@
         "patternParams": {
           "amplitude": 125,
           "frequency": 4.8
-        }
+        },
+        "spriteScale": 0.78
       }
     },
     "gnat": {
       "name": "Gnat Interceptor",
       "boss": false,
       "template": {
-        "sprite": "enemyRed2",
+        "sprite": "assets/generated/fleet_gaps_v1/gnat_interceptor.png",
         "hull": 10,
         "shield": 0,
         "armor": 0,
@@ -213,14 +223,15 @@
         "patternParams": {
           "amplitude": 220,
           "frequency": 6.2
-        }
+        },
+        "spriteScale": 0.56
       }
     },
     "harvester": {
       "name": "Harvester Bomber",
       "boss": false,
       "template": {
-        "sprite": "ufoGreen",
+        "sprite": "assets/generated/fleet_gaps_v1/harvester_bomber.png",
         "hp": 320,
         "speed": 70,
         "score": 1000,
@@ -234,27 +245,29 @@
         "fireRate": 1.1,
         "fireMode": "spread",
         "fireCount": 11,
-        "fireSpread": 1.5
+        "fireSpread": 1.5,
+        "spriteScale": 0.82
       }
     },
     "hunter": {
       "name": "Hunter Pursuit Drone",
       "boss": false,
       "template": {
-        "sprite": "enemyGreen4",
+        "sprite": "assets/generated/pilot_sprites/enemy_hunter.png",
         "hp": 102,
         "speed": 155,
         "score": 580,
         "baseCredit": 90,
         "radius": 22,
-        "ai": "hunter"
+        "ai": "hunter",
+        "spriteScale": 0.78
       }
     },
     "interceptor": {
       "name": "Interceptor Wing",
       "boss": false,
       "template": {
-        "sprite": "enemyBlue3",
+        "sprite": "assets/generated/pilot_sprites/enemy_scout.png",
         "hp": 22,
         "speed": 95,
         "score": 120,
@@ -264,14 +277,15 @@
         "patternParams": {
           "amplitude": 70,
           "frequency": 2.8
-        }
+        },
+        "spriteScale": 0.76
       }
     },
     "level10:boss": {
       "name": "Iron Graveyard Juggernaut",
       "boss": true,
       "template": {
-        "sprite": "enemyBlack5",
+        "sprite": "assets/generated/boss_fortress.png",
         "hull": 520,
         "shield": 0,
         "armor": 900,
@@ -280,7 +294,7 @@
         "score": 2200,
         "baseCredit": 620,
         "radius": 86,
-        "spriteScale": 2.5,
+        "spriteScale": 1.04,
         "pattern": "bossSweep",
         "isBoss": true,
         "empImmune": true,
@@ -294,7 +308,7 @@
       "name": "Corridor Gatekeeper",
       "boss": true,
       "template": {
-        "sprite": "ufoYellow",
+        "sprite": "assets/generated/boss_anvil.png",
         "hull": 540,
         "shield": 360,
         "armor": 520,
@@ -303,7 +317,7 @@
         "score": 2600,
         "baseCredit": 720,
         "radius": 82,
-        "spriteScale": 2.35,
+        "spriteScale": 0.98,
         "pattern": "bossSweep",
         "isBoss": true,
         "empImmune": true,
@@ -341,7 +355,7 @@
       "name": "Patrol Wing Overboss",
       "boss": true,
       "template": {
-        "sprite": "ufoBlue",
+        "sprite": "assets/generated/boss_manta.png",
         "hp": 360,
         "speed": 68,
         "score": 850,
@@ -352,7 +366,8 @@
         "fireRate": 1.5,
         "fireMode": "radial",
         "fireCount": 10,
-        "bulletSpeed": 155
+        "bulletSpeed": 155,
+        "spriteScale": 0.74
       }
     },
     "level2:boss": {
@@ -580,7 +595,7 @@
       "name": "Neon Swarm Sovereign",
       "boss": true,
       "template": {
-        "sprite": "ufoGreen",
+        "sprite": "assets/generated/boss_warden8.png",
         "hull": 420,
         "shield": 360,
         "armor": 0,
@@ -588,7 +603,7 @@
         "score": 1600,
         "baseCredit": 420,
         "radius": 74,
-        "spriteScale": 2.2,
+        "spriteScale": 0.93,
         "pattern": "bossSweep",
         "isBoss": true,
         "empImmune": true,
@@ -603,7 +618,7 @@
       "name": "Lurker Ambush Probe",
       "boss": false,
       "template": {
-        "sprite": "enemyGreen4",
+        "sprite": "assets/generated/pilot_sprites/enemy_hunter.png",
         "hp": 40,
         "speed": 90,
         "score": 220,
@@ -611,14 +626,15 @@
         "radius": 18,
         "ai": "stalker",
         "aggroRadius": 260,
-        "fireRate": 1.7
+        "fireRate": 1.7,
+        "spriteScale": 0.76
       }
     },
     "marauder": {
       "name": "Marauder Spiralwing",
       "boss": false,
       "template": {
-        "sprite": "enemyRed5",
+        "sprite": "assets/generated/pilot_sprites/enemy_ace.png",
         "hp": 88,
         "speed": 140,
         "score": 460,
@@ -632,7 +648,8 @@
         "fireRate": 1,
         "fireMode": "spread",
         "fireCount": 8,
-        "fireSpread": 1.2
+        "fireSpread": 1.2,
+        "spriteScale": 0.82
       }
     },
     "overhaul_demo:boss": {
@@ -663,7 +680,7 @@
       "name": "Overseer Command Skiff",
       "boss": false,
       "template": {
-        "sprite": "ufoYellow",
+        "sprite": "assets/generated/fleet_gaps_v1/captain_corvette.png",
         "hp": 380,
         "speed": 80,
         "score": 1200,
@@ -677,14 +694,15 @@
         "fireRate": 0.9,
         "fireMode": "radial",
         "fireCount": 22,
-        "bulletSpeed": 195
+        "bulletSpeed": 195,
+        "spriteScale": 0.82
       }
     },
     "phantom": {
       "name": "Phantom Spiralwing",
       "boss": false,
       "template": {
-        "sprite": "enemyGreen5",
+        "sprite": "assets/generated/fleet_gaps_v1/elite_vortex.png",
         "hp": 118,
         "speed": 155,
         "score": 740,
@@ -698,14 +716,15 @@
         "fireRate": 0.85,
         "fireMode": "spread",
         "fireCount": 8,
-        "fireSpread": 1.2
+        "fireSpread": 1.2,
+        "spriteScale": 0.78
       }
     },
     "plated": {
       "name": "Plated Bastion",
       "boss": false,
       "template": {
-        "sprite": "enemyBlack4",
+        "sprite": "assets/generated/fleet_gaps_v1/plated_heavy.png",
         "hull": 26,
         "shield": 0,
         "armor": 70,
@@ -715,14 +734,15 @@
         "baseCredit": 22,
         "radius": 22,
         "pattern": "drift",
-        "fireRate": 2.8
+        "fireRate": 2.8,
+        "spriteScale": 0.62
       }
     },
     "reaper": {
       "name": "Reaper Hunter-Killer",
       "boss": false,
       "template": {
-        "sprite": "enemyBlack4",
+        "sprite": "assets/generated/fleet_gaps_v1/reaper_predator.png",
         "hp": 105,
         "speed": 165,
         "score": 780,
@@ -732,14 +752,15 @@
         "fireRate": 1.2,
         "fireMode": "spread",
         "fireCount": 6,
-        "fireSpread": 0.9
+        "fireSpread": 0.9,
+        "spriteScale": 0.72
       }
     },
     "scout": {
       "name": "Blue Scout Drone",
       "boss": false,
       "template": {
-        "sprite": "enemyBlue2",
+        "sprite": "assets/generated/pilot_sprites/enemy_scout.png",
         "hp": 56,
         "speed": 145,
         "score": 280,
@@ -749,14 +770,15 @@
         "patternParams": {
           "amplitude": 200,
           "frequency": 5.4
-        }
+        },
+        "spriteScale": 0.74
       }
     },
     "shieldkite": {
       "name": "Shield-Kite Drone",
       "boss": false,
       "template": {
-        "sprite": "enemyGreen5",
+        "sprite": "assets/generated/fleet_gaps_v1/shieldkite.png",
         "hull": 22,
         "shield": 70,
         "armor": 0,
@@ -769,14 +791,15 @@
         "fireCount": 5,
         "fireSpread": 0.8,
         "fireRate": 2.4,
-        "shieldRegen": 14
+        "shieldRegen": 14,
+        "spriteScale": 0.72
       }
     },
     "spark": {
       "name": "Spark Shield-Kite",
       "boss": false,
       "template": {
-        "sprite": "enemyGreen4",
+        "sprite": "assets/generated/fleet_gaps_v1/spark_skirmisher.png",
         "hull": 14,
         "shield": 26,
         "armor": 0,
@@ -789,14 +812,15 @@
         "fireMode": "spread",
         "fireCount": 5,
         "fireSpread": 0.9,
-        "shieldRegen": 14
+        "shieldRegen": 14,
+        "spriteScale": 0.64
       }
     },
     "stalker": {
       "name": "Stalker Proximity Hunter",
       "boss": false,
       "template": {
-        "sprite": "enemyBlue5",
+        "sprite": "assets/generated/fleet_gaps_v1/reaper_predator.png",
         "hull": 34,
         "shield": 22,
         "armor": 0,
@@ -808,14 +832,15 @@
         "aggroRadius": 240,
         "fireRate": 1.8,
         "fireMode": "aim",
-        "shieldRegen": 10
+        "shieldRegen": 10,
+        "spriteScale": 0.7
       }
     },
     "tank": {
       "name": "Armored Test Rig",
       "boss": false,
       "template": {
-        "sprite": "ufoYellow",
+        "sprite": "assets/generated/fleet_gaps_v1/tank_bulwark.png",
         "hull": 45,
         "shield": 0,
         "armor": 120,
@@ -826,27 +851,29 @@
         "radius": 30,
         "ai": "transport",
         "fireMode": "aim",
-        "fireRate": 3.2
+        "fireRate": 3.2,
+        "spriteScale": 0.72
       }
     },
     "transport": {
       "name": "Cargo Transport (Pirated)",
       "boss": false,
       "template": {
-        "sprite": "ufoBlue",
+        "sprite": "assets/generated/fleet_gaps_v1/transport_hauler.png",
         "hp": 400,
         "speed": 62,
         "score": 1100,
         "baseCredit": 200,
         "radius": 36,
-        "ai": "transport"
+        "ai": "transport",
+        "spriteScale": 0.8
       }
     },
     "warden": {
       "name": "Warden Gunline",
       "boss": false,
       "template": {
-        "sprite": "enemyBlack5",
+        "sprite": "assets/generated/fleet_gaps_v1/warden_line_ship.png",
         "hp": 130,
         "speed": 105,
         "score": 700,
@@ -856,14 +883,15 @@
         "fireRate": 1.1,
         "fireMode": "spread",
         "fireCount": 11,
-        "fireSpread": 1.4
+        "fireSpread": 1.4,
+        "spriteScale": 0.78
       }
     },
     "ai_demo:boss": {
       "name": "AI Lab: Live Targets Boss",
       "boss": true,
       "template": {
-        "sprite": "ufoYellow",
+        "sprite": "assets/generated/boss_trident.png",
         "hull": 420,
         "shield": 120,
         "armor": 260,
@@ -872,7 +900,7 @@
         "score": 2100,
         "baseCredit": 560,
         "radius": 82,
-        "spriteScale": 2.5,
+        "spriteScale": 0.95,
         "ai": "duelist",
         "aiParams": {
           "holdY": 180,
@@ -1342,7 +1370,7 @@
       "name": "Shiftling",
       "boss": false,
       "template": {
-        "sprite": "enemyBlue3",
+        "sprite": "assets/generated/fleet_gaps_v1/sentinel_strafer.png",
         "hull": 18,
         "shield": 14,
         "armor": 0,
@@ -1363,14 +1391,15 @@
         },
         "fireRate": 1.8,
         "fireMode": "aim",
-        "bulletSpeed": 200
+        "bulletSpeed": 200,
+        "spriteScale": 0.68
       }
     },
     "holdfast": {
       "name": "Holdfast",
       "boss": false,
       "template": {
-        "sprite": "enemyBlack3",
+        "sprite": "assets/generated/fleet_gaps_v1/escort_gunship.png",
         "hull": 28,
         "shield": 0,
         "armor": 70,
@@ -1391,14 +1420,15 @@
         "fireMode": "spread",
         "fireCount": 4,
         "fireSpread": 0.75,
-        "bulletSpeed": 185
+        "bulletSpeed": 185,
+        "spriteScale": 0.74
       }
     },
     "coil": {
       "name": "Coil",
       "boss": false,
       "template": {
-        "sprite": "enemyRed2",
+        "sprite": "assets/generated/fleet_gaps_v1/duelist_flanker.png",
         "hull": 24,
         "shield": 0,
         "armor": 0,
@@ -1414,14 +1444,15 @@
         },
         "fireRate": 2.2,
         "fireMode": "aim",
-        "bulletSpeed": 210
+        "bulletSpeed": 210,
+        "spriteScale": 0.66
       }
     },
     "orbiter": {
       "name": "Orbiter",
       "boss": false,
       "template": {
-        "sprite": "ufoYellow",
+        "sprite": "assets/generated/fleet_gaps_v1/orbiter_core.png",
         "hull": 140,
         "shield": 60,
         "armor": 140,
@@ -1430,7 +1461,7 @@
         "score": 650,
         "baseCredit": 120,
         "radius": 54,
-        "spriteScale": 1.8,
+        "spriteScale": 0.76,
         "pattern": "bossOrbit",
         "patternParams": {
           "radiusX": 330,
@@ -1448,7 +1479,7 @@
       "name": "Pattern Lab: Live Fire Boss",
       "boss": true,
       "template": {
-        "sprite": "ufoRed",
+        "sprite": "assets/generated/boss_serpent.png",
         "hull": 520,
         "shield": 160,
         "armor": 520,
@@ -1457,7 +1488,7 @@
         "score": 2500,
         "baseCredit": 650,
         "radius": 88,
-        "spriteScale": 2.7,
+        "spriteScale": 0.78,
         "pattern": "bossAdvanceSweep",
         "patternParams": {
           "pause": 0.85,

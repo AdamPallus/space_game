@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 10,
+  "sprites": [
+    { "name": "plated_heavy", "cell": 0, "size": [128, 128], "componentMode": "largest" },
+    { "name": "tank_bulwark", "cell": 1, "size": [136, 128], "componentMode": "largest" },
+    { "name": "transport_hauler", "cell": 2, "size": [128, 128], "componentMode": "largest" },
+    { "name": "escort_gunship", "cell": 3, "size": [112, 112], "componentMode": "largest" },
+    { "name": "sentinel_strafer", "cell": 4, "size": [112, 112], "componentMode": "largest" },
+    { "name": "duelist_flanker", "cell": 5, "size": [112, 112], "componentMode": "largest" },
+    { "name": "gnat_interceptor", "cell": 6, "size": [80, 80], "componentMode": "largest" },
+    { "name": "dart_skirmisher", "cell": 7, "size": [96, 96], "componentMode": "largest" },
+    { "name": "spark_skirmisher", "cell": 8, "size": [96, 96], "componentMode": "largest" },
+    { "name": "shieldkite", "cell": 9, "size": [112, 112], "componentMode": "largest" },
+    { "name": "warden_line_ship", "cell": 10, "size": [120, 120], "componentMode": "largest" },
+    { "name": "captain_corvette", "cell": 11, "size": [128, 128], "componentMode": "largest" },
+    { "name": "harvester_bomber", "cell": 12, "size": [128, 128], "componentMode": "largest" },
+    { "name": "orbiter_core", "cell": 13, "size": [128, 128], "componentMode": "largest" },
+    { "name": "elite_vortex", "cell": 14, "size": [120, 120], "componentMode": "largest" },
+    { "name": "reaper_predator", "cell": 15, "size": [120, 120], "componentMode": "largest" }
+  ]
+}

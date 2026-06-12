@@ -97,6 +97,7 @@ const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
 const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
+const GENERATED_PILOT_ROOT = `${GENERATED_ROOT}/pilot_sprites`;
 let shouldAutoLaunchFreshPilotMission = false;
 const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "template",
@@ -2199,6 +2200,7 @@ const assets = {
   },
   visualThemes: {
     generated_v1: {
+      player: loadImage(`${GENERATED_PILOT_ROOT}/player_interceptor.png`),
       playerBullet: loadImage(`${GENERATED_EFFECT_ROOT}/player_kinetic_bolt.png`),
       playerPlasma: loadImage(`${GENERATED_EFFECT_ROOT}/player_plasma_bolt.png`),
       playerPierce: loadImage(`${GENERATED_EFFECT_ROOT}/player_pierce_lance.png`),
@@ -2239,6 +2241,8 @@ const assets = {
   },
 };
 
+const KENNEY_VISUAL_THEME_KEYS = new Set(["kenney", "kenney_v1", "starter", "starter_v1", "none"]);
+
 const enemySpriteMap = {
   enemyBlue2: assets.enemies.scout,
   enemyBlue3: assets.enemies.blue3,
@@ -2259,7 +2263,11 @@ const enemySpriteMap = {
 
 function getLevelVisualTheme() {
   const key = mission?.level?.visualTheme;
-  return key ? assets.visualThemes?.[key] || null : null;
+  if (key && KENNEY_VISUAL_THEME_KEYS.has(String(key).toLowerCase())) return null;
+  const defaultTheme = assets.visualThemes.generated_v1;
+  if (!key) return defaultTheme;
+  const theme = assets.visualThemes?.[key];
+  return theme ? { ...defaultTheme, ...theme } : defaultTheme;
 }
 
 const availableLevels = [
@@ -7385,7 +7393,13 @@ function drawPlayer() {
   if (player.cloakTimer > 0) {
     ctx.globalAlpha = 0.35;
   }
-  const usedSprite = drawSpriteCentered(assets.player, player.x, player.y, player.spriteScale);
+  const visualTheme = getLevelVisualTheme();
+  const usedSprite = drawSpriteCentered(
+    visualTheme?.player || assets.player,
+    player.x,
+    player.y,
+    player.spriteScale
+  );
   if (!usedSprite) {
     ctx.translate(player.x, player.y);
     ctx.fillStyle = "#22d3ee";

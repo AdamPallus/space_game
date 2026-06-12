@@ -32,7 +32,6 @@
       }
     },
     "drone": {
-      "sprite": "enemyBlue3",
       "hull": 22,
       "shield": 16,
       "score": 120,
@@ -44,7 +43,6 @@
       "shieldRegen": 7
     },
     "lurker": {
-      "sprite": "enemyBlue5",
       "hull": 24,
       "shield": 0,
       "armor": 0,

@@ -8,7 +8,6 @@
   "completeOnBoss": true,
   "enemyTypes": {
     "drone": {
-      "sprite": "enemyBlue3",
       "hull": 26,
       "shield": 20,
       "speed": 78,

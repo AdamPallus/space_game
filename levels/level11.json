@@ -18,7 +18,6 @@
       }
     },
     "spark": {
-      "sprite": "enemyGreen5",
       "hull": 18,
       "shield": 34,
       "speed": 125,

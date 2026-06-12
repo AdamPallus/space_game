@@ -43,7 +43,6 @@
       "fireSpread": 0.56
     },
     "sentinel": {
-      "sprite": "enemyBlack3",
       "hull": 24,
       "shield": 20,
       "armor": 0,

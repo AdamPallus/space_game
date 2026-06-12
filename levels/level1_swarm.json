@@ -38,7 +38,6 @@
       "fireRate": 1.9
     },
     "drone": {
-      "sprite": "enemyBlue3",
       "hull": 20,
       "shield": 14,
       "speed": 74,

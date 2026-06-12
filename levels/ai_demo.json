@@ -8,7 +8,6 @@
   "completeOnBoss": true,
   "enemyTypes": {
     "sentinel": {
-      "sprite": "enemyBlack3",
       "hull": 34,
       "shield": 40,
       "armor": 0,

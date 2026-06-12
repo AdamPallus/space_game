@@ -32,7 +32,6 @@
       }
     },
     "sentinel": {
-      "sprite": "enemyBlack3",
       "hull": 28,
       "shield": 24,
       "armor": 0,

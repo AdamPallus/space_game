@@ -74,6 +74,10 @@ const investmentTreeLines = document.getElementById("investment-tree-lines");
 const investmentTreeInspector = document.getElementById("investment-tree-inspector");
 const economyTreeCredits = document.getElementById("economy-tree-credits");
 const economyTreeProgress = document.getElementById("economy-tree-progress");
+const ledgerBulletin = document.getElementById("ledger-bulletin");
+const ledgerStockList = document.getElementById("ledger-stock-list");
+const ledgerInventoryList = document.getElementById("ledger-inventory-list");
+const ledgerReceipt = document.getElementById("ledger-receipt");
 
 // Investment UI elements
 const engineeringTier = document.getElementById("engineering-tier");
@@ -219,6 +223,7 @@ const ECONOMY = {
     },
   },
   market: {
+    buyRate: 1,
     sellRate: 0.4,
     handlingFeeRate: 0.6,
     stockLots: 5,
@@ -226,6 +231,28 @@ const ECONOMY = {
     bulletinBonusRate: 0.4,
     mispricedLotChance: 0.125,
     mispricedValueRange: [0.35, 0.5],
+    mispricedMinProfitRate: 0.02,
+    earlyRecallAuditThreshold: 3,
+    stockRarityProgression: [
+      { unlockedLevel: 1, weights: { scrap: 0.72, certified: 0.28 } },
+      { unlockedLevel: 3, weights: { scrap: 0.42, certified: 0.48, prototype: 0.1 } },
+      { unlockedLevel: 6, weights: { scrap: 0.2, certified: 0.5, prototype: 0.27, preFounding: 0.03 } },
+      { unlockedLevel: 9, weights: { certified: 0.42, prototype: 0.5, preFounding: 0.08 } },
+    ],
+    bulletinTags: [
+      { tag: "kinetic", label: "Kinetic frames" },
+      { tag: "plasma", label: "Plasma frames" },
+      { tag: "anti-armor", label: "Anti-armor gear" },
+      { tag: "shield", label: "Shield hardware" },
+      { tag: "defense", label: "Defense modules" },
+      { tag: "aux", label: "Aux systems" },
+      { tag: "pierce", label: "Pierce traces" },
+      { tag: "regen", label: "Regen hardware" },
+      { tag: "control", label: "Control systems" },
+      { tag: "evasion", label: "Evasion gear" },
+      { tag: "flow-rate", label: "Flow-rate tuning" },
+      { tag: "sustain", label: "Sustain traces" },
+    ],
   },
 };
 
@@ -239,6 +266,13 @@ const LEDGER_COPY = {
   fleetDividends: "Fleet dividends",
   noCargo: "No salvage pods recovered.",
   bossPod: "Boss recovery pod",
+  ledgerHandlingFee: "Ledger handling fee",
+  demandBulletin: "Demand bulletin",
+  demandBonus: "Demand bulletin bonus",
+  clericalAdjustment: "clerical adjustment",
+  marketEmpty: "No lots listed. Complete a mission to refresh the exchange.",
+  sellEmpty: "No recovered inventory available for sale.",
+  earlyRecallAudit: "Pattern flagged: repeated early RTB. No action taken.",
 };
 
 const upgrades = [
@@ -1496,6 +1530,355 @@ function addItemsToArmoryInventory(items) {
   });
 }
 
+function createDefaultLedgerMarketState() {
+  return {
+    stock: [],
+    stockMissionCount: null,
+    bulletin: null,
+    pendingBulletinSales: {
+      count: 0,
+      bonus: 0,
+      tag: null,
+      label: null,
+    },
+    consecutiveEarlyRecalls: 0,
+    lastReceipt: null,
+  };
+}
+
+function normalizeLedgerMarketState(targetState = state) {
+  const defaults = createDefaultLedgerMarketState();
+  const existing = targetState.ledgerMarket || {};
+  const pending = existing.pendingBulletinSales || {};
+  targetState.ledgerMarket = {
+    ...defaults,
+    ...existing,
+    stock: Array.isArray(existing.stock)
+      ? existing.stock
+          .filter((lot) => lot?.item?.id)
+          .map((lot) => ({
+            id: String(lot.id || generateItemInstanceId()),
+            item: cloneItem(lot.item),
+            price: Math.max(0, Math.round(Number(lot.price) || 0)),
+            listValue: Math.max(0, Math.round(Number(lot.listValue) || getItemListValue(lot.item))),
+            priceRate: Number.isFinite(lot.priceRate) ? lot.priceRate : ECONOMY.market.buyRate,
+            clericalAdjustment: !!lot.clericalAdjustment,
+          }))
+      : [],
+    stockMissionCount: Number.isFinite(existing.stockMissionCount)
+      ? existing.stockMissionCount
+      : defaults.stockMissionCount,
+    bulletin: existing.bulletin?.tag
+      ? {
+          tag: String(existing.bulletin.tag),
+          label: String(existing.bulletin.label || existing.bulletin.tag),
+          missionCount: Number.isFinite(existing.bulletin.missionCount)
+            ? existing.bulletin.missionCount
+            : targetState.missionCount || 0,
+        }
+      : null,
+    pendingBulletinSales: {
+      count: Math.max(0, Math.round(Number(pending.count) || 0)),
+      bonus: Math.max(0, Math.round(Number(pending.bonus) || 0)),
+      tag: pending.tag || null,
+      label: pending.label || null,
+    },
+    consecutiveEarlyRecalls: Math.max(
+      0,
+      Math.round(Number(existing.consecutiveEarlyRecalls) || 0)
+    ),
+    lastReceipt: existing.lastReceipt || null,
+  };
+  return targetState.ledgerMarket;
+}
+
+function getLedgerMarketState(targetState = state) {
+  return normalizeLedgerMarketState(targetState);
+}
+
+function getItemListValue(item) {
+  if (Number.isFinite(item?.value)) return Math.max(0, Math.round(item.value));
+  const rarityConfig = getRarityConfig(item?.rarity || "scrap");
+  const [min, max] = rarityConfig.valueRange || [40, 80];
+  return Math.round((min + max) / 2);
+}
+
+function pickDemandBulletinTag(previousTag = null) {
+  const tags = ECONOMY.market.bulletinTags;
+  if (!tags.length) return null;
+  const candidates = tags.length > 1 ? tags.filter((entry) => entry.tag !== previousTag) : tags;
+  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+  return picked ? { tag: picked.tag, label: picked.label } : null;
+}
+
+function refreshDemandBulletin({ force = false } = {}) {
+  const ledger = getLedgerMarketState();
+  const cadence = Math.max(1, ECONOMY.market.bulletinCadence || 3);
+  const missionCount = state.missionCount || 0;
+  const shouldPick =
+    force ||
+    !ledger.bulletin?.tag ||
+    missionCount - (ledger.bulletin.missionCount || 0) >= cadence;
+  if (!shouldPick) return ledger.bulletin;
+  const picked = pickDemandBulletinTag(ledger.bulletin?.tag || null);
+  if (!picked) {
+    ledger.bulletin = null;
+    return null;
+  }
+  ledger.bulletin = {
+    ...picked,
+    missionCount,
+  };
+  return ledger.bulletin;
+}
+
+function getActiveDemandBulletin() {
+  return refreshDemandBulletin();
+}
+
+function itemMatchesDemandBulletin(item, bulletin = getActiveDemandBulletin()) {
+  if (!item || !bulletin?.tag) return false;
+  const tags = Array.isArray(item.tags) ? item.tags : [];
+  return tags.includes(bulletin.tag);
+}
+
+function getMarketRarityWeights() {
+  const unlockedLevel = state.unlockedLevels || 1;
+  let selected = ECONOMY.market.stockRarityProgression[0]?.weights || { scrap: 1 };
+  ECONOMY.market.stockRarityProgression.forEach((entry) => {
+    if (unlockedLevel >= entry.unlockedLevel) selected = entry.weights;
+  });
+  return selected;
+}
+
+function rollMarketItem() {
+  const rarity = rollWeighted(getMarketRarityWeights());
+  return rollItemForRarity(rarity);
+}
+
+function generateLedgerLotId(index) {
+  const missionPart = String(state.missionCount || 0).padStart(3, "0");
+  const lotPart = String(index + 1).padStart(2, "0");
+  const suffix = Math.random().toString(36).slice(2, 5).toUpperCase();
+  return `L-${missionPart}-${lotPart}-${suffix}`;
+}
+
+function createLedgerLot(index, clericalAdjustment = false) {
+  const item = rollMarketItem();
+  if (!item) return null;
+  const listValue = getItemListValue(item);
+  let priceRate = ECONOMY.market.buyRate;
+  if (clericalAdjustment) {
+    const [min, max] = ECONOMY.market.mispricedValueRange;
+    const profitableMax = Math.max(
+      min,
+      Math.min(max, ECONOMY.market.sellRate - (ECONOMY.market.mispricedMinProfitRate || 0))
+    );
+    priceRate = min + Math.random() * (profitableMax - min);
+  }
+  return {
+    id: generateLedgerLotId(index),
+    item,
+    listValue,
+    priceRate,
+    price: Math.max(1, Math.round(listValue * priceRate)),
+    clericalAdjustment,
+  };
+}
+
+function rollLedgerStock({ force = false } = {}) {
+  const ledger = getLedgerMarketState();
+  if (!itemPoolCatalog) return ledger.stock;
+  if (!force && ledger.stock.length) return ledger.stock;
+  const lots = [];
+  const mispricedIndex =
+    Math.random() < ECONOMY.market.mispricedLotChance
+      ? Math.floor(Math.random() * ECONOMY.market.stockLots)
+      : -1;
+  for (let i = 0; i < ECONOMY.market.stockLots; i += 1) {
+    const lot = createLedgerLot(i, i === mispricedIndex);
+    if (lot) lots.push(lot);
+  }
+  ledger.stock = lots;
+  ledger.stockMissionCount = state.missionCount || 0;
+  return ledger.stock;
+}
+
+async function ensureLedgerMarketReady() {
+  await ensureItemPoolLoaded();
+  refreshDemandBulletin();
+  const ledger = getLedgerMarketState();
+  if (ledger.stockMissionCount === null) {
+    rollLedgerStock({ force: true });
+    saveState();
+  }
+  return ledger;
+}
+
+function getItemSellQuote(item) {
+  const listValue = getItemListValue(item);
+  const handlingFee = Math.round(listValue * ECONOMY.market.handlingFeeRate);
+  const basePayout = Math.max(0, listValue - handlingFee);
+  const bulletin = getActiveDemandBulletin();
+  const bulletinMatch = itemMatchesDemandBulletin(item, bulletin);
+  const bulletinBonus = bulletinMatch
+    ? Math.round(basePayout * ECONOMY.market.bulletinBonusRate)
+    : 0;
+  return {
+    listValue,
+    basePayout,
+    handlingFee,
+    bulletin,
+    bulletinMatch,
+    bulletinBonus,
+    payout: basePayout + bulletinBonus,
+  };
+}
+
+function setLedgerReceipt(receipt) {
+  const ledger = getLedgerMarketState();
+  ledger.lastReceipt = {
+    timestamp: Date.now(),
+    ...receipt,
+  };
+}
+
+function recordBulletinSaleBonus(quote) {
+  if (!quote?.bulletinMatch || quote.bulletinBonus <= 0) return;
+  const ledger = getLedgerMarketState();
+  ledger.pendingBulletinSales.count += 1;
+  ledger.pendingBulletinSales.bonus += quote.bulletinBonus;
+  ledger.pendingBulletinSales.tag = quote.bulletin?.tag || null;
+  ledger.pendingBulletinSales.label = quote.bulletin?.label || null;
+}
+
+function removeInventoryItem(itemId) {
+  const inventory = getArmoryInventory(state);
+  const index = inventory.findIndex((item) => item.id === itemId);
+  if (index < 0) return null;
+  const [item] = inventory.splice(index, 1);
+  return item || null;
+}
+
+function unequipSoldInventoryItem(itemId) {
+  if (!state.armory || !itemId) return;
+  if (state.armory.equippedPrimaryItemId === itemId) {
+    state.armory.equippedPrimaryItemId = null;
+    state.armory.equippedLoadoutId =
+      state.armory.equippedLoadoutId || starterWeaponLoadouts[0]?.id || "fundamentals";
+  }
+  if (Array.isArray(state.armory.equippedDefenseSlotIds)) {
+    state.armory.equippedDefenseSlotIds = state.armory.equippedDefenseSlotIds.map((slotId) =>
+      slotId === itemId ? "none" : slotId
+    );
+  }
+  if (state.armory.equippedSupportItemId === itemId) {
+    state.armory.equippedSupportItemId = null;
+    state.rmbWeapon = state.rmbWeapon || "cloak";
+  }
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
+}
+
+function isInventoryItemInstalled(itemId) {
+  if (!itemId || !state.armory) return false;
+  if (state.armory.equippedPrimaryItemId === itemId) return true;
+  if (state.armory.equippedSupportItemId === itemId) return true;
+  return Array.isArray(state.armory.equippedDefenseSlotIds)
+    ? state.armory.equippedDefenseSlotIds.includes(itemId)
+    : false;
+}
+
+function buyLedgerLot(lotId) {
+  const ledger = getLedgerMarketState();
+  const lotIndex = ledger.stock.findIndex((lot) => lot.id === lotId);
+  if (lotIndex < 0) return;
+  const lot = ledger.stock[lotIndex];
+  if (state.credits < lot.price) return;
+  state.credits -= lot.price;
+  addItemsToArmoryInventory([lot.item]);
+  ledger.stock.splice(lotIndex, 1);
+  setLedgerReceipt({
+    title: `Purchase ${lot.id}`,
+    lines: [
+      { label: "Item", text: lot.item.name },
+      { label: "List value", amount: lot.listValue },
+      {
+        label: lot.clericalAdjustment
+          ? `Lot price (${LEDGER_COPY.clericalAdjustment})`
+          : "Lot price",
+        amount: -lot.price,
+        fee: true,
+      },
+      { label: "Credits paid", amount: -lot.price, total: true, fee: true },
+    ],
+  });
+  saveState();
+  safeUpdateHangar();
+}
+
+function sellInventoryItem(itemId) {
+  const item = findInventoryItem(itemId);
+  if (!item) return;
+  const quote = getItemSellQuote(item);
+  removeInventoryItem(itemId);
+  unequipSoldInventoryItem(itemId);
+  state.credits += quote.payout;
+  state.lifetimeCredits += quote.payout;
+  recordBulletinSaleBonus(quote);
+  const lines = [
+    { label: "Item", text: item.name },
+    { label: "List value", amount: quote.listValue },
+    { label: LEDGER_COPY.ledgerHandlingFee, amount: -quote.handlingFee, fee: true },
+  ];
+  if (quote.bulletinBonus > 0) {
+    lines.push({
+      label: `${LEDGER_COPY.demandBonus} (${quote.bulletin?.label || quote.bulletin?.tag})`,
+      amount: quote.bulletinBonus,
+    });
+  }
+  lines.push({ label: "Net payout", amount: quote.payout, total: true });
+  setLedgerReceipt({
+    title: "Sale Receipt",
+    lines,
+  });
+  saveState();
+  safeUpdateHangar();
+}
+
+function capturePendingBulletinSaleSummary() {
+  const ledger = getLedgerMarketState();
+  const pending = ledger.pendingBulletinSales;
+  if (!pending.count || pending.bonus <= 0) return null;
+  const summary = { ...pending };
+  ledger.pendingBulletinSales = {
+    count: 0,
+    bonus: 0,
+    tag: null,
+    label: null,
+  };
+  return summary;
+}
+
+function settleLedgerAfterMission(outcome) {
+  const ledger = getLedgerMarketState();
+  if (outcome === "boss") {
+    ledger.consecutiveEarlyRecalls = 0;
+  } else if (outcome === "rtb") {
+    ledger.consecutiveEarlyRecalls += 1;
+  } else {
+    ledger.consecutiveEarlyRecalls = 0;
+  }
+  const earlyRecallAudit =
+    ledger.consecutiveEarlyRecalls >= ECONOMY.market.earlyRecallAuditThreshold;
+  refreshDemandBulletin();
+  rollLedgerStock({ force: true });
+  return {
+    earlyRecallAudit,
+    consecutiveEarlyRecalls: ledger.consecutiveEarlyRecalls,
+  };
+}
+
 const starfield = Array.from({ length: 120 }, () => ({
   x: Math.random(),
   y: Math.random(),
@@ -2704,6 +3087,7 @@ function loadState() {
       },
       rmbWeapon: "cloak",
       missionCarouselIndex: {},
+      ledgerMarket: createDefaultLedgerMarketState(),
     };
   }
   try {
@@ -2827,6 +3211,7 @@ function loadState() {
     if (parsed.weapon?.payload) parsed.unlocked.payload[parsed.weapon.payload] = true;
     if (parsed.weapon?.modifier) parsed.unlocked.modifier[parsed.weapon.modifier] = true;
     if (parsed.rmbWeapon) parsed.unlocked.aux[parsed.rmbWeapon] = true;
+    normalizeLedgerMarketState(parsed);
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
@@ -2900,6 +3285,8 @@ function loadState() {
         shares: 0,
       },
       rmbWeapon: "cloak",
+      missionCarouselIndex: {},
+      ledgerMarket: createDefaultLedgerMarketState(),
     };
   }
 }
@@ -3215,6 +3602,9 @@ function endMission({ ejected = false, completed = false } = {}) {
   state.lifetimeCredits += finalReward;
   state.missionCount += 1;
   state.lastMissionSummary = `${formatTime(mission.elapsed)} | ${mission.kills} kills`;
+  const outcome = completed ? "boss" : ejected ? "rtb" : "death";
+  const bulletinSaleSummary = capturePendingBulletinSaleSummary();
+  const ledgerMissionSummary = settleLedgerAfterMission(outcome);
   let completedEntry = null;
   if (completed && mission.level?.id) {
     completedEntry = availableLevels.find((level) => level.id === mission.level.id);
@@ -3266,7 +3656,7 @@ function endMission({ ejected = false, completed = false } = {}) {
     playSfx("eject", 0.5);
   }
   renderDebriefSummary({
-    outcome: completed ? "boss" : ejected ? "rtb" : "death",
+    outcome,
     grossBounty,
     bountyKept,
     recoveryBonus,
@@ -3277,6 +3667,9 @@ function endMission({ ejected = false, completed = false } = {}) {
     identifiedItems,
     lostCargo,
     bossSalvageCount: bossSalvage.length,
+    bulletinSaleSummary,
+    earlyRecallAudit: ledgerMissionSummary.earlyRecallAudit,
+    consecutiveEarlyRecalls: ledgerMissionSummary.consecutiveEarlyRecalls,
     onboardingMessage,
   });
   debriefTime.textContent = formatTime(mission.elapsed);
@@ -3325,17 +3718,32 @@ function renderDebriefSummary(summary) {
       },
       { label: LEDGER_COPY.fleetDividends, amount: summary.dividends },
       { label: LEDGER_COPY.hullWritedown, amount: -summary.hullWritedown, fee: true },
-      { label: "Net", amount: summary.finalReward, total: true },
     ];
+    if (summary.bulletinSaleSummary?.bonus > 0) {
+      rows.push({
+        label: LEDGER_COPY.demandBonus,
+        amount: summary.bulletinSaleSummary.bonus,
+        note: `${summary.bulletinSaleSummary.count} prior sale${summary.bulletinSaleSummary.count === 1 ? "" : "s"} | ${summary.bulletinSaleSummary.label || summary.bulletinSaleSummary.tag}`,
+        memo: true,
+      });
+    }
+    if (summary.earlyRecallAudit) {
+      rows.push({
+        label: "Audit memo",
+        text: `${LEDGER_COPY.earlyRecallAudit} (${summary.consecutiveEarlyRecalls} RTBs)`,
+        memo: true,
+      });
+    }
+    rows.push({ label: "Net", amount: summary.finalReward, total: true });
     debriefLedger.innerHTML = `
       <div class="ledger-title">Claims Receipt</div>
       <div class="ledger-lines">
         ${rows
           .map(
             (row) => `
-          <div class="ledger-line${row.fee ? " fee" : ""}${row.total ? " total" : ""}">
+          <div class="ledger-line${row.fee ? " fee" : ""}${row.total ? " total" : ""}${row.memo ? " memo" : ""}">
             <span>${escapeHtml(row.label)}${row.note ? ` <em>${escapeHtml(row.note)}</em>` : ""}</span>
-            <strong>${row.amount < 0 ? "-" : ""}${formatCredits(Math.abs(row.amount))}</strong>
+            <strong>${row.text ? escapeHtml(row.text) : `${row.amount < 0 ? "-" : ""}${formatCredits(Math.abs(row.amount))}`}</strong>
           </div>
         `
           )
@@ -3487,6 +3895,7 @@ function updateHangar() {
   renderShipUpgradesPanel();
   renderConsumableLoadout();
   renderConsumableStore();
+  renderLedgerMarket();
   renderInvestments();
   if (activeHangarTab === "mission") {
     renderLevelSelect();
@@ -5296,6 +5705,147 @@ function renderConsumableStore() {
     entry.appendChild(meta);
     entry.appendChild(button);
     consumableStore.appendChild(entry);
+  });
+}
+
+function renderLedgerReceiptPanel(ledger) {
+  if (!ledgerReceipt) return;
+  const receipt = ledger.lastReceipt;
+  if (!receipt?.lines?.length) {
+    ledgerReceipt.innerHTML = `
+      <div class="ledger-title">Ledger Receipt</div>
+      <div class="ledger-lines">
+        <div class="ledger-line memo">
+          <span>No posted transactions</span>
+          <strong>Awaiting buy/sell order</strong>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  ledgerReceipt.innerHTML = `
+    <div class="ledger-title">${escapeHtml(receipt.title || "Ledger Receipt")}</div>
+    <div class="ledger-lines">
+      ${receipt.lines
+        .map(
+          (row) => `
+        <div class="ledger-line${row.fee ? " fee" : ""}${row.total ? " total" : ""}${row.memo ? " memo" : ""}">
+          <span>${escapeHtml(row.label)}</span>
+          <strong>${row.text ? escapeHtml(row.text) : `${row.amount < 0 ? "-" : ""}${formatCredits(Math.abs(row.amount))}`}</strong>
+        </div>
+      `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderLedgerBulletinPanel(ledger) {
+  if (!ledgerBulletin) return;
+  const bulletin = ledger.bulletin || getActiveDemandBulletin();
+  if (!bulletin) {
+    ledgerBulletin.innerHTML = `
+      <span class="ledger-bulletin-kicker">${LEDGER_COPY.demandBulletin}</span>
+      <strong>No active demand</strong>
+      <span>Standard sale rate applies.</span>
+    `;
+    return;
+  }
+  const missionsSince = (state.missionCount || 0) - (bulletin.missionCount || 0);
+  const nextRefresh = Math.max(1, ECONOMY.market.bulletinCadence - missionsSince);
+  ledgerBulletin.innerHTML = `
+    <span class="ledger-bulletin-kicker">${LEDGER_COPY.demandBulletin}</span>
+    <strong>${escapeHtml(bulletin.label)}</strong>
+    <span>+${Math.round(ECONOMY.market.bulletinBonusRate * 100)}% sale payout | refresh in ${nextRefresh} mission${nextRefresh === 1 ? "" : "s"}</span>
+  `;
+}
+
+function renderLedgerStock(ledger) {
+  if (!ledgerStockList) return;
+  ledgerStockList.innerHTML = "";
+  if (!ledger.stock.length) {
+    ledgerStockList.innerHTML = `<div class="ledger-empty">${LEDGER_COPY.marketEmpty}</div>`;
+    return;
+  }
+  ledger.stock.forEach((lot) => {
+    const item = lot.item;
+    const rarity = item.rarity || "scrap";
+    const canAfford = state.credits >= lot.price;
+    const tags = Array.isArray(item.tags) ? item.tags.slice(0, 4) : [];
+    const entry = document.createElement("div");
+    entry.className = `ledger-market-item rarity-${rarity}`;
+    entry.setAttribute("style", getRarityStyle(rarity));
+    entry.innerHTML = `
+      <div class="ledger-item-icon">
+        <img src="${escapeHtml(item.icon || `${ASSET_ROOT}/Power-ups/powerupBlue.png`)}" alt="" />
+      </div>
+      <div class="ledger-item-main">
+        <div class="ledger-item-kicker">${escapeHtml(lot.id)}${lot.clericalAdjustment ? ` - ${LEDGER_COPY.clericalAdjustment}` : ""}</div>
+        <div class="ledger-item-name">${escapeHtml(item.name)}</div>
+        <div class="ledger-item-meta">${escapeHtml(getRarityLabel(rarity))} | List ${formatCredits(lot.listValue)} | Ask ${formatCredits(lot.price)}</div>
+        <div class="ledger-item-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+      </div>
+      <button type="button" class="small" ${canAfford ? "" : "disabled"}>${canAfford ? "Buy" : "Need Credits"}</button>
+    `;
+    const button = entry.querySelector("button");
+    button?.addEventListener("click", () => buyLedgerLot(lot.id));
+    ledgerStockList.appendChild(entry);
+  });
+}
+
+function renderLedgerInventory(ledger) {
+  if (!ledgerInventoryList) return;
+  const inventory = getArmoryInventory(state);
+  ledgerInventoryList.innerHTML = "";
+  if (!inventory.length) {
+    ledgerInventoryList.innerHTML = `<div class="ledger-empty">${LEDGER_COPY.sellEmpty}</div>`;
+    return;
+  }
+  inventory.forEach((item) => {
+    const rarity = item.rarity || "scrap";
+    const quote = getItemSellQuote(item);
+    const bulletinLabel = quote.bulletinMatch
+      ? ` | ${LEDGER_COPY.demandBonus} +${formatCredits(quote.bulletinBonus)}`
+      : "";
+    const installed = isInventoryItemInstalled(item.id);
+    const tags = Array.isArray(item.tags) ? item.tags.slice(0, 4) : [];
+    const entry = document.createElement("div");
+    entry.className = `ledger-market-item rarity-${rarity}`;
+    entry.setAttribute("style", getRarityStyle(rarity));
+    entry.innerHTML = `
+      <div class="ledger-item-icon">
+        <img src="${escapeHtml(item.icon || `${ASSET_ROOT}/Power-ups/powerupBlue.png`)}" alt="" />
+      </div>
+      <div class="ledger-item-main">
+        <div class="ledger-item-kicker">${escapeHtml(getRarityLabel(rarity))}${installed ? " | Installed" : ""}</div>
+        <div class="ledger-item-name">${escapeHtml(item.name)}</div>
+        <div class="ledger-item-meta">List ${formatCredits(quote.listValue)} | Fee ${formatCredits(quote.handlingFee)} | Pays ${formatCredits(quote.payout)}${bulletinLabel}</div>
+        <div class="ledger-item-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+      </div>
+      <button type="button" class="small">Sell</button>
+    `;
+    const button = entry.querySelector("button");
+    button?.addEventListener("click", () => sellInventoryItem(item.id));
+    ledgerInventoryList.appendChild(entry);
+  });
+}
+
+async function renderLedgerMarketAsync() {
+  if (!ledgerBulletin && !ledgerStockList && !ledgerInventoryList && !ledgerReceipt) return;
+  if (ledgerStockList) ledgerStockList.innerHTML = `<div class="ledger-empty">Loading market lots...</div>`;
+  const ledger = await ensureLedgerMarketReady();
+  renderLedgerBulletinPanel(ledger);
+  renderLedgerStock(ledger);
+  renderLedgerInventory(ledger);
+  renderLedgerReceiptPanel(ledger);
+}
+
+function renderLedgerMarket() {
+  renderLedgerMarketAsync().catch((error) => {
+    console.error("Ledger market render failed:", error);
+    if (ledgerStockList) {
+      ledgerStockList.innerHTML = `<div class="ledger-empty">Ledger exchange unavailable.</div>`;
+    }
   });
 }
 

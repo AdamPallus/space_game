@@ -142,6 +142,18 @@ function validateItemBuild(build, context, errors) {
   }
 }
 
+function validateTags(tags, context, errors, { required = true } = {}) {
+  if (!Array.isArray(tags)) {
+    if (required) errors.push(`${context} is missing tags.`);
+    return;
+  }
+  tags.forEach((tag) => {
+    if (typeof tag !== "string" || !tag.trim()) {
+      errors.push(`${context} has an invalid tag.`);
+    }
+  });
+}
+
 function validateItemPool() {
   const errors = [];
   if (!fs.existsSync(ITEM_POOL_PATH)) {
@@ -182,6 +194,7 @@ function validateItemPool() {
         }
       });
     }
+    validateTags(affix.tags, `Affix '${id}'`, errors, { required: false });
     if (affix.build) validateItemBuild(affix.build, `Affix '${id}'`, errors);
     if (affix.buildAdd) validateItemBuild(affix.buildAdd, `Affix '${id}' buildAdd`, errors);
   }
@@ -203,9 +216,7 @@ function validateItemPool() {
     if (typeof entry.description !== "string" || !entry.description.trim()) {
       errors.push(`Item '${id}' is missing description.`);
     }
-    if (!Array.isArray(entry.tags)) {
-      errors.push(`Item '${id}' is missing tags.`);
-    }
+    validateTags(entry.tags, `Item '${id}'`, errors);
     validateItemBuild(entry.build || {}, `Item '${id}'`, errors);
     if (Array.isArray(entry.affixes)) {
       entry.affixes.forEach((affixId) => {

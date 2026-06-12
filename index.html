@@ -169,6 +169,35 @@
           </div>
 
           <div class="tab-panel" id="tab-economy" data-tab-panel="economy" hidden>
+            <div class="loadout ledger-market-section">
+              <div class="ledger-market-head">
+                <div>
+                  <p class="armory-kicker">Ledger Exchange</p>
+                  <h2>Market Lots & Salvage Sales</h2>
+                  <p class="investments-desc">
+                    Buy rotating lots, sell recovered inventory, and watch for quiet pricing errors.
+                  </p>
+                </div>
+                <div class="ledger-bulletin" id="ledger-bulletin"></div>
+              </div>
+              <div class="ledger-market-grid">
+                <section class="ledger-market-pane">
+                  <div class="ledger-pane-head">
+                    <h3>Available Lots</h3>
+                    <span class="ledger-pane-note">Rerolls after every mission</span>
+                  </div>
+                  <div class="ledger-market-list" id="ledger-stock-list"></div>
+                </section>
+                <section class="ledger-market-pane">
+                  <div class="ledger-pane-head">
+                    <h3>Inventory Claims</h3>
+                    <span class="ledger-pane-note">Standard sell rate: 40%</span>
+                  </div>
+                  <div class="ledger-market-list" id="ledger-inventory-list"></div>
+                </section>
+              </div>
+              <div class="ledger-receipt" id="ledger-receipt"></div>
+            </div>
             <div class="loadout investments-section">
               <h2>Fleet Investments</h2>
               <p class="investments-desc">

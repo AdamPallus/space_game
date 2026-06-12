@@ -1390,6 +1390,16 @@ body {
   color: #fca5a5;
 }
 
+.ledger-line.memo {
+  color: #bae6fd;
+}
+
+.ledger-line.memo strong {
+  max-width: 58%;
+  text-align: right;
+  line-height: 1.35;
+}
+
 .ledger-line.total {
   margin-top: 6px;
   padding-top: 10px;
@@ -1456,6 +1466,175 @@ body {
   border: 1px solid rgba(248, 113, 113, 0.28);
   color: #fecaca;
   background: rgba(69, 10, 10, 0.24);
+}
+
+.ledger-market-section {
+  display: grid;
+  gap: 16px;
+}
+
+.ledger-market-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 16px;
+  align-items: start;
+}
+
+.ledger-market-head h2 {
+  margin: 0 0 8px;
+}
+
+.ledger-bulletin {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  background: rgba(44, 36, 10, 0.32);
+  color: #fde68a;
+}
+
+.ledger-bulletin-kicker {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #facc15;
+}
+
+.ledger-bulletin strong {
+  color: #fff7ed;
+}
+
+.ledger-bulletin span:last-child {
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.ledger-market-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ledger-market-pane {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ledger-pane-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.ledger-pane-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.ledger-pane-note {
+  color: #8fb3dd;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.ledger-market-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ledger-market-item {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(90, 140, 200, 0.3);
+  background:
+    radial-gradient(circle at 4% 50%, var(--rarity-glow), rgba(6, 15, 30, 0.58) 26%),
+    rgba(6, 15, 30, 0.76);
+}
+
+.ledger-item-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(2, 6, 16, 0.45);
+}
+
+.ledger-item-icon img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.ledger-item-main {
+  min-width: 0;
+}
+
+.ledger-item-kicker {
+  color: var(--rarity-color);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.ledger-item-name {
+  margin-top: 3px;
+  color: #f8fafc;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-item-meta {
+  margin-top: 3px;
+  color: #9bb9dd;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ledger-item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.ledger-item-tags span {
+  padding: 3px 6px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.38);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ledger-market-item button {
+  align-self: stretch;
+  min-width: 104px;
+  white-space: nowrap;
+}
+
+.ledger-empty {
+  padding: 13px 14px;
+  border: 1px solid rgba(90, 140, 200, 0.24);
+  color: #9bb9dd;
+  background: rgba(6, 15, 30, 0.52);
+  font-size: 13px;
+}
+
+.ledger-receipt {
+  display: grid;
+  gap: 8px;
 }
 
 .weapon-grid {
@@ -2809,6 +2988,11 @@ body.generated-ui-skin #overlay .investment-tree-node::before {
 }
 
 @media (max-width: 920px) {
+  .ledger-market-head,
+  .ledger-market-grid {
+    grid-template-columns: 1fr;
+  }
+
   .economy-tree-layout {
     grid-template-columns: 1fr;
   }
@@ -2824,6 +3008,30 @@ body.generated-ui-skin #overlay .investment-tree-node::before {
 }
 
 @media (max-width: 640px) {
+  .ledger-market-item {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .ledger-item-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .ledger-item-icon img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .ledger-market-item button {
+    grid-column: 1 / -1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .ledger-line.memo strong {
+    max-width: none;
+  }
+
   .economy-tree-hud {
     max-width: none;
     align-items: stretch;

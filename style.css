@@ -658,7 +658,16 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   cursor: pointer;
   transition: border-color 0.12s, box-shadow 0.12s;
 }
-.armory-inventory-item:hover { border-color: var(--rarity-color); }
+.armory-inventory-item[style] {
+  border-color: var(--rarity-color);
+  box-shadow: 0 0 5px var(--rarity-glow);
+}
+.armory-inventory-item:hover,
+.armory-inventory-item:focus-visible {
+  border-color: var(--rarity-color);
+  box-shadow: 0 0 10px var(--rarity-glow);
+  outline: none;
+}
 .armory-inventory-item.is-preview {
   border-color: var(--rarity-color);
   box-shadow: 0 0 10px var(--rarity-glow);
@@ -671,6 +680,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .armory-inventory-icon { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
 .armory-inventory-icon img { max-width: 100%; max-height: 100%; }
 .armory-inventory-name {
+  color: var(--rarity-color, var(--ink));
   font-size: 10px;
   text-align: center;
   line-height: 1.25;
@@ -695,10 +705,127 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   text-transform: uppercase;
   color: var(--accent);
 }
-.stat-row { display: flex; justify-content: space-between; gap: 10px; }
+.stat-row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .stat-k { color: var(--muted); }
 .stat-v { font-weight: 600; }
-.stat-tip, .stat-footnote { font-size: 10px; color: var(--muted); }
+.stat-tip, .stat-footnote {
+  flex: 1 0 100%;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.item-tooltip {
+  position: fixed;
+  z-index: 90;
+  width: min(320px, calc(100vw - 24px));
+  pointer-events: none;
+  filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.55));
+}
+.item-display-block {
+  --rarity-color: var(--ink);
+  --rarity-glow: rgba(232, 238, 252, 0.18);
+  border: 1px solid var(--rarity-color);
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(18, 24, 38, 0.96), rgba(8, 11, 18, 0.98));
+  box-shadow: 0 0 10px var(--rarity-glow);
+  padding: 10px 12px;
+  color: var(--ink);
+  font-size: 12px;
+}
+.item-display-block.inline {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  border: 0;
+}
+.item-display-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.item-display-name {
+  color: var(--rarity-color);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.item-display-type {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.item-display-rule {
+  height: 1px;
+  margin: 8px 0;
+  background: linear-gradient(90deg, var(--rarity-color), transparent);
+  opacity: 0.7;
+}
+.item-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.item-headline-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+.item-headline-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.item-delta {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+.item-delta.good { color: var(--good); }
+.item-delta.bad { color: var(--danger); }
+.item-stat-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.item-stat-line {
+  display: grid;
+  grid-template-columns: minmax(92px, 1fr) auto;
+  gap: 10px;
+}
+.item-stat-label { color: var(--muted); }
+.item-stat-value { font-weight: 600; text-align: right; }
+.item-stat-math {
+  grid-column: 1 / -1;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.item-affix-line {
+  color: var(--accent);
+  font-weight: 600;
+}
+.item-affix-line.innate {
+  color: var(--ink);
+  font-weight: 500;
+}
+.item-lore {
+  margin-top: 8px;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-style: italic;
+}
+.item-footer {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 10px;
+}
 
 /* ==========================================================================
    LEDGER SCENE
@@ -797,11 +924,19 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   display: flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rarity-color, var(--line));
   border-radius: var(--radius-sm);
   background: var(--panel-2);
+  box-shadow: 0 0 5px var(--rarity-glow, transparent);
   padding: 8px 10px;
   font-size: 12px;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.ledger-market-item:hover,
+.ledger-market-item:focus-visible {
+  border-color: var(--rarity-color);
+  box-shadow: 0 0 10px var(--rarity-glow);
+  outline: none;
 }
 .ledger-market-item.is-sold { opacity: 0.45; }
 .ledger-item-icon { width: 30px; height: 30px; flex: 0 0 auto; }
@@ -814,6 +949,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   color: var(--rarity-color);
 }
 .ledger-item-name {
+  color: var(--rarity-color, var(--ink));
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -1219,9 +1355,15 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   border: 1px solid var(--rarity-color);
   border-radius: var(--radius-sm);
   background: var(--panel);
-  box-shadow: inset 3px 0 0 var(--rarity-color);
+  box-shadow: inset 3px 0 0 var(--rarity-color), 0 0 5px var(--rarity-glow);
   padding: 8px 10px;
   font-size: 12px;
+  transition: box-shadow 0.12s;
+}
+.salvage-item:hover,
+.salvage-item:focus-visible {
+  box-shadow: inset 3px 0 0 var(--rarity-color), 0 0 10px var(--rarity-glow);
+  outline: none;
 }
 .salvage-item-icon { width: 30px; height: 30px; flex: 0 0 auto; }
 .salvage-item-icon img { max-width: 100%; max-height: 100%; }
@@ -1231,7 +1373,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   text-transform: uppercase;
   color: var(--rarity-color);
 }
-.salvage-item-name { font-weight: 600; }
+.salvage-item-name { color: var(--rarity-color); font-weight: 600; }
 .salvage-item-meta { font-size: 10px; color: var(--muted); }
 .salvage-actions { margin-left: auto; display: flex; gap: 6px; }
 .salvage-actions button {

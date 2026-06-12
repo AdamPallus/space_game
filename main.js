@@ -120,6 +120,7 @@ const levelList = document.getElementById("level-list");
 const compendiumList = document.getElementById("compendium-list");
 const compendiumSearch = document.getElementById("compendium-search");
 const compendiumShowBosses = document.getElementById("compendium-show-bosses");
+const relicArchive = document.getElementById("relic-archive");
 
 const STORAGE_KEY = "mini-fighter-save";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
@@ -166,6 +167,21 @@ const ECONOMY = {
   salvagePodSpeed: 40,
   cargoFullFlashSeconds: 1.1,
   minDamageFloor: 0.2,
+  kinetic: {
+    baseDamage: 14,
+    baseVelocity: 560,
+    velocityExponent: 1.5,
+    sizeVelocityTradeoff: 0.62,
+    impulseBudgetByDiameter: {
+      small: 0.98,
+      medium: 1,
+      large: 1.16,
+    },
+    velocityLevelBudgetBonus: 0.12,
+  },
+  plasma: {
+    baseDamage: 12,
+  },
   deathBountyWritedownRate: 0.25,
   recoveryBonusRate: {
     min: 0.1,
@@ -200,6 +216,7 @@ const ECONOMY = {
       glow: "rgba(148, 163, 184, 0.76)",
       affixCount: 0,
       valueRange: [40, 80],
+      kineticImpulseBonus: 0,
     },
     certified: {
       label: "Certified",
@@ -208,6 +225,7 @@ const ECONOMY = {
       glow: "rgba(96, 165, 250, 0.82)",
       affixCount: 1,
       valueRange: [150, 300],
+      kineticImpulseBonus: 0.07,
     },
     prototype: {
       label: "Prototype",
@@ -216,6 +234,7 @@ const ECONOMY = {
       glow: "rgba(167, 139, 250, 0.88)",
       affixCount: 2,
       valueRange: [500, 900],
+      kineticImpulseBonus: 0.16,
     },
     preFounding: {
       label: "Pre-Founding",
@@ -224,6 +243,7 @@ const ECONOMY = {
       glow: "rgba(250, 204, 21, 0.92)",
       affixCount: 2,
       valueRange: [1500, 3000],
+      kineticImpulseBonus: 0.28,
     },
   },
   market: {
@@ -339,6 +359,7 @@ function createDefaultShipBuild() {
     armorAmountLevel: 0,
     armorClass: 10,
     armorClassLevel: 0,
+    kineticImpulseBudget: 0,
   };
 }
 
@@ -634,9 +655,12 @@ function sanitizeWeaponFrameBuild(build, context = "weapon frame") {
   if (!["kinetic", "plasma"].includes(normalized.ammo)) {
     throw new Error(`${context} has invalid ammo`);
   }
-  if (!["none", "homing", "explosive", "pierce"].includes(normalized.effect)) {
+  if (!["none", "homing", "explosive", "pierce", "vampiric"].includes(normalized.effect)) {
     throw new Error(`${context} has invalid effect`);
   }
+  normalized.kineticImpulseBudget = Number.isFinite(normalized.kineticImpulseBudget)
+    ? normalized.kineticImpulseBudget
+    : 0;
   if (!Array.isArray(normalized.defenseSlots)) {
     throw new Error(`${context} has invalid defenseSlots`);
   }
@@ -828,8 +852,21 @@ function composeShipBuildFromArmory(targetState) {
 
   const supportItem = findInventoryItem(targetState.armory?.equippedSupportItemId, targetState);
   if (supportItem && isSupportSlotType(supportItem.slotType) && supportItem.build) {
-    ["flowRateLevel", "flowVelocityLevel", "flowSizeLevel", "shieldMaxLevel", "shieldRegenLevel", "armorAmountLevel", "armorClassLevel"].forEach((key) => {
+    [
+      "flowRateLevel",
+      "flowVelocityLevel",
+      "flowSizeLevel",
+      "shieldMaxLevel",
+      "shieldRegenLevel",
+      "armorAmountLevel",
+      "armorClassLevel",
+      "kineticImpulseBudget",
+    ].forEach((key) => {
       if (Number.isFinite(supportItem.build[key])) {
+        if (key === "kineticImpulseBudget") {
+          merged[key] = (Number.isFinite(merged[key]) ? merged[key] : 0) + supportItem.build[key];
+          return;
+        }
         merged[key] = Math.max(merged[key] ?? 0, supportItem.build[key]);
       }
     });
@@ -1262,10 +1299,12 @@ function rollWeighted(weights) {
 function normalizeItemPoolCatalog(catalog) {
   const entries = catalog?.entries && typeof catalog.entries === "object" ? catalog.entries : {};
   const affixes = catalog?.affixes && typeof catalog.affixes === "object" ? catalog.affixes : {};
+  const relics = catalog?.relics && typeof catalog.relics === "object" ? catalog.relics : {};
   return {
     version: catalog?.version || 1,
     entries,
     affixes,
+    relics,
   };
 }
 
@@ -1312,7 +1351,7 @@ function buildRuntimeItemPoolFromExistingGear() {
       build: {},
     };
   });
-  return { version: 1, entries, affixes: {} };
+  return { version: 1, entries, affixes: {}, relics: {} };
 }
 
 async function loadItemPoolCatalog() {
@@ -1369,7 +1408,13 @@ function applyBuildAdd(build, patch = {}) {
   });
 }
 
-function getApplicableAffixes(slotType, baseBuild = {}) {
+function getCatalogAffix(affixId) {
+  const catalog = itemPoolCatalog || { affixes: {} };
+  const affix = catalog.affixes?.[affixId];
+  return affix && typeof affix === "object" ? { id: affixId, ...affix } : null;
+}
+
+function getApplicableAffixes(slotType, baseBuild = {}, baseEntry = {}) {
   const catalog = itemPoolCatalog || { affixes: {} };
   const normalizedSlot = normalizeArmorySlotType(slotType);
   const baseEffect = baseBuild.effect && baseBuild.effect !== "none" ? "weapon-effect" : null;
@@ -1378,15 +1423,29 @@ function getApplicableAffixes(slotType, baseBuild = {}) {
     .filter((affix) => {
       const allowedSlots = Array.isArray(affix.slotTypes) ? affix.slotTypes : [];
       if (!allowedSlots.map(normalizeArmorySlotType).includes(normalizedSlot)) return false;
+      if (
+        normalizedSlot === "defense" &&
+        Array.isArray(affix.defenseTypes) &&
+        baseEntry.defenseType &&
+        !affix.defenseTypes.includes(baseEntry.defenseType)
+      ) {
+        return false;
+      }
       if (baseEffect && affix.exclusiveGroup === baseEffect) return false;
       return true;
     });
 }
 
-function pickAffixesForItem(slotType, baseBuild, count) {
+function pickAffixesForItem(
+  slotType,
+  baseBuild,
+  count,
+  { excludeIds = new Set(), usedGroups = new Set(), baseEntry = {} } = {}
+) {
   const selected = [];
-  const usedGroups = new Set();
-  const candidates = getApplicableAffixes(slotType, baseBuild);
+  const candidates = getApplicableAffixes(slotType, baseBuild, baseEntry).filter(
+    (affix) => !excludeIds.has(affix.id)
+  );
   while (selected.length < count && candidates.length) {
     const index = Math.floor(Math.random() * candidates.length);
     const affix = candidates.splice(index, 1)[0];
@@ -1401,6 +1460,19 @@ function generateItemInstanceId() {
   return `loot_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function normalizeUniqueProperty(entry) {
+  const property = entry?.uniqueProperty;
+  if (!property || typeof property !== "object" || Array.isArray(property)) return null;
+  return {
+    id: property.id || "unique_property",
+    name: property.name || "Unique trace",
+    description: property.description || "",
+    tags: Array.isArray(property.tags) ? property.tags : [],
+    build: property.build || {},
+    buildAdd: property.buildAdd || {},
+  };
+}
+
 function createRolledItem(baseId, baseEntry, rarity) {
   const rarityConfig = getRarityConfig(rarity);
   const affixCount = rarityConfig.affixCount ?? 0;
@@ -1409,23 +1481,55 @@ function createRolledItem(baseId, baseEntry, rarity) {
     ...cloneShipBuild(createDefaultShipBuild().effectUpgrades),
     ...cloneShipBuild(build.effectUpgrades || {}),
   };
-  const affixes = pickAffixesForItem(baseEntry.slotType, build, affixCount);
+  build.kineticImpulseBudget = Number.isFinite(build.kineticImpulseBudget)
+    ? build.kineticImpulseBudget
+    : 0;
+
+  const fixedAffixes = Array.isArray(baseEntry.affixes)
+    ? baseEntry.affixes.map(getCatalogAffix).filter(Boolean)
+    : [];
+  const fixedAffixIds = new Set(fixedAffixes.map((affix) => affix.id));
+  const usedGroups = new Set(
+    fixedAffixes.map((affix) => affix.exclusiveGroup).filter(Boolean)
+  );
+  const rolledAffixes = pickAffixesForItem(baseEntry.slotType, build, affixCount, {
+    excludeIds: fixedAffixIds,
+    usedGroups,
+    baseEntry,
+  });
+  const affixes = [...fixedAffixes, ...rolledAffixes];
   affixes.forEach((affix) => {
     applyBuildPatch(build, affix.build || {});
     applyBuildAdd(build, affix.buildAdd || {});
   });
+  if (Number.isFinite(rarityConfig.kineticImpulseBonus) && rarityConfig.kineticImpulseBonus > 0) {
+    build.kineticImpulseBudget =
+      (Number.isFinite(build.kineticImpulseBudget) ? build.kineticImpulseBudget : 0) +
+      rarityConfig.kineticImpulseBonus;
+  }
 
-  const affixNames = affixes.map((affix) => affix.name).filter(Boolean);
+  const uniqueProperty = normalizeUniqueProperty(baseEntry);
+  if (uniqueProperty) {
+    applyBuildPatch(build, uniqueProperty.build || {});
+    applyBuildAdd(build, uniqueProperty.buildAdd || {});
+  }
+
+  const affixNames = [
+    ...affixes.map((affix) => affix.name).filter(Boolean),
+    uniqueProperty?.name,
+  ].filter(Boolean);
   const rarityLabel = rarityConfig.label;
-  const name = `${rarityLabel} ${baseEntry.name}${affixNames.length ? ` - ${affixNames.join(", ")}` : ""}`;
+  const name = `${rarityLabel} ${baseEntry.name}${affixNames.length ? ` — ${affixNames.join(", ")}` : ""}`;
   const value = randomIntInclusive(rarityConfig.valueRange[0], rarityConfig.valueRange[1]);
   const tags = Array.from(
     new Set([
       ...(Array.isArray(baseEntry.tags) ? baseEntry.tags : []),
       ...affixes.flatMap((affix) => (Array.isArray(affix.tags) ? affix.tags : [])),
+      ...(uniqueProperty?.tags || []),
       rarity,
     ])
   );
+  if (baseEntry.relicLore && !tags.includes("relic")) tags.push("relic");
 
   return {
     id: generateItemInstanceId(),
@@ -1444,6 +1548,17 @@ function createRolledItem(baseId, baseEntry, rarity) {
     build,
     rarity,
     value,
+    relicId: baseEntry.relicLore ? baseId : null,
+    relicLore: baseEntry.relicLore || "",
+    relicLoreStatus: baseEntry.relicLore ? "undiscovered" : "",
+    uniqueProperty: uniqueProperty
+      ? {
+          id: uniqueProperty.id,
+          name: uniqueProperty.name,
+          description: uniqueProperty.description,
+          tags: uniqueProperty.tags,
+        }
+      : null,
     affixes: affixes.map((affix) => ({
       id: affix.id,
       name: affix.name,
@@ -1453,8 +1568,12 @@ function createRolledItem(baseId, baseEntry, rarity) {
 }
 
 function rollItemForRarity(rarity) {
-  const catalog = itemPoolCatalog || { entries: {} };
-  const entries = Object.entries(catalog.entries || {}).filter(([, entry]) => {
+  const catalog = itemPoolCatalog || { entries: {}, relics: {} };
+  const relicEntries = Object.entries(catalog.relics || {});
+  const rollSource = rarity === "preFounding" && relicEntries.length
+    ? catalog.relics
+    : catalog.entries;
+  const entries = Object.entries(rollSource || {}).filter(([, entry]) => {
     const slotType = normalizeArmorySlotType(entry.slotType);
     return ["primary", "defense", "aux"].includes(slotType);
   });
@@ -1524,11 +1643,65 @@ function findInventoryItem(itemId, targetState = state) {
   return getArmoryInventory(targetState).find((item) => item.id === itemId) || null;
 }
 
-function addItemsToArmoryInventory(items) {
+function normalizeRelicCollection(collection) {
+  if (!collection || typeof collection !== "object" || Array.isArray(collection)) return {};
+  const normalized = {};
+  Object.entries(collection).forEach(([id, entry]) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return;
+    const relicId = String(entry.relicId || id);
+    normalized[relicId] = {
+      relicId,
+      name: String(entry.name || entry.baseName || relicId),
+      baseName: String(entry.baseName || entry.name || relicId),
+      lore: String(entry.lore || ""),
+      uniquePropertyName: String(entry.uniquePropertyName || ""),
+      discoveredAt: Number.isFinite(entry.discoveredAt) ? entry.discoveredAt : Date.now(),
+      count: Math.max(1, Math.round(Number(entry.count) || 1)),
+      tags: Array.isArray(entry.tags) ? entry.tags.filter((tag) => typeof tag === "string") : [],
+    };
+  });
+  return normalized;
+}
+
+function getRelicCollection(targetState = state) {
+  targetState.relicCollection = normalizeRelicCollection(targetState.relicCollection);
+  return targetState.relicCollection;
+}
+
+function getRelicDiscoveryId(item) {
+  if (!item) return null;
+  if (item.relicId) return item.relicId;
+  if (item.rarity === "preFounding" && item.baseId) return item.baseId;
+  return null;
+}
+
+function recordRelicDiscovery(item) {
+  const relicId = getRelicDiscoveryId(item);
+  if (!relicId || !item?.relicLore) return false;
+  const collection = getRelicCollection(state);
+  const existing = collection[relicId] || null;
+  const firstDiscovery = !existing;
+  collection[relicId] = {
+    relicId,
+    name: item.name || existing?.name || relicId,
+    baseName: item.baseName || existing?.baseName || item.name || relicId,
+    lore: item.relicLore || existing?.lore || "",
+    uniquePropertyName: item.uniqueProperty?.name || existing?.uniquePropertyName || "",
+    discoveredAt: existing?.discoveredAt || Date.now(),
+    count: (existing?.count || 0) + 1,
+    tags: Array.from(new Set(Array.isArray(item.tags) ? item.tags : existing?.tags || [])),
+  };
+  item.relicFirstDiscovery = firstDiscovery;
+  item.relicLoreStatus = firstDiscovery ? "new" : "archived";
+  return firstDiscovery;
+}
+
+function addItemsToArmoryInventory(items, { recordRelics = true } = {}) {
   const inventory = getArmoryInventory(state);
   const existingIds = new Set(inventory.map((item) => item.id));
   items.forEach((item) => {
     if (!item?.id || existingIds.has(item.id)) return;
+    if (recordRelics) recordRelicDiscovery(item);
     inventory.push(cloneItem(item));
     existingIds.add(item.id);
   });
@@ -1802,20 +1975,30 @@ function buyLedgerLot(lotId) {
   state.credits -= lot.price;
   addItemsToArmoryInventory([lot.item]);
   ledger.stock.splice(lotIndex, 1);
+  const receiptLines = [
+    { label: "Item", text: lot.item.name },
+    { label: "List value", amount: lot.listValue },
+  ];
+  if (lot.item.relicFirstDiscovery && lot.item.relicLore) {
+    receiptLines.push({
+      label: "Relic fragment",
+      text: lot.item.relicLore,
+      memo: true,
+    });
+  }
+  receiptLines.push(
+    {
+      label: lot.clericalAdjustment
+        ? `Lot price (${LEDGER_COPY.clericalAdjustment})`
+        : "Lot price",
+      amount: -lot.price,
+      fee: true,
+    },
+    { label: "Credits paid", amount: -lot.price, total: true, fee: true }
+  );
   setLedgerReceipt({
     title: `Purchase ${lot.id}`,
-    lines: [
-      { label: "Item", text: lot.item.name },
-      { label: "List value", amount: lot.listValue },
-      {
-        label: lot.clericalAdjustment
-          ? `Lot price (${LEDGER_COPY.clericalAdjustment})`
-          : "Lot price",
-        amount: -lot.price,
-        fee: true,
-      },
-      { label: "Credits paid", amount: -lot.price, total: true, fee: true },
-    ],
+    lines: receiptLines,
   });
   saveState();
   safeUpdateHangar();
@@ -3116,6 +3299,7 @@ function loadState() {
       debugShowFullCompendium: false,
       encounteredEnemies: {},
       killsByEnemyKey: {},
+      relicCollection: {},
       cargo: [],
       armory: {
         ownedLoadoutIds: ["fundamentals"],
@@ -3203,6 +3387,7 @@ function loadState() {
     parsed.debugShowFullCompendium = parsed.debugShowFullCompendium ?? false;
     parsed.encounteredEnemies = parsed.encounteredEnemies || {};
     parsed.killsByEnemyKey = parsed.killsByEnemyKey || {};
+    parsed.relicCollection = normalizeRelicCollection(parsed.relicCollection);
     parsed.cargo = Array.isArray(parsed.cargo) ? parsed.cargo : [];
     const hadShipBuild = !!parsed.shipBuild;
     parsed.shipBuild = parsed.shipBuild || createDefaultShipBuild();
@@ -3232,6 +3417,7 @@ function loadState() {
     parsed.shipBuild.flowRateLevel = parsed.shipBuild.flowRateLevel ?? 0;
     parsed.shipBuild.flowVelocityLevel = parsed.shipBuild.flowVelocityLevel ?? 0;
     parsed.shipBuild.flowSizeLevel = parsed.shipBuild.flowSizeLevel ?? 0;
+    parsed.shipBuild.kineticImpulseBudget = parsed.shipBuild.kineticImpulseBudget ?? 0;
     parsed.shipBuild.ammo = parsed.shipBuild.ammo || parsed.weapon?.payload || "kinetic";
     parsed.shipBuild.effect = parsed.shipBuild.effect || "none";
     parsed.shipBuild.effectUpgrades = parsed.shipBuild.effectUpgrades || {};
@@ -3315,6 +3501,7 @@ function loadState() {
       debugShowFullCompendium: false,
       encounteredEnemies: {},
       killsByEnemyKey: {},
+      relicCollection: {},
       cargo: [],
       armory: {
         ownedLoadoutIds: ["fundamentals"],
@@ -3393,6 +3580,7 @@ function getShipBuild() {
       ...state.shipBuild.effectUpgrades,
     };
   }
+  state.shipBuild.kineticImpulseBudget = state.shipBuild.kineticImpulseBudget ?? 0;
   return state.shipBuild;
 }
 
@@ -3868,6 +4056,12 @@ function renderDebriefSummary(summary) {
             const affixes = Array.isArray(item.affixes) && item.affixes.length
               ? item.affixes.map((affix) => affix.name || affix.id).join(", ")
               : "No affix trace";
+            const relicLore =
+              item.relicLore && item.relicFirstDiscovery
+                ? `<div class="salvage-relic-lore">${escapeHtml(item.relicLore)}</div>`
+                : item.relicId && item.relicLore
+                  ? `<div class="salvage-relic-lore archived">Relic record already archived.</div>`
+                  : "";
             const sourceLabel =
               index >= identified.length - (summary.bossSalvageCount || 0)
                 ? LEDGER_COPY.bossPod
@@ -3881,6 +4075,7 @@ function renderDebriefSummary(summary) {
                   <div class="salvage-item-kicker">${escapeHtml(sourceLabel)} identified</div>
                   <div class="salvage-item-name">${escapeHtml(item.name)}</div>
                   <div class="salvage-item-meta">${escapeHtml(getRarityLabel(rarity))} | ${formatCredits(item.value || 0)} | ${escapeHtml(affixes)}</div>
+                  ${relicLore}
                   <div class="salvage-actions">
                     <button type="button" class="ghost small" data-debrief-keep="${escapeHtml(item.id)}">Keep</button>
                     <button type="button" class="small" data-debrief-sell="${escapeHtml(item.id)}">Sell</button>
@@ -4772,7 +4967,57 @@ function renderDroneCompendium() {
   renderDroneCompendiumAsync();
 }
 
+function renderRelicArchive() {
+  if (!relicArchive) return;
+  const relics = Object.values(getRelicCollection(state)).sort(
+    (a, b) => (a.discoveredAt || 0) - (b.discoveredAt || 0)
+  );
+  if (!relics.length) {
+    relicArchive.innerHTML = `
+      <div class="relic-archive-head">
+        <div>
+          <p class="armory-kicker">Pre-Founding Relics</p>
+          <h3>Collection Records</h3>
+        </div>
+        <span class="relic-count">0 logged</span>
+      </div>
+      <div class="relic-empty">No relic records filed.</div>
+    `;
+    return;
+  }
+  relicArchive.innerHTML = `
+    <div class="relic-archive-head">
+      <div>
+        <p class="armory-kicker">Pre-Founding Relics</p>
+        <h3>Collection Records</h3>
+      </div>
+      <span class="relic-count">${relics.length} logged</span>
+    </div>
+    <div class="relic-archive-list">
+      ${relics
+        .map((entry) => {
+          const tags = Array.isArray(entry.tags) ? entry.tags.slice(0, 4) : [];
+          return `
+            <article class="relic-card">
+              <div class="relic-card-top">
+                <div>
+                  <div class="relic-name">${escapeHtml(entry.baseName || entry.name)}</div>
+                  <div class="relic-meta">${escapeHtml(entry.uniquePropertyName || "Unique trace")} | ${entry.count} found</div>
+                </div>
+                <span class="tag warn">RELIC</span>
+              </div>
+              <p class="relic-lore">${escapeHtml(entry.lore)}</p>
+              <div class="compendium-tags">${tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
+            </article>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
 async function renderDroneCompendiumAsync() {
+  renderRelicArchive();
   if (!compendiumList) return;
   compendiumList.innerHTML = `<div class="muted">Loading intel…</div>`;
 
@@ -4839,6 +5084,7 @@ async function renderDroneCompendiumAsync() {
       ? `<div class="muted">No matching drones found.</div>`
       : `<div class="muted">No intel yet. Encounter enemies in missions to populate the compendium.</div>`;
   }
+  renderRelicArchive();
 }
 
 const rmbWeapons = [
@@ -5143,17 +5389,6 @@ function renderShipStatsPanel() {
   const mountShots = mount === "rear" ? 2 : 1;
   const totalProjectiles = shotsPerTrigger * mountShots;
 
-  const gunDiameter = build.gunDiameter || "medium";
-  let diameterScale = 1;
-  let diameterSpeedScale = 1;
-  if (cfg.ammo === "plasma") {
-    diameterScale = gunDiameter === "small" ? 1.05 : gunDiameter === "large" ? 2.2 : 1.45;
-    diameterSpeedScale = gunDiameter === "small" ? 0.82 : gunDiameter === "large" ? 0.45 : 0.62;
-  } else {
-    diameterScale = gunDiameter === "small" ? 0.85 : gunDiameter === "large" ? 1.25 : 1;
-    diameterSpeedScale = gunDiameter === "small" ? 1.12 : gunDiameter === "large" ? 0.9 : 1;
-  }
-
   const sampleDamage = computePrimaryDamage({
     ammo: cfg.ammo,
     speed: cfg.bulletSpeed,
@@ -5202,7 +5437,7 @@ function renderShipStatsPanel() {
   const formula =
     cfg.ammo === "plasma"
       ? `Plasma dmg = 12 * (radius/4)`
-      : `Kinetic dmg = 14 * (radius/4) * (speed/560)`;
+      : `Kinetic dmg = 14 * size * velocity^${ECONOMY.kinetic.velocityExponent}`;
 
   const rateNote =
     armorSlots > 0
@@ -5211,10 +5446,11 @@ function renderShipStatsPanel() {
 
   const triggerRate = cfg.cooldown > 0 ? 1 / cfg.cooldown : 0;
   const projPerSecond = triggerRate * totalProjectiles;
-  const sizeFactor = Math.max(0.05, cfg.projectileRadius / 4);
-  const velFactor = Math.max(0.2, cfg.bulletSpeed / 560);
-  const baseKinetic = 14;
-  const basePlasma = 12;
+  const sizeFactor = cfg.sizeFactor ?? Math.max(0.05, cfg.projectileRadius / 4);
+  const velFactor =
+    cfg.velocityFactor ?? Math.max(0.2, cfg.bulletSpeed / ECONOMY.kinetic.baseVelocity);
+  const baseKinetic = ECONOMY.kinetic.baseDamage;
+  const basePlasma = ECONOMY.plasma.baseDamage;
 
   const statRow = (label, value, tip) => `
     <div class="stat-row" tabindex="0">
@@ -5227,15 +5463,22 @@ function renderShipStatsPanel() {
   const damageTip =
     cfg.ammo === "plasma"
       ? `Plasma hit dmg = ${basePlasma} base * ${formatNumber(sizeFactor, 2)} (radius/4) = ${formatNumber(sampleDamage, 1)}`
-      : `Kinetic hit dmg = ${baseKinetic} base * ${formatNumber(sizeFactor, 2)} (radius/4) * ${formatNumber(velFactor, 2)} (speed/560) = ${formatNumber(sampleDamage, 1)}`;
+      : `Kinetic hit dmg = ${baseKinetic} base * ${formatNumber(sizeFactor, 2)} size * ${formatNumber(velFactor, 2)}^${ECONOMY.kinetic.velocityExponent} velocity = ${formatNumber(sampleDamage, 1)}`;
   const dotTip =
     cfg.ammo === "plasma"
       ? `DoT DPS = hitDmg * 0.45 = ${formatNumber(sampleDamage, 1)} * 0.45 = ${formatNumber(dotDps, 1)} (for ${dotDuration}s)`
       : "Plasma only.";
   const cooldownTip = `Cooldown = 0.28s base * ${formatNumber(cfg.flowRateScale, 3)} (Flow Rate) * ${formatNumber(cfg.armorPenalty, 2)} (Armor penalty) * ${cfg.spread === "burst" ? "2.15 (Burst)" : cfg.spread === "wide" ? "1.15 (Wide)" : "1.00"} = ${formatNumber(cfg.cooldown, 2)}s`;
-  const speedTip = `Speed = 560 base * ${formatNumber(diameterSpeedScale, 2)} (Gun diameter) * ${formatNumber(cfg.flowVelocityScale, 2)} (Velocity) = ${Math.round(cfg.bulletSpeed)} px/s`;
-  const radiusTip = `Radius = 4 base * ${formatNumber(diameterScale, 2)} (Gun diameter) * ${formatNumber(cfg.flowSizeScale, 2)} (Size) * ${cfg.spread === "focused" ? "1.00" : "0.50 (micro-shots)"} = ${formatNumber(cfg.projectileRadius, 1)} px`;
+  const speedTip =
+    cfg.ammo === "kinetic"
+      ? `Speed = ${ECONOMY.kinetic.baseVelocity} base * ${formatNumber(cfg.kineticImpulseBudget, 2)} impulse / ${formatNumber(sizeFactor, 2)}^${ECONOMY.kinetic.sizeVelocityTradeoff} size tradeoff = ${Math.round(cfg.bulletSpeed)} px/s`
+      : `Speed = ${ECONOMY.kinetic.baseVelocity} base * ${formatNumber(cfg.diameterSpeedScale, 2)} (Gun diameter) * ${formatNumber(cfg.flowVelocityScale, 2)} (Velocity) = ${Math.round(cfg.bulletSpeed)} px/s`;
+  const radiusTip = `Radius = 4 base * ${formatNumber(cfg.diameterScale, 2)} (Gun diameter) * ${formatNumber(cfg.flowSizeScale, 2)} (Size) * ${cfg.spread === "focused" ? "1.00" : "0.50 (micro-shots)"} = ${formatNumber(cfg.projectileRadius, 1)} px`;
   const rateTip = `${formatNumber(triggerRate, 2)} triggers/sec; ${totalProjectiles} proj/trigger => ${formatNumber(projPerSecond, 1)} proj/sec (theoretical)`;
+  const impulseTip =
+    cfg.ammo === "kinetic"
+      ? `Impulse budget = gun budget + velocity tuning + rarity/item bonuses. Size trades against muzzle velocity before damage uses velocity^${ECONOMY.kinetic.velocityExponent}.`
+      : "Kinetic only.";
   const explosiveTip = explosive
     ? `Explosion radius = 70 * (radius/4) * (1 + 0.18*tune)\n= 70 * ${formatNumber(sizeFactor, 2)} * (1 + 0.18*${cfg.effectTune ?? 0}) = ${Math.round(explosive.radius)}px.\nExplosion dmg = hitDmg * ${explosive.mult} (scaled by distance).`
     : "Not equipped.";
@@ -5269,6 +5512,7 @@ function renderShipStatsPanel() {
         ${statRow("DoT DPS", dotDps ? formatNumber(dotDps, 1) : "-", dotTip)}
         ${statRow("Cooldown", `${formatNumber(cfg.cooldown, 2)}s`, cooldownTip)}
         ${statRow("Trigger Rate", `${formatNumber(triggerRate, 2)}/s`, rateTip)}
+        ${cfg.ammo === "kinetic" ? statRow("Impulse Budget", formatNumber(cfg.kineticImpulseBudget, 2), impulseTip) : ""}
         ${statRow("Projectile Speed", `${Math.round(cfg.bulletSpeed)} px/s`, speedTip)}
         ${statRow("Projectile Radius", `${formatNumber(cfg.projectileRadius, 1)} px`, radiusTip)}
         ${statRow("Explosive", explosive ? `${Math.round(explosive.radius)}px` : "-", explosiveTip)}
@@ -5613,6 +5857,9 @@ function renderArmoryInspector(slotId) {
         .map((affix) => `<span class="armory-defense">${escapeHtml(affix.name || affix.id)}</span>`)
         .join("")
     : "";
+  const uniqueMeta = item.uniqueProperty?.name
+    ? `<span class="armory-defense">${escapeHtml(item.uniqueProperty.name)}</span>`
+    : "";
   armoryInspector.innerHTML = `
     <div class="armory-inspector-head">
       <div class="armory-inspector-title">
@@ -5623,7 +5870,7 @@ function renderArmoryInspector(slotId) {
       <span class="armory-chip">${statusLabel}</span>
     </div>
     <p class="armory-summary">${item.description}</p>
-    ${rarityMeta || valueMeta || affixMeta ? `<div class="armory-defenses">${rarityMeta}${valueMeta}${affixMeta}</div>` : ""}
+    ${rarityMeta || valueMeta || affixMeta || uniqueMeta ? `<div class="armory-defenses">${rarityMeta}${valueMeta}${affixMeta}${uniqueMeta}</div>` : ""}
     ${statRows}
   `;
 }
@@ -6358,9 +6605,20 @@ function getWeaponConfig() {
   };
 }
 
+function getKineticImpulseBudget(build, gunDiameter = "medium") {
+  const kinetic = ECONOMY.kinetic;
+  const baseBudget = kinetic.impulseBudgetByDiameter?.[gunDiameter] ?? 1;
+  const velocityBonus =
+    Math.max(0, build?.flowVelocityLevel ?? 0) * (kinetic.velocityLevelBudgetBonus ?? 0);
+  const itemBonus = Number.isFinite(build?.kineticImpulseBudget)
+    ? build.kineticImpulseBudget
+    : 0;
+  return Math.max(0.2, baseBudget + velocityBonus + itemBonus);
+}
+
 function getPrimaryFireConfig(buildOverride = null) {
   const build = buildOverride || getShipBuild();
-  const baseSpeed = 560;
+  const baseSpeed = ECONOMY.kinetic.baseVelocity;
   const baseCooldown = 0.28;
   const gunDiameter = build.gunDiameter || "medium";
   const spread = build.spread || "focused";
@@ -6393,7 +6651,18 @@ function getPrimaryFireConfig(buildOverride = null) {
 
   const microScale = spread === "focused" ? 1 : 0.5;
   const projectileRadius = 4 * diameterScale * flowSizeScale * microScale;
-  const bulletSpeed = baseSpeed * diameterSpeedScale * flowVelocityScale;
+  const sizeFactor = Math.max(0.05, projectileRadius / 4);
+  const kineticImpulseBudget =
+    ammo === "kinetic" ? getKineticImpulseBudget(build, gunDiameter) : null;
+  const velocityFactor =
+    ammo === "kinetic"
+      ? Math.max(
+          0.2,
+          kineticImpulseBudget /
+            Math.pow(sizeFactor, ECONOMY.kinetic.sizeVelocityTradeoff)
+        )
+      : diameterSpeedScale * flowVelocityScale;
+  const bulletSpeed = baseSpeed * velocityFactor;
 
   let cooldown = baseCooldown * armorPenalty * flowRateScale;
   if (spread === "burst") cooldown *= 2.15; // 5 shots at once
@@ -6422,17 +6691,24 @@ function getPrimaryFireConfig(buildOverride = null) {
     flowRateScale,
     flowVelocityScale,
     flowSizeScale,
+    diameterScale,
+    diameterSpeedScale,
+    sizeFactor,
+    velocityFactor,
+    kineticImpulseBudget,
   };
 }
 
-function computePrimaryDamage({ ammo, speed, radius }) {
+function computePrimaryDamage({ ammo, speed, radius, damageBoostMult = null }) {
   const sizeFactor = Math.max(0.05, radius / 4);
-  const velFactor = Math.max(0.2, speed / 560);
-  const baseKinetic = 14;
-  const basePlasma = 12;
+  const velFactor = Math.max(0.2, speed / ECONOMY.kinetic.baseVelocity);
+  const baseKinetic = ECONOMY.kinetic.baseDamage;
+  const basePlasma = ECONOMY.plasma.baseDamage;
   let damage =
-    ammo === "plasma" ? basePlasma * sizeFactor : baseKinetic * sizeFactor * velFactor;
-  damage *= player.damageBoostMult || 1;
+    ammo === "plasma"
+      ? basePlasma * sizeFactor
+      : baseKinetic * sizeFactor * Math.pow(velFactor, ECONOMY.kinetic.velocityExponent);
+  damage *= Number.isFinite(damageBoostMult) ? damageBoostMult : player.damageBoostMult || 1;
   return damage;
 }
 

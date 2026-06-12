@@ -43,6 +43,7 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
 
 const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8")).entries || {};
 const allowedItemSlotTypes = new Set(["primary", "defense", "aux", "support"]);
+const allowedDefenseTypes = new Set(["shield", "armor"]);
 const allowedItemEffects = new Set(["none", "homing", "explosive", "pierce", "vampiric"]);
 const allowedItemBuildKeys = new Set([
   "gunDiameter",
@@ -59,6 +60,7 @@ const allowedItemBuildKeys = new Set([
   "armorAmountLevel",
   "armorClass",
   "armorClassLevel",
+  "kineticImpulseBudget",
 ]);
 
 function listLevelFiles(dir) {
@@ -154,6 +156,52 @@ function validateTags(tags, context, errors, { required = true } = {}) {
   });
 }
 
+function validateItemPoolEntry(id, entry, label, affixIds, errors) {
+  if (!/^[a-z0-9_:-]+$/.test(id)) {
+    errors.push(`${label} '${id}' must use a stable lowercase id.`);
+  }
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    errors.push(`${label} '${id}' must be an object.`);
+    return;
+  }
+  if (!allowedItemSlotTypes.has(entry.slotType)) {
+    errors.push(`${label} '${id}' has invalid slotType '${entry.slotType}'.`);
+  }
+  if (typeof entry.name !== "string" || !entry.name.trim()) {
+    errors.push(`${label} '${id}' is missing name.`);
+  }
+  if (typeof entry.description !== "string" || !entry.description.trim()) {
+    errors.push(`${label} '${id}' is missing description.`);
+  }
+  validateTags(entry.tags, `${label} '${id}'`, errors);
+  validateItemBuild(entry.build || {}, `${label} '${id}'`, errors);
+  if (Array.isArray(entry.affixes)) {
+    entry.affixes.forEach((affixId) => {
+      if (!affixIds.has(affixId)) {
+        errors.push(`${label} '${id}' references unknown affix '${affixId}'.`);
+      }
+    });
+  }
+  if (entry.uniqueProperty !== undefined) {
+    if (!entry.uniqueProperty || typeof entry.uniqueProperty !== "object" || Array.isArray(entry.uniqueProperty)) {
+      errors.push(`${label} '${id}' has invalid uniqueProperty.`);
+    } else {
+      const property = entry.uniqueProperty;
+      if (typeof property.name !== "string" || !property.name.trim()) {
+        errors.push(`${label} '${id}' uniqueProperty is missing name.`);
+      }
+      validateTags(property.tags, `${label} '${id}' uniqueProperty`, errors, { required: false });
+      if (property.build) validateItemBuild(property.build, `${label} '${id}' uniqueProperty`, errors);
+      if (property.buildAdd) {
+        validateItemBuild(property.buildAdd, `${label} '${id}' uniqueProperty buildAdd`, errors);
+      }
+    }
+  }
+  if (entry.relicLore !== undefined && typeof entry.relicLore !== "string") {
+    errors.push(`${label} '${id}' relicLore must be a string.`);
+  }
+}
+
 function validateItemPool() {
   const errors = [];
   if (!fs.existsSync(ITEM_POOL_PATH)) {
@@ -166,11 +214,15 @@ function validateItemPool() {
   }
   const entries = pool.entries;
   const affixes = pool.affixes || {};
+  const relics = pool.relics || {};
   if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
     errors.push("item pool must define entries.");
   }
   if (typeof affixes !== "object" || Array.isArray(affixes)) {
     errors.push("item pool affixes must be an object.");
+  }
+  if (typeof relics !== "object" || Array.isArray(relics)) {
+    errors.push("item pool relics must be an object.");
   }
 
   const affixIds = new Set(Object.keys(affixes || {}));
@@ -195,36 +247,26 @@ function validateItemPool() {
       });
     }
     validateTags(affix.tags, `Affix '${id}'`, errors, { required: false });
+    if (affix.defenseTypes !== undefined) {
+      if (!Array.isArray(affix.defenseTypes) || !affix.defenseTypes.length) {
+        errors.push(`Affix '${id}' defenseTypes must be a non-empty array.`);
+      } else {
+        affix.defenseTypes.forEach((defenseType) => {
+          if (!allowedDefenseTypes.has(defenseType)) {
+            errors.push(`Affix '${id}' has invalid defenseType '${defenseType}'.`);
+          }
+        });
+      }
+    }
     if (affix.build) validateItemBuild(affix.build, `Affix '${id}'`, errors);
     if (affix.buildAdd) validateItemBuild(affix.buildAdd, `Affix '${id}' buildAdd`, errors);
   }
 
   for (const [id, entry] of Object.entries(entries || {})) {
-    if (!/^[a-z0-9_:-]+$/.test(id)) {
-      errors.push(`Item '${id}' must use a stable lowercase id.`);
-    }
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-      errors.push(`Item '${id}' must be an object.`);
-      continue;
-    }
-    if (!allowedItemSlotTypes.has(entry.slotType)) {
-      errors.push(`Item '${id}' has invalid slotType '${entry.slotType}'.`);
-    }
-    if (typeof entry.name !== "string" || !entry.name.trim()) {
-      errors.push(`Item '${id}' is missing name.`);
-    }
-    if (typeof entry.description !== "string" || !entry.description.trim()) {
-      errors.push(`Item '${id}' is missing description.`);
-    }
-    validateTags(entry.tags, `Item '${id}'`, errors);
-    validateItemBuild(entry.build || {}, `Item '${id}'`, errors);
-    if (Array.isArray(entry.affixes)) {
-      entry.affixes.forEach((affixId) => {
-        if (!affixIds.has(affixId)) {
-          errors.push(`Item '${id}' references unknown affix '${affixId}'.`);
-        }
-      });
-    }
+    validateItemPoolEntry(id, entry, "Item", affixIds, errors);
+  }
+  for (const [id, entry] of Object.entries(relics || {})) {
+    validateItemPoolEntry(id, entry, "Relic", affixIds, errors);
   }
   return errors;
 }

@@ -1390,6 +1390,7 @@ body {
 .station-scene > .ledger-terminal,
 .station-scene > .compendium-toolbar,
 .station-scene > .compendium-grid,
+.station-scene > .relic-archive,
 .station-scene > .mission-grid,
 .station-scene > .actions,
 .station-scene > p {
@@ -1556,12 +1557,89 @@ body {
 }
 
 .archive-scene {
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
 }
 
 .archive-scene .compendium-grid {
   overflow: auto;
   padding-right: 8px;
+}
+
+.relic-archive {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.relic-archive-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.relic-archive-head h3 {
+  margin: 2px 0 0;
+  color: #f8fafc;
+  font-size: 16px;
+}
+
+.relic-count {
+  color: #facc15;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.relic-empty {
+  color: #9bb9dd;
+  font-size: 12px;
+}
+
+.relic-archive-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  max-height: 180px;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.relic-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(251, 191, 36, 0.26);
+  border-radius: 8px;
+  background: rgba(13, 11, 22, 0.68);
+}
+
+.relic-card-top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.relic-name {
+  color: #f8fafc;
+  font-weight: 800;
+}
+
+.relic-meta {
+  margin-top: 2px;
+  color: #9bb9dd;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.relic-lore {
+  margin: 0;
+  color: #fde68a;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .onboarding-banner {
@@ -1920,6 +1998,22 @@ body {
   color: #9bb9dd;
   font-size: 12px;
   line-height: 1.4;
+}
+
+.salvage-relic-lore {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-left: 2px solid rgba(250, 204, 21, 0.75);
+  background: rgba(250, 204, 21, 0.08);
+  color: #fde68a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.salvage-relic-lore.archived {
+  color: #9bb9dd;
+  border-left-color: rgba(155, 185, 221, 0.5);
+  background: rgba(2, 6, 16, 0.22);
 }
 
 .salvage-actions {

@@ -14,6 +14,32 @@
         }
       }
     },
+    "homing_trace": {
+      "name": "Homing trace",
+      "description": "Guidance routines bend shots toward nearby targets.",
+      "tags": ["homing", "tracking"],
+      "slotTypes": ["primary"],
+      "exclusiveGroup": "weapon-effect",
+      "build": {
+        "effect": "homing",
+        "effectUpgrades": {
+          "homing": 1
+        }
+      }
+    },
+    "explosive_trace": {
+      "name": "Explosive trace",
+      "description": "Impact routines vent a small splash burst.",
+      "tags": ["explosive", "area"],
+      "slotTypes": ["primary"],
+      "exclusiveGroup": "weapon-effect",
+      "build": {
+        "effect": "explosive",
+        "effectUpgrades": {
+          "explosive": 1
+        }
+      }
+    },
     "vampiric_trace": {
       "name": "Vampiric trace",
       "description": "Confirmed kills return a small amount of hull integrity.",
@@ -28,20 +54,88 @@
       }
     },
     "flow_rate_plus": {
-      "name": "+Flow rate",
+      "name": "Flow-rate tune",
       "description": "Improves weapon cycling speed.",
       "tags": ["flow-rate"],
-      "slotTypes": ["primary"],
+      "slotTypes": ["primary", "aux"],
       "buildAdd": {
         "flowRateLevel": 1
       }
     },
+    "flow_velocity_plus": {
+      "name": "Flow-velocity tune",
+      "description": "Improves muzzle flow or support-system drive pressure.",
+      "tags": ["flow-velocity"],
+      "slotTypes": ["primary", "aux"],
+      "buildAdd": {
+        "flowVelocityLevel": 1
+      }
+    },
+    "flow_size_plus": {
+      "name": "Flow-size tune",
+      "description": "Increases projectile envelope or linked emitter volume.",
+      "tags": ["flow-size"],
+      "slotTypes": ["primary"],
+      "buildAdd": {
+        "flowSizeLevel": 1
+      }
+    },
+    "impulse_budget_plus": {
+      "name": "Impulse reserve",
+      "description": "Raises kinetic impulse budget without changing bore size.",
+      "tags": ["kinetic", "impulse"],
+      "slotTypes": ["primary", "aux"],
+      "buildAdd": {
+        "kineticImpulseBudget": 0.12
+      }
+    },
+    "shield_max_plus": {
+      "name": "Shield capacity tune",
+      "description": "Improves maximum shield strength.",
+      "tags": ["shield", "capacity"],
+      "slotTypes": ["defense", "aux"],
+      "defenseTypes": ["shield"],
+      "buildAdd": {
+        "shieldMaxLevel": 1
+      }
+    },
     "shield_regen_plus": {
-      "name": "+Shield regen",
+      "name": "Shield-regen tune",
       "description": "Improves shield recovery rate.",
       "tags": ["shield", "regen"],
       "slotTypes": ["defense", "aux"],
+      "defenseTypes": ["shield"],
       "buildAdd": {
+        "shieldRegenLevel": 1
+      }
+    },
+    "armor_plate_plus": {
+      "name": "Armor mass tune",
+      "description": "Adds recoverable armor volume to plating modules.",
+      "tags": ["armor", "plating"],
+      "slotTypes": ["defense"],
+      "defenseTypes": ["armor"],
+      "buildAdd": {
+        "armorAmountLevel": 1
+      }
+    },
+    "armor_class_plus": {
+      "name": "Armor class tune",
+      "description": "Improves per-hit armor mitigation.",
+      "tags": ["armor", "mitigation"],
+      "slotTypes": ["defense"],
+      "defenseTypes": ["armor"],
+      "buildAdd": {
+        "armorClassLevel": 1
+      }
+    },
+    "bulwark_capacitor": {
+      "name": "Bulwark capacitor",
+      "description": "Routes spare support charge into shields.",
+      "tags": ["shield", "bulwark", "aux"],
+      "slotTypes": ["aux"],
+      "buildAdd": {
+        "shieldMaxLevel": 1,
         "shieldRegenLevel": 1
       }
     }
@@ -188,6 +282,164 @@
       "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupYellow_shield.png",
       "tags": ["aux", "shield", "bulwark"],
       "build": {}
+    }
+  },
+  "relics": {
+    "relic_blackbox_driver": {
+      "slotType": "primary",
+      "sourceId": "relic_blackbox_driver",
+      "name": "Blackbox Driver",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A sealed kinetic driver with an undocumented recoil governor.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun10.png",
+      "tags": ["relic", "kinetic", "focused", "pierce", "anti-armor"],
+      "build": {
+        "gunDiameter": "large",
+        "spread": "focused",
+        "ammo": "kinetic",
+        "effect": "pierce",
+        "flowRateLevel": 0,
+        "flowVelocityLevel": 2,
+        "flowSizeLevel": 1,
+        "defenseSlots": ["shield", "armor"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 0,
+        "armorAmountLevel": 1,
+        "armorClass": 12,
+        "armorClassLevel": 0,
+        "kineticImpulseBudget": 0.12
+      },
+      "uniqueProperty": {
+        "id": "blackbox_overclock",
+        "name": "Blackbox overclock",
+        "description": "Adds sealed impulse reserve and deeper pierce tuning.",
+        "tags": ["impulse", "anti-armor"],
+        "build": {
+          "effectUpgrades": {
+            "pierce": 2
+          }
+        },
+        "buildAdd": {
+          "kineticImpulseBudget": 0.18
+        }
+      },
+      "relicLore": "TODO(adam): Final Blackbox Driver identification fragment."
+    },
+    "relic_greenline_bloom": {
+      "slotType": "primary",
+      "sourceId": "relic_greenline_bloom",
+      "name": "Greenline Bloom",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A plasma emitter that blooms into controlled micro-shot sheets.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/SpaceShooterRedux/PNG/Parts/gun08.png",
+      "tags": ["relic", "plasma", "wide", "explosive", "swarm"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "wide",
+        "ammo": "plasma",
+        "effect": "explosive",
+        "flowRateLevel": 2,
+        "flowVelocityLevel": 0,
+        "flowSizeLevel": 1,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 1,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0
+      },
+      "uniqueProperty": {
+        "id": "greenline_afterburn",
+        "name": "Greenline afterburn",
+        "description": "Adds cycling speed and bloom volume to plasma sheets.",
+        "tags": ["plasma", "area"],
+        "buildAdd": {
+          "flowRateLevel": 1,
+          "flowSizeLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Greenline Bloom identification fragment."
+    },
+    "relic_cradle_aegis": {
+      "slotType": "defense",
+      "defenseType": "shield",
+      "sourceId": "relic_cradle_aegis",
+      "name": "Cradle Aegis",
+      "subtitle": "Pre-Founding barrier",
+      "description": "A quiet shield lattice with impossible recovery discipline.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png",
+      "tags": ["relic", "shield", "defense", "regen"],
+      "build": {
+        "shieldMaxLevel": 2,
+        "shieldRegenLevel": 2
+      },
+      "uniqueProperty": {
+        "id": "cradle_memory",
+        "name": "Cradle memory",
+        "description": "Adds a deep capacity reserve and faster shield return.",
+        "tags": ["shield", "capacity"],
+        "buildAdd": {
+          "shieldMaxLevel": 1,
+          "shieldRegenLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Cradle Aegis identification fragment."
+    },
+    "relic_founder_plate": {
+      "slotType": "defense",
+      "defenseType": "armor",
+      "sourceId": "relic_founder_plate",
+      "name": "Founder Plate",
+      "subtitle": "Pre-Founding plating",
+      "description": "Dense old-world armor marked with an unreadable registry stamp.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/shield_gold.png",
+      "tags": ["relic", "armor", "defense", "plating"],
+      "build": {
+        "armorAmountLevel": 3,
+        "armorClass": 14,
+        "armorClassLevel": 1
+      },
+      "uniqueProperty": {
+        "id": "founder_claim_stamp",
+        "name": "Founder claim stamp",
+        "description": "Adds unusually clean per-hit mitigation.",
+        "tags": ["armor", "mitigation"],
+        "buildAdd": {
+          "armorClassLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Founder Plate identification fragment."
+    },
+    "relic_orphan_signal": {
+      "slotType": "aux",
+      "ability": "emp",
+      "sourceId": "relic_orphan_signal",
+      "name": "Orphan Signal",
+      "subtitle": "Pre-Founding pilot system",
+      "description": "An EMP projector that sings through inactive fleet channels.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_bolt.png",
+      "tags": ["relic", "aux", "emp", "control"],
+      "build": {
+        "flowVelocityLevel": 1,
+        "shieldRegenLevel": 1,
+        "kineticImpulseBudget": 0.1
+      },
+      "uniqueProperty": {
+        "id": "orphan_handshake",
+        "name": "Orphan handshake",
+        "description": "Adds support-link impulse reserve and shield feedback.",
+        "tags": ["aux", "impulse"],
+        "buildAdd": {
+          "kineticImpulseBudget": 0.12,
+          "shieldRegenLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Orphan Signal identification fragment."
     }
   }
 }

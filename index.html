@@ -7,10 +7,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=economy-tree-5" />
+    <link rel="stylesheet" href="style.css?v=clean-1" />
   </head>
   <body>
     <div id="app">
@@ -23,7 +23,6 @@
           <div class="hud-row"><span>Shields</span><span id="hud-shield">0</span></div>
         </div>
         <div class="hud-center">
-          <div class="title">Mini Fighter Program</div>
           <div class="subtitle" id="hud-mission">Mission 1</div>
           <div class="boss-progress">
             <span id="boss-label">Boss ETA</span>
@@ -40,39 +39,29 @@
         <div class="hud-right">
           <div class="hud-row"><span>Credits</span><span id="hud-credits">0</span></div>
           <div class="hud-row"><span>Timer</span><span id="hud-time">00:00</span></div>
-          <div class="hud-row"><span>Item 1</span><span id="hud-item-1">-</span></div>
-          <div class="hud-row"><span>Item 2</span><span id="hud-item-2">-</span></div>
         </div>
       </div>
 
       <div id="overlay">
         <div class="panel" id="hangar">
-          <div class="hangar-stage" id="hangar-stage">
-            <div class="hangar-hud-strip">
-              <div>
-                <p class="armory-kicker">Mothership Hangar</p>
-                <h1>Mini Fighter Program</h1>
+          <header class="hangar-top">
+            <div class="hangar-title">
+              <span class="kicker">Mothership Hangar</span>
+              <h1>Mini Fighter Program</h1>
+            </div>
+            <div class="hangar-stats">
+              <div class="hangar-stat">
+                <span class="label">Pilot Rank</span>
+                <strong id="pilot-rank">Rookie</strong>
               </div>
-              <div class="hangar-metrics">
-                <div>
-                  <span class="label">Pilot Rank</span>
-                  <strong id="pilot-rank">Rookie</strong>
-                </div>
-                <div>
-                  <span class="label">Available Credits</span>
-                  <strong id="available-credits">0</strong>
-                </div>
-                <div>
-                  <span class="label">Lifetime Credits</span>
-                  <strong id="lifetime-credits">0</strong>
-                </div>
-                <div>
-                  <span class="label">Last Mission</span>
-                  <strong id="last-mission">N/A</strong>
-                </div>
+              <div class="hangar-stat">
+                <span class="label">Credits</span>
+                <strong id="available-credits">0</strong>
               </div>
-              <div class="debug-station">
-                <div class="label">Debug</div>
+            </div>
+            <details class="dev-station">
+              <summary>DEV</summary>
+              <div class="dev-popover">
                 <label class="toggle">
                   <input type="checkbox" id="debug-unlock" />
                   <span>Unlock All Levels</span>
@@ -89,113 +78,81 @@
                   <input type="checkbox" id="debug-skip-onboarding" />
                   <span>Skip Onboarding</span>
                 </label>
-                <button id="reset-btn" class="ghost small">Reset Progress</button>
+                <button id="reset-btn" class="btn ghost small">Reset Progress</button>
               </div>
-            </div>
-            <div id="hangar-status" class="hangar-status" hidden></div>
-            <div id="onboarding-banner" class="onboarding-banner" hidden></div>
+            </details>
+          </header>
 
-            <div class="tab-panel hangar-scene hub-scene" id="scene-hub" data-tab-panel="hub">
-              <div class="hub-copy">
-                <p class="armory-kicker">Cradle 07</p>
-                <h2>Choose A Station</h2>
-                <p>Move through the mothership from the hangar floor. Each station keeps its own equipment, records, and launch path.</p>
-              </div>
-              <div class="hub-drone">
-                <img src="assets/SpaceShooterRedux/PNG/playerShip2_blue.png" alt="" />
-              </div>
-              <button class="scene-hotspot hotspot-armory" type="button" data-scene-target="loadout">
-                <span>Armory Bench</span>
+          <div id="hangar-status" class="hangar-status" hidden></div>
+          <div id="onboarding-banner" class="onboarding-banner" hidden></div>
+
+          <div class="scene hub-scene" data-tab-panel="hub">
+            <div class="hub-copy">
+              <span class="kicker">Cradle 07</span>
+              <h2>Choose A Station</h2>
+            </div>
+            <div class="hub-drone art-slot" data-art="hangar-drone">
+              <img src="assets/SpaceShooterRedux/PNG/playerShip2_blue.png" alt="" />
+            </div>
+            <nav class="hub-hotspots">
+              <button class="scene-hotspot" type="button" data-scene-target="loadout">
+                <span class="kicker">Armory Bench</span>
                 <strong>Refit</strong>
               </button>
-              <button class="scene-hotspot hotspot-ledger" type="button" data-scene-target="economy">
-                <span>Ledger Terminal</span>
-                <strong>Market</strong>
-              </button>
-              <button class="scene-hotspot hotspot-mission" type="button" data-scene-target="mission">
-                <span>Mission Board</span>
+              <button class="scene-hotspot" type="button" data-scene-target="mission">
+                <span class="kicker">Mission Board</span>
                 <strong>Launch</strong>
               </button>
-              <button class="scene-hotspot hotspot-archive" type="button" data-scene-target="compendium">
-                <span>Intel Archive</span>
-                <strong>Drone Records</strong>
+              <button class="scene-hotspot" type="button" data-scene-target="economy">
+                <span class="kicker">Ledger Terminal</span>
+                <strong>Market</strong>
               </button>
-            </div>
+              <button class="scene-hotspot" type="button" data-scene-target="compendium">
+                <span class="kicker">Intel Archive</span>
+                <strong>Records</strong>
+              </button>
+            </nav>
+          </div>
 
-          <div class="tab-panel hangar-scene station-scene armory-scene" id="tab-loadout" data-tab-panel="loadout" hidden>
+          <div class="scene station-scene armory-scene" data-tab-panel="loadout" hidden>
             <div class="scene-head">
-              <button class="scene-back ghost small" type="button" data-scene-target="hub">Back To Hangar</button>
+              <button class="btn ghost small scene-back" type="button" data-scene-target="hub">&larr; Hangar</button>
               <div>
-                <p class="armory-kicker">Armory Bench</p>
+                <span class="kicker">Armory Bench</span>
                 <h2>Drone Workbench</h2>
               </div>
+              <button id="select-mission-btn" class="btn primary">Select Mission</button>
             </div>
-            <div class="loadout armory-loadout">
-              <div class="armory-shell">
-                <div class="armory-stage-copy">
-                  <p class="armory-kicker">Combat Assembly</p>
-                  <h2>Select A Slot, Then Swap Gear</h2>
-                  <p class="investments-desc">
-                    Click a hardpoint on the drone to browse compatible gear. Hover the inventory icons on the
-                    right to compare modules, then click one to install it instantly.
-                  </p>
-                </div>
-                <div class="armory-main">
-                  <div class="armory-stage-panel">
-                    <div class="armory-bench" id="armory-bench" aria-label="Drone assembly bench"></div>
-                  </div>
-                  <div class="armory-side">
-                    <div class="armory-inspector" id="armory-inspector" aria-label="Selected module"></div>
-                    <div class="armory-rack">
-                      <div class="armory-rack-head">
-                        <div>
-                          <h3 id="armory-rack-title">Module Inventory</h3>
-                          <p class="muted" id="armory-rack-copy">
-                            Click a hardpoint to open a compatible inventory grid.
-                          </p>
-                        </div>
-                        <div class="armory-rack-actions">
-                          <button type="button" class="ghost small" id="armory-toggle-stats">Show Stats</button>
-                          <span class="armory-rack-tip" id="armory-rack-tip">Click icon to install</span>
-                        </div>
-                      </div>
-                      <div class="armory-inventory-grid" id="weapon-inventory"></div>
-                      <div class="ship-stats" id="ship-stats" aria-label="Ship stats" hidden></div>
+            <div class="armory-main">
+              <div class="armory-stage-panel art-slot" data-art="armory-bench">
+                <div class="armory-bench" id="armory-bench" aria-label="Drone assembly bench"></div>
+              </div>
+              <div class="armory-side">
+                <div class="armory-inspector" id="armory-inspector" aria-label="Selected module"></div>
+                <div class="armory-rack">
+                  <div class="armory-rack-head">
+                    <div>
+                      <h3 id="armory-rack-title">Module Inventory</h3>
+                      <p class="muted" id="armory-rack-copy">Click a hardpoint to browse gear.</p>
+                    </div>
+                    <div class="armory-rack-actions">
+                      <button type="button" class="btn ghost small" id="armory-toggle-stats">Show Stats</button>
+                      <span class="armory-rack-tip muted" id="armory-rack-tip">Click icon to install</span>
                     </div>
                   </div>
+                  <div class="armory-inventory-grid" id="weapon-inventory"></div>
+                  <div class="ship-stats" id="ship-stats" aria-label="Ship stats" hidden></div>
                 </div>
               </div>
-            </div>
-
-            <div class="loadout">
-              <h2>Mission Items</h2>
-              <p class="investments-desc">Equip consumables purchased in the Economy tab.</p>
-              <div class="consumable-slots">
-                <div class="consumable-slot">
-                  <span class="label">Slot 1</span>
-                  <span id="consumable-slot-1">Empty</span>
-                  <button id="clear-slot-1" class="ghost small">Clear</button>
-                </div>
-                <div class="consumable-slot">
-                  <span class="label">Slot 2</span>
-                  <span id="consumable-slot-2">Empty</span>
-                  <button id="clear-slot-2" class="ghost small">Clear</button>
-                </div>
-              </div>
-              <div class="upgrade-list" id="consumable-equip-list"></div>
-            </div>
-
-            <div class="actions">
-              <button id="select-mission-btn">Select Mission</button>
             </div>
           </div>
 
-          <div class="tab-panel hangar-scene station-scene ledger-scene" id="tab-economy" data-tab-panel="economy" hidden>
+          <div class="scene station-scene ledger-scene" data-tab-panel="economy" hidden>
             <div class="scene-head">
-              <button class="scene-back ghost small" type="button" data-scene-target="hub">Back To Hangar</button>
+              <button class="btn ghost small scene-back" type="button" data-scene-target="hub">&larr; Hangar</button>
               <div>
-                <p class="armory-kicker">Ledger Terminal</p>
-                <h2>Exchange Kiosk</h2>
+                <span class="kicker">Ledger Terminal</span>
+                <h2>MK-IV Claims Interface</h2>
               </div>
             </div>
             <div class="ledger-terminal">
@@ -205,154 +162,91 @@
                 <button class="ledger-mode-button" type="button" data-ledger-mode="claims">Claims</button>
               </div>
               <div class="ledger-screen">
-                <div class="ledger-screen-header">
-                  <div>
-                    <span>LEDGER TERMINAL</span>
-                    <strong>MK-IV CLAIMS INTERFACE</strong>
-                  </div>
-                  <div class="ledger-bulletin" id="ledger-bulletin"></div>
-                </div>
+                <div class="ledger-bulletin" id="ledger-bulletin"></div>
                 <section class="ledger-mode-panel active" data-ledger-panel="market">
-                  <div class="loadout ledger-market-section">
-                    <div class="ledger-market-head">
-                      <div>
-                        <p class="armory-kicker">Ledger Exchange</p>
-                        <h2>Market Lots & Salvage Sales</h2>
-                        <p class="investments-desc">
-                          Buy rotating lots, sell recovered inventory, and watch for quiet pricing errors.
-                        </p>
+                  <div class="ledger-market-grid">
+                    <section class="ledger-market-pane">
+                      <div class="ledger-pane-head">
+                        <h3>Available Lots</h3>
+                        <span class="ledger-pane-note">Rerolls after every mission</span>
                       </div>
-                    </div>
-                    <div class="ledger-market-grid">
-                      <section class="ledger-market-pane">
-                        <div class="ledger-pane-head">
-                          <h3>Available Lots</h3>
-                          <span class="ledger-pane-note">Rerolls after every mission</span>
-                        </div>
-                        <div class="ledger-market-list" id="ledger-stock-list"></div>
-                      </section>
-                      <section class="ledger-market-pane">
-                        <div class="ledger-pane-head">
-                          <h3>Inventory Claims</h3>
-                          <span class="ledger-pane-note">Standard sell rate: 40%</span>
-                        </div>
-                        <div class="ledger-market-list" id="ledger-inventory-list"></div>
-                      </section>
-                    </div>
+                      <div class="ledger-market-list" id="ledger-stock-list"></div>
+                    </section>
+                    <section class="ledger-market-pane">
+                      <div class="ledger-pane-head">
+                        <h3>Sell Inventory</h3>
+                        <span class="ledger-pane-note">Standard rate: 40% of list</span>
+                      </div>
+                      <div class="ledger-market-list" id="ledger-inventory-list"></div>
+                    </section>
                   </div>
                 </section>
                 <section class="ledger-mode-panel" data-ledger-panel="investments" hidden>
-                  <div class="loadout investments-section">
-                    <h2>Fleet Investments</h2>
-                    <p class="investments-desc">
-                      Invest in mothership infrastructure for long-term benefits. Returns compound over time.
-                    </p>
-                    <div class="economy-tree-shell">
-                      <div class="economy-tree-hud">
-                        <div>
-                          <span class="economy-hud-label">Available Credits</span>
-                          <strong id="economy-tree-credits">0</strong>
-                        </div>
-                        <div>
-                          <span class="economy-hud-label">Network Progress</span>
-                          <strong id="economy-tree-progress">0/15</strong>
-                        </div>
-                      </div>
-                      <div class="economy-tree-layout">
-                        <div class="economy-tree-map" id="investment-tree-map" aria-label="Fleet investment upgrade tree">
-                          <svg
-                            class="economy-tree-lines"
-                            id="investment-tree-lines"
-                            viewBox="0 0 100 100"
-                            preserveAspectRatio="none"
-                            aria-hidden="true"
-                          ></svg>
-                        </div>
-                        <aside
-                          class="economy-tree-inspector"
-                          id="investment-tree-inspector"
-                          aria-live="polite"
-                        ></aside>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="loadout">
-                    <h2>Hangar Store</h2>
-                    <p class="investments-desc">Purchase consumables for your next mission.</p>
-                    <div class="upgrade-list" id="consumable-store"></div>
-                  </div>
+                  <div class="invest-tracks" id="investment-tracks"></div>
                 </section>
                 <section class="ledger-mode-panel" data-ledger-panel="claims" hidden>
-                  <div class="loadout claims-section">
-                    <p class="armory-kicker">Claims Printer</p>
-                    <h2>Last Posted Receipt</h2>
-                    <div class="ledger-receipt" id="ledger-receipt"></div>
-                  </div>
+                  <div class="ledger-receipt" id="ledger-receipt"></div>
                 </section>
               </div>
             </div>
           </div>
 
-          <div class="tab-panel hangar-scene station-scene mission-board-scene" id="tab-mission" data-tab-panel="mission" hidden>
+          <div class="scene station-scene mission-board-scene" data-tab-panel="mission" hidden>
             <div class="scene-head">
-              <button class="scene-back ghost small" type="button" data-scene-target="hub">Back To Hangar</button>
+              <button class="btn ghost small scene-back" type="button" data-scene-target="hub">&larr; Hangar</button>
               <div>
-                <p class="armory-kicker">Mission Board</p>
-                <h2>Contracts Wall</h2>
+                <span class="kicker">Mission Board</span>
+                <h2>Contracts</h2>
               </div>
+              <button id="launch-btn" class="btn primary">Launch Mission</button>
             </div>
-            <p id="mission-briefing-text">Select a mission profile. Each sortie increases in difficulty.</p>
+            <p id="mission-briefing-text" class="muted briefing"></p>
             <div class="mission-grid" id="level-list"></div>
-            <div class="actions">
-              <button id="launch-btn">Launch Mission</button>
-            </div>
           </div>
 
-          <div class="tab-panel hangar-scene station-scene archive-scene" id="tab-compendium" data-tab-panel="compendium" hidden>
+          <div class="scene station-scene archive-scene" data-tab-panel="compendium" hidden>
             <div class="scene-head">
-              <button class="scene-back ghost small" type="button" data-scene-target="hub">Back To Hangar</button>
+              <button class="btn ghost small scene-back" type="button" data-scene-target="hub">&larr; Hangar</button>
               <div>
-                <p class="armory-kicker">Intel Archive</p>
-                <h2>Enemy Drone Compendium</h2>
+                <span class="kicker">Intel Archive</span>
+                <h2>Drone Records</h2>
+              </div>
+              <div class="compendium-toolbar">
+                <input id="compendium-search" class="compendium-search" type="search" placeholder="Search..." />
+                <label class="toggle compact">
+                  <input type="checkbox" id="compendium-show-bosses" checked />
+                  <span>Bosses</span>
+                </label>
               </div>
             </div>
-            <p class="investments-desc">
-              Field intel on hostile drones. (In the full game, entries unlock as you encounter them.)
-            </p>
-            <div class="compendium-toolbar">
-              <input id="compendium-search" class="compendium-search" type="search" placeholder="Search drones..." />
-              <label class="toggle compact">
-                <input type="checkbox" id="compendium-show-bosses" checked />
-                <span>Show Bosses</span>
-              </label>
+            <div class="archive-body">
+              <div class="compendium-grid" id="compendium-list"></div>
+              <section class="relic-archive" id="relic-archive"></section>
             </div>
-            <div class="compendium-grid" id="compendium-list"></div>
-            <section class="relic-archive" id="relic-archive"></section>
-          </div>
           </div>
         </div>
 
         <div class="panel claims-report-scene" id="debrief" hidden>
           <div class="scene-head">
             <div>
-              <p class="armory-kicker">Claims Report</p>
+              <span class="kicker">Claims Report</span>
               <h1>Mission Debrief</h1>
             </div>
             <div class="debrief-stamp" id="debrief-stamp">SETTLED</div>
           </div>
-          <p id="debrief-text">Your ship was destroyed. Escape pod recovered.</p>
+          <p id="debrief-text" class="muted"></p>
           <div class="stats-grid">
             <div>
               <div class="label">Time Survived</div>
-              <div id="debrief-time">00:00</div>
+              <div class="stat-big" id="debrief-time">00:00</div>
             </div>
             <div>
               <div class="label">Enemies Destroyed</div>
-              <div id="debrief-kills">0</div>
+              <div class="stat-big" id="debrief-kills">0</div>
             </div>
             <div>
               <div class="label">Credits Earned</div>
-              <div id="debrief-credits">0</div>
+              <div class="stat-big" id="debrief-credits">0</div>
             </div>
           </div>
           <div class="debrief-scroll">
@@ -360,7 +254,7 @@
             <div class="debrief-salvage" id="debrief-salvage"></div>
           </div>
           <div class="actions">
-            <button id="return-btn">Return to Hangar</button>
+            <button id="return-btn" class="btn primary">Return to Hangar</button>
           </div>
         </div>
       </div>
@@ -374,8 +268,6 @@
       </div>
 
       <div id="mobile-controls" aria-hidden="true" hidden>
-        <button class="mobile-btn item slot1" id="mobile-item-1">Item 1</button>
-        <button class="mobile-btn item slot2" id="mobile-item-2">Item 2</button>
         <button class="mobile-btn alt" id="mobile-alt">
           <img class="mobile-icon" id="mobile-alt-icon" alt="" />
           <span class="mobile-label" id="mobile-alt-label"></span>
@@ -388,7 +280,7 @@
         <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ship-modal-title">
           <div class="modal-header">
             <h3 id="ship-modal-title">Ship Module</h3>
-            <button class="ghost small" id="ship-modal-close" type="button">Close</button>
+            <button class="btn ghost small" id="ship-modal-close" type="button">Close</button>
           </div>
           <div class="modal-body" id="ship-modal-body"></div>
         </div>
@@ -402,20 +294,17 @@
           aria-labelledby="mission-intro-title"
         >
           <div class="modal-body mission-intro-body">
-            <p class="mission-intro-kicker">Emergency Briefing</p>
-            <h2 id="mission-intro-title">Flight School: Fundamentals</h2>
-            <p id="mission-intro-text">
-              Standard kinetic trainer. Stay on target and break formation before the warden arrives.
-            </p>
+            <span class="kicker">Emergency Briefing</span>
+            <h2 id="mission-intro-title">Flight School</h2>
+            <p id="mission-intro-text"></p>
             <div class="actions">
-              <button id="mission-intro-confirm" type="button">Let's go!</button>
+              <button id="mission-intro-confirm" class="btn primary" type="button">Let's go!</button>
             </div>
           </div>
         </div>
       </div>
-
     </div>
 
-    <script src="main.js?v=economy-tree-5"></script>
+    <script src="main.js?v=clean-1"></script>
   </body>
 </html>

@@ -52,29 +52,9 @@ const debugShowCompendium = document.getElementById("debug-show-compendium");
 const debugSkipOnboarding = document.getElementById("debug-skip-onboarding");
 const onboardingBanner = document.getElementById("onboarding-banner");
 const missionBriefingText = document.getElementById("mission-briefing-text");
-const treeBarrel = document.getElementById("tree-barrel");
-const treeTrigger = document.getElementById("tree-trigger");
-const treeMount = document.getElementById("tree-mount");
-const treePayload = document.getElementById("tree-payload");
-const treeModifier = document.getElementById("tree-modifier");
-const treePrimaryUpgrades = document.getElementById("tree-primary-upgrades");
-const treeAuxSelect = document.getElementById("tree-aux-select");
-const treeAuxUpgrades = document.getElementById("tree-aux-upgrades");
-const treeShipUpgrades = document.getElementById("tree-ship-upgrades");
 const hangarTabButtons = document.querySelectorAll(".tab-btn");
 const hangarSceneButtons = document.querySelectorAll("[data-scene-target]");
 const hangarTabPanels = document.querySelectorAll("[data-tab-panel]");
-const consumableStore = document.getElementById("consumable-store");
-const consumableEquipList = document.getElementById("consumable-equip-list");
-const consumableSlot1 = document.getElementById("consumable-slot-1");
-const consumableSlot2 = document.getElementById("consumable-slot-2");
-const clearSlot1 = document.getElementById("clear-slot-1");
-const clearSlot2 = document.getElementById("clear-slot-2");
-const investmentTreeMap = document.getElementById("investment-tree-map");
-const investmentTreeLines = document.getElementById("investment-tree-lines");
-const investmentTreeInspector = document.getElementById("investment-tree-inspector");
-const economyTreeCredits = document.getElementById("economy-tree-credits");
-const economyTreeProgress = document.getElementById("economy-tree-progress");
 const ledgerBulletin = document.getElementById("ledger-bulletin");
 const ledgerStockList = document.getElementById("ledger-stock-list");
 const ledgerInventoryList = document.getElementById("ledger-inventory-list");
@@ -82,19 +62,6 @@ const ledgerReceipt = document.getElementById("ledger-receipt");
 const ledgerModeButtons = document.querySelectorAll("[data-ledger-mode]");
 const ledgerModePanels = document.querySelectorAll("[data-ledger-panel]");
 
-// Investment UI elements
-const engineeringTier = document.getElementById("engineering-tier");
-const engineeringBenefits = document.getElementById("engineering-benefits");
-const engineeringInvest = document.getElementById("engineering-invest");
-const engineeringCost = document.getElementById("engineering-cost");
-const operationsTier = document.getElementById("operations-tier");
-const operationsBenefits = document.getElementById("operations-benefits");
-const operationsInvest = document.getElementById("operations-invest");
-const operationsCost = document.getElementById("operations-cost");
-const sharesTier = document.getElementById("shares-tier");
-const sharesBenefits = document.getElementById("shares-benefits");
-const sharesInvest = document.getElementById("shares-invest");
-const sharesCost = document.getElementById("shares-cost");
 
 const launchBtn = document.getElementById("launch-btn");
 const selectMissionBtn = document.getElementById("select-mission-btn");
@@ -555,24 +522,6 @@ const investmentTreeBranches = {
     ],
   },
 };
-
-const investmentTreeConnections = [
-  ["root", "engineering-0"],
-  ["engineering-0", "engineering-1"],
-  ["engineering-1", "engineering-2"],
-  ["engineering-1", "engineering-3"],
-  ["engineering-0", "engineering-4"],
-  ["root", "operations-0"],
-  ["operations-0", "operations-1"],
-  ["operations-1", "operations-2"],
-  ["operations-1", "operations-3"],
-  ["operations-3", "operations-4"],
-  ["root", "shares-0"],
-  ["shares-0", "shares-1"],
-  ["shares-1", "shares-2"],
-  ["shares-0", "shares-3"],
-  ["shares-3", "shares-4"],
-];
 
 function getSharesDividendRate() {
   const tier = state.investments?.shares ?? 0;
@@ -1165,7 +1114,6 @@ let activeMusic = null;
 const musicLibrary = new Map();
 const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
 let openUpgradeId = null;
-let selectedInvestmentNode = null;
 let enemyIdCounter = 1;
 let armorySelectedSlotId = "primary";
 let armoryPreviewItemId = null;
@@ -3218,21 +3166,7 @@ if (hudItem2) {
   });
 }
 
-if (clearSlot1) {
-  clearSlot1.addEventListener("click", () => {
-    state.consumableSlots[0] = "none";
-    saveState();
-    safeUpdateHangar();
-  });
-}
 
-if (clearSlot2) {
-  clearSlot2.addEventListener("click", () => {
-    state.consumableSlots[1] = "none";
-    saveState();
-    safeUpdateHangar();
-  });
-}
 
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".upgrade-node")) {
@@ -4188,10 +4122,7 @@ function updateHangar() {
     }
   }
 
-  renderAuxTree();
   renderShipUpgradesPanel();
-  renderConsumableLoadout();
-  renderConsumableStore();
   renderLedgerMarket();
   renderInvestments();
   setLedgerMode(activeLedgerMode);
@@ -4243,196 +4174,47 @@ async function autoLaunchFreshPilotMission() {
   }
 }
 
+
+
+
+
 function renderInvestments() {
-  if (!investmentTreeMap || !investmentTreeInspector) return;
-
-  const branchKeys = Object.keys(investmentTreeBranches);
-  const totalPurchased = branchKeys.reduce((sum, key) => sum + (state.investments[key] ?? 0), 0);
-  const totalTiers = branchKeys.reduce((sum, key) => sum + investments[key].tiers.length, 0);
-  const nodePositions = { root: { x: 50, y: 52 } };
-
-  branchKeys.forEach((key) => {
-    investmentTreeBranches[key].nodes.forEach((position, tierIndex) => {
-      nodePositions[`${key}-${tierIndex}`] = position;
-    });
-  });
-
-  normalizeSelectedInvestmentNode(branchKeys);
-
-  if (economyTreeCredits) {
-    setCountedNumber(economyTreeCredits, state.credits);
-  }
-  if (economyTreeProgress) {
-    economyTreeProgress.textContent = `${totalPurchased}/${totalTiers}`;
-  }
-
-  if (investmentTreeLines) {
-    investmentTreeLines.innerHTML = "";
-    investmentTreeConnections.forEach(([fromId, toId]) => {
-      const from = nodePositions[fromId];
-      const to = nodePositions[toId];
-      if (!from || !to) return;
-      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      line.setAttribute("x1", from.x);
-      line.setAttribute("y1", from.y);
-      line.setAttribute("x2", to.x);
-      line.setAttribute("y2", to.y);
-      line.classList.add("economy-tree-link", getInvestmentNodeStatus(toId));
-      investmentTreeLines.appendChild(line);
-    });
-  }
-
-  investmentTreeMap.querySelectorAll(".investment-tree-node").forEach((node) => node.remove());
-
-  const rootNode = document.createElement("div");
-  rootNode.className = "investment-tree-node root purchased";
-  rootNode.style.left = `${nodePositions.root.x}%`;
-  rootNode.style.top = `${nodePositions.root.y}%`;
-  rootNode.innerHTML = `
-    <span class="investment-node-icon">✦</span>
-    <span class="investment-node-tier">Fleet</span>
-  `;
-  investmentTreeMap.appendChild(rootNode);
-
-  branchKeys.forEach((key) => {
-    const branch = investmentTreeBranches[key];
-    const currentTier = state.investments[key] ?? 0;
+  const container = document.getElementById("investment-tracks");
+  if (!container) return;
+  container.innerHTML = "";
+  Object.keys(investments).forEach((key) => {
     const data = investments[key];
-    branch.nodes.forEach((position, tierIndex) => {
-      const tier = data.tiers[tierIndex];
-      const nodeId = `${key}-${tierIndex}`;
-      const purchased = tierIndex < currentTier;
-      const available = tierIndex === currentTier;
-      const affordable = available && state.credits >= tier.cost;
-      const locked = tierIndex > currentTier;
-      const selected =
-        selectedInvestmentNode?.key === key && selectedInvestmentNode?.tierIndex === tierIndex;
-      const node = document.createElement("button");
-      node.type = "button";
-      node.className = [
-        "investment-tree-node",
-        branch.accent,
-        purchased ? "purchased" : "",
-        available ? "available" : "",
-        affordable ? "affordable" : "",
-        locked ? "locked" : "",
-        selected ? "selected" : "",
-      ]
-        .filter(Boolean)
-        .join(" ");
-      node.style.left = `${position.x}%`;
-      node.style.top = `${position.y}%`;
-      node.setAttribute("aria-pressed", selected ? "true" : "false");
-      node.setAttribute(
-        "aria-label",
-        `${data.name} tier ${tierIndex + 1}: ${tier.benefit}`
-      );
-      node.dataset.investmentKey = key;
-      node.dataset.tierIndex = tierIndex.toString();
-      node.innerHTML = `
-        <span class="investment-node-icon">${branch.icon}</span>
-        <span class="investment-node-tier">${tierIndex + 1}</span>
-        <span class="investment-node-cost">${tier.cost}</span>
-      `;
-      node.addEventListener("click", () => {
-        selectedInvestmentNode = { key, tierIndex };
-        renderInvestments();
-      });
-      investmentTreeMap.appendChild(node);
-    });
+    const branch = investmentTreeBranches[key] || {};
+    const currentTier = state.investments[key] ?? 0;
+    const maxTier = data.tiers.length;
+    const nextTier = currentTier < maxTier ? data.tiers[currentTier] : null;
+    const affordable = !!nextTier && state.credits >= nextTier.cost;
+
+    const card = document.createElement("section");
+    card.className = `invest-track${nextTier ? "" : " maxed"}`;
+    const pips = data.tiers
+      .map((_, i) => `<span class="pip${i < currentTier ? " filled" : ""}"></span>`)
+      .join("");
+    card.innerHTML = `
+      <div class="invest-track-head">
+        <span class="invest-track-icon">${branch.icon || ""}</span>
+        <div>
+          <h3>${data.name}</h3>
+          <p class="muted">${branch.subtitle || ""}</p>
+        </div>
+      </div>
+      <div class="invest-pips">${pips}<span class="invest-tier-label">Tier ${currentTier}/${maxTier}</span></div>
+      <p class="invest-benefit">${nextTier ? `Next: ${nextTier.benefit}` : `Fully invested: ${data.tiers[maxTier - 1].benefit}`}</p>
+      <button type="button" class="invest-btn" ${affordable ? "" : "disabled"}>
+        ${nextTier ? `Invest ${nextTier.cost} cr` : "Complete"}
+      </button>
+    `;
+    const btn = card.querySelector(".invest-btn");
+    if (btn && affordable) {
+      btn.addEventListener("click", () => handleInvestment(key));
+    }
+    container.appendChild(card);
   });
-
-  renderInvestmentInspector();
-}
-
-function normalizeSelectedInvestmentNode(branchKeys = Object.keys(investmentTreeBranches)) {
-  if (!selectedInvestmentNode || !investments[selectedInvestmentNode.key]) {
-    const firstIncomplete = branchKeys.find(
-      (key) => (state.investments[key] ?? 0) < investments[key].tiers.length
-    );
-    const key = firstIncomplete || branchKeys[0];
-    selectedInvestmentNode = {
-      key,
-      tierIndex: Math.min(state.investments[key] ?? 0, investments[key].tiers.length - 1),
-    };
-    return;
-  }
-
-  const maxIndex = investments[selectedInvestmentNode.key].tiers.length - 1;
-  selectedInvestmentNode.tierIndex = Math.max(0, Math.min(selectedInvestmentNode.tierIndex, maxIndex));
-}
-
-function getInvestmentNodeStatus(nodeId) {
-  if (nodeId === "root") return "purchased";
-  const [key, tierText] = nodeId.split("-");
-  const tierIndex = Number(tierText);
-  const currentTier = state.investments[key] ?? 0;
-  if (tierIndex < currentTier) return "purchased";
-  if (tierIndex === currentTier) {
-    return state.credits >= investments[key].tiers[tierIndex].cost ? "affordable" : "available";
-  }
-  return "locked";
-}
-
-function renderInvestmentInspector() {
-  if (!investmentTreeInspector) return;
-  normalizeSelectedInvestmentNode();
-  const { key, tierIndex } = selectedInvestmentNode;
-  const data = investments[key];
-  const branch = investmentTreeBranches[key];
-  const tier = data.tiers[tierIndex];
-  const currentTier = state.investments[key] ?? 0;
-  const maxTier = data.tiers.length;
-  const purchased = tierIndex < currentTier;
-  const available = tierIndex === currentTier;
-  const locked = tierIndex > currentTier;
-  const affordable = available && state.credits >= tier.cost;
-  const status = purchased
-    ? "Installed"
-    : locked
-      ? `Requires Tier ${tierIndex}`
-      : affordable
-        ? "Ready to install"
-        : "Not enough credits";
-  const buttonLabel = purchased
-    ? "Installed"
-    : locked
-      ? "Locked"
-      : affordable
-        ? "Purchase Node"
-        : "Need Credits";
-
-  investmentTreeInspector.className = `economy-tree-inspector ${branch.accent}`;
-  investmentTreeInspector.innerHTML = `
-    <div class="economy-inspector-kicker">${data.name}</div>
-    <div class="economy-inspector-title">
-      <span>${branch.icon}</span>
-      <strong>Tier ${tierIndex + 1}/${maxTier}</strong>
-    </div>
-    <p>${branch.subtitle}</p>
-    <div class="economy-inspector-benefit">${tier.benefit}</div>
-    <div class="economy-inspector-stats">
-      <span>Status</span><strong>${status}</strong>
-      <span>Upgrade Cost</span><strong>${state.credits}/${tier.cost}</strong>
-      <span>Track Progress</span><strong>${currentTier}/${maxTier}</strong>
-    </div>
-    <button type="button" class="invest-btn economy-tree-buy" ${affordable ? "" : "disabled"}>
-      ${buttonLabel}
-    </button>
-  `;
-
-  const buyButton = investmentTreeInspector.querySelector(".economy-tree-buy");
-  if (buyButton && affordable) {
-    buyButton.addEventListener("click", () => {
-      handleInvestment(key);
-      const nextTier = state.investments[key] ?? 0;
-      selectedInvestmentNode = {
-        key,
-        tierIndex: Math.min(nextTier, maxTier - 1),
-      };
-      safeUpdateHangar();
-    });
-  }
 }
 
 function handleInvestment(key) {
@@ -4449,16 +4231,6 @@ function handleInvestment(key) {
   safeUpdateHangar();
 }
 
-// Wire up investment buttons
-if (engineeringInvest) {
-  engineeringInvest.addEventListener("click", () => handleInvestment("engineering"));
-}
-if (operationsInvest) {
-  operationsInvest.addEventListener("click", () => handleInvestment("operations"));
-}
-if (sharesInvest) {
-  sharesInvest.addEventListener("click", () => handleInvestment("shares"));
-}
 
 function renderLevelSelect() {
   renderLevelSelectAsync();
@@ -5145,54 +4917,6 @@ const upgradeCategories = {
 
 const upgradeRequirements = {};
 
-function renderComponentNodes(container, options, current, key) {
-  if (!container) return;
-  container.innerHTML = "";
-  const credits = state.lifetimeCredits;
-  const unlocked = state.unlocked?.[key] || {};
-  options.forEach((option) => {
-    const rankLocked = credits < option.unlockAt && !state.debugUnlock;
-    const isUnlocked = state.debugUnlock || unlocked[option.id];
-    const cost = option.cost ?? 0;
-    const canPurchase = !rankLocked && !isUnlocked && state.credits >= cost;
-    const button = document.createElement("button");
-    button.className = "tree-node";
-    if (option.id === current) {
-      button.classList.add("active");
-    }
-    if (rankLocked || (!isUnlocked && !canPurchase)) {
-      button.classList.add("locked");
-    }
-    button.disabled = rankLocked || (!isUnlocked && !canPurchase);
-    let metaText = "Equip";
-    if (rankLocked) {
-      metaText = `Locked @ ${option.unlockAt}`;
-    } else if (!isUnlocked) {
-      metaText = `Unlock ${cost}/${state.credits}`;
-    } else if (option.id === current) {
-      metaText = "Equipped";
-    } else {
-      metaText = "Unlocked";
-    }
-    button.innerHTML = `
-      <span class="node-title">${option.name}</span>
-      <span class="node-meta">${metaText}</span>
-    `;
-    button.addEventListener("click", () => {
-      if (rankLocked) return;
-      if (!isUnlocked) {
-        if (cost > 0 && state.credits < cost) return;
-        state.credits -= cost;
-        if (!state.unlocked[key]) state.unlocked[key] = {};
-        state.unlocked[key][option.id] = true;
-      }
-      state.weapon[key] = option.id;
-      saveState();
-      safeUpdateHangar();
-    });
-    container.appendChild(button);
-  });
-}
 
 function ensureComponentSelection(key, options) {
   const credits = state.lifetimeCredits;
@@ -5231,144 +4955,9 @@ function ensureAuxSelection() {
   }
 }
 
-function renderUpgradeNodes(container, upgradeIds) {
-  if (!container) return;
-  container.innerHTML = "";
-  upgradeIds.forEach((upgradeId) => {
-    const upgrade = upgrades.find((item) => item.id === upgradeId);
-    if (!upgrade) return;
-    const level = state.upgrades[upgradeId];
-    const cost = upgradeCost(upgradeId);
-    const maxLevel = upgrade.maxLevel ?? Infinity;
-    const requirement = upgradeRequirements[upgradeId];
-    const meetsRequirement = requirement ? requirement.test() : true;
-    const canPurchase = meetsRequirement && level < maxLevel && state.credits >= cost;
 
-    const node = document.createElement("div");
-    node.className = "tree-node upgrade-node";
-    node.tabIndex = 0;
-    if (openUpgradeId === upgradeId) {
-      node.classList.add("open");
-    }
-    if (!canPurchase || !meetsRequirement) {
-      node.classList.add("locked");
-    }
 
-    const title = document.createElement("span");
-    title.className = "node-title";
-    title.textContent = `${upgrade.name} (Lv ${level})`;
 
-    const meta = document.createElement("span");
-    meta.className = "node-meta";
-    if (level >= maxLevel) {
-      meta.textContent = "Maxed";
-    } else {
-      meta.textContent = meetsRequirement ? "Upgrade available" : requirement?.label || "Locked";
-    }
-
-    const popover = document.createElement("div");
-    popover.className = "node-popover";
-
-    const desc = document.createElement("div");
-    desc.className = "node-desc";
-    desc.textContent = upgrade.desc;
-
-    const costRow = document.createElement("div");
-    costRow.className = "node-cost";
-    if (level >= maxLevel) {
-      costRow.textContent = "Maximum level reached";
-    } else if (!meetsRequirement) {
-      costRow.textContent = requirement?.label || "Locked";
-    } else {
-      costRow.textContent = `Cost: ${cost}/${state.credits}`;
-    }
-
-    popover.appendChild(desc);
-    popover.appendChild(costRow);
-
-    node.appendChild(title);
-    node.appendChild(meta);
-    node.appendChild(popover);
-    node.addEventListener("click", (event) => {
-      event.stopPropagation();
-      openUpgradeId = upgradeId;
-      if (canPurchase) {
-        state.credits -= cost;
-        state.upgrades[upgradeId] += 1;
-        saveState();
-      }
-      safeUpdateHangar();
-    });
-    container.appendChild(node);
-  });
-}
-
-function renderWeaponTree() {
-  ensureComponentSelection("barrel", weaponComponents.barrel);
-  ensureComponentSelection("trigger", weaponComponents.trigger);
-  ensureComponentSelection("mount", weaponComponents.mount);
-  ensureComponentSelection("payload", weaponComponents.payload);
-  ensureComponentSelection("modifier", weaponComponents.modifier);
-  renderComponentNodes(treeBarrel, weaponComponents.barrel, state.weapon.barrel, "barrel");
-  renderComponentNodes(treeTrigger, weaponComponents.trigger, state.weapon.trigger, "trigger");
-  renderComponentNodes(treeMount, weaponComponents.mount, state.weapon.mount, "mount");
-  renderComponentNodes(treePayload, weaponComponents.payload, state.weapon.payload, "payload");
-  renderComponentNodes(treeModifier, weaponComponents.modifier, state.weapon.modifier, "modifier");
-}
-
-function renderAuxTree() {
-  if (!treeAuxSelect) return;
-  ensureAuxSelection();
-  treeAuxSelect.innerHTML = "";
-  const credits = state.lifetimeCredits;
-  const unlockedAux = state.unlocked?.aux || {};
-  rmbWeapons.forEach((weapon) => {
-    const rankLocked = credits < (weapon.unlockAt ?? 0) && !state.debugUnlock;
-    const isUnlocked = state.debugUnlock || unlockedAux[weapon.id];
-    const cost = weapon.cost ?? 0;
-    const canPurchase = !rankLocked && !isUnlocked && state.credits >= cost;
-    const button = document.createElement("button");
-    button.className = "tree-node";
-    if (state.rmbWeapon === weapon.id) {
-      button.classList.add("active");
-    }
-    if (rankLocked || (!isUnlocked && !canPurchase)) {
-      button.classList.add("locked");
-    }
-    button.disabled = rankLocked || (!isUnlocked && !canPurchase);
-    let metaText = weapon.desc;
-    if (rankLocked) {
-      metaText = `Locked @ ${weapon.unlockAt ?? 0}`;
-    } else if (!isUnlocked) {
-      metaText = `Unlock ${cost}/${state.credits}`;
-    } else if (state.rmbWeapon === weapon.id) {
-      metaText = "Equipped";
-    }
-    button.innerHTML = `
-      <span class="node-title">${weapon.name}</span>
-      <span class="node-meta">${metaText}</span>
-    `;
-    button.addEventListener("click", () => {
-      if (rankLocked) return;
-      if (!isUnlocked) {
-        if (cost > 0 && state.credits < cost) return;
-        state.credits -= cost;
-        if (!state.unlocked.aux) state.unlocked.aux = {};
-        state.unlocked.aux[weapon.id] = true;
-      }
-      state.rmbWeapon = weapon.id;
-      saveState();
-      safeUpdateHangar();
-    });
-    treeAuxSelect.appendChild(button);
-  });
-}
-
-function renderUpgradeTrees() {
-  renderUpgradeNodes(treePrimaryUpgrades, upgradeCategories.primary);
-  renderUpgradeNodes(treeAuxUpgrades, upgradeCategories.aux);
-  renderUpgradeNodes(treeShipUpgrades, upgradeCategories.ship);
-}
 
 function shipPanelUpgradeCost(baseCost, level) {
   return Math.round(baseCost * Math.pow(1.45, level));
@@ -6009,54 +5598,6 @@ function isConsumableUnlocked(item) {
   return engineeringTier >= (item.unlockTier ?? 0);
 }
 
-function renderConsumableStore() {
-  if (!consumableStore) return;
-  consumableStore.innerHTML = "";
-  consumables.forEach((item) => {
-    const unlocked = isConsumableUnlocked(item);
-    const owned = state.consumablesOwned[item.id] ?? 0;
-    const canAfford = state.credits >= item.cost;
-
-    const entry = document.createElement("div");
-    entry.className = "upgrade-item";
-    if (!unlocked) {
-      entry.classList.add("locked");
-    }
-
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    const unlockNote =
-      !unlocked && item.unlockTier
-        ? `<span class="desc">Requires Engineering Tier ${item.unlockTier}</span>`
-        : "";
-    meta.innerHTML = `
-      <span class="name">${item.name}</span>
-      <span class="desc">${item.desc}</span>
-      ${unlockNote}
-      <span class="cost">Cost: ${item.cost} | Owned: ${owned}</span>
-    `;
-
-    const button = document.createElement("button");
-    if (!unlocked) {
-      button.textContent = "Locked";
-      button.disabled = true;
-    } else {
-      button.textContent = canAfford ? "Buy" : "Insufficient";
-      button.disabled = !canAfford;
-      button.addEventListener("click", () => {
-        if (state.credits < item.cost) return;
-        state.credits -= item.cost;
-        state.consumablesOwned[item.id] = (state.consumablesOwned[item.id] ?? 0) + 1;
-        saveState();
-        safeUpdateHangar();
-      });
-    }
-
-    entry.appendChild(meta);
-    entry.appendChild(button);
-    consumableStore.appendChild(entry);
-  });
-}
 
 function renderLedgerReceiptPanel(ledger) {
   if (!ledgerReceipt) return;
@@ -6199,80 +5740,6 @@ function renderLedgerMarket() {
   });
 }
 
-function renderConsumableLoadout() {
-  if (!consumableEquipList) return;
-  const slotIds = state.consumableSlots || ["none", "none"];
-  const slotLabels = slotIds.map((slotId) => {
-    if (!slotId || slotId === "none") return "Empty";
-    return consumablesById[slotId]?.name || "Unknown";
-  });
-
-  if (consumableSlot1) consumableSlot1.textContent = slotLabels[0];
-  if (consumableSlot2) consumableSlot2.textContent = slotLabels[1];
-  if (clearSlot1) clearSlot1.disabled = slotIds[0] === "none";
-  if (clearSlot2) clearSlot2.disabled = slotIds[1] === "none";
-
-  consumableEquipList.innerHTML = "";
-  consumables.forEach((item) => {
-    const unlocked = isConsumableUnlocked(item);
-    const owned = state.consumablesOwned[item.id] ?? 0;
-    const slot1Active = slotIds[0] === item.id;
-    const slot2Active = slotIds[1] === item.id;
-
-    const entry = document.createElement("div");
-    entry.className = "upgrade-item";
-    if (!unlocked) {
-      entry.classList.add("locked");
-    }
-    if (slot1Active || slot2Active) {
-      entry.classList.add("active");
-    }
-
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    const unlockNote =
-      !unlocked && item.unlockTier
-        ? `<span class="desc">Requires Engineering Tier ${item.unlockTier}</span>`
-        : "";
-    meta.innerHTML = `
-      <span class="name">${item.name}</span>
-      <span class="desc">${item.desc}</span>
-      ${unlockNote}
-      <span class="cost">Owned: ${owned} | Uses/mission: ${item.usesPerMission}</span>
-    `;
-
-    const actions = document.createElement("div");
-    actions.className = "consumable-actions";
-
-    const slot1Btn = document.createElement("button");
-    slot1Btn.className = "ghost small";
-    slot1Btn.textContent = slot1Active ? "Slot 1 (eq)" : "Slot 1";
-    slot1Btn.disabled = !unlocked;
-    slot1Btn.addEventListener("click", () => {
-      if (!unlocked) return;
-      state.consumableSlots[0] = item.id;
-      saveState();
-      safeUpdateHangar();
-    });
-
-    const slot2Btn = document.createElement("button");
-    slot2Btn.className = "ghost small";
-    slot2Btn.textContent = slot2Active ? "Slot 2 (eq)" : "Slot 2";
-    slot2Btn.disabled = !unlocked;
-    slot2Btn.addEventListener("click", () => {
-      if (!unlocked) return;
-      state.consumableSlots[1] = item.id;
-      saveState();
-      safeUpdateHangar();
-    });
-
-    actions.appendChild(slot1Btn);
-    actions.appendChild(slot2Btn);
-    entry.appendChild(meta);
-    entry.appendChild(actions);
-    consumableEquipList.appendChild(entry);
-  });
-}
 
 function getPilotRank(credits) {
   if (credits < 250) return "Rookie";

@@ -190,6 +190,12 @@ const ECONOMY = {
     eliteBonusChance: 0.15,
   },
   rarityOrder: ["scrap", "certified", "prototype", "preFounding"],
+  itemBaseTierGates: {
+    1: 1,
+    2: 2,
+    3: 4,
+    4: 6,
+  },
   rarities: {
     scrap: {
       label: "Scrap-grade",
@@ -249,13 +255,20 @@ const ECONOMY = {
       { tag: "kinetic", label: "Kinetic frames" },
       { tag: "plasma", label: "Plasma frames" },
       { tag: "anti-armor", label: "Anti-armor gear" },
+      { tag: "swarm", label: "Swarm-control gear" },
+      { tag: "wide", label: "Wide-pattern frames" },
+      { tag: "focused", label: "Focused frames" },
+      { tag: "homing", label: "Homing arrays" },
+      { tag: "explosive", label: "Explosive impact gear" },
       { tag: "shield", label: "Shield hardware" },
       { tag: "defense", label: "Defense modules" },
       { tag: "aux", label: "Aux systems" },
       { tag: "pierce", label: "Pierce traces" },
+      { tag: "heavy", label: "Heavy-bore gear" },
       { tag: "regen", label: "Regen hardware" },
       { tag: "control", label: "Control systems" },
       { tag: "evasion", label: "Evasion gear" },
+      { tag: "tracking", label: "Tracking gear" },
       { tag: "flow-rate", label: "Flow-rate tuning" },
       { tag: "sustain", label: "Sustain traces" },
     ],
@@ -1541,15 +1554,48 @@ function createRolledItem(baseId, baseEntry, rarity) {
   };
 }
 
-function rollItemForRarity(rarity) {
+function getCampaignProgressLevelForItemPools({ includeActiveMission = false } = {}) {
+  let progressLevel = Math.max(1, Math.floor(state.unlockedLevels || 1));
+  if (includeActiveMission && mission?.level?.id) {
+    const baseId = missionBaseIdFor(mission.level.id);
+    const missionIndex = availableLevels.findIndex((level) => level.id === baseId);
+    if (missionIndex >= 0) {
+      progressLevel = Math.max(progressLevel, missionIndex + 1);
+    }
+  }
+  return progressLevel;
+}
+
+function getMaxUnlockedItemBaseTier({ sourceKey = null, includeActiveMission = false } = {}) {
+  const progressLevel = getCampaignProgressLevelForItemPools({ includeActiveMission });
+  const gates = ECONOMY.itemBaseTierGates || { 1: 1 };
+  let maxTier = 1;
+  Object.entries(gates).forEach(([tier, minCampaignLevel]) => {
+    if (progressLevel >= minCampaignLevel) {
+      maxTier = Math.max(maxTier, Number(tier));
+    }
+  });
+  if (sourceKey === "boss") {
+    maxTier = Math.max(maxTier, 4);
+  }
+  return maxTier;
+}
+
+function getItemBaseTier(entry, fallbackTier = 1) {
+  const tier = Number(entry?.tier);
+  return Number.isFinite(tier) ? Math.max(1, Math.floor(tier)) : fallbackTier;
+}
+
+function rollItemForRarity(rarity, options = {}) {
   const catalog = itemPoolCatalog || { entries: {}, relics: {} };
   const relicEntries = Object.entries(catalog.relics || {});
-  const rollSource = rarity === "preFounding" && relicEntries.length
-    ? catalog.relics
-    : catalog.entries;
+  const usingRelics = rarity === "preFounding" && relicEntries.length;
+  const rollSource = usingRelics ? catalog.relics : catalog.entries;
+  const maxTier = getMaxUnlockedItemBaseTier(options);
   const entries = Object.entries(rollSource || {}).filter(([, entry]) => {
     const slotType = normalizeArmorySlotType(entry.slotType);
-    return ["primary", "defense", "aux"].includes(slotType);
+    if (!["primary", "defense", "aux"].includes(slotType)) return false;
+    return getItemBaseTier(entry, usingRelics ? 4 : 1) <= maxTier;
   });
   if (!entries.length) return null;
   const [baseId, baseEntry] = entries[Math.floor(Math.random() * entries.length)];
@@ -1597,7 +1643,7 @@ function rollSalvageDrop(enemy, { force = false, forceSource = null } = {}) {
     ? shiftRarityWeightsUp(sourceConfig.rarityWeights)
     : sourceConfig.rarityWeights;
   const rarity = rollWeighted(weights);
-  const item = rollItemForRarity(rarity);
+  const item = rollItemForRarity(rarity, { sourceKey, includeActiveMission: true });
   if (!item) return null;
   item.dropSource = sourceKey;
   return {
@@ -1804,7 +1850,7 @@ function getMarketRarityWeights() {
 
 function rollMarketItem() {
   const rarity = rollWeighted(getMarketRarityWeights());
-  return rollItemForRarity(rarity);
+  return rollItemForRarity(rarity, { sourceKey: "market" });
 }
 
 function generateLedgerLotId(index) {

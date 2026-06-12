@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 10,
+  "sprites": [
+    { "name": "needle_storm", "cell": 0, "size": [112, 112], "componentMode": "largest" },
+    { "name": "twin_driver", "cell": 1, "size": [112, 112], "componentMode": "largest" },
+    { "name": "ember_spray", "cell": 2, "size": [112, 112], "componentMode": "largest" },
+    { "name": "slug_cannon", "cell": 3, "size": [120, 112], "componentMode": "largest" },
+    { "name": "plasma_lance", "cell": 4, "size": [120, 112], "componentMode": "largest" },
+    { "name": "seeker_array", "cell": 5, "size": [112, 112], "componentMode": "largest" },
+    { "name": "demolition_bore", "cell": 6, "size": [120, 112], "componentMode": "largest" },
+    { "name": "lash_driver", "cell": 7, "size": [112, 112], "componentMode": "largest" },
+    { "name": "longbow_rail", "cell": 8, "size": [128, 112], "componentMode": "largest" },
+    { "name": "surge_shield", "cell": 9, "size": [112, 112], "componentMode": "largest" },
+    { "name": "ablative_plate", "cell": 10, "size": [112, 112], "componentMode": "largest" },
+    { "name": "generic_weapon_housing", "cell": 11, "size": [112, 112], "componentMode": "largest" },
+    { "name": "generic_plasma_housing", "cell": 12, "size": [112, 112], "componentMode": "largest" },
+    { "name": "generic_kinetic_housing", "cell": 13, "size": [112, 112], "componentMode": "largest" },
+    { "name": "generic_defense_housing", "cell": 14, "size": [112, 112], "componentMode": "largest" },
+    { "name": "generic_relic_housing", "cell": 15, "size": [112, 112], "componentMode": "largest" }
+  ]
+}

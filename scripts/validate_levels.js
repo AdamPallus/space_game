@@ -173,6 +173,18 @@ function validateItemPoolEntry(id, entry, label, affixIds, errors) {
   if (typeof entry.description !== "string" || !entry.description.trim()) {
     errors.push(`${label} '${id}' is missing description.`);
   }
+  if (entry.tier !== undefined) {
+    if (!Number.isInteger(entry.tier) || entry.tier < 1 || entry.tier > 4) {
+      errors.push(`${label} '${id}' tier must be an integer from 1 to 4.`);
+    }
+  }
+  if (entry.icon !== undefined) {
+    if (typeof entry.icon !== "string" || !entry.icon.trim()) {
+      errors.push(`${label} '${id}' has invalid icon.`);
+    } else if (!/^https?:\/\//.test(entry.icon) && !fs.existsSync(path.join(ROOT, entry.icon))) {
+      errors.push(`${label} '${id}' icon does not exist: ${entry.icon}`);
+    }
+  }
   validateTags(entry.tags, `${label} '${id}'`, errors);
   validateItemBuild(entry.build || {}, `${label} '${id}'`, errors);
   if (Array.isArray(entry.affixes)) {

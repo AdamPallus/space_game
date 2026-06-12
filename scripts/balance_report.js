@@ -309,9 +309,12 @@ function applyDamageToEnemy(enemy, damage, { chipFloor = true } = {}) {
   return applied;
 }
 
-function expectedHits(spread, enemyRadius) {
+function expectedHits(spread, enemy) {
+  const enemyRadius = enemy.radius;
+  const armored = enemy.maxArmor > 0 || enemy.armorClass > 0;
   if (spread === "focused") return 1;
-  if (spread === "burst") return enemyRadius >= 34 ? 4 : 3;
+  if (spread === "burst") return armored ? 1.15 : enemyRadius >= 34 ? 4 : 3;
+  if (armored) return enemyRadius >= 60 ? 0.45 : 0.35;
   if (enemyRadius >= 60) return 3.5;
   if (enemyRadius >= 30) return 2.2;
   return 1.4;
@@ -340,19 +343,19 @@ function simulateTtk(build, enemyBase) {
   let dotTimer = 0;
   let dotDps = 0;
   while (elapsed <= 600) {
-    const hits = expectedHits(cfg.spread, enemy.radius);
+    const hits = expectedHits(cfg.spread, enemy);
     applyExpectedHits(enemy, hitDamage, hits);
     if (cfg.ammo === "plasma") {
       dotTimer = Math.max(dotTimer, 3);
       dotDps = Math.max(dotDps, hitDamage * 0.45);
     }
-    if (enemy.hull <= 0) return elapsed;
+    if (enemy.hull <= 0) return Math.max(cfg.cooldown, elapsed);
     const dt = cfg.cooldown;
     if (dotTimer > 0 && dotDps > 0) {
       const dotStep = Math.min(dotTimer, dt);
       applyDamageToEnemy(enemy, dotDps * dotStep, { chipFloor: false });
       dotTimer = Math.max(0, dotTimer - dt);
-      if (enemy.hull <= 0) return elapsed + dotStep;
+      if (enemy.hull <= 0) return Math.max(cfg.cooldown, elapsed + dotStep);
     }
     elapsed += dt;
   }
@@ -394,6 +397,19 @@ Object.entries(frames).forEach(([id, entry]) => {
 Object.entries(pool.entries || {})
   .filter(([, entry]) => normalizeSlotType(entry.slotType) === "primary")
   .forEach(([id, entry], index) => {
+    rows.push({
+      id: `base:${id}`,
+      name: entry.name || id,
+      tags: Array.isArray(entry.tags) ? entry.tags : [],
+      build: {
+        ...createDefaultShipBuild(),
+        ...clone(entry.build || {}),
+        effectUpgrades: {
+          ...createDefaultShipBuild().effectUpgrades,
+          ...clone(entry.build?.effectUpgrades || {}),
+        },
+      },
+    });
     rows.push(rollSampleItem(pool, id, entry, "certified", 1000 + index));
     rows.push(rollSampleItem(pool, id, entry, "prototype", 2000 + index));
   });
@@ -463,6 +479,65 @@ if (toughestPlated) {
       `Anti-armor reference: ${antiArmorBest.row.name} vs ${toughestPlated.id} = ${formatTtk(antiArmorBest.ttk)}s`
     );
   }
+}
+
+function requireRow(id) {
+  const row = matrix.find((candidate) => candidate.id === id);
+  if (!row) failures.push(`Balance report is missing ${id}.`);
+  return row;
+}
+
+const phase4bRows = {
+  needle: requireRow("base:needle_storm"),
+  ember: requireRow("base:ember_spray"),
+  slug: requireRow("base:slug_cannon"),
+  longbow: requireRow("base:longbow_rail"),
+};
+const phase4bPlatedTarget =
+  enemies.find((enemy) => enemy.id === "level8_armored:boss") ||
+  enemies.find((enemy) => enemy.id === "plated") ||
+  toughestPlated;
+const phase4bSwarmTarget =
+  enemies.find((enemy) => enemy.id === "fighter") ||
+  enemies.find((enemy) => enemy.id === "scout") ||
+  enemies.find((enemy) => enemy.id === "gnat");
+
+if (phase4bPlatedTarget && Object.values(phase4bRows).every(Boolean)) {
+  const armorRows = [phase4bRows.slug, phase4bRows.longbow];
+  const hoseRows = [phase4bRows.needle, phase4bRows.ember];
+  armorRows.forEach((armorRow) => {
+    hoseRows.forEach((hoseRow) => {
+      const armorTtk = armorRow.ttk[phase4bPlatedTarget.id];
+      const hoseTtk = hoseRow.ttk[phase4bPlatedTarget.id];
+      if (!(Number.isFinite(armorTtk) && Number.isFinite(hoseTtk) && hoseTtk >= armorTtk * 2.5)) {
+        failures.push(
+          `${armorRow.name} must beat ${hoseRow.name} by >=2.5x against ${phase4bPlatedTarget.id}; got ${formatTtk(armorTtk)}s vs ${formatTtk(hoseTtk)}s.`
+        );
+      }
+    });
+  });
+  console.log(
+    `Phase 4b plated check target: ${phase4bPlatedTarget.id} | Slug ${formatTtk(phase4bRows.slug.ttk[phase4bPlatedTarget.id])}s, Longbow ${formatTtk(phase4bRows.longbow.ttk[phase4bPlatedTarget.id])}s, Needle ${formatTtk(phase4bRows.needle.ttk[phase4bPlatedTarget.id])}s, Ember ${formatTtk(phase4bRows.ember.ttk[phase4bPlatedTarget.id])}s`
+  );
+}
+
+if (phase4bSwarmTarget && Object.values(phase4bRows).every(Boolean)) {
+  const bestHose = Math.min(
+    phase4bRows.needle.ttk[phase4bSwarmTarget.id],
+    phase4bRows.ember.ttk[phase4bSwarmTarget.id]
+  );
+  const bestArmor = Math.min(
+    phase4bRows.slug.ttk[phase4bSwarmTarget.id],
+    phase4bRows.longbow.ttk[phase4bSwarmTarget.id]
+  );
+  if (!(Number.isFinite(bestHose) && Number.isFinite(bestArmor) && bestHose < bestArmor)) {
+    failures.push(
+      `Needle Storm/Ember Spray must invert the relationship against ${phase4bSwarmTarget.id}; best hose ${formatTtk(bestHose)}s vs best armor ${formatTtk(bestArmor)}s.`
+    );
+  }
+  console.log(
+    `Phase 4b swarm check target: ${phase4bSwarmTarget.id} | best hose ${formatTtk(bestHose)}s, best armor ${formatTtk(bestArmor)}s`
+  );
 }
 
 if (failures.length) {

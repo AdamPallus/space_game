@@ -5525,7 +5525,7 @@ function renderShipUpgradesPanel() {
   if (armoryBench) {
     armoryBench.innerHTML = `
       <div class="armory-drone">
-        <img class="armory-ship-base" src="${ASSET_ROOT}/playerShip2_blue.png" alt="" aria-hidden="true" />
+        <img class="armory-ship-base" src="${GENERATED_PILOT_ROOT}/player_interceptor.png" alt="" aria-hidden="true" />
         ${slotDefs
           .map(
             (slot) => `

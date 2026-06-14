@@ -65,7 +65,7 @@ render the same way but in ink color — innate vs rolled is visible.
 | effect: pierce | `Shots pierce 1 additional enemy` |
 | effect: homing | `Shots seek nearby targets` |
 | effect: explosive | `Shots burst on impact (area damage)` |
-| effect: vampiric | `Kills restore a small amount of hull` |
+| effect: vampiric | `Damage dealt restores hull` |
 | shieldMaxLevel / shieldRegenLevel | `+X Shield` / `+X/s Shield Regen` |
 | armorAmountLevel / armorClassLevel | `+X Armor` / `+1 Armor Class` |
 

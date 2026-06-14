@@ -105,6 +105,7 @@ const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
 const GENERATED_PILOT_ROOT = `${GENERATED_ROOT}/pilot_sprites`;
+const BOSS_DEFEAT_DELAY_SECONDS = 2.8;
 const VALID_WEAPON_SPREADS = ["focused", "dual", "dualRapid", "rapid", "burst", "wide"];
 const WEAPON_SPREAD_LABELS = {
   focused: "Single",
@@ -4041,6 +4042,8 @@ async function startMission({ showIntro = false } = {}) {
     eventIndex: 0,
     spawnQueue: [],
     bossAlive: false,
+    bossDefeated: false,
+    bossFinishTimer: 0,
     bossSpawnTime: getBossSpawnTime(level),
     empTimer: 0,
     consumableSlots: consumablesState.slots,
@@ -4221,6 +4224,10 @@ function endMission({ ejected = false, completed = false } = {}) {
 
 function formatCredits(value) {
   return `${Math.round(value)} cr`;
+}
+
+function formatLedgerCredits(value) {
+  return `${Math.round(value)}¢`;
 }
 
 function escapeHtml(value) {
@@ -5516,6 +5523,36 @@ function getComparableSlotIdForItem(item, slotId = null) {
   return "primary";
 }
 
+function getCompactItemName(item) {
+  if (!item) return "Open";
+  if (item.baseName) return item.baseName;
+  let name = String(item.name || item.id || "Item").trim();
+  const rarityLabels = Object.values(ECONOMY.rarities || {})
+    .map((config) => config?.label)
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  for (const label of rarityLabels) {
+    if (name.startsWith(`${label} `)) {
+      name = name.slice(label.length + 1).trim();
+      break;
+    }
+  }
+  return name.split(" — ")[0].trim() || name;
+}
+
+function getInstalledSlotVisualRarity(item) {
+  if (!item) return null;
+  return item.rarity || "certified";
+}
+
+function getDenseItemRoleLabel(item) {
+  const slotType = normalizeArmorySlotType(item?.slotType);
+  if (slotType === "primary") return "Primary";
+  if (slotType === "defense") return item?.defenseType ? capitalize(item.defenseType) : "Defense";
+  if (isSupportSlotType(slotType)) return "Support";
+  return "Module";
+}
+
 function getItemTypeLine(item, build, slotId) {
   const rarityLabel = item?.rarity ? getRarityLabel(item.rarity) : "Standard";
   if (slotId === "primary") {
@@ -6116,8 +6153,11 @@ function getArmorySlotDefinitions() {
       label: "Primary Hardpoint",
       className: "armory-slot-primary",
       installedId: equippedWeapon?.id || null,
-      name: equippedWeapon ? getArmoryFrameVisual(equippedWeapon).hardpointName : "Open Hardpoint",
-      meta: equippedWeapon?.name || "No weapon linked",
+      item: equippedWeapon || null,
+      name: equippedWeapon ? getCompactItemName(equippedWeapon) : "Open Hardpoint",
+      meta: equippedWeapon?.build
+        ? `${getSpreadLabel(equippedWeapon.build.spread)} | ${capitalize(equippedWeapon.build.ammo || "kinetic")}`
+        : "No weapon linked",
       note: "Weapon modules change the projectile profile and hidden fire tuning.",
       icon: equippedWeapon ? getArmoryFrameVisual(equippedWeapon).icon : getDefaultItemIcon("certified"),
     },
@@ -6126,8 +6166,9 @@ function getArmorySlotDefinitions() {
       label: "Defense A",
       className: "armory-slot-defense-left",
       installedId: defenseSlotIds[0],
-      name: defenseA?.name || "Open Bay",
-      meta: "Shield or armor",
+      item: defenseA || null,
+      name: defenseA ? getCompactItemName(defenseA) : "Open Bay",
+      meta: defenseA?.defenseType ? `${capitalize(defenseA.defenseType)} module` : "Shield or armor",
       note: defenseA?.description || "Install a defense module into this bay.",
       icon: defenseA?.icon || defenseVisuals.none.icon,
     },
@@ -6136,8 +6177,9 @@ function getArmorySlotDefinitions() {
       label: "Defense B",
       className: "armory-slot-defense-right",
       installedId: defenseSlotIds[1],
-      name: defenseB?.name || "Open Bay",
-      meta: "Shield or armor",
+      item: defenseB || null,
+      name: defenseB ? getCompactItemName(defenseB) : "Open Bay",
+      meta: defenseB?.defenseType ? `${capitalize(defenseB.defenseType)} module` : "Shield or armor",
       note: defenseB?.description || "Install a defense module into this bay.",
       icon: defenseB?.icon || defenseVisuals.none.icon,
     },
@@ -6146,7 +6188,8 @@ function getArmorySlotDefinitions() {
       label: "Support",
       className: "armory-slot-support",
       installedId: support?.id || null,
-      name: support?.name || "No support linked",
+      item: support || null,
+      name: support ? getCompactItemName(support) : "No support linked",
       meta: "Pilot system",
       note: support?.description || "Install a support item for your alternate action.",
       icon: support?.icon || mobileAltIcons.cloak,
@@ -6357,7 +6400,6 @@ function renderArmoryInspector(slotId) {
       <span class="armory-chip">${statusLabel}</span>
     </div>
     ${renderItemDisplayBlock(display, { inline: true })}
-    ${item.description ? `<p class="armory-summary">${escapeHtml(item.description)}</p>` : ""}
   `;
 }
 
@@ -6375,25 +6417,27 @@ function renderShipUpgradesPanel() {
       <div class="armory-drone">
         <img class="armory-ship-base" src="${GENERATED_PILOT_ROOT}/player_interceptor.png" alt="" aria-hidden="true" />
         ${slotDefs
-          .map(
-            (slot) => `
+          .map((slot) => {
+            const visualRarity = getInstalledSlotVisualRarity(slot.item);
+            return `
           <button
             type="button"
-            class="armory-slot ${slot.className} is-clickable${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
+            class="armory-slot ${slot.className} is-clickable${visualRarity ? ` rarity-${visualRarity}` : ""}${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
             data-armory-slot="${slot.id}"
+            ${visualRarity ? `style="${getRarityStyle(visualRarity)}"` : ""}
           >
             <span class="armory-slot-label">${slot.label}</span>
             <span class="armory-slot-head">
-              <img class="armory-slot-icon" src="${slot.icon}" alt="" />
+              <span class="armory-slot-icon-frame"><img class="armory-slot-icon" src="${escapeHtml(slot.icon)}" alt="" /></span>
               <span class="armory-slot-copy">
-                <span class="armory-slot-name">${slot.name}</span>
-                <span class="armory-slot-meta">${slot.meta}</span>
+                <span class="armory-slot-name">${escapeHtml(slot.name)}</span>
+                <span class="armory-slot-meta">${escapeHtml(slot.meta)}</span>
               </span>
               <span class="armory-slot-pill">${slot.installedId && slot.installedId !== "none" ? "Installed" : "Open"}</span>
             </span>
           </button>
-        `
-          )
+        `;
+          })
           .join("")}
       </div>
     `;
@@ -6441,7 +6485,7 @@ function renderShipUpgradesPanel() {
     }
     button.innerHTML = `
       <span class="armory-inventory-icon"><img src="${escapeHtml(item.icon)}" alt="" /></span>
-      <span class="armory-inventory-name">${escapeHtml(item.name)}</span>
+      <span class="armory-inventory-name">${escapeHtml(getCompactItemName(item))}</span>
     `;
     attachItemTooltip(button, item, armorySelectedSlotId);
     button.addEventListener("pointerdown", () => {
@@ -6580,9 +6624,9 @@ function renderLedgerStock(ledger) {
         <img src="${escapeHtml(item.icon || getDefaultItemIcon(rarity))}" alt="" />
       </div>
       <div class="ledger-item-main">
-        <div class="ledger-item-kicker">${escapeHtml(lot.id)}${lot.clericalAdjustment ? ` - ${LEDGER_COPY.clericalAdjustment}` : ""}</div>
-        <div class="ledger-item-name">${escapeHtml(item.name)}</div>
-        <div class="ledger-item-meta">${escapeHtml(getRarityLabel(rarity))} | List ${formatCredits(lot.listValue)} | Ask ${formatCredits(lot.price)}</div>
+        <div class="ledger-item-kicker">${lot.clericalAdjustment ? escapeHtml(LEDGER_COPY.clericalAdjustment) : escapeHtml(getDenseItemRoleLabel(item))}</div>
+        <div class="ledger-item-name">${escapeHtml(getCompactItemName(item))}</div>
+        <div class="ledger-item-price">${formatLedgerCredits(lot.price)}</div>
         <div class="ledger-item-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
       <button type="button" class="ledger-action-button buy" ${canAfford ? "" : "disabled"}>${canAfford ? "Buy" : "Short"}</button>
@@ -6606,7 +6650,7 @@ function renderLedgerInventory(ledger) {
     const rarity = item.rarity || "scrap";
     const quote = getItemSellQuote(item);
     const bulletinLabel = quote.bulletinMatch
-      ? ` | ${LEDGER_COPY.demandBonus} +${formatCredits(quote.bulletinBonus)}`
+      ? ` | ${LEDGER_COPY.demandBonus} +${formatLedgerCredits(quote.bulletinBonus)}`
       : "";
     const installed = isInventoryItemInstalled(item.id);
     const tags = Array.isArray(item.tags) ? item.tags.slice(0, 4) : [];
@@ -6619,9 +6663,10 @@ function renderLedgerInventory(ledger) {
         <img src="${escapeHtml(item.icon || getDefaultItemIcon(rarity))}" alt="" />
       </div>
       <div class="ledger-item-main">
-        <div class="ledger-item-kicker">${escapeHtml(getRarityLabel(rarity))}${installed ? " | Installed" : ""}</div>
-        <div class="ledger-item-name">${escapeHtml(item.name)}</div>
-        <div class="ledger-item-meta">List ${formatCredits(quote.listValue)} | Fee ${formatCredits(quote.handlingFee)} | Pays ${formatCredits(quote.payout)}${bulletinLabel}</div>
+        <div class="ledger-item-kicker">${escapeHtml(getDenseItemRoleLabel(item))}${installed ? " | Installed" : ""}</div>
+        <div class="ledger-item-name">${escapeHtml(getCompactItemName(item))}</div>
+        <div class="ledger-item-price">${formatLedgerCredits(quote.payout)}</div>
+        <div class="ledger-item-meta">Payout${bulletinLabel ? escapeHtml(bulletinLabel) : ""}</div>
         <div class="ledger-item-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
       <button type="button" class="ledger-action-button sell"${installed ? " disabled" : ""}>${installed ? "Kept" : "Sell"}</button>
@@ -7448,8 +7493,13 @@ function update(delta) {
 
   mission.elapsed += delta;
   const dying = mission.deathTimer > 0;
+  const bossFinishing = mission.bossFinishTimer > 0;
+  const endingSequence = dying || bossFinishing;
   if (dying) {
     mission.deathTimer = Math.max(0, mission.deathTimer - delta);
+  }
+  if (bossFinishing) {
+    mission.bossFinishTimer = Math.max(0, mission.bossFinishTimer - delta);
   }
   mission.spawnTimer -= delta;
   mission.enemyFireTimer -= delta;
@@ -7483,7 +7533,7 @@ function update(delta) {
     }
   }
 
-  if (!dying) {
+  if (!endingSequence) {
     if (mission.level) {
       scheduleLevelSpawns();
       for (let i = mission.spawnQueue.length - 1; i >= 0; i -= 1) {
@@ -7510,7 +7560,7 @@ function update(delta) {
   }
 
   const globalEmp = mission.empTimer > 0;
-  if (!dying) {
+  if (!endingSequence) {
     enemies.forEach((enemy) => {
       if (!enemy.empImmune && (globalEmp || enemy.empHitTimer > 0)) return;
       enemy.fireCooldown -= delta;
@@ -7532,7 +7582,7 @@ function update(delta) {
   const width = canvas.width / window.devicePixelRatio;
   const height = canvas.height / window.devicePixelRatio;
 
-  if (!dying) {
+  if (!endingSequence) {
     if (inputMode === "touch" && touchState.active) {
       const dx = touchState.x - player.x;
       const dy = touchState.y - player.y;
@@ -8047,12 +8097,17 @@ function update(delta) {
   cleanArrays(floatingTexts, (text) => text.life <= 0);
   cleanArrays(explosions, (boom) => boom.elapsed >= boom.duration);
 
-  if (!dying) {
+  if (!endingSequence) {
     handleCollisions();
     if (player.hull <= 0) {
       startPlayerDeathSequence();
       return;
     }
+  }
+
+  if (bossFinishing && mission.bossFinishTimer <= 0) {
+    endMission({ completed: true });
+    return;
   }
 
   if (dying && mission.deathTimer <= 0) {
@@ -8180,6 +8235,43 @@ function handleCollisions() {
   handleSalvagePodCollisions();
 }
 
+function startBossDefeatSequence(enemy) {
+  if (!mission || mission.bossDefeated) return;
+  mission.bossAlive = false;
+  mission.bossDefeated = true;
+  mission.bossFinishTimer = BOSS_DEFEAT_DELAY_SECONDS;
+  grantBossSalvage(enemy);
+  enemyBullets.length = 0;
+  salvagePods.length = 0;
+  screenFlash = Math.min(0.78, screenFlash + 0.5);
+  addCameraShake(0.72, enemy.x, enemy.y);
+  playSfx("explosion", 0.22);
+  const baseRadius = Math.max(130, enemy.radius * 2.25);
+  spawnExplosion(enemy.x, enemy.y, baseRadius, {
+    intensity: 1.25,
+    blend: "lighter",
+    style: "bossDeath",
+    coalesce: false,
+  });
+  const burstCount = 6;
+  for (let i = 0; i < burstCount; i += 1) {
+    const angle = (Math.PI * 2 * i) / burstCount + Math.random() * 0.28;
+    const dist = enemy.radius * (0.35 + Math.random() * 0.75);
+    spawnExplosion(
+      enemy.x + Math.cos(angle) * dist,
+      enemy.y + Math.sin(angle) * dist,
+      baseRadius * (0.34 + Math.random() * 0.16),
+      {
+        intensity: 0.85,
+        blend: "lighter",
+        style: "kill",
+        coalesce: false,
+      }
+    );
+  }
+  spawnFloatingText(enemy.x, enemy.y - enemy.radius * 0.8, "BOSS DESTROYED", "#f0b429");
+}
+
 function handleEnemyDestroyed(enemy, bullet) {
   mission.kills += 1;
   mission.score += enemy.score;
@@ -8194,16 +8286,12 @@ function handleEnemyDestroyed(enemy, bullet) {
   const baseTrauma = Math.min(0.22, 0.03 + enemy.radius / 260);
   addCameraShake(enemy.isBoss ? 0.42 : baseTrauma, enemy.x, enemy.y);
   if (enemy.isBoss) {
-    grantBossSalvage(enemy);
-    screenFlash = Math.min(0.6, screenFlash + 0.35);
+    startBossDefeatSequence(enemy);
   } else {
     const drop = rollSalvageDrop(enemy);
     if (drop) {
       spawnSalvagePod(enemy.x, enemy.y, drop);
     }
-  }
-  if (enemy.isBoss && mission.level?.completeOnBoss) {
-    endMission({ completed: true });
   }
 }
 
@@ -9119,7 +9207,7 @@ function spawnExplosion(
     intensity,
     blend,
     style,
-    deathScale: style === "playerDeath" ? 3.2 : undefined,
+    deathScale: style === "playerDeath" ? 3.2 : style === "bossDeath" ? 4.5 : undefined,
   });
 }
 
@@ -9142,7 +9230,7 @@ function drawExplosion(boom) {
 
   ctx.save();
   ctx.globalCompositeOperation = boom.blend || "source-over";
-  if (style === "playerDeath") {
+  if (style === "playerDeath" || style === "bossDeath") {
     // Big, readable explosion with a fiery animated core.
     const ringR = maxRadius * 0.9;
     const ringW = Math.max(3, boom.radius * 0.18);
@@ -9158,7 +9246,7 @@ function drawExplosion(boom) {
     ctx.stroke();
 
     ctx.globalAlpha = Math.min(1, 0.95 * alpha * intensity);
-    if (visualTheme?.playerDeathCore?.loaded) {
+    if (style === "playerDeath" && visualTheme?.playerDeathCore?.loaded) {
       drawSpriteCentered(
         visualTheme.playerDeathCore,
         boom.x,
@@ -9276,6 +9364,13 @@ function updateBossProgress() {
     setBossBarLayer(bossShieldFill, 0, 0);
     setBossBarLayer(bossArmorFill, 0, 0);
     setBossBarLayer(bossProgressFill, 0, 0);
+    return;
+  }
+  if (mission.bossDefeated) {
+    bossLabel.textContent = "Boss Defeated";
+    setBossBarLayer(bossShieldFill, 0, 0);
+    setBossBarLayer(bossArmorFill, 0, 0);
+    setBossBarLayer(bossProgressFill, 0, 100);
     return;
   }
   if (mission.bossAlive) {

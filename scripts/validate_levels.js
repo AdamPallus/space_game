@@ -59,9 +59,11 @@ const allowedItemBuildKeys = new Set([
   "cooldownMult",
   "shieldMaxLevel",
   "shieldRegenLevel",
+  "shieldCooldownLevel",
   "armorAmountLevel",
   "armorClass",
   "armorClassLevel",
+  "armorDragLevel",
   "kineticImpulseBudget",
 ]);
 

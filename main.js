@@ -181,6 +181,11 @@ const ECONOMY = {
     max: 0.25,
   },
   dropSources: {
+    defaultSlotWeights: {
+      primary: 0.58,
+      defense: 0.24,
+      aux: 0.18,
+    },
     ordinary: {
       chance: 0.02,
       rarityWeights: { scrap: 1 },
@@ -188,15 +193,18 @@ const ECONOMY = {
     transport: {
       chance: 1,
       rarityWeights: { scrap: 0.82, certified: 0.18 },
+      slotWeights: { primary: 0.6, defense: 0.25, aux: 0.15 },
     },
     captain: {
       chance: 0.6,
       minBaseCredit: 150,
       rarityWeights: { scrap: 0.25, certified: 0.65, prototype: 0.1 },
+      slotWeights: { primary: 0.68, defense: 0.22, aux: 0.1 },
     },
     boss: {
       chance: 1,
       rarityWeights: { certified: 0.25, prototype: 0.7, preFounding: 0.05 },
+      slotWeights: { primary: 0.72, defense: 0.2, aux: 0.08 },
     },
     eliteBonusChance: 0.15,
   },
@@ -249,6 +257,7 @@ const ECONOMY = {
     buyRate: 1,
     sellRate: 0.4,
     handlingFeeRate: 0.6,
+    stockVersion: 2,
     stockLots: 5,
     bulletinCadence: 3,
     bulletinBonusRate: 0.4,
@@ -365,9 +374,11 @@ function createDefaultShipBuild() {
     defenseSlots: ["shield", "none"], // shield | armor | none
     shieldMaxLevel: 0,
     shieldRegenLevel: 0,
+    shieldCooldownLevel: 0,
     armorAmountLevel: 0,
     armorClass: 10,
     armorClassLevel: 0,
+    armorDragLevel: 0,
     kineticImpulseBudget: 0,
   };
 }
@@ -394,9 +405,11 @@ const defaultStarterWeaponLoadouts = [
       defenseSlots: ["shield", "none"],
       shieldMaxLevel: 0,
       shieldRegenLevel: 0,
+      shieldCooldownLevel: 0,
       armorAmountLevel: 0,
       armorClass: 10,
       armorClassLevel: 0,
+      armorDragLevel: 0,
     },
   },
   {
@@ -420,9 +433,11 @@ const defaultStarterWeaponLoadouts = [
       defenseSlots: ["shield", "none"],
       shieldMaxLevel: 0,
       shieldRegenLevel: 1,
+      shieldCooldownLevel: 0,
       armorAmountLevel: 0,
       armorClass: 10,
       armorClassLevel: 0,
+      armorDragLevel: 0,
     },
   },
   {
@@ -446,9 +461,11 @@ const defaultStarterWeaponLoadouts = [
       defenseSlots: ["shield", "armor"],
       shieldMaxLevel: 1,
       shieldRegenLevel: 0,
+      shieldCooldownLevel: 0,
       armorAmountLevel: 1,
       armorClass: 12,
       armorClassLevel: 0,
+      armorDragLevel: 1,
     },
   },
 ];
@@ -809,9 +826,11 @@ function composeShipBuildFromArmory(targetState) {
     defenseSlots: ["none", "none"],
     shieldMaxLevel: 0,
     shieldRegenLevel: 0,
+    shieldCooldownLevel: 0,
     armorAmountLevel: 0,
     armorClass: 10,
     armorClassLevel: 0,
+    armorDragLevel: 0,
   };
 
   const equippedDefenseSlots = Array.isArray(targetState.armory?.equippedDefenseSlotIds)
@@ -824,23 +843,19 @@ function composeShipBuildFromArmory(targetState) {
     if (!module) return;
     if (module.defenseType === "shield") {
       merged.defenseSlots[index] = "shield";
-      merged.shieldMaxLevel = Math.max(merged.shieldMaxLevel, module.build.shieldMaxLevel ?? 0);
-      merged.shieldRegenLevel = Math.max(
-        merged.shieldRegenLevel,
-        module.build.shieldRegenLevel ?? 0
-      );
+      merged.shieldMaxLevel += module.build.shieldMaxLevel ?? 0;
+      merged.shieldRegenLevel += module.build.shieldRegenLevel ?? 0;
+      merged.shieldCooldownLevel += module.build.shieldCooldownLevel ?? 0;
     }
     if (module.defenseType === "armor") {
       merged.defenseSlots[index] = "armor";
-      merged.armorAmountLevel = Math.max(
-        merged.armorAmountLevel,
-        module.build.armorAmountLevel ?? 0
-      );
+      merged.armorAmountLevel += module.build.armorAmountLevel ?? 0;
       merged.armorClass = Math.max(merged.armorClass, module.build.armorClass ?? 10);
       merged.armorClassLevel = Math.max(
         merged.armorClassLevel,
         module.build.armorClassLevel ?? 0
       );
+      merged.armorDragLevel += module.build.armorDragLevel ?? 0;
     }
   });
 
@@ -852,12 +867,23 @@ function composeShipBuildFromArmory(targetState) {
       "flowSizeLevel",
       "shieldMaxLevel",
       "shieldRegenLevel",
+      "shieldCooldownLevel",
       "armorAmountLevel",
       "armorClassLevel",
+      "armorDragLevel",
       "kineticImpulseBudget",
     ].forEach((key) => {
       if (Number.isFinite(supportItem.build[key])) {
-        if (key === "kineticImpulseBudget") {
+        if (
+          [
+            "kineticImpulseBudget",
+            "shieldMaxLevel",
+            "shieldRegenLevel",
+            "shieldCooldownLevel",
+            "armorAmountLevel",
+            "armorDragLevel",
+          ].includes(key)
+        ) {
           merged[key] = (Number.isFinite(merged[key]) ? merged[key] : 0) + supportItem.build[key];
           return;
         }
@@ -890,9 +916,11 @@ function findClosestStarterLoadoutId(build) {
     }
     if ((candidate.shieldMaxLevel ?? 0) === (build.shieldMaxLevel ?? 0)) score += 1;
     if ((candidate.shieldRegenLevel ?? 0) === (build.shieldRegenLevel ?? 0)) score += 1;
+    if ((candidate.shieldCooldownLevel ?? 0) === (build.shieldCooldownLevel ?? 0)) score += 1;
     if ((candidate.armorAmountLevel ?? 0) === (build.armorAmountLevel ?? 0)) score += 1;
     if ((candidate.armorClass ?? 10) === (build.armorClass ?? 10)) score += 1;
     if ((candidate.armorClassLevel ?? 0) === (build.armorClassLevel ?? 0)) score += 1;
+    if ((candidate.armorDragLevel ?? 0) === (build.armorDragLevel ?? 0)) score += 1;
     if (score > bestScore) {
       bestScore = score;
       bestId = item.id;
@@ -1217,14 +1245,15 @@ const defenseModules = [
     slotType: "defense",
     defenseType: "shield",
     name: "Phase Shield",
-    subtitle: "Barrier",
-    description: "Standard shield projector. Gives the drone a forgiving buffer while learning patterns.",
-    notes: "Reliable all-round defense. Best default pick if you want more margin for mistakes.",
+    subtitle: "Capacity barrier",
+    description: "Stable shield projector with a deeper buffer and standard recovery timing.",
+    notes: "Capacity shielding for pilots who want more margin for mistakes before regeneration starts.",
     icon: `${GENERATED_ITEM_ICON_ROOT}/phase_shield_projector.png`,
-    tags: ["shield", "starter"],
+    tags: ["shield", "starter", "capacity"],
     build: {
-      shieldMaxLevel: 0,
+      shieldMaxLevel: 1,
       shieldRegenLevel: 0,
+      shieldCooldownLevel: 0,
     },
   },
   {
@@ -1241,6 +1270,7 @@ const defenseModules = [
       armorAmountLevel: 1,
       armorClass: 12,
       armorClassLevel: 0,
+      armorDragLevel: 1,
     },
   },
 ];
@@ -1605,17 +1635,56 @@ function getItemBaseTier(entry, fallbackTier = 1) {
   return Number.isFinite(tier) ? Math.max(1, Math.floor(tier)) : fallbackTier;
 }
 
-function rollItemForRarity(rarity, options = {}) {
+function itemEntryMatchesRollOptions(baseId, entry, options = {}) {
+  const slotType = normalizeArmorySlotType(entry.slotType);
+  if (!["primary", "defense", "aux"].includes(slotType)) return false;
+  if (options.slotType && slotType !== normalizeArmorySlotType(options.slotType)) return false;
+  if (options.excludeBaseIds?.has?.(baseId)) return false;
+  const tags = Array.isArray(entry.tags) ? entry.tags : [];
+  if (
+    Array.isArray(options.requiredTags) &&
+    options.requiredTags.length &&
+    !options.requiredTags.every((tag) => tags.includes(tag))
+  ) {
+    return false;
+  }
+  if (
+    Array.isArray(options.anyTags) &&
+    options.anyTags.length &&
+    !options.anyTags.some((tag) => tags.includes(tag))
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function getRollSourceForRarity(rarity) {
   const catalog = itemPoolCatalog || { entries: {}, relics: {} };
   const relicEntries = Object.entries(catalog.relics || {});
   const usingRelics = rarity === "preFounding" && relicEntries.length;
-  const rollSource = usingRelics ? catalog.relics : catalog.entries;
+  return {
+    rollSource: usingRelics ? catalog.relics : catalog.entries,
+    usingRelics,
+  };
+}
+
+function getEligibleRollEntries(rarity, options = {}) {
+  const { rollSource, usingRelics } = getRollSourceForRarity(rarity);
   const maxTier = getMaxUnlockedItemBaseTier(options);
-  const entries = Object.entries(rollSource || {}).filter(([, entry]) => {
-    const slotType = normalizeArmorySlotType(entry.slotType);
-    if (!["primary", "defense", "aux"].includes(slotType)) return false;
+  return Object.entries(rollSource || {}).filter(([baseId, entry]) => {
+    if (!itemEntryMatchesRollOptions(baseId, entry, options)) return false;
     return getItemBaseTier(entry, usingRelics ? 4 : 1) <= maxTier;
   });
+}
+
+function rollItemForRarity(rarity, options = {}) {
+  let entries = getEligibleRollEntries(rarity, options);
+  if (!entries.length && options.excludeBaseIds) {
+    entries = getEligibleRollEntries(rarity, { ...options, excludeBaseIds: null });
+  }
+  if (!entries.length && Array.isArray(options.anyTags)) {
+    entries = getEligibleRollEntries(rarity, { ...options, anyTags: null });
+  }
   if (!entries.length) return null;
   const [baseId, baseEntry] = entries[Math.floor(Math.random() * entries.length)];
   return createRolledItem(baseId, baseEntry, rarity);
@@ -1662,7 +1731,15 @@ function rollSalvageDrop(enemy, { force = false, forceSource = null } = {}) {
     ? shiftRarityWeightsUp(sourceConfig.rarityWeights)
     : sourceConfig.rarityWeights;
   const rarity = rollWeighted(weights);
-  const item = rollItemForRarity(rarity, { sourceKey, includeActiveMission: true });
+  const slotWeights = sourceConfig.slotWeights || ECONOMY.dropSources.defaultSlotWeights;
+  const preferredSlotType = rollWeighted(slotWeights);
+  const item =
+    rollItemForRarity(rarity, {
+      sourceKey,
+      includeActiveMission: true,
+      slotType: preferredSlotType,
+    }) ||
+    rollItemForRarity(rarity, { sourceKey, includeActiveMission: true });
   if (!item) return null;
   item.dropSource = sourceKey;
   return {
@@ -1749,6 +1826,7 @@ function addItemsToArmoryInventory(items, { recordRelics = true } = {}) {
 function createDefaultLedgerMarketState() {
   return {
     stock: [],
+    stockVersion: ECONOMY.market.stockVersion,
     stockMissionCount: null,
     bulletin: null,
     pendingBulletinSales: {
@@ -1766,10 +1844,13 @@ function normalizeLedgerMarketState(targetState = state) {
   const defaults = createDefaultLedgerMarketState();
   const existing = targetState.ledgerMarket || {};
   const pending = existing.pendingBulletinSales || {};
+  const stockVersion =
+    Number.isFinite(existing.stockVersion) ? existing.stockVersion : 0;
+  const isCurrentStockVersion = stockVersion === ECONOMY.market.stockVersion;
   targetState.ledgerMarket = {
     ...defaults,
     ...existing,
-    stock: Array.isArray(existing.stock)
+    stock: isCurrentStockVersion && Array.isArray(existing.stock)
       ? existing.stock
           .filter((lot) => lot?.item?.id)
           .map((lot) => ({
@@ -1781,7 +1862,8 @@ function normalizeLedgerMarketState(targetState = state) {
             clericalAdjustment: !!lot.clericalAdjustment,
           }))
       : [],
-    stockMissionCount: Number.isFinite(existing.stockMissionCount)
+    stockVersion: ECONOMY.market.stockVersion,
+    stockMissionCount: isCurrentStockVersion && Number.isFinite(existing.stockMissionCount)
       ? existing.stockMissionCount
       : defaults.stockMissionCount,
     bulletin: existing.bulletin?.tag
@@ -1867,9 +1949,9 @@ function getMarketRarityWeights() {
   return selected;
 }
 
-function rollMarketItem() {
+function rollMarketItem(options = {}) {
   const rarity = rollWeighted(getMarketRarityWeights());
-  return rollItemForRarity(rarity, { sourceKey: "market" });
+  return rollItemForRarity(rarity, { sourceKey: "market", ...options });
 }
 
 function generateLedgerLotId(index) {
@@ -1879,8 +1961,8 @@ function generateLedgerLotId(index) {
   return `L-${missionPart}-${lotPart}-${suffix}`;
 }
 
-function createLedgerLot(index, clericalAdjustment = false) {
-  const item = rollMarketItem();
+function createLedgerLot(index, clericalAdjustment = false, itemOptions = {}) {
+  const item = rollMarketItem(itemOptions);
   if (!item) return null;
   const listValue = getItemListValue(item);
   let priceRate = ECONOMY.market.buyRate;
@@ -1907,15 +1989,29 @@ function rollLedgerStock({ force = false } = {}) {
   if (!itemPoolCatalog) return ledger.stock;
   if (!force && ledger.stock.length) return ledger.stock;
   const lots = [];
+  const usedBaseIds = new Set();
   const mispricedIndex =
     Math.random() < ECONOMY.market.mispricedLotChance
       ? Math.floor(Math.random() * ECONOMY.market.stockLots)
       : -1;
+  const stockSpecs = [
+    { slotType: "primary", anyTags: ["dual", "rapid", "plasma", "anti-armor", "homing", "explosive"] },
+    { slotType: "primary", anyTags: ["dual", "rapid", "wide", "focused", "swarm", "heavy"] },
+    { slotType: "defense" },
+  ];
   for (let i = 0; i < ECONOMY.market.stockLots; i += 1) {
-    const lot = createLedgerLot(i, i === mispricedIndex);
-    if (lot) lots.push(lot);
+    const spec = stockSpecs[i] || {};
+    const lot = createLedgerLot(i, i === mispricedIndex, {
+      ...spec,
+      excludeBaseIds: usedBaseIds,
+    });
+    if (lot) {
+      lots.push(lot);
+      if (lot.item?.baseId) usedBaseIds.add(lot.item.baseId);
+    }
   }
   ledger.stock = lots;
+  ledger.stockVersion = ECONOMY.market.stockVersion;
   ledger.stockMissionCount = state.missionCount || 0;
   return ledger.stock;
 }
@@ -2186,6 +2282,7 @@ const player = {
   maxShield: 40,
   shieldRegen: 12,
   shieldCooldown: 0,
+  shieldRechargeDelay: 2.5,
   healthBarTimer: 0,
   fireCooldown: 0,
   spriteScale: 0.75,
@@ -2287,7 +2384,7 @@ const assets = {
     generated_v1: {
       player: loadImage(`${GENERATED_PILOT_ROOT}/player_interceptor.png`),
       playerBullet: loadImage(`${GENERATED_EFFECT_ROOT}/player_kinetic_bolt.png`),
-      playerPlasma: loadImage(`${GENERATED_EFFECT_ROOT}/player_plasma_bolt.png`),
+      playerPlasma: loadImage(`${GENERATED_EFFECT_ROOT}/player_plasma_orb.png`),
       playerPierce: loadImage(`${GENERATED_EFFECT_ROOT}/player_pierce_lance.png`),
       playerRocket: loadImage(`${GENERATED_EFFECT_ROOT}/player_rocket.png`),
       enemyBullet: loadImage(`${GENERATED_EFFECT_ROOT}/enemy_red_bolt.png`),
@@ -3489,9 +3586,11 @@ function loadState() {
     while (parsed.shipBuild.defenseSlots.length < 2) parsed.shipBuild.defenseSlots.push("none");
     parsed.shipBuild.shieldMaxLevel = parsed.shipBuild.shieldMaxLevel ?? 0;
     parsed.shipBuild.shieldRegenLevel = parsed.shipBuild.shieldRegenLevel ?? 0;
+    parsed.shipBuild.shieldCooldownLevel = parsed.shipBuild.shieldCooldownLevel ?? 0;
     parsed.shipBuild.armorClass = parsed.shipBuild.armorClass ?? 10;
     parsed.shipBuild.armorAmountLevel = parsed.shipBuild.armorAmountLevel ?? 0;
     parsed.shipBuild.armorClassLevel = parsed.shipBuild.armorClassLevel ?? 0;
+    parsed.shipBuild.armorDragLevel = parsed.shipBuild.armorDragLevel ?? 0;
     normalizeStarterArmoryState(parsed);
     parsed.missionCarouselIndex = parsed.missionCarouselIndex || {};
     parsed.shipUnlocked = parsed.shipUnlocked || {};
@@ -3640,6 +3739,8 @@ function getShipBuild() {
     };
   }
   state.shipBuild.kineticImpulseBudget = state.shipBuild.kineticImpulseBudget ?? 0;
+  state.shipBuild.shieldCooldownLevel = state.shipBuild.shieldCooldownLevel ?? 0;
+  state.shipBuild.armorDragLevel = state.shipBuild.armorDragLevel ?? 0;
   state.shipBuild.cooldownMult = Number.isFinite(state.shipBuild.cooldownMult)
     ? Math.max(0.35, state.shipBuild.cooldownMult)
     : 1;
@@ -3754,18 +3855,22 @@ function applyUpgrades() {
   const armorSlots = defenseSlots.filter((slot) => slot === "armor").length;
 
   const baseShieldPerSlot = 40;
-  const shieldMaxMult = 1 + (build.shieldMaxLevel ?? 0) * 0.18;
-  player.maxShield = shieldSlots > 0 ? Math.round(baseShieldPerSlot * shieldSlots * shieldMaxMult) : 0;
+  const shieldCapacitySlots = Math.max(0.25, shieldSlots + (build.shieldMaxLevel ?? 0) * 0.18);
+  player.maxShield = shieldSlots > 0 ? Math.round(baseShieldPerSlot * shieldCapacitySlots) : 0;
   player.shield = player.maxShield;
   const baseShieldRegen = 12;
-  const shieldRegenMult = 1 + (build.shieldRegenLevel ?? 0) * 0.22;
-  player.shieldRegen = shieldSlots > 0 ? baseShieldRegen * shieldSlots * shieldRegenMult : 0;
+  const shieldRegenSlots = Math.max(0.2, shieldSlots + (build.shieldRegenLevel ?? 0) * 0.22);
+  player.shieldRegen = shieldSlots > 0 ? baseShieldRegen * shieldRegenSlots : 0;
   player.shieldCooldown = 0;
+  player.shieldRechargeDelay =
+    shieldSlots > 0
+      ? Math.max(0.7, 2.5 * (1 + (build.shieldCooldownLevel ?? 0) * 0.16))
+      : 0;
 
   const baseArmorPerSlot = 80;
-  const armorAmountMult = 1 + (build.armorAmountLevel ?? 0) * 0.18;
+  const armorCapacitySlots = Math.max(0.25, armorSlots + (build.armorAmountLevel ?? 0) * 0.18);
   player.maxArmor =
-    armorSlots > 0 ? Math.round(baseArmorPerSlot * armorSlots * armorAmountMult) : 0;
+    armorSlots > 0 ? Math.round(baseArmorPerSlot * armorCapacitySlots) : 0;
   player.armor = player.maxArmor;
   const baseArmorClass = build.armorClass ?? 10;
   player.armorClass =
@@ -5189,19 +5294,38 @@ function getDefenseStatsForBuild(build, targetState = state) {
   const armorSlots = defenseSlots.filter((slot) => slot === "armor").length;
   const hullLevel = targetState.upgrades?.hull ?? 0;
   const hull = Math.round(100 * (1 + hullLevel * 0.08));
+  const shieldCapacitySlots = Math.max(0.25, shieldSlots + (build.shieldMaxLevel ?? 0) * 0.18);
   const shield = shieldSlots > 0
-    ? Math.round(40 * shieldSlots * (1 + (build.shieldMaxLevel ?? 0) * 0.18))
+    ? Math.round(40 * shieldCapacitySlots)
     : 0;
+  const shieldRegenSlots = Math.max(0.2, shieldSlots + (build.shieldRegenLevel ?? 0) * 0.22);
   const shieldRegen = shieldSlots > 0
-    ? 12 * shieldSlots * (1 + (build.shieldRegenLevel ?? 0) * 0.22)
+    ? 12 * shieldRegenSlots
     : 0;
+  const shieldRechargeDelay = shieldSlots > 0
+    ? Math.max(0.7, 2.5 * (1 + (build.shieldCooldownLevel ?? 0) * 0.16))
+    : 0;
+  const armorCapacitySlots = Math.max(0.25, armorSlots + (build.armorAmountLevel ?? 0) * 0.18);
   const armor = armorSlots > 0
-    ? Math.round(80 * armorSlots * (1 + (build.armorAmountLevel ?? 0) * 0.18))
+    ? Math.round(80 * armorCapacitySlots)
     : 0;
   const armorClass = armorSlots > 0
     ? Math.round((build.armorClass ?? 10) + (build.armorClassLevel ?? 0) * 2)
     : 0;
-  return { hull, shield, shieldRegen, armor, armorClass, shieldSlots, armorSlots };
+  const armorDrag = armorSlots > 0
+    ? Math.round((armorSlots * 0.1 + Math.max(0, build.armorDragLevel ?? 0) * 0.06) * 100)
+    : 0;
+  return {
+    hull,
+    shield,
+    shieldRegen,
+    shieldRechargeDelay,
+    armor,
+    armorClass,
+    armorDrag,
+    shieldSlots,
+    armorSlots,
+  };
 }
 
 function getOffenseStatsForBuild(build, targetState = state) {
@@ -5314,11 +5438,17 @@ function getBuildLanguageLines(patch = {}) {
   if (Number.isFinite(buildAdd.shieldRegenLevel) && buildAdd.shieldRegenLevel !== 0) {
     addLine(`+${formatNumber(12 * 0.22 * Math.abs(buildAdd.shieldRegenLevel), 1)}/s Shield Regen`);
   }
+  if (Number.isFinite(buildAdd.shieldCooldownLevel) && buildAdd.shieldCooldownLevel !== 0) {
+    addLine(`${buildAdd.shieldCooldownLevel < 0 ? "Shorter" : "Longer"} shield recovery delay`);
+  }
   if (Number.isFinite(buildAdd.armorAmountLevel) && buildAdd.armorAmountLevel !== 0) {
     addLine(`+${Math.round(80 * 0.18 * Math.abs(buildAdd.armorAmountLevel))} Armor`);
   }
   if (Number.isFinite(buildAdd.armorClassLevel) && buildAdd.armorClassLevel !== 0) {
     addLine(`+${Math.round(2 * Math.abs(buildAdd.armorClassLevel))} Armor Class`);
+  }
+  if (Number.isFinite(buildAdd.armorDragLevel) && buildAdd.armorDragLevel !== 0) {
+    addLine(`${buildAdd.armorDragLevel > 0 ? "More" : "Less"} armor drag on weapon cycling`);
   }
   if (buildPatch.effect === "pierce") addLine("Shots pierce 1 additional enemy");
   if (buildPatch.effect === "homing") addLine("Shots seek nearby targets");
@@ -5421,10 +5551,12 @@ function getItemDisplayStats(item, slotId = null) {
     lines = headlineKey === "armor"
       ? [
           { label: "Armor Class", value: defense.armorClass ? `${defense.armorClass}` : "-", math: `Armor Class = base + 2 per armor-class level.` },
+          { label: "Armor Drag", value: defense.armorDrag ? `+${defense.armorDrag}% cooldown` : "-", math: "Armor drag increases primary weapon cooldown." },
           { label: "Effect", value: "Reduces incoming hit damage", math: "Armor applies per-hit reduction before hull damage." },
         ]
       : [
           { label: "Shield Regen", value: `${formatNumber(defense.shieldRegen, 1)}/s`, math: `12/s per shield slot * shield regen tuning.` },
+          { label: "Recovery Delay", value: `${formatNumber(defense.shieldRechargeDelay, 1)}s`, math: `Base 2.5s, shifted by shield recovery tuning.` },
           { label: "Effect", value: "Regenerates after damage pause", math: "Collision damage bypasses shields." },
         ];
   } else {
@@ -5608,8 +5740,10 @@ function renderShipStatsPanel() {
     { label: "Hull", value: `${stats.defense.hull}`, math: `Hull = 100 * (1 + 0.08*${state.upgrades?.hull ?? 0}).` },
     { label: "Shield", value: `${stats.defense.shield}`, math: `40 per shield slot, scaled by shield tuning.` },
     { label: "Shield Regen", value: `${formatNumber(stats.defense.shieldRegen, 1)}/s`, math: `12/s per shield slot, scaled by regen tuning.` },
+    { label: "Recovery Delay", value: stats.defense.shieldRechargeDelay ? `${formatNumber(stats.defense.shieldRechargeDelay, 1)}s` : "-", math: `Base 2.5s, shifted by shield recovery tuning.` },
     { label: "Armor", value: `${stats.defense.armor}`, math: `80 per armor slot, scaled by armor mass tuning.` },
     { label: "Armor Class", value: stats.defense.armorClass ? `${stats.defense.armorClass}` : "-", math: `Base class + 2 per armor-class level.` },
+    { label: "Armor Drag", value: stats.defense.armorDrag ? `+${stats.defense.armorDrag}% cooldown` : "-", math: `Armor modules increase primary weapon cooldown by their drag rating.` },
   ];
   const supportRows = [
     { label: "Ability", value: support.name, math: "" },
@@ -6602,7 +6736,8 @@ function getPrimaryFireConfig(buildOverride = null) {
 
   const armorSlots =
     (build.defenseSlots?.filter((slot) => slot === "armor").length ?? 0);
-  const armorPenalty = 1 + armorSlots * 0.18;
+  const armorPenalty =
+    1 + armorSlots * 0.1 + Math.max(0, build.armorDragLevel ?? 0) * 0.06;
 
   const spreadRadiusScale = {
     focused: 1,
@@ -6728,8 +6863,16 @@ function firePlayerBullet() {
       radius,
       damage: computePrimaryDamage({ ammo: cfg.ammo, speed, radius }),
       image: extra.image || image,
-      width: extra.width ?? Math.max(6, 10 * (radius / 4)),
-      height: extra.height ?? Math.max(14, 32 * (radius / 4)),
+      width: extra.width ?? (
+        cfg.ammo === "plasma"
+          ? Math.max(16, 28 * (radius / 4))
+          : Math.max(6, 10 * (radius / 4))
+      ),
+      height: extra.height ?? (
+        cfg.ammo === "plasma"
+          ? Math.max(16, 28 * (radius / 4))
+          : Math.max(14, 32 * (radius / 4))
+      ),
       rotation: Math.atan2(vy, vx) + Math.PI / 2,
       baseSpeed: speed,
       originAngle: Math.atan2(vy, vx),
@@ -6796,8 +6939,8 @@ function firePlayerBullet() {
         x: player.x + lateralOffset + posJitter,
         y: player.y - player.radius,
         radius,
-        width: Math.max(6, 10 * sizeScale),
-        height: Math.max(14, 32 * sizeScale),
+        width: cfg.ammo === "plasma" ? Math.max(16, 28 * sizeScale) : Math.max(6, 10 * sizeScale),
+        height: cfg.ammo === "plasma" ? Math.max(16, 28 * sizeScale) : Math.max(14, 32 * sizeScale),
         damageScale: mountScale,
       });
       // Apply mount scale by scaling damage post-compute.
@@ -7786,7 +7929,7 @@ function applyDamage(amount, { collision = false, sourceX = null, sourceY = null
     amount -= absorbed;
     if (absorbed > 0) shieldHit = true;
     absorbedShield = absorbed;
-    if (absorbed > 0) player.shieldCooldown = 2.5;
+    if (absorbed > 0) player.shieldCooldown = player.shieldRechargeDelay || 2.5;
   }
 
   if (amount > 0 && player.armor > 0) {
@@ -8054,7 +8197,7 @@ function drawBullet(bullet, color = "#e0f2fe") {
       : animation === "ember" || animation === "orb"
         ? 1 + Math.sin(age * 20) * 0.11
         : 1 + Math.sin(age * 24) * 0.055;
-    const stretch = animation === "lance" ? 1.09 : animation === "plasma" ? 1.04 : 1;
+    const stretch = animation === "lance" ? 1.09 : 1;
     const sway = animation === "bolt" || animation === "lance" ? Math.sin(age * 32) * 0.025 : 0;
     const rotation = (bullet.rotation || 0) + sway + age * (bullet.spinRate || 0);
     const trailCount = animation === "lance" ? 4 : animation === "ember" || animation === "orb" ? 2 : 3;

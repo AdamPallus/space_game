@@ -42,7 +42,7 @@
     },
     "vampiric_trace": {
       "name": "Vampiric trace",
-      "description": "Confirmed kills return a small amount of hull integrity.",
+      "description": "Damage dealt returns a small amount of hull integrity.",
       "tags": ["vampiric", "sustain"],
       "slotTypes": ["primary"],
       "exclusiveGroup": "weapon-effect",
@@ -109,6 +109,16 @@
         "shieldRegenLevel": 1
       }
     },
+    "shield_recovery_tune": {
+      "name": "Shield recovery tune",
+      "description": "Shortens the delay before shields begin regenerating.",
+      "tags": ["shield", "recovery"],
+      "slotTypes": ["defense", "aux"],
+      "defenseTypes": ["shield"],
+      "buildAdd": {
+        "shieldCooldownLevel": -1
+      }
+    },
     "armor_plate_plus": {
       "name": "Armor mass tune",
       "description": "Adds recoverable armor volume to plating modules.",
@@ -129,6 +139,16 @@
         "armorClassLevel": 1
       }
     },
+    "armor_drag_tune": {
+      "name": "Armor drag tune",
+      "description": "Lightens armor linkage to reduce weapon cycling drag.",
+      "tags": ["armor", "drag"],
+      "slotTypes": ["defense"],
+      "defenseTypes": ["armor"],
+      "buildAdd": {
+        "armorDragLevel": -1
+      }
+    },
     "bulwark_capacitor": {
       "name": "Bulwark capacitor",
       "description": "Routes spare support charge into shields.",
@@ -136,7 +156,8 @@
       "slotTypes": ["aux"],
       "buildAdd": {
         "shieldMaxLevel": 1,
-        "shieldRegenLevel": 1
+        "shieldRegenLevel": 1,
+        "shieldCooldownLevel": -1
       }
     }
   },
@@ -162,9 +183,11 @@
         "defenseSlots": ["shield", "none"],
         "shieldMaxLevel": 0,
         "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
         "armorAmountLevel": 0,
         "armorClass": 10,
-        "armorClassLevel": 0
+        "armorClassLevel": 0,
+        "armorDragLevel": 0
       }
     },
     "frame_area_control": {
@@ -188,9 +211,11 @@
         "defenseSlots": ["shield", "none"],
         "shieldMaxLevel": 0,
         "shieldRegenLevel": 1,
+        "shieldCooldownLevel": 0,
         "armorAmountLevel": 0,
         "armorClass": 10,
-        "armorClassLevel": 0
+        "armorClassLevel": 0,
+        "armorDragLevel": 0
       }
     },
     "frame_armor_break": {
@@ -214,9 +239,11 @@
         "defenseSlots": ["shield", "armor"],
         "shieldMaxLevel": 1,
         "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
         "armorAmountLevel": 1,
         "armorClass": 12,
-        "armorClassLevel": 0
+        "armorClassLevel": 0,
+        "armorDragLevel": 1
       }
     },
     "needle_storm": {
@@ -469,14 +496,15 @@
       "sourceId": "shield_module",
       "tier": 1,
       "name": "Phase Shield",
-      "subtitle": "Barrier",
-      "description": "Standard shield projector for a forgiving buffer.",
-      "notes": "Recovered shield hardware suitable for either defense bay.",
+      "subtitle": "Capacity barrier",
+      "description": "A stable shield projector with a deeper buffer and standard recovery timing.",
+      "notes": "Capacity shielding for pilots who want a larger mistake buffer before regeneration starts.",
       "icon": "assets/generated/item_icons_v1/phase_shield_projector.png",
-      "tags": ["shield", "defense"],
+      "tags": ["shield", "defense", "capacity"],
       "build": {
-        "shieldMaxLevel": 0,
-        "shieldRegenLevel": 0
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0
       }
     },
     "defense_heavy_plate": {
@@ -486,14 +514,33 @@
       "tier": 1,
       "name": "Heavy Plate",
       "subtitle": "Plating",
-      "description": "Dense armor slab for soaking direct fire.",
-      "notes": "Recovered armor hardware suitable for either defense bay.",
+      "description": "Dense armor slab with balanced mass, class, and weapon drag.",
+      "notes": "Reliable plating for pilots who want clear mitigation without going fully bulky.",
       "icon": "assets/generated/item_icons_v1/plated_armor_module.png",
-      "tags": ["armor", "defense"],
+      "tags": ["armor", "defense", "balanced"],
       "build": {
         "armorAmountLevel": 1,
         "armorClass": 12,
-        "armorClassLevel": 0
+        "armorClassLevel": 0,
+        "armorDragLevel": 1
+      }
+    },
+    "defense_laminate_plate": {
+      "slotType": "defense",
+      "defenseType": "armor",
+      "sourceId": "laminate_plate",
+      "tier": 2,
+      "name": "Reactive Laminate",
+      "subtitle": "Light plating",
+      "description": "High-class laminate that mitigates small hits with less weapon drag but less armor volume.",
+      "notes": "A lighter armor path for pilots who need class efficiency without slowing the gun line.",
+      "icon": "assets/generated/item_icons_v1/plated_armor_module.png",
+      "tags": ["armor", "defense", "mitigation", "light"],
+      "build": {
+        "armorAmountLevel": 0,
+        "armorClass": 14,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0
       }
     },
     "defense_surge_shield": {
@@ -503,13 +550,31 @@
       "tier": 2,
       "name": "Surge Shield",
       "subtitle": "Regen barrier",
-      "description": "A light shield projector tuned for fast recovery over raw capacity.",
-      "notes": "Tempo shielding for hit-and-run pilots who trust the recharge window.",
+      "description": "A light shield projector with low capacity, fast regeneration, and a short recovery delay.",
+      "notes": "Tempo shielding for hit-and-run pilots who can avoid sustained fire.",
       "icon": "assets/generated/item_icons_v2/surge_shield.png",
-      "tags": ["shield", "defense", "regen", "tempo"],
+      "tags": ["shield", "defense", "regen", "tempo", "recovery"],
       "build": {
-        "shieldMaxLevel": -1,
-        "shieldRegenLevel": 2
+        "shieldMaxLevel": -2,
+        "shieldRegenLevel": 3,
+        "shieldCooldownLevel": -4
+      }
+    },
+    "defense_anchor_shield": {
+      "slotType": "defense",
+      "defenseType": "shield",
+      "sourceId": "anchor_shield",
+      "tier": 3,
+      "name": "Anchor Shield",
+      "subtitle": "Reserve barrier",
+      "description": "A heavy reserve projector with a large shield pool but sluggish recovery.",
+      "notes": "Anchor shielding is for pilots who want to survive bursts and accept longer downtime.",
+      "icon": "assets/generated/item_icons_v1/phase_shield_projector.png",
+      "tags": ["shield", "defense", "capacity", "heavy"],
+      "build": {
+        "shieldMaxLevel": 3,
+        "shieldRegenLevel": -1,
+        "shieldCooldownLevel": 2
       }
     },
     "defense_ablative_plate": {
@@ -519,14 +584,15 @@
       "tier": 3,
       "name": "Ablative Plate",
       "subtitle": "Bulk plating",
-      "description": "Layered armor volume that sacrifices class efficiency for raw mass.",
-      "notes": "Heavier than Heavy Plate, with lower armor class but more material to burn through.",
+      "description": "Layered armor volume that sacrifices class efficiency and weapon tempo for raw mass.",
+      "notes": "Bulk plating gives the largest armor pool, but it drags hardest on weapon cycling.",
       "icon": "assets/generated/item_icons_v2/ablative_plate.png",
-      "tags": ["armor", "defense", "plating", "bulk"],
+      "tags": ["armor", "defense", "plating", "bulk", "heavy"],
       "build": {
         "armorAmountLevel": 2,
-        "armorClass": 11,
-        "armorClassLevel": 0
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 2
       }
     },
     "aux_cloak": {
@@ -591,9 +657,11 @@
         "defenseSlots": ["shield", "armor"],
         "shieldMaxLevel": 1,
         "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
         "armorAmountLevel": 1,
         "armorClass": 12,
         "armorClassLevel": 0,
+        "armorDragLevel": 1,
         "kineticImpulseBudget": 0.12
       },
       "uniqueProperty": {
@@ -632,9 +700,11 @@
         "defenseSlots": ["shield", "none"],
         "shieldMaxLevel": 1,
         "shieldRegenLevel": 1,
+        "shieldCooldownLevel": -1,
         "armorAmountLevel": 0,
         "armorClass": 10,
-        "armorClassLevel": 0
+        "armorClassLevel": 0,
+        "armorDragLevel": 0
       },
       "uniqueProperty": {
         "id": "greenline_afterburn",
@@ -660,7 +730,8 @@
       "tags": ["relic", "shield", "defense", "regen"],
       "build": {
         "shieldMaxLevel": 2,
-        "shieldRegenLevel": 2
+        "shieldRegenLevel": 2,
+        "shieldCooldownLevel": -2
       },
       "uniqueProperty": {
         "id": "cradle_memory",
@@ -669,7 +740,8 @@
         "tags": ["shield", "capacity"],
         "buildAdd": {
           "shieldMaxLevel": 1,
-          "shieldRegenLevel": 1
+          "shieldRegenLevel": 1,
+          "shieldCooldownLevel": -1
         }
       },
       "relicLore": "TODO(adam): Final Cradle Aegis identification fragment."
@@ -687,7 +759,8 @@
       "build": {
         "armorAmountLevel": 3,
         "armorClass": 14,
-        "armorClassLevel": 1
+        "armorClassLevel": 1,
+        "armorDragLevel": 2
       },
       "uniqueProperty": {
         "id": "founder_claim_stamp",
@@ -713,6 +786,7 @@
       "build": {
         "flowVelocityLevel": 1,
         "shieldRegenLevel": 1,
+        "shieldCooldownLevel": -1,
         "kineticImpulseBudget": 0.1
       },
       "uniqueProperty": {
@@ -722,7 +796,8 @@
         "tags": ["aux", "impulse"],
         "buildAdd": {
           "kineticImpulseBudget": 0.12,
-          "shieldRegenLevel": 1
+          "shieldRegenLevel": 1,
+          "shieldCooldownLevel": -1
         }
       },
       "relicLore": "TODO(adam): Final Orphan Signal identification fragment."

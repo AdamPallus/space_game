@@ -21,9 +21,11 @@
         "defenseSlots": ["shield", "none"],
         "shieldMaxLevel": 0,
         "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
         "armorAmountLevel": 0,
         "armorClass": 10,
-        "armorClassLevel": 0
+        "armorClassLevel": 0,
+        "armorDragLevel": 0
       }
     },
     "area_control": {
@@ -46,9 +48,11 @@
         "defenseSlots": ["shield", "none"],
         "shieldMaxLevel": 0,
         "shieldRegenLevel": 1,
+        "shieldCooldownLevel": 0,
         "armorAmountLevel": 0,
         "armorClass": 10,
-        "armorClassLevel": 0
+        "armorClassLevel": 0,
+        "armorDragLevel": 0
       }
     },
     "armor_break": {
@@ -71,9 +75,11 @@
         "defenseSlots": ["shield", "armor"],
         "shieldMaxLevel": 1,
         "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
         "armorAmountLevel": 1,
         "armorClass": 12,
-        "armorClassLevel": 0
+        "armorClassLevel": 0,
+        "armorDragLevel": 1
       }
     }
   }

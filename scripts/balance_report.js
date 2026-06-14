@@ -60,9 +60,11 @@ function createDefaultShipBuild() {
     defenseSlots: ["shield", "none"],
     shieldMaxLevel: 0,
     shieldRegenLevel: 0,
+    shieldCooldownLevel: 0,
     armorAmountLevel: 0,
     armorClass: 10,
     armorClassLevel: 0,
+    armorDragLevel: 0,
     kineticImpulseBudget: 0,
   };
 }
@@ -225,7 +227,8 @@ function getPrimaryFireConfig(build) {
       : 1 + Math.max(0, flowVelocityLevel) * 0.08;
   const flowSizeScale = 1 + Math.max(0, flowSizeLevel) * 0.12;
   const armorSlots = (build.defenseSlots || []).filter((slot) => slot === "armor").length;
-  const armorPenalty = 1 + armorSlots * 0.18;
+  const armorPenalty =
+    1 + armorSlots * 0.1 + Math.max(0, build.armorDragLevel || 0) * 0.06;
   const spreadRadiusScale = {
     focused: 1,
     dual: 0.82,

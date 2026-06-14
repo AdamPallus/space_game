@@ -3,7 +3,7 @@ const path = require("path");
 
 const catalogPath = path.join(__dirname, "..", "items", "weapon_frames.json");
 const allowedGunDiameters = new Set(["small", "medium", "large"]);
-const allowedSpreads = new Set(["focused", "burst", "wide"]);
+const allowedSpreads = new Set(["focused", "dual", "rapid", "burst", "wide"]);
 const allowedAmmo = new Set(["kinetic", "plasma"]);
 const allowedEffects = new Set(["none", "homing", "explosive", "pierce", "vampiric"]);
 const allowedDefenseSlots = new Set(["none", "shield", "armor"]);

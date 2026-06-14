@@ -44,6 +44,7 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
 const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8")).entries || {};
 const allowedItemSlotTypes = new Set(["primary", "defense", "aux", "support"]);
 const allowedDefenseTypes = new Set(["shield", "armor"]);
+const allowedItemSpreads = new Set(["focused", "dual", "rapid", "burst", "wide"]);
 const allowedItemEffects = new Set(["none", "homing", "explosive", "pierce", "vampiric"]);
 const allowedItemBuildKeys = new Set([
   "gunDiameter",
@@ -55,6 +56,7 @@ const allowedItemBuildKeys = new Set([
   "flowRateLevel",
   "flowVelocityLevel",
   "flowSizeLevel",
+  "cooldownMult",
   "shieldMaxLevel",
   "shieldRegenLevel",
   "armorAmountLevel",
@@ -141,6 +143,9 @@ function validateItemBuild(build, context, errors) {
   }
   if (build.effect && !allowedItemEffects.has(build.effect)) {
     errors.push(`${context} has invalid effect '${build.effect}'.`);
+  }
+  if (build.spread && !allowedItemSpreads.has(build.spread)) {
+    errors.push(`${context} has invalid spread '${build.spread}'.`);
   }
 }
 

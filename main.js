@@ -9,6 +9,8 @@ const hudScore = document.getElementById("hud-score");
 const hudTime = document.getElementById("hud-time");
 const hudMission = document.getElementById("hud-mission");
 const bossLabel = document.getElementById("boss-label");
+const bossShieldFill = document.getElementById("boss-shield-fill");
+const bossArmorFill = document.getElementById("boss-armor-fill");
 const bossProgressFill = document.getElementById("boss-progress-fill");
 const hudCargoPips = document.getElementById("hud-cargo-pips");
 const hudCargoStatus = document.getElementById("hud-cargo-status");
@@ -100,6 +102,14 @@ const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
 const GENERATED_PILOT_ROOT = `${GENERATED_ROOT}/pilot_sprites`;
+const VALID_WEAPON_SPREADS = ["focused", "dual", "rapid", "burst", "wide"];
+const WEAPON_SPREAD_LABELS = {
+  focused: "Single",
+  dual: "Dual",
+  rapid: "Rapid",
+  burst: "Burst",
+  wide: "Wide",
+};
 const GENERATED_BACKGROUND_URLS = {
   generatedTealRift: `${GENERATED_BACKGROUND_ROOT}/teal_rift_native_1024.png`,
   generatedAmberDust: `${GENERATED_BACKGROUND_ROOT}/amber_dust_native_1024.png`,
@@ -259,6 +269,8 @@ const ECONOMY = {
       { tag: "swarm", label: "Swarm-control gear" },
       { tag: "wide", label: "Wide-pattern frames" },
       { tag: "focused", label: "Focused frames" },
+      { tag: "dual", label: "Dual-driver frames" },
+      { tag: "rapid", label: "Rapid-fire frames" },
       { tag: "homing", label: "Homing arrays" },
       { tag: "explosive", label: "Explosive impact gear" },
       { tag: "shield", label: "Shield hardware" },
@@ -337,10 +349,11 @@ const upgrades = [
 function createDefaultShipBuild() {
   return {
     gunDiameter: "medium", // small | medium | large
-    spread: "focused", // focused | burst | wide
+    spread: "focused", // focused | dual | rapid | burst | wide
     flowRateLevel: 0,
     flowVelocityLevel: 0,
     flowSizeLevel: 0,
+    cooldownMult: 1,
     ammo: "kinetic", // kinetic | plasma
     effect: "none", // none | homing | explosive | pierce | vampiric
     effectUpgrades: {
@@ -627,7 +640,7 @@ function sanitizeWeaponFrameBuild(build, context = "weapon frame") {
   if (!["small", "medium", "large"].includes(normalized.gunDiameter)) {
     throw new Error(`${context} has invalid gunDiameter`);
   }
-  if (!["focused", "burst", "wide"].includes(normalized.spread)) {
+  if (!VALID_WEAPON_SPREADS.includes(normalized.spread)) {
     throw new Error(`${context} has invalid spread`);
   }
   if (!["kinetic", "plasma"].includes(normalized.ammo)) {
@@ -639,6 +652,9 @@ function sanitizeWeaponFrameBuild(build, context = "weapon frame") {
   normalized.kineticImpulseBudget = Number.isFinite(normalized.kineticImpulseBudget)
     ? normalized.kineticImpulseBudget
     : 0;
+  normalized.cooldownMult = Number.isFinite(normalized.cooldownMult)
+    ? Math.max(0.35, normalized.cooldownMult)
+    : 1;
   if (!Array.isArray(normalized.defenseSlots)) {
     throw new Error(`${context} has invalid defenseSlots`);
   }
@@ -3624,6 +3640,9 @@ function getShipBuild() {
     };
   }
   state.shipBuild.kineticImpulseBudget = state.shipBuild.kineticImpulseBudget ?? 0;
+  state.shipBuild.cooldownMult = Number.isFinite(state.shipBuild.cooldownMult)
+    ? Math.max(0.35, state.shipBuild.cooldownMult)
+    : 1;
   return state.shipBuild;
 }
 
@@ -3683,6 +3702,9 @@ function syncShipBuildToLegacy() {
   // This mapping is intentionally lossy; later steps will fully switch to shipBuild.
   const spread = build.spread || "focused";
   if (spread === "focused") {
+    state.weapon.barrel = "focused";
+    state.weapon.trigger = "rapid";
+  } else if (spread === "dual" || spread === "rapid") {
     state.weapon.barrel = "focused";
     state.weapon.trigger = "rapid";
   } else if (spread === "burst") {
@@ -5087,6 +5109,10 @@ function formatNumber(value, decimals = 1) {
   return value.toFixed(decimals);
 }
 
+function getSpreadLabel(spread) {
+  return WEAPON_SPREAD_LABELS[spread] || capitalize(spread || "focused");
+}
+
 function getComparableSlotIdForItem(item, slotId = null) {
   if (slotId) return slotId;
   const slotType = normalizeArmorySlotType(item?.slotType);
@@ -5200,7 +5226,7 @@ function getOffenseStatsForBuild(build, targetState = state) {
     attacksPerSecond,
     totalProjectiles,
     burnDps,
-    pattern: `${capitalize(cfg.spread)} - ${totalProjectiles} projectile${totalProjectiles === 1 ? "" : "s"}`,
+    pattern: `${getSpreadLabel(cfg.spread)} - ${totalProjectiles} projectile${totalProjectiles === 1 ? "" : "s"}`,
     ammo: `${capitalize(cfg.ammo)}${burnText}`,
   };
 }
@@ -5297,7 +5323,7 @@ function getBuildLanguageLines(patch = {}) {
   if (buildPatch.effect === "pierce") addLine("Shots pierce 1 additional enemy");
   if (buildPatch.effect === "homing") addLine("Shots seek nearby targets");
   if (buildPatch.effect === "explosive") addLine("Shots burst on impact (area damage)");
-  if (buildPatch.effect === "vampiric") addLine("Kills restore a small amount of hull");
+  if (buildPatch.effect === "vampiric") addLine("Damage dealt restores hull");
   return lines;
 }
 
@@ -5514,7 +5540,8 @@ function positionItemTooltip(anchor) {
   left = Math.max(gap, Math.min(left, window.innerWidth - tooltipRect.width - gap));
   let top = rect.top;
   if (top + tooltipRect.height > window.innerHeight - gap) {
-    top = window.innerHeight - tooltipRect.height - gap;
+    const topAbove = rect.top - tooltipRect.height - gap;
+    top = topAbove >= gap ? topAbove : window.innerHeight - tooltipRect.height - gap;
   }
   top = Math.max(gap, top);
   itemTooltipEl.style.left = `${Math.round(left)}px`;
@@ -6134,7 +6161,7 @@ function renderLedgerStock(ledger) {
         <div class="ledger-item-meta">${escapeHtml(getRarityLabel(rarity))} | List ${formatCredits(lot.listValue)} | Ask ${formatCredits(lot.price)}</div>
         <div class="ledger-item-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
-      <button type="button" class="small" ${canAfford ? "" : "disabled"}>${canAfford ? "Buy" : "Need Credits"}</button>
+      <button type="button" class="ledger-action-button buy" ${canAfford ? "" : "disabled"}>${canAfford ? "Buy" : "Short"}</button>
     `;
     const button = entry.querySelector("button");
     button?.addEventListener("click", () => buyLedgerLot(lot.id));
@@ -6173,7 +6200,7 @@ function renderLedgerInventory(ledger) {
         <div class="ledger-item-meta">List ${formatCredits(quote.listValue)} | Fee ${formatCredits(quote.handlingFee)} | Pays ${formatCredits(quote.payout)}${bulletinLabel}</div>
         <div class="ledger-item-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
-      <button type="button" class="small">Sell</button>
+      <button type="button" class="ledger-action-button sell"${installed ? " disabled" : ""}>${installed ? "Kept" : "Sell"}</button>
     `;
     const button = entry.querySelector("button");
     button?.addEventListener("click", () => sellInventoryItem(item.id));
@@ -6577,8 +6604,17 @@ function getPrimaryFireConfig(buildOverride = null) {
     (build.defenseSlots?.filter((slot) => slot === "armor").length ?? 0);
   const armorPenalty = 1 + armorSlots * 0.18;
 
-  const microScale = spread === "focused" ? 1 : 0.5;
-  const projectileRadius = 4 * diameterScale * flowSizeScale * microScale;
+  const spreadRadiusScale = {
+    focused: 1,
+    dual: 0.82,
+    rapid: 0.58,
+    burst: 0.5,
+    wide: 0.5,
+  }[spread] ?? 1;
+  const cooldownMult = Number.isFinite(build.cooldownMult)
+    ? Math.max(0.35, build.cooldownMult)
+    : 1;
+  const projectileRadius = 4 * diameterScale * flowSizeScale * spreadRadiusScale;
   const sizeFactor = Math.max(0.05, projectileRadius / 4);
   const kineticImpulseBudget =
     ammo === "kinetic" ? getKineticImpulseBudget(build, gunDiameter) : null;
@@ -6592,18 +6628,43 @@ function getPrimaryFireConfig(buildOverride = null) {
       : diameterSpeedScale * flowVelocityScale;
   const bulletSpeed = baseSpeed * velocityFactor;
 
-  let cooldown = baseCooldown * armorPenalty * flowRateScale;
+  let cooldown = baseCooldown * armorPenalty * flowRateScale * cooldownMult;
+  if (spread === "dual") cooldown *= 1.28; // two straight barrels, slower per trigger
+  if (spread === "rapid") cooldown *= 0.46; // machine-gun cadence, one small round per trigger
   if (spread === "burst") cooldown *= 2.15; // 5 shots at once
   if (spread === "wide") cooldown *= 1.15; // still 5 shots, but meant to be spammy
   cooldown = Math.max(0.08, cooldown);
 
-  const jitter = spread === "burst" ? (5 * Math.PI) / 180 : 0;
-  const angles =
-    spread === "wide"
-      ? [-0.35, -0.175, 0, 0.175, 0.35]
-      : spread === "focused"
-        ? [0]
-        : [0, 0, 0, 0, 0]; // burst: all centered, jitter handles variation
+  const jitter =
+    spread === "burst"
+      ? (5 * Math.PI) / 180
+      : spread === "rapid"
+        ? (1.5 * Math.PI) / 180
+        : 0;
+  const pattern = {
+    wide: {
+      angles: [-0.35, -0.175, 0, 0.175, 0.35],
+      offsets: [0, 0, 0, 0, 0],
+    },
+    dual: {
+      angles: [0, 0],
+      offsets: [-9, 9],
+    },
+    burst: {
+      angles: [0, 0, 0, 0, 0],
+      offsets: [-4, -2, 0, 2, 4],
+    },
+    rapid: {
+      angles: [0],
+      offsets: [0],
+    },
+    focused: {
+      angles: [0],
+      offsets: [0],
+    },
+  }[spread] || { angles: [0], offsets: [0] };
+  const armorChipFloorRate = spread === "rapid" ? 0.035 : ECONOMY.minDamageFloor;
+  const minArmorChipDamage = spread === "rapid" ? 0.25 : 1;
 
   return {
     ammo,
@@ -6614,7 +6675,8 @@ function getPrimaryFireConfig(buildOverride = null) {
     projectileRadius,
     cooldown,
     jitter,
-    angles,
+    angles: pattern.angles,
+    offsets: pattern.offsets,
     armorPenalty,
     flowRateScale,
     flowVelocityScale,
@@ -6624,6 +6686,8 @@ function getPrimaryFireConfig(buildOverride = null) {
     sizeFactor,
     velocityFactor,
     kineticImpulseBudget,
+    armorChipFloorRate,
+    minArmorChipDamage,
   };
 }
 
@@ -6672,6 +6736,9 @@ function firePlayerBullet() {
       homingMaxOffset: 0.6,
       homingStrength: 0.05,
       payload: cfg.ammo,
+      plasma: cfg.ammo === "plasma",
+      armorChipFloorRate: cfg.armorChipFloorRate,
+      minArmorChipDamage: cfg.minArmorChipDamage,
       age: 0,
       animation:
         extra.animation ||
@@ -6685,6 +6752,10 @@ function firePlayerBullet() {
     if (cfg.ammo === "plasma" && !visualTheme?.playerPlasma?.loaded) {
       bullet.shape = "orb";
       bullet.color = "rgba(34, 197, 94, 0.95)";
+    } else if (cfg.ammo === "plasma") {
+      bullet.color = "rgba(45, 212, 191, 0.95)";
+      bullet.glowColor = "rgba(34, 211, 238, 0.42)";
+      bullet.spinRate = bullet.spinRate ?? 1.6;
     }
     const tune = cfg.effectTune ?? 0;
     if (cfg.effect === "homing") {
@@ -6696,7 +6767,7 @@ function firePlayerBullet() {
     } else if (cfg.effect === "explosive") {
       bullet.explosive = true;
     } else if (cfg.effect === "vampiric") {
-      bullet.vampiric = 2 + tune * 1.5;
+      bullet.vampiric = 0.1 + tune * 0.035;
     }
     if (bullet.pierce && !bullet.hitIds) bullet.hitIds = new Set();
     if (bullet.explosive) {
@@ -6715,10 +6786,14 @@ function firePlayerBullet() {
       const vy = -Math.cos(shotAngle) * cfg.bulletSpeed * direction;
       const radius = cfg.projectileRadius;
       const sizeScale = radius / 4;
-      // Slight position shuffle so micro-shots don't perfectly overlap.
-      const posJitter = cfg.spread === "focused" ? 0 : (Math.random() - 0.5) * 6;
+      const lateralOffset = cfg.offsets?.[index] ?? 0;
+      // Slight position shuffle so centered micro-shots don't perfectly overlap.
+      const posJitter =
+        cfg.spread === "burst" || cfg.spread === "wide"
+          ? (Math.random() - 0.5) * 6
+          : 0;
       spawnBullet(vx, vy, {
-        x: player.x + posJitter,
+        x: player.x + lateralOffset + posJitter,
         y: player.y - player.radius,
         radius,
         width: Math.max(6, 10 * sizeScale),
@@ -6727,7 +6802,7 @@ function firePlayerBullet() {
       });
       // Apply mount scale by scaling damage post-compute.
       bullets[bullets.length - 1].damage *= mountScale;
-      if (cfg.spread !== "focused") {
+      if (cfg.spread === "wide" || cfg.spread === "burst") {
         bullets[bullets.length - 1].rotation += (index - 2) * 0.01;
       }
     });
@@ -7106,6 +7181,9 @@ function update(delta) {
           bullet.vy += (targetVy - bullet.vy) * strength;
         }
       }
+    }
+    if (bullet.homing) {
+      bullet.rotation = Math.atan2(bullet.vy, bullet.vx) + Math.PI / 2;
     }
     bullet.x += bullet.vx * delta;
     bullet.y += bullet.vy * delta;
@@ -7562,10 +7640,15 @@ function handleCollisions() {
       if (bullet.hitIds && bullet.hitIds.has(enemy.id)) continue;
       if (distance(bullet.x, bullet.y, enemy.x, enemy.y) < bullet.radius + enemy.radius) {
         revealEnemyHealth(enemy);
-        applyDamageToEnemy(enemy, bullet.damage);
+        const durabilityBefore = getEnemyRemainingDurability(enemy);
+        applyDamageToEnemy(enemy, bullet.damage, {
+          chipFloorRate: bullet.armorChipFloorRate,
+          minChipDamage: bullet.minArmorChipDamage,
+        });
+        const directDamageDealt = Math.max(0, durabilityBefore - getEnemyRemainingDurability(enemy));
+        healPlayerFromVampiricDamage(bullet, directDamageDealt);
         if (bullet.payload === "plasma") {
-          enemy.dotTimer = Math.max(enemy.dotTimer, 3.0);
-          enemy.dotDps = Math.max(enemy.dotDps, bullet.damage * 0.45);
+          applyPlasmaBurn(enemy, directDamageDealt || bullet.damage);
         } else if (bullet.payload === "emp") {
           if (!enemy.empImmune) {
             enemy.empHitTimer = Math.max(enemy.empHitTimer, 1.2);
@@ -7577,7 +7660,7 @@ function handleCollisions() {
           spawnExplosion(enemy.x, enemy.y, radius * 0.42, {
             intensity: 0.35,
             blend: "lighter",
-            style: "impact",
+            style: bullet.payload === "plasma" ? "plasmaImpact" : "impact",
             coalesce: true,
           });
           addCameraShake(Math.min(0.2, 0.03 + radius / 700), enemy.x, enemy.y);
@@ -7587,7 +7670,17 @@ function handleCollisions() {
             if (d > radius) return;
             const scale = 1 - d / radius;
             revealEnemyHealth(other);
-            applyDamageToEnemy(other, bullet.damage * (bullet.explosiveDamageMult ?? 0.7) * scale);
+            const splashDamage = bullet.damage * (bullet.explosiveDamageMult ?? 0.7) * scale;
+            const splashBefore = getEnemyRemainingDurability(other);
+            applyDamageToEnemy(other, splashDamage, {
+              chipFloorRate: bullet.armorChipFloorRate,
+              minChipDamage: bullet.minArmorChipDamage,
+            });
+            const splashDealt = Math.max(0, splashBefore - getEnemyRemainingDurability(other));
+            healPlayerFromVampiricDamage(bullet, splashDealt);
+            if (bullet.payload === "plasma") {
+              applyPlasmaBurn(other, splashDealt || splashDamage);
+            }
           });
         }
         if (bullet.hitIds) {
@@ -7671,9 +7764,6 @@ function handleEnemyDestroyed(enemy, bullet) {
   }
   if (enemy.isBoss && mission.level?.completeOnBoss) {
     endMission({ completed: true });
-  }
-  if (bullet && bullet.vampiric) {
-    player.hull = Math.min(player.maxHull, player.hull + bullet.vampiric);
   }
 }
 
@@ -7971,6 +8061,17 @@ function drawBullet(bullet, color = "#e0f2fe") {
     const trailStep = Math.max(5, Math.min(16, speed * 0.032));
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
+    if (bullet.plasma) {
+      const glowRadius = Math.max(width, height) * (0.42 + Math.sin(age * 15) * 0.04);
+      const glow = ctx.createRadialGradient(bullet.x, bullet.y, 0, bullet.x, bullet.y, glowRadius);
+      glow.addColorStop(0, "rgba(236, 254, 255, 0.3)");
+      glow.addColorStop(0.45, bullet.glowColor || "rgba(34, 211, 238, 0.32)");
+      glow.addColorStop(1, "rgba(20, 184, 166, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(bullet.x, bullet.y, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
     for (let i = trailCount; i >= 1; i -= 1) {
       const alpha = 0.09 + (trailCount - i) * 0.045;
       const scale = 1 - i * 0.08;
@@ -8207,7 +8308,9 @@ function updateHud() {
     if (hudScore) hudScore.textContent = "0";
     hudTime.textContent = "00:00";
     hudCredits.textContent = state.credits.toString();
-    if (bossProgressFill) bossProgressFill.style.width = "0%";
+    setBossBarLayer(bossShieldFill, 0, 0);
+    setBossBarLayer(bossArmorFill, 0, 0);
+    setBossBarLayer(bossProgressFill, 0, 0);
     if (bossLabel) bossLabel.textContent = "Boss ETA";
   } else {
     const runCredits = creditRewardFor(mission);
@@ -8453,6 +8556,14 @@ function distance(x1, y1, x2, y2) {
   return Math.hypot(x1 - x2, y1 - y2);
 }
 
+function getEnemyRemainingDurability(enemy) {
+  return (
+    Math.max(0, enemy.shield || 0) +
+    Math.max(0, enemy.armor || 0) +
+    Math.max(0, enemy.hull || 0)
+  );
+}
+
 function revealEnemyHealth(enemy) {
   enemy.healthBarTimer = Math.max(enemy.healthBarTimer || 0, 1.35);
 }
@@ -8461,7 +8572,11 @@ function revealPlayerHealth() {
   player.healthBarTimer = Math.max(player.healthBarTimer || 0, 1.8);
 }
 
-function applyDamageToEnemy(enemy, damage, { chipFloor = true } = {}) {
+function applyDamageToEnemy(
+  enemy,
+  damage,
+  { chipFloor = true, chipFloorRate = ECONOMY.minDamageFloor, minChipDamage = 1 } = {}
+) {
   // Shields absorb full damage; armor reduces per-hit damage by armorClass.
   // Returns the total applied to any pool (for analytics/feel), but callers
   // should still treat "interaction" as happening even if applied is 0.
@@ -8478,7 +8593,7 @@ function applyDamageToEnemy(enemy, damage, { chipFloor = true } = {}) {
   if (remaining <= 0) return applied;
   if (enemy.maxArmor > 0 && enemy.armor > 0) {
     const floorDamage = chipFloor
-      ? Math.max(1, baseDamage * ECONOMY.minDamageFloor)
+      ? Math.max(minChipDamage, baseDamage * chipFloorRate)
       : 0;
     const effective = Math.max(floorDamage, remaining - (enemy.armorClass || 0));
     if (effective <= 0) return applied;
@@ -8495,6 +8610,19 @@ function applyDamageToEnemy(enemy, damage, { chipFloor = true } = {}) {
   enemy.hull -= remaining;
   applied += remaining;
   return applied;
+}
+
+function applyPlasmaBurn(enemy, sourceDamage) {
+  if (!enemy || sourceDamage <= 0) return;
+  enemy.dotTimer = Math.max(enemy.dotTimer || 0, 3.0);
+  enemy.dotDps = Math.max(enemy.dotDps || 0, sourceDamage * 0.45);
+}
+
+function healPlayerFromVampiricDamage(bullet, damageDealt) {
+  if (!bullet?.vampiric || damageDealt <= 0 || player.hull >= player.maxHull) return;
+  const heal = Math.min(player.maxHull * 0.08, damageDealt * bullet.vampiric);
+  if (heal <= 0) return;
+  player.hull = Math.min(player.maxHull, player.hull + heal);
 }
 
 function wrapAngle(angle) {
@@ -8611,15 +8739,16 @@ function drawExplosion(boom) {
     ctx.restore();
     return;
   }
-  if (style === "impact") {
+  if (style === "impact" || style === "plasmaImpact") {
     // Ring-style impact: reads well, but doesn't stack into a fully opaque blob.
     const ringR = maxRadius * 0.82;
     const ringW = Math.max(2, boom.radius * 0.22);
     const ringAlpha = 0.55 * alpha * intensity;
     const gradient = ctx.createRadialGradient(boom.x, boom.y, ringR - ringW, boom.x, boom.y, ringR + ringW);
-    gradient.addColorStop(0, "rgba(251, 191, 36, 0)");
-    gradient.addColorStop(0.5, `rgba(251, 191, 36, ${ringAlpha})`);
-    gradient.addColorStop(1, "rgba(251, 191, 36, 0)");
+    const ringColor = style === "plasmaImpact" ? "34, 211, 238" : "251, 191, 36";
+    gradient.addColorStop(0, `rgba(${ringColor}, 0)`);
+    gradient.addColorStop(0.5, `rgba(${ringColor}, ${ringAlpha})`);
+    gradient.addColorStop(1, `rgba(${ringColor}, 0)`);
     ctx.strokeStyle = gradient;
     ctx.lineWidth = ringW;
     ctx.beginPath();
@@ -8693,22 +8822,54 @@ function getBossSpawnTime(level) {
   return earliest;
 }
 
+function setBossBarLayer(element, leftPercent, widthPercent) {
+  if (!element) return;
+  element.style.left = `${Math.max(0, Math.min(100, leftPercent))}%`;
+  element.style.width = `${Math.max(0, Math.min(100, widthPercent))}%`;
+}
+
 function updateBossProgress() {
   if (!bossProgressFill || !bossLabel || !mission) return;
   const bossTime = mission.bossSpawnTime;
   if (!bossTime) {
     bossLabel.textContent = "No Boss";
-    bossProgressFill.style.width = "0%";
+    setBossBarLayer(bossShieldFill, 0, 0);
+    setBossBarLayer(bossArmorFill, 0, 0);
+    setBossBarLayer(bossProgressFill, 0, 0);
     return;
   }
   if (mission.bossAlive) {
-    bossLabel.textContent = "Boss Engaged";
-    bossProgressFill.style.width = "100%";
+    const boss = enemies.find((enemy) => enemy.isBoss);
+    if (!boss) {
+      bossLabel.textContent = "Boss Engaged";
+      setBossBarLayer(bossShieldFill, 0, 0);
+      setBossBarLayer(bossArmorFill, 0, 0);
+      setBossBarLayer(bossProgressFill, 0, 100);
+      return;
+    }
+    const maxShield = boss.maxShield || 0;
+    const maxArmor = boss.maxArmor || 0;
+    const maxHull = boss.maxHull || 0;
+    const totalMax = maxShield + maxArmor + maxHull;
+    if (totalMax <= 0) return;
+    const shield = Math.max(0, boss.shield || 0);
+    const armor = Math.max(0, boss.armor || 0);
+    const hull = Math.max(0, boss.hull || 0);
+    const shieldMaxWidth = (maxShield / totalMax) * 100;
+    const armorMaxWidth = (maxArmor / totalMax) * 100;
+    const hullLeft = shieldMaxWidth + armorMaxWidth;
+    setBossBarLayer(bossShieldFill, 0, (shield / totalMax) * 100);
+    setBossBarLayer(bossArmorFill, shieldMaxWidth, (armor / totalMax) * 100);
+    setBossBarLayer(bossProgressFill, hullLeft, (hull / totalMax) * 100);
+    const totalRemaining = shield + armor + hull;
+    bossLabel.textContent = `Boss ${Math.max(0, Math.round((totalRemaining / totalMax) * 100))}%`;
     return;
   }
   const progress = Math.min(1, mission.elapsed / bossTime);
   bossLabel.textContent = `Boss ETA ${formatTime(Math.max(0, bossTime - mission.elapsed))}`;
-  bossProgressFill.style.width = `${Math.round(progress * 100)}%`;
+  setBossBarLayer(bossShieldFill, 0, 0);
+  setBossBarLayer(bossArmorFill, 0, 0);
+  setBossBarLayer(bossProgressFill, 0, Math.round(progress * 100));
 }
 
 let lastTime = performance.now();

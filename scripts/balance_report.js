@@ -48,6 +48,7 @@ function createDefaultShipBuild() {
     flowRateLevel: 0,
     flowVelocityLevel: 0,
     flowSizeLevel: 0,
+    cooldownMult: 1,
     ammo: "kinetic",
     effect: "none",
     effectUpgrades: {
@@ -225,8 +226,17 @@ function getPrimaryFireConfig(build) {
   const flowSizeScale = 1 + Math.max(0, flowSizeLevel) * 0.12;
   const armorSlots = (build.defenseSlots || []).filter((slot) => slot === "armor").length;
   const armorPenalty = 1 + armorSlots * 0.18;
-  const microScale = spread === "focused" ? 1 : 0.5;
-  const projectileRadius = 4 * diameterScale * flowSizeScale * microScale;
+  const spreadRadiusScale = {
+    focused: 1,
+    dual: 0.82,
+    rapid: 0.58,
+    burst: 0.5,
+    wide: 0.5,
+  }[spread] || 1;
+  const cooldownMult = Number.isFinite(build.cooldownMult)
+    ? Math.max(0.35, build.cooldownMult)
+    : 1;
+  const projectileRadius = 4 * diameterScale * flowSizeScale * spreadRadiusScale;
   const sizeFactor = Math.max(0.05, projectileRadius / 4);
   const kineticImpulseBudget = ammo === "kinetic" ? getKineticImpulseBudget(build, gunDiameter) : null;
   const velocityFactor =
@@ -236,7 +246,9 @@ function getPrimaryFireConfig(build) {
           kineticImpulseBudget / Math.pow(sizeFactor, ECONOMY.kinetic.sizeVelocityTradeoff)
         )
       : diameterSpeedScale * flowVelocityScale;
-  let cooldown = 0.28 * armorPenalty * flowRateScale;
+  let cooldown = 0.28 * armorPenalty * flowRateScale * cooldownMult;
+  if (spread === "dual") cooldown *= 1.28;
+  if (spread === "rapid") cooldown *= 0.46;
   if (spread === "burst") cooldown *= 2.15;
   if (spread === "wide") cooldown *= 1.15;
   return {
@@ -247,6 +259,8 @@ function getPrimaryFireConfig(build) {
     bulletSpeed: ECONOMY.kinetic.baseVelocity * velocityFactor,
     projectileRadius,
     cooldown: Math.max(0.08, cooldown),
+    armorChipFloorRate: spread === "rapid" ? 0.035 : ECONOMY.minDamageFloor,
+    minArmorChipDamage: spread === "rapid" ? 0.25 : 1,
   };
 }
 
@@ -279,7 +293,11 @@ function normalizeEnemy(id, entry) {
   };
 }
 
-function applyDamageToEnemy(enemy, damage, { chipFloor = true } = {}) {
+function applyDamageToEnemy(
+  enemy,
+  damage,
+  { chipFloor = true, chipFloorRate = ECONOMY.minDamageFloor, minChipDamage = 1 } = {}
+) {
   const baseDamage = Math.max(0, damage);
   let remaining = baseDamage;
   let applied = 0;
@@ -291,7 +309,7 @@ function applyDamageToEnemy(enemy, damage, { chipFloor = true } = {}) {
   }
   if (remaining <= 0) return applied;
   if (enemy.maxArmor > 0 && enemy.armor > 0) {
-    const floorDamage = chipFloor ? Math.max(1, baseDamage * ECONOMY.minDamageFloor) : 0;
+    const floorDamage = chipFloor ? Math.max(minChipDamage, baseDamage * chipFloorRate) : 0;
     const effective = Math.max(floorDamage, remaining - (enemy.armorClass || 0));
     if (effective <= 0) return applied;
     const toArmor = Math.min(enemy.armor, effective);
@@ -313,6 +331,8 @@ function expectedHits(spread, enemy) {
   const enemyRadius = enemy.radius;
   const armored = enemy.maxArmor > 0 || enemy.armorClass > 0;
   if (spread === "focused") return 1;
+  if (spread === "rapid") return 1;
+  if (spread === "dual") return armored ? 1.55 : enemyRadius >= 30 ? 2 : 1.65;
   if (spread === "burst") return armored ? 1.15 : enemyRadius >= 34 ? 4 : 3;
   if (armored) return enemyRadius >= 60 ? 0.45 : 0.35;
   if (enemyRadius >= 60) return 3.5;
@@ -320,14 +340,14 @@ function expectedHits(spread, enemy) {
   return 1.4;
 }
 
-function applyExpectedHits(enemy, hitDamage, hits) {
+function applyExpectedHits(enemy, hitDamage, hits, hitOptions = {}) {
   const fullHits = Math.floor(hits);
   const fractional = hits - fullHits;
   for (let i = 0; i < fullHits; i += 1) {
-    applyDamageToEnemy(enemy, hitDamage);
+    applyDamageToEnemy(enemy, hitDamage, hitOptions);
   }
   if (fractional > 0) {
-    applyDamageToEnemy(enemy, hitDamage * fractional);
+    applyDamageToEnemy(enemy, hitDamage * fractional, hitOptions);
   }
 }
 
@@ -342,9 +362,13 @@ function simulateTtk(build, enemyBase) {
   let elapsed = 0;
   let dotTimer = 0;
   let dotDps = 0;
+  const hitOptions = {
+    chipFloorRate: cfg.armorChipFloorRate,
+    minChipDamage: cfg.minArmorChipDamage,
+  };
   while (elapsed <= 600) {
     const hits = expectedHits(cfg.spread, enemy);
-    applyExpectedHits(enemy, hitDamage, hits);
+    applyExpectedHits(enemy, hitDamage, hits, hitOptions);
     if (cfg.ammo === "plasma") {
       dotTimer = Math.max(dotTimer, 3);
       dotDps = Math.max(dotDps, hitDamage * 0.45);

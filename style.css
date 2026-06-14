@@ -646,6 +646,13 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   border: 1px solid var(--rarity-color);
   color: var(--rarity-color);
 }
+.armory-installed-empty {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 11px;
+}
 .armory-defenses, .armory-defense { font-size: 11px; }
 
 .armory-rack {
@@ -695,10 +702,6 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   border-color: var(--rarity-color);
   box-shadow: 0 0 10px var(--rarity-glow);
   outline: none;
-}
-.armory-inventory-item.is-preview {
-  border-color: var(--rarity-color);
-  box-shadow: 0 0 10px var(--rarity-glow);
 }
 .armory-inventory-item.is-installed {
   border-color: var(--good);
@@ -945,14 +948,16 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  grid-auto-rows: 154px;
   gap: 8px;
   align-content: start;
   padding-right: 4px;
 }
 .ledger-market-item {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 34px minmax(0, 1fr) 28px;
   align-items: center;
+  justify-items: center;
   gap: 6px;
   border: 1px solid var(--rarity-color, var(--line));
   border-radius: var(--radius-sm);
@@ -961,7 +966,9 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   padding: 8px 6px;
   font-size: 12px;
   transition: border-color 0.12s, box-shadow 0.12s;
-  min-height: 148px;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 .ledger-market-item:hover,
 .ledger-market-item:focus-visible {
@@ -973,23 +980,25 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .ledger-item-icon {
   width: 34px;
   height: 34px;
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .ledger-item-icon img { max-width: 100%; max-height: 100%; }
 .ledger-item-main {
-  flex: 1;
   min-width: 0;
+  min-height: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  overflow: hidden;
 }
 .ledger-item-kicker {
   font-size: 9px;
+  line-height: 1;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--rarity-color);
@@ -1005,31 +1014,19 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   line-height: 1.2;
   text-align: center;
   max-height: 2.4em;
+  width: 100%;
   overflow: hidden;
 }
 .ledger-item-price {
   color: var(--ink);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
   line-height: 1;
-}
-.ledger-item-meta {
-  min-height: 1.1em;
-  font-size: 9px;
-  color: var(--muted);
-  text-align: center;
-}
-.ledger-item-tags {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-height: 28px;
-  overflow: hidden;
 }
 .ledger-action-button {
   appearance: none;
   width: 100%;
+  height: 28px;
   min-width: 64px;
   border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
@@ -1041,7 +1038,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 7px 8px;
+  padding: 0 8px;
   cursor: pointer;
   box-shadow: inset 0 0 10px rgba(63, 208, 255, 0.08), 0 0 8px rgba(63, 208, 255, 0.18);
 }

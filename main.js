@@ -1194,7 +1194,6 @@ const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
 let openUpgradeId = null;
 let enemyIdCounter = 1;
 let armorySelectedSlotId = "primary";
-let armoryPreviewItemId = null;
 let armoryStatsExpanded = false;
 let itemTooltipEl = null;
 let itemTooltipTimer = null;
@@ -6299,13 +6298,6 @@ function getArmorySlotMeta(slotId) {
   return meta[slotId] || meta.primary;
 }
 
-function getArmoryPreviewItem(slotId) {
-  const items = getArmoryItemsForSlot(slotId);
-  const installed = items.find((item) => item.installed) || items[0] || null;
-  if (!armoryPreviewItemId) return installed;
-  return items.find((item) => item.id === armoryPreviewItemId) || installed;
-}
-
 function getInstalledArmoryItem(slotId) {
   return getArmoryItemsForSlot(slotId).find((item) => item.installed) || null;
 }
@@ -6372,17 +6364,7 @@ function handleArmorySlotInstall(slotId, itemId) {
 
 function renderArmoryInspector(slotId) {
   if (!armoryInspector || !slotId) return;
-  const item = getArmoryPreviewItem(slotId) || getInstalledArmoryItem(slotId);
-  if (!item) return;
-  const statusLabel = armoryPreviewItemId
-    ? item.installed
-      ? "Installed"
-      : "Preview"
-    : item.installed
-      ? "Installed"
-      : item.owned
-        ? "Owned"
-        : getArmoryUnlockText(item, false);
+  const item = getInstalledArmoryItem(slotId);
   const slotLabel =
     slotId === "primary"
       ? "Primary Hardpoint"
@@ -6391,13 +6373,25 @@ function renderArmoryInspector(slotId) {
         : slotId === "defense-0"
           ? "Defense Bay A"
           : "Defense Bay B";
+  if (!item) {
+    armoryInspector.innerHTML = `
+      <div class="armory-inspector-head">
+        <div class="armory-inspector-title">
+          <p class="armory-kicker">${slotLabel}</p>
+        </div>
+        <span class="armory-chip">Open</span>
+      </div>
+      <div class="armory-installed-empty">No module installed</div>
+    `;
+    return;
+  }
   const display = getItemDisplayStats(item, slotId);
   armoryInspector.innerHTML = `
     <div class="armory-inspector-head">
       <div class="armory-inspector-title">
         <p class="armory-kicker">${slotLabel}</p>
       </div>
-      <span class="armory-chip">${statusLabel}</span>
+      <span class="armory-chip">Installed</span>
     </div>
     ${renderItemDisplayBlock(display, { inline: true })}
   `;
@@ -6445,7 +6439,6 @@ function renderShipUpgradesPanel() {
       const slotId = slotButton.dataset.armorySlot || null;
       slotButton.addEventListener("click", () => {
         armorySelectedSlotId = slotId;
-        armoryPreviewItemId = null;
         safeUpdateHangar();
       });
     });
@@ -6479,7 +6472,7 @@ function renderShipUpgradesPanel() {
         ? canInstallSupportItem(item)
         : !!item.owned;
     button.type = "button";
-    button.className = `armory-inventory-item${item.installed ? " is-installed" : ""}${canInstall ? "" : " is-locked"}${armoryPreviewItemId === item.id ? " is-preview" : ""}${item.rarity ? ` rarity-${item.rarity}` : ""}`;
+    button.className = `armory-inventory-item${item.installed ? " is-installed" : ""}${canInstall ? "" : " is-locked"}${item.rarity ? ` rarity-${item.rarity}` : ""}`;
     if (item.rarity) {
       button.setAttribute("style", getRarityStyle(item.rarity));
     }
@@ -6488,35 +6481,8 @@ function renderShipUpgradesPanel() {
       <span class="armory-inventory-name">${escapeHtml(getCompactItemName(item))}</span>
     `;
     attachItemTooltip(button, item, armorySelectedSlotId);
-    button.addEventListener("pointerdown", () => {
-      button.dataset.previewFirstTap =
-        !shouldShowFloatingItemTooltip() && armoryPreviewItemId !== item.id ? "1" : "0";
-    });
-    button.addEventListener("mouseenter", () => {
-      armoryPreviewItemId = item.id;
-      renderArmoryInspector(armorySelectedSlotId);
-    });
-    button.addEventListener("mouseleave", () => {
-      armoryPreviewItemId = null;
-      renderArmoryInspector(armorySelectedSlotId);
-    });
-    button.addEventListener("focus", () => {
-      armoryPreviewItemId = item.id;
-      renderArmoryInspector(armorySelectedSlotId);
-    });
-    button.addEventListener("blur", () => {
-      armoryPreviewItemId = null;
-      renderArmoryInspector(armorySelectedSlotId);
-    });
     button.addEventListener("click", () => {
-      const needsPreviewTap = button.dataset.previewFirstTap === "1";
-      armoryPreviewItemId = item.id;
-      button.dataset.previewFirstTap = "0";
       if (item.installed) {
-        renderArmoryInspector(armorySelectedSlotId);
-        return;
-      }
-      if (needsPreviewTap) {
         renderArmoryInspector(armorySelectedSlotId);
         return;
       }
@@ -6614,7 +6580,6 @@ function renderLedgerStock(ledger) {
     const item = lot.item;
     const rarity = item.rarity || "scrap";
     const canAfford = state.credits >= lot.price;
-    const tags = Array.isArray(item.tags) ? item.tags.slice(0, 4) : [];
     const entry = document.createElement("div");
     entry.className = `ledger-market-item rarity-${rarity}`;
     entry.setAttribute("style", getRarityStyle(rarity));
@@ -6627,7 +6592,6 @@ function renderLedgerStock(ledger) {
         <div class="ledger-item-kicker">${lot.clericalAdjustment ? escapeHtml(LEDGER_COPY.clericalAdjustment) : escapeHtml(getDenseItemRoleLabel(item))}</div>
         <div class="ledger-item-name">${escapeHtml(getCompactItemName(item))}</div>
         <div class="ledger-item-price">${formatLedgerCredits(lot.price)}</div>
-        <div class="ledger-item-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
       <button type="button" class="ledger-action-button buy" ${canAfford ? "" : "disabled"}>${canAfford ? "Buy" : "Short"}</button>
     `;
@@ -6649,11 +6613,7 @@ function renderLedgerInventory(ledger) {
   inventory.forEach((item) => {
     const rarity = item.rarity || "scrap";
     const quote = getItemSellQuote(item);
-    const bulletinLabel = quote.bulletinMatch
-      ? ` | ${LEDGER_COPY.demandBonus} +${formatLedgerCredits(quote.bulletinBonus)}`
-      : "";
     const installed = isInventoryItemInstalled(item.id);
-    const tags = Array.isArray(item.tags) ? item.tags.slice(0, 4) : [];
     const entry = document.createElement("div");
     entry.className = `ledger-market-item rarity-${rarity}`;
     entry.setAttribute("style", getRarityStyle(rarity));
@@ -6666,8 +6626,6 @@ function renderLedgerInventory(ledger) {
         <div class="ledger-item-kicker">${escapeHtml(getDenseItemRoleLabel(item))}${installed ? " | Installed" : ""}</div>
         <div class="ledger-item-name">${escapeHtml(getCompactItemName(item))}</div>
         <div class="ledger-item-price">${formatLedgerCredits(quote.payout)}</div>
-        <div class="ledger-item-meta">Payout${bulletinLabel ? escapeHtml(bulletinLabel) : ""}</div>
-        <div class="ledger-item-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
       <button type="button" class="ledger-action-button sell"${installed ? " disabled" : ""}>${installed ? "Kept" : "Sell"}</button>
     `;

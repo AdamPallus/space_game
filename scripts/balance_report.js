@@ -232,6 +232,7 @@ function getPrimaryFireConfig(build) {
   const spreadRadiusScale = {
     focused: 1,
     dual: 0.82,
+    dualRapid: 0.54,
     rapid: 0.58,
     burst: 0.5,
     wide: 0.5,
@@ -251,9 +252,11 @@ function getPrimaryFireConfig(build) {
       : diameterSpeedScale * flowVelocityScale;
   let cooldown = 0.28 * armorPenalty * flowRateScale * cooldownMult;
   if (spread === "dual") cooldown *= 1.28;
+  if (spread === "dualRapid") cooldown *= 0.68;
   if (spread === "rapid") cooldown *= 0.46;
   if (spread === "burst") cooldown *= 2.15;
   if (spread === "wide") cooldown *= 1.15;
+  const isRapidPattern = spread === "rapid" || spread === "dualRapid";
   return {
     ammo,
     effect,
@@ -262,8 +265,8 @@ function getPrimaryFireConfig(build) {
     bulletSpeed: ECONOMY.kinetic.baseVelocity * velocityFactor,
     projectileRadius,
     cooldown: Math.max(0.08, cooldown),
-    armorChipFloorRate: spread === "rapid" ? 0.035 : ECONOMY.minDamageFloor,
-    minArmorChipDamage: spread === "rapid" ? 0.25 : 1,
+    armorChipFloorRate: isRapidPattern ? 0.035 : ECONOMY.minDamageFloor,
+    minArmorChipDamage: isRapidPattern ? 0.25 : 1,
   };
 }
 
@@ -336,6 +339,7 @@ function expectedHits(spread, enemy) {
   if (spread === "focused") return 1;
   if (spread === "rapid") return 1;
   if (spread === "dual") return armored ? 1.55 : enemyRadius >= 30 ? 2 : 1.65;
+  if (spread === "dualRapid") return armored ? 1.25 : enemyRadius >= 30 ? 1.85 : 1.45;
   if (spread === "burst") return armored ? 1.15 : enemyRadius >= 34 ? 4 : 3;
   if (armored) return enemyRadius >= 60 ? 0.45 : 0.35;
   if (enemyRadius >= 60) return 3.5;

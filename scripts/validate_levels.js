@@ -44,7 +44,7 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
 const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8")).entries || {};
 const allowedItemSlotTypes = new Set(["primary", "defense", "aux", "support"]);
 const allowedDefenseTypes = new Set(["shield", "armor"]);
-const allowedItemSpreads = new Set(["focused", "dual", "rapid", "burst", "wide"]);
+const allowedItemSpreads = new Set(["focused", "dual", "dualRapid", "rapid", "burst", "wide"]);
 const allowedItemEffects = new Set(["none", "homing", "explosive", "pierce", "vampiric"]);
 const allowedItemBuildKeys = new Set([
   "gunDiameter",

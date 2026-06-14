@@ -51,6 +51,7 @@ const lastMissionEl = document.getElementById("last-mission");
 const debugUnlock = document.getElementById("debug-unlock");
 const debugInvincible = document.getElementById("debug-invincible");
 const debugShowCompendium = document.getElementById("debug-show-compendium");
+const debugShowItems = document.getElementById("debug-show-items");
 const debugShowMath = document.getElementById("debug-show-math");
 const debugSkipOnboarding = document.getElementById("debug-skip-onboarding");
 const onboardingBanner = document.getElementById("onboarding-banner");
@@ -90,6 +91,8 @@ const levelList = document.getElementById("level-list");
 const compendiumList = document.getElementById("compendium-list");
 const compendiumSearch = document.getElementById("compendium-search");
 const compendiumShowBosses = document.getElementById("compendium-show-bosses");
+const archiveTitle = document.getElementById("archive-title");
+const compendiumModeButtons = document.querySelectorAll("[data-compendium-mode]");
 const relicArchive = document.getElementById("relic-archive");
 
 const STORAGE_KEY = "mini-fighter-save";
@@ -102,10 +105,11 @@ const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
 const GENERATED_PILOT_ROOT = `${GENERATED_ROOT}/pilot_sprites`;
-const VALID_WEAPON_SPREADS = ["focused", "dual", "rapid", "burst", "wide"];
+const VALID_WEAPON_SPREADS = ["focused", "dual", "dualRapid", "rapid", "burst", "wide"];
 const WEAPON_SPREAD_LABELS = {
   focused: "Single",
   dual: "Dual",
+  dualRapid: "Twin Rapid",
   rapid: "Rapid",
   burst: "Burst",
   wide: "Wide",
@@ -257,7 +261,7 @@ const ECONOMY = {
     buyRate: 1,
     sellRate: 0.4,
     handlingFeeRate: 0.6,
-    stockVersion: 2,
+    stockVersion: 3,
     stockLots: 5,
     bulletinCadence: 3,
     bulletinBonusRate: 0.4,
@@ -358,7 +362,7 @@ const upgrades = [
 function createDefaultShipBuild() {
   return {
     gunDiameter: "medium", // small | medium | large
-    spread: "focused", // focused | dual | rapid | burst | wide
+    spread: "focused", // focused | dual | dualRapid | rapid | burst | wide
     flowRateLevel: 0,
     flowVelocityLevel: 0,
     flowSizeLevel: 0,
@@ -1812,12 +1816,79 @@ function recordRelicDiscovery(item) {
   return firstDiscovery;
 }
 
+function normalizeItemCollection(collection) {
+  if (!collection || typeof collection !== "object" || Array.isArray(collection)) return {};
+  const normalized = {};
+  Object.entries(collection).forEach(([id, entry]) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return;
+    const baseId = String(entry.baseId || id);
+    normalized[baseId] = {
+      baseId,
+      name: String(entry.name || entry.baseName || baseId),
+      slotType: normalizeArmorySlotType(entry.slotType || "primary"),
+      lastRarity: String(entry.lastRarity || entry.rarity || ""),
+      discoveredAt: Number.isFinite(entry.discoveredAt) ? entry.discoveredAt : Date.now(),
+      count: Math.max(1, Math.round(Number(entry.count) || 1)),
+      tags: Array.isArray(entry.tags) ? entry.tags.filter((tag) => typeof tag === "string") : [],
+    };
+  });
+  return normalized;
+}
+
+function getItemCollection(targetState = state) {
+  targetState.itemCollection = normalizeItemCollection(targetState.itemCollection);
+  return targetState.itemCollection;
+}
+
+function findCatalogBaseIdBySourceId(sourceId, slotType = null) {
+  if (!sourceId || !itemPoolCatalog) return null;
+  const normalizedSlot = slotType ? normalizeArmorySlotType(slotType) : null;
+  const sources = [itemPoolCatalog.entries || {}, itemPoolCatalog.relics || {}];
+  for (const source of sources) {
+    const match = Object.entries(source).find(([, entry]) => {
+      if (!entry || entry.sourceId !== sourceId) return false;
+      return !normalizedSlot || normalizeArmorySlotType(entry.slotType) === normalizedSlot;
+    });
+    if (match) return match[0];
+  }
+  return null;
+}
+
+function getCatalogBaseIdForItem(item) {
+  if (!item) return null;
+  if (item.baseId) return item.baseId;
+  const slotType = normalizeArmorySlotType(item.slotType);
+  return (
+    findCatalogBaseIdBySourceId(item.sourceId, slotType) ||
+    findCatalogBaseIdBySourceId(item.id, slotType) ||
+    null
+  );
+}
+
+function recordItemDiscovery(item) {
+  const baseId = getCatalogBaseIdForItem(item);
+  if (!baseId) return false;
+  const collection = getItemCollection(state);
+  const existing = collection[baseId] || null;
+  collection[baseId] = {
+    baseId,
+    name: item.baseName || item.name || existing?.name || baseId,
+    slotType: normalizeArmorySlotType(item.slotType || existing?.slotType || "primary"),
+    lastRarity: item.rarity || existing?.lastRarity || "",
+    discoveredAt: existing?.discoveredAt || Date.now(),
+    count: (existing?.count || 0) + 1,
+    tags: Array.from(new Set(Array.isArray(item.tags) ? item.tags : existing?.tags || [])),
+  };
+  return !existing;
+}
+
 function addItemsToArmoryInventory(items, { recordRelics = true } = {}) {
   const inventory = getArmoryInventory(state);
   const existingIds = new Set(inventory.map((item) => item.id));
   items.forEach((item) => {
     if (!item?.id || existingIds.has(item.id)) return;
     if (recordRelics) recordRelicDiscovery(item);
+    recordItemDiscovery(item);
     inventory.push(cloneItem(item));
     existingIds.add(item.id);
   });
@@ -1995,8 +2066,8 @@ function rollLedgerStock({ force = false } = {}) {
       ? Math.floor(Math.random() * ECONOMY.market.stockLots)
       : -1;
   const stockSpecs = [
-    { slotType: "primary", anyTags: ["dual", "rapid", "plasma", "anti-armor", "homing", "explosive"] },
-    { slotType: "primary", anyTags: ["dual", "rapid", "wide", "focused", "swarm", "heavy"] },
+    { slotType: "primary", anyTags: ["dual", "rapid", "burst", "plasma", "anti-armor", "homing", "explosive"] },
+    { slotType: "primary", anyTags: ["dual", "rapid", "burst", "wide", "focused", "swarm", "heavy", "multi-shot"] },
     { slotType: "defense" },
   ];
   for (let i = 0; i < ECONOMY.market.stockLots; i += 1) {
@@ -2550,6 +2621,7 @@ let selectedLevelId = devSkipOnboarding && devRequestedLevelId ? devRequestedLev
 let lastLoadedLevelId = null;
 let activeHangarTab = devSkipOnboarding ? "mission" : "hub";
 let activeLedgerMode = "market";
+let activeCompendiumMode = "drones";
 let hangarNeedsRefresh = false;
 let openShipNodeId = null;
 let openMissionInfoBaseId = null;
@@ -3148,7 +3220,7 @@ function setHangarTab(tabId, { renderLevels = true } = {}) {
     renderLevelSelect();
   }
   if (renderLevels && tabId === "compendium") {
-    renderDroneCompendium();
+    renderArchiveCompendium();
   }
   updateMobileControls();
 }
@@ -3188,14 +3260,20 @@ setLedgerMode(activeLedgerMode);
 
 if (compendiumSearch) {
   compendiumSearch.addEventListener("input", () => {
-    if (activeHangarTab === "compendium") renderDroneCompendium();
+    if (activeHangarTab === "compendium") renderArchiveCompendium();
   });
 }
 if (compendiumShowBosses) {
   compendiumShowBosses.addEventListener("change", () => {
-    if (activeHangarTab === "compendium") renderDroneCompendium();
+    if (activeHangarTab === "compendium") renderArchiveCompendium();
   });
 }
+compendiumModeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    activeCompendiumMode = button.dataset.compendiumMode === "items" ? "items" : "drones";
+    if (activeHangarTab === "compendium") renderArchiveCompendium();
+  });
+});
 
 async function launchSelectedMission({ showIntro = false } = {}) {
   if (!isLevelUnlocked(selectedLevelId)) return;
@@ -3407,7 +3485,15 @@ if (debugShowCompendium) {
   debugShowCompendium.addEventListener("change", () => {
     state.debugShowFullCompendium = debugShowCompendium.checked;
     saveState();
-    if (activeHangarTab === "compendium") renderDroneCompendium();
+    if (activeHangarTab === "compendium") renderArchiveCompendium();
+  });
+}
+
+if (debugShowItems) {
+  debugShowItems.addEventListener("change", () => {
+    state.debugShowAllItems = debugShowItems.checked;
+    saveState();
+    if (activeHangarTab === "compendium") renderArchiveCompendium();
   });
 }
 
@@ -3450,10 +3536,12 @@ function loadState() {
       debugUnlock: false,
       debugInvincible: false,
       debugShowFullCompendium: false,
+      debugShowAllItems: false,
       devShowMath: false,
       encounteredEnemies: {},
       killsByEnemyKey: {},
       relicCollection: {},
+      itemCollection: {},
       cargo: [],
       armory: {
         ownedLoadoutIds: ["fundamentals"],
@@ -3539,10 +3627,12 @@ function loadState() {
     parsed.debugUnlock = parsed.debugUnlock ?? false;
     parsed.debugInvincible = parsed.debugInvincible ?? false;
     parsed.debugShowFullCompendium = parsed.debugShowFullCompendium ?? false;
+    parsed.debugShowAllItems = parsed.debugShowAllItems ?? false;
     parsed.devShowMath = parsed.devShowMath ?? false;
     parsed.encounteredEnemies = parsed.encounteredEnemies || {};
     parsed.killsByEnemyKey = parsed.killsByEnemyKey || {};
     parsed.relicCollection = normalizeRelicCollection(parsed.relicCollection);
+    parsed.itemCollection = normalizeItemCollection(parsed.itemCollection);
     parsed.cargo = Array.isArray(parsed.cargo) ? parsed.cargo : [];
     const hadShipBuild = !!parsed.shipBuild;
     parsed.shipBuild = parsed.shipBuild || createDefaultShipBuild();
@@ -3656,10 +3746,12 @@ function loadState() {
       debugUnlock: false,
       debugInvincible: false,
       debugShowFullCompendium: false,
+      debugShowAllItems: false,
       devShowMath: false,
       encounteredEnemies: {},
       killsByEnemyKey: {},
       relicCollection: {},
+      itemCollection: {},
       cargo: [],
       armory: {
         ownedLoadoutIds: ["fundamentals"],
@@ -3805,7 +3897,7 @@ function syncShipBuildToLegacy() {
   if (spread === "focused") {
     state.weapon.barrel = "focused";
     state.weapon.trigger = "rapid";
-  } else if (spread === "dual" || spread === "rapid") {
+  } else if (spread === "dual" || spread === "dualRapid" || spread === "rapid") {
     state.weapon.barrel = "focused";
     state.weapon.trigger = "rapid";
   } else if (spread === "burst") {
@@ -4322,6 +4414,9 @@ function updateHangar() {
   if (debugShowCompendium) {
     debugShowCompendium.checked = !!state.debugShowFullCompendium;
   }
+  if (debugShowItems) {
+    debugShowItems.checked = !!state.debugShowAllItems;
+  }
   if (debugShowMath) {
     debugShowMath.checked = !!state.devShowMath;
   }
@@ -4373,7 +4468,7 @@ function updateHangar() {
     renderLevelSelect();
   }
   if (activeHangarTab === "compendium") {
-    renderDroneCompendium();
+    renderArchiveCompendium();
   }
   if ((!mission || !mission.active) && hangarPanel && !hangarPanel.hidden) {
     setHangarMusic();
@@ -4981,8 +5076,31 @@ function makeCompendiumDescription(entry) {
   return notes;
 }
 
-function renderDroneCompendium() {
+function renderArchiveChrome() {
+  const isItemMode = activeCompendiumMode === "items";
+  if (archiveTitle) archiveTitle.textContent = isItemMode ? "Item Records" : "Drone Records";
+  compendiumModeButtons.forEach((button) => {
+    const active = button.dataset.compendiumMode === activeCompendiumMode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  const bossToggle = compendiumShowBosses?.closest("label");
+  if (bossToggle) bossToggle.hidden = isItemMode;
+  if (relicArchive) relicArchive.hidden = isItemMode;
+}
+
+function renderArchiveCompendium() {
+  renderArchiveChrome();
+  if (activeCompendiumMode === "items") {
+    renderItemCompendiumAsync();
+    return;
+  }
   renderDroneCompendiumAsync();
+}
+
+function renderDroneCompendium() {
+  activeCompendiumMode = "drones";
+  renderArchiveCompendium();
 }
 
 function renderRelicArchive() {
@@ -5103,6 +5221,178 @@ async function renderDroneCompendiumAsync() {
       : `<div class="muted">No intel yet. Encounter enemies in missions to populate the compendium.</div>`;
   }
   renderRelicArchive();
+}
+
+function getItemCatalogEntries() {
+  const catalog = itemPoolCatalog || { entries: {}, relics: {} };
+  const regularItems = Object.entries(catalog.entries || {}).map(([baseId, entry]) => ({
+    baseId,
+    isRelic: false,
+    ...entry,
+  }));
+  const relicItems = Object.entries(catalog.relics || {}).map(([baseId, entry]) => ({
+    baseId,
+    isRelic: true,
+    tier: entry.tier || 4,
+    ...entry,
+  }));
+  const slotOrder = { primary: 0, defense: 1, aux: 2 };
+  return [...regularItems, ...relicItems].sort((a, b) => {
+    const aSlot = slotOrder[normalizeArmorySlotType(a.slotType)] ?? 9;
+    const bSlot = slotOrder[normalizeArmorySlotType(b.slotType)] ?? 9;
+    if (aSlot !== bSlot) return aSlot - bSlot;
+    if ((a.tier || 1) !== (b.tier || 1)) return (a.tier || 1) - (b.tier || 1);
+    return String(a.name || a.baseId).localeCompare(String(b.name || b.baseId));
+  });
+}
+
+function addSourceItemDiscovery(ids, sourceId, slotType) {
+  const baseId = findCatalogBaseIdBySourceId(sourceId, slotType);
+  if (baseId) ids.add(baseId);
+}
+
+function getDiscoveredItemBaseIds() {
+  const ids = new Set(Object.keys(getItemCollection(state)));
+  getArmoryInventory(state).forEach((item) => {
+    const baseId = getCatalogBaseIdForItem(item);
+    if (baseId) ids.add(baseId);
+  });
+  (state.armory?.ownedLoadoutIds || []).forEach((id) => addSourceItemDiscovery(ids, id, "primary"));
+  (state.armory?.ownedDefenseModuleIds || []).forEach((id) => addSourceItemDiscovery(ids, id, "defense"));
+  Object.entries(state.unlocked?.aux || {}).forEach(([id, unlocked]) => {
+    if (unlocked) addSourceItemDiscovery(ids, id, "aux");
+  });
+  if (state.rmbWeapon) addSourceItemDiscovery(ids, state.rmbWeapon, "aux");
+  return ids;
+}
+
+function getItemCatalogSubtitle(entry, foundCount) {
+  const slot = normalizeArmorySlotType(entry.slotType);
+  const tier = entry.isRelic ? "Pre-Founding relic" : `Tier ${entry.tier || 1}`;
+  const found = foundCount > 0 ? ` | ${foundCount} found` : "";
+  if (slot === "primary") {
+    const ammo = capitalize(entry.build?.ammo || "kinetic");
+    return `${tier} | ${ammo} primary${found}`;
+  }
+  if (slot === "defense") {
+    return `${tier} | ${capitalize(entry.defenseType || "defense")} module${found}`;
+  }
+  return `${tier} | ${capitalize(entry.ability || "aux")} support${found}`;
+}
+
+function getPrimaryCatalogDetails(entry) {
+  const build = entry.build || {};
+  const effect = build.effect || "none";
+  const lines = [
+    `Pattern: ${getSpreadLabel(build.spread || "focused")}`,
+    `Ammo: ${capitalize(build.ammo || "kinetic")}`,
+  ];
+  if (effect && effect !== "none") {
+    lines.push(`Innate effect: ${capitalize(effect)}`);
+  } else {
+    lines.push("Rolls: homing, explosive, pierce, vampiric");
+  }
+  const diameter = build.gunDiameter ? `${capitalize(build.gunDiameter)} bore` : "";
+  const rate = Number.isFinite(build.flowRateLevel) ? `Rate +${build.flowRateLevel}` : "";
+  const size = Number.isFinite(build.flowSizeLevel) ? `Size +${build.flowSizeLevel}` : "";
+  const tuning = [diameter, rate, size].filter(Boolean).join(" | ");
+  if (tuning) lines.push(tuning);
+  return lines.join("\n");
+}
+
+function getDefenseCatalogDetails(entry) {
+  const build = entry.build || {};
+  if (entry.defenseType === "shield") {
+    return [
+      `Shield capacity tune: ${build.shieldMaxLevel ?? 0}`,
+      `Shield regen tune: ${build.shieldRegenLevel ?? 0}`,
+      `Recovery delay tune: ${build.shieldCooldownLevel ?? 0}`,
+    ].join("\n");
+  }
+  if (entry.defenseType === "armor") {
+    return [
+      `Armor volume tune: ${build.armorAmountLevel ?? 0}`,
+      `Armor class: ${build.armorClass ?? 10}`,
+      `Weapon drag tune: ${build.armorDragLevel ?? 0}`,
+    ].join("\n");
+  }
+  return "Defense module.";
+}
+
+function getItemCatalogDetails(entry) {
+  const slot = normalizeArmorySlotType(entry.slotType);
+  if (slot === "primary") return getPrimaryCatalogDetails(entry);
+  if (slot === "defense") return getDefenseCatalogDetails(entry);
+  return `Support system: ${capitalize(entry.ability || entry.sourceId || "aux")}`;
+}
+
+function itemCatalogMatchesQuery(entry, query) {
+  if (!query) return true;
+  const build = entry.build || {};
+  const tags = Array.isArray(entry.tags) ? entry.tags.join(" ") : "";
+  const hay = [
+    entry.name,
+    entry.subtitle,
+    entry.description,
+    entry.baseId,
+    entry.sourceId,
+    entry.slotType,
+    entry.defenseType,
+    entry.ability,
+    build.spread,
+    build.ammo,
+    build.effect,
+    tags,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return hay.includes(query);
+}
+
+async function renderItemCompendiumAsync() {
+  if (!compendiumList) return;
+  compendiumList.innerHTML = `<div class="muted">Loading item records...</div>`;
+  await ensureItemPoolLoaded();
+  if (activeCompendiumMode !== "items") return;
+  const query = (compendiumSearch?.value || "").trim().toLowerCase();
+  const showAll = !!state.debugShowAllItems;
+  const discovered = getDiscoveredItemBaseIds();
+  const collection = getItemCollection(state);
+  const list = getItemCatalogEntries();
+  const gatedList = showAll ? list : list.filter((entry) => discovered.has(entry.baseId));
+  const filtered = gatedList.filter((entry) => itemCatalogMatchesQuery(entry, query));
+
+  compendiumList.innerHTML = "";
+  filtered.forEach((entry) => {
+    const foundCount = collection[entry.baseId]?.count || (discovered.has(entry.baseId) ? 1 : 0);
+    const tags = Array.isArray(entry.tags) ? entry.tags.slice(0, 5) : [];
+    const slot = normalizeArmorySlotType(entry.slotType);
+    const card = document.createElement("div");
+    card.className = `compendium-card item${entry.isRelic ? " boss" : ""}`;
+    card.innerHTML = `
+      <div class="compendium-sprite">
+        ${entry.icon ? `<img src="${escapeHtml(entry.icon)}" alt="" loading="lazy" />` : ""}
+      </div>
+      <div class="compendium-body">
+        <h3 class="compendium-title">${escapeHtml(entry.name || entry.baseId)}</h3>
+        <p class="compendium-subtitle">${escapeHtml(getItemCatalogSubtitle(entry, foundCount))}</p>
+        <div class="compendium-tags">
+          ${entry.isRelic ? `<span class="tag warn">RELIC</span>` : ""}
+          <span class="tag">${escapeHtml(slot)}</span>
+          ${tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
+        </div>
+      </div>
+      <div class="compendium-details">${escapeHtml(getItemCatalogDetails(entry))}</div>
+    `;
+    compendiumList.appendChild(card);
+  });
+
+  if (!filtered.length) {
+    compendiumList.innerHTML = showAll
+      ? `<div class="muted">No matching items found.</div>`
+      : `<div class="muted">No item records yet. Keep or buy salvage to populate the item archive.</div>`;
+  }
 }
 
 const rmbWeapons = [
@@ -6742,6 +7032,7 @@ function getPrimaryFireConfig(buildOverride = null) {
   const spreadRadiusScale = {
     focused: 1,
     dual: 0.82,
+    dualRapid: 0.54,
     rapid: 0.58,
     burst: 0.5,
     wide: 0.5,
@@ -6765,6 +7056,7 @@ function getPrimaryFireConfig(buildOverride = null) {
 
   let cooldown = baseCooldown * armorPenalty * flowRateScale * cooldownMult;
   if (spread === "dual") cooldown *= 1.28; // two straight barrels, slower per trigger
+  if (spread === "dualRapid") cooldown *= 0.68; // paired machine-gun barrels
   if (spread === "rapid") cooldown *= 0.46; // machine-gun cadence, one small round per trigger
   if (spread === "burst") cooldown *= 2.15; // 5 shots at once
   if (spread === "wide") cooldown *= 1.15; // still 5 shots, but meant to be spammy
@@ -6773,7 +7065,7 @@ function getPrimaryFireConfig(buildOverride = null) {
   const jitter =
     spread === "burst"
       ? (5 * Math.PI) / 180
-      : spread === "rapid"
+      : spread === "rapid" || spread === "dualRapid"
         ? (1.5 * Math.PI) / 180
         : 0;
   const pattern = {
@@ -6784,6 +7076,10 @@ function getPrimaryFireConfig(buildOverride = null) {
     dual: {
       angles: [0, 0],
       offsets: [-9, 9],
+    },
+    dualRapid: {
+      angles: [0, 0],
+      offsets: [-7, 7],
     },
     burst: {
       angles: [0, 0, 0, 0, 0],
@@ -6798,8 +7094,9 @@ function getPrimaryFireConfig(buildOverride = null) {
       offsets: [0],
     },
   }[spread] || { angles: [0], offsets: [0] };
-  const armorChipFloorRate = spread === "rapid" ? 0.035 : ECONOMY.minDamageFloor;
-  const minArmorChipDamage = spread === "rapid" ? 0.25 : 1;
+  const isRapidPattern = spread === "rapid" || spread === "dualRapid";
+  const armorChipFloorRate = isRapidPattern ? 0.035 : ECONOMY.minDamageFloor;
+  const minArmorChipDamage = isRapidPattern ? 0.25 : 1;
 
   return {
     ammo,

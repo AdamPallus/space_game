@@ -1231,7 +1231,35 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 /* ==========================================================================
    COMPENDIUM / ARCHIVE SCENE
    ========================================================================== */
-.compendium-toolbar { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; }
+.compendium-toolbar { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; flex-wrap: wrap; justify-content: flex-end; }
+.compendium-mode {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+}
+.compendium-mode-button {
+  border: 0;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+.compendium-mode-button.active {
+  background: rgba(102, 224, 255, 0.16);
+  color: var(--ink);
+}
+.compendium-mode-button:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
 .compendium-search {
   background: var(--panel-2);
   border: 1px solid var(--line);
@@ -1275,6 +1303,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .compendium-body { grid-area: body; }
 .compendium-details { grid-area: details; }
 .compendium-card.boss { border-color: var(--danger); }
+.compendium-card.item { border-color: rgba(102, 224, 255, 0.24); }
 .compendium-sprite {
   width: 44px;
   height: 44px;
@@ -1291,7 +1320,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .compendium-title { font-weight: 700; font-size: 12px; }
 .compendium-subtitle { color: var(--muted); font-size: 10px; }
 .compendium-tags { display: flex; gap: 4px; flex-wrap: wrap; }
-.compendium-details { color: var(--muted); }
+.compendium-details { color: var(--muted); white-space: pre-line; }
 
 .relic-archive { display: flex; flex-direction: column; gap: 8px; }
 .relic-archive-head { display: flex; align-items: baseline; justify-content: space-between; }

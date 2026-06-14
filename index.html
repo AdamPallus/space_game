@@ -77,6 +77,10 @@
                   <span>Show Full Compendium</span>
                 </label>
                 <label class="toggle">
+                  <input type="checkbox" id="debug-show-items" />
+                  <span>Show All Items</span>
+                </label>
+                <label class="toggle">
                   <input type="checkbox" id="debug-show-math" />
                   <span>Show Math</span>
                 </label>
@@ -215,9 +219,13 @@
               <button class="btn ghost small scene-back" type="button" data-scene-target="hub">&larr; Hangar</button>
               <div>
                 <span class="kicker">Intel Archive</span>
-                <h2>Drone Records</h2>
+                <h2 id="archive-title">Drone Records</h2>
               </div>
               <div class="compendium-toolbar">
+                <div class="compendium-mode" role="tablist" aria-label="Archive mode">
+                  <button class="compendium-mode-button active" type="button" data-compendium-mode="drones">Drones</button>
+                  <button class="compendium-mode-button" type="button" data-compendium-mode="items">Items</button>
+                </div>
                 <input id="compendium-search" class="compendium-search" type="search" placeholder="Search..." />
                 <label class="toggle compact">
                   <input type="checkbox" id="compendium-show-bosses" checked />

@@ -1,6 +1,8 @@
 # UI Design Bible: Scenes, Not Pages
 
-*Author: Claude (Fable 5), 2026-06-11. Companion docs: [ECONOMY_DESIGN.md](ECONOMY_DESIGN.md), [CODEX_SPEC.md](CODEX_SPEC.md)*
+*Author: Claude (Fable 5), 2026-06-11. Companion docs: [STATE.md](STATE.md), [CURRENT_SYSTEMS.md](CURRENT_SYSTEMS.md), [ROADMAP.md](ROADMAP.md), [ECONOMY_DESIGN.md](ECONOMY_DESIGN.md)*
+
+Status: active visual and interaction direction. The flat scene shell has been implemented; use `STATE.md` and `CURRENT_SYSTEMS.md` for the exact current screen behavior, and use this file when extending meta-game UI.
 
 This document is **binding** for all meta-game UI work (everything between
 runs). Any agent doing UI work must read it first, the way level work reads
@@ -138,4 +140,6 @@ This is all achievable in plain HTML/CSS over the existing structure — no
 engine needed. Scenes are absolutely-positioned full-viewport divs with
 background art; hotspots are positioned buttons; transitions are CSS
 transforms. The current `uiSkin=generated` ::before technique generalizes.
-Build order and acceptance criteria live in [CODEX_SPEC.md](CODEX_SPEC.md).
+Current implementation notes and acceptance checks live in [STATE.md](STATE.md)
+and [ROADMAP.md](ROADMAP.md). The older build-order spec is archived under
+`outdated_docs/implemented_specs/`.

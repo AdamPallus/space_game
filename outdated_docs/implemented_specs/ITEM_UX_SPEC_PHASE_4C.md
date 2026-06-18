@@ -1,8 +1,9 @@
 # Item Communication Spec (Phase 4c)
 
 *For Codex. The model is Diablo 3's item tooltip — do not invent a new
-pattern, transcribe that one. Companion: [CODEX_SPEC.md](CODEX_SPEC.md),
-[UI_DESIGN.md](UI_DESIGN.md) (Ten Rules still bind).*
+pattern, transcribe that one. Companion:
+[CODEX_SPEC_PHASES_1_4C.md](CODEX_SPEC_PHASES_1_4C.md),
+[../../UI_DESIGN.md](../../UI_DESIGN.md) (Ten Rules still bind).*
 
 ## The problem being fixed
 

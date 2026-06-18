@@ -1,8 +1,13 @@
 # Weapon System And Frame Catalog
 
+Status: active weapon authoring reference. Flight School is still present in the
+current code, but the roadmap calls for removing it as a required onboarding
+gate. Treat these frames as guaranteed starter frames, not as a reason to keep
+Flight School copy alive.
+
 The current weapon system has two authoring surfaces:
 
-- `/Users/pallusa/space_shooter/items/weapon_frames.json` defines the guaranteed Flight School starter frames.
+- `/Users/pallusa/space_shooter/items/weapon_frames.json` defines the guaranteed starter frames used by the current onboarding and fresh-save flow.
 - `/Users/pallusa/space_shooter/items/item_pool.json` defines loot/shop item bases, affixes, and relics.
 
 Both surfaces ultimately feed the same `build` object. The player sees items and tooltips, while combat reads the normalized build fields from `main.js`.

@@ -1,6 +1,8 @@
 # Economy Design: Salvage, the Ledger, and Beating the System
 
-*Author: Claude (Fable 5), 2026-06-11. Companion docs: [UI_DESIGN.md](UI_DESIGN.md), [CODEX_SPEC.md](CODEX_SPEC.md), [STORY-PREMISE.md](STORY-PREMISE.md)*
+*Author: Claude (Fable 5), 2026-06-11. Companion docs: [STATE.md](STATE.md), [CURRENT_SYSTEMS.md](CURRENT_SYSTEMS.md), [ROADMAP.md](ROADMAP.md), [UI_DESIGN.md](UI_DESIGN.md), [STORY-PREMISE.md](STORY-PREMISE.md)*
+
+Status: active design direction. Phases 1-4c of the original implementation spec have mostly landed and the old build spec is archived under `outdated_docs/implemented_specs/`. Use `STATE.md` and `CURRENT_SYSTEMS.md` for current behavior before using this file for future design decisions.
 
 ## Design thesis
 
@@ -77,8 +79,8 @@ intended — but they must cost **efficiency, never possibility**. Three rules:
 
 1. **Armor reduces, never nullifies.** Minimum chip-damage floor on every hit
    (tune ~15–25% of base damage, min 1). The wrong loadout makes plated
-   enemies slow and wasteful to kill, never invincible. (Resolves the
-   existing TODO_NEXT.md armor-vs-micro-shots issue.)
+   enemies slow and wasteful to kill, never invincible. (Resolves the old
+   armor-vs-micro-shots note now archived with the playtest docs.)
 2. **Contracts telegraph threat composition.** Mission briefs state it
    plainly ("Escort wing: plated. Pierce-rated munitions recommended."). The
    Ledger publishes accurate intel — it profits from your salvage either
@@ -143,7 +145,7 @@ inventory for a demand spike is a legitimate strategy. If hoarding ever turns
 degenerate, the remedy is a small per-cycle "Ledger warehousing fee" receipt
 line — never a hard cap.
 
-### Kinetic flow model (Phase 4+; do not implement earlier)
+### Kinetic flow model (implemented baseline, tune further after Phase 4)
 
 Kinetic damage derives from projectile physics instead of flat numbers:
 `damage ∝ size × velocity^k` (k tunable in config, start ~1.5 — never start
@@ -164,7 +166,8 @@ Consequences this buys:
   slugs. The upgrade is on screen every frame.
 
 The existing `flowVelocityLevel` / `flowSizeLevel` / `gunDiameter` fields are
-the inputs; this model is the physics they were waiting for.
+the inputs. Current weapon tuning uses these concepts, and future changes should
+adjust the model through those fields instead of adding one-off damage tags.
 
 ---
 

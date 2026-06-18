@@ -1,0 +1,103 @@
+# Space Shooter Current State
+
+Last audited: 2026-06-18
+
+This is the first file to read before changing the game. It summarizes what is implemented now, which docs are still authoritative, which older specs are archived, and which validation commands should pass before committing.
+
+## Current Game Shape
+
+The project is a browser-based extraction shmup. Players launch from the hangar, fight through scripted mission waves, collect salvage pods and item drops, then extract or lose part of the haul. The current build already includes:
+
+- A flat scene shell for hangar, mission select, armory, Ledger market, profile, item archive, compendium, and combat.
+- Scripted JSON missions in `levels/` with variants, lab encounters, bosses, salvage pods, item drops, and enemy catalog validation.
+- A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
+- A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
+- A Ledger market with rotating stock, daily lots, pricing, dividends, bulletins, volatility, and sponsored listings.
+- Generated salvage/UI chrome, mission background art, item icons, and combat fleet art promoted into the live UI, with Kenney assets still available as fallback or comparison art.
+
+## Known Current Gaps
+
+These are intentional follow-up targets, not bugs in the docs:
+
+- Flight School onboarding still exists in code and copy. It is slated for removal in the next playable cleanup phase.
+- Credits still include score and elapsed-time terms in `creditRewardFor()`. The roadmap calls for credits to come from combat, salvage, mission rewards, market returns, and explicit bonuses instead.
+- Inventory and market screens do not yet have sort or filter controls.
+- EMP disables enemy fire but does not yet remove nearby hostile projectiles.
+- Random repair caches for armor or hull do not exist yet.
+- Auto-gun, mini weapon slot, second weapon bay, hull type bonuses, and durability are not implemented.
+
+## Run Locally
+
+The game is a static web app. From the repo root:
+
+```bash
+python3 -m http.server 8765
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8765/
+```
+
+Useful dev query flags:
+
+- `?devSkip=1` unlocks progression for smoke testing.
+- `?devInvincible=1` makes combat survival tests easier.
+- `?devAutoFire=1` keeps the primary weapon firing during manual checks.
+
+## Validation
+
+Run these after changes that touch gameplay data, item generation, combat math, or UI code:
+
+```bash
+node --check main.js
+node --check scripts/balance_report.js
+node scripts/validate_levels.js
+node scripts/validate_weapon_frames.js
+node scripts/balance_report.js
+git diff --check
+```
+
+For UI-affecting work, also run a browser smoke test against the local static server. Static-server 404 probes for browser-favored files are not enough by themselves to call the run broken.
+
+## Important Files
+
+- `index.html`, `style.css`, `main.js`: the single-page game shell, visual system, and gameplay runtime.
+- `levels/*.json`: scripted missions and variants.
+- `enemies/enemy_catalog.json`: enemy definitions referenced by level scripts.
+- `items/item_pool.json`: generated item archetypes, affixes, relics, and support items.
+- `items/weapon_frames.json`: guaranteed and generated weapon-frame definitions.
+- `scripts/validate_levels.js`: level and item-pool structural validation.
+- `scripts/validate_weapon_frames.js`: weapon-frame schema validation.
+- `scripts/balance_report.js`: economy, item, and mission-balance checks.
+
+## Implementation Map
+
+Recent history shows these major pieces have already landed:
+
+- Phase 1 extraction loop: salvage pods, cargo hold, extraction settlement, and itemized debrief.
+- Phase 2 Ledger market: rotating stock, lots, market state, dividends, and UI.
+- Phase 3 flat scene shell: noncombat navigation and scene-based UI.
+- Phase 4 item generation: larger item pool, affix families, relics, balance report, and validators.
+- Phase 4b base archetypes: defense, support, relic, and weapon-item expansion.
+- Phase 4c communication UI: richer armory/item cards, tooltips, and item archive.
+- Weapon variety passes: additional projectile patterns, plasma visuals, and combat UI tuning.
+- Generated asset passes: UI chrome, item icon pack, combat fleet art, and mission backgrounds.
+
+## Documentation Map
+
+Active docs in the repo root:
+
+- `STATE.md`: current source of truth and validation checklist.
+- `CURRENT_SYSTEMS.md`: detailed explanation of implemented systems.
+- `ROADMAP.md`: prioritized next work.
+- `ECONOMY_DESIGN.md`: active economy design thesis and long-term direction.
+- `UI_DESIGN.md`: active visual and interaction design rules.
+- `ASSET_GENERATION.md`: current generated-asset workflow and manifest.
+- `LEVEL_JSON_FORMAT.md`: active level schema reference.
+- `WEAPON_FRAME_FORMAT.md`: active weapon-frame schema reference.
+- `STORY-PREMISE.md`: active tone and lore source.
+- `CREDITS.md`: asset and tool credits.
+
+Archived docs live in `outdated_docs/`. They are useful historical context, but should not be treated as implementation instructions unless a new active doc links to them explicitly.

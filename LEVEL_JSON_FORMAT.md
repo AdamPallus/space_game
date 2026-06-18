@@ -1,5 +1,9 @@
 # Level JSON Format
 
+Status: active level-data reference. Current implementation details and
+validation commands live in `STATE.md`; this file documents the level schema
+rules enforced by `scripts/validate_levels.js`.
+
 Enemy identities come from [enemies/enemy_catalog.json](/Users/pallusa/space_shooter/enemies/enemy_catalog.json). Level files do not define new enemies.
 
 ## Rules

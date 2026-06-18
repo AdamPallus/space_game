@@ -1,5 +1,9 @@
 # Space Shooter — Story Premise (Mothership Society + Ledger Control)
 
+Status: active tone and lore source. For implemented mechanics, read `STATE.md`
+and `CURRENT_SYSTEMS.md` first; this file explains the fiction those systems
+should reinforce.
+
 ## One-line hook
 A city-sized mothership survives by predatory salvage economics; you claw your way up as an elite drone pilot while the **Ledger** quietly holds your family’s oxygen and comfort hostage.
 

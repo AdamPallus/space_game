@@ -176,7 +176,7 @@ valid and interesting).
 ### Icons
 
 Generate one `assets/generated/item_icons_v2/` 4x4 chroma-key sheet (same
-shared style block as CODEX_ASSET_RUN.md): the 9 new weapons + 2 defenses +
+shared style block as CODEX_ASSET_RUN_BASELINE_ASSETS.md): the 9 new weapons + 2 defenses +
 5 spare generic housings. Distinct silhouettes per role (hose = multi-barrel
 cluster, slug = massive single bore, seeker = finned pods, rail = long thin).
 
@@ -197,7 +197,7 @@ cluster, slug = massive single bore, seeker = finned pods, rail = long thin).
 
 ## Phase 4c — Item communication (Diablo-style tooltips & stats)
 
-Full spec in [ITEM_UX_SPEC.md](ITEM_UX_SPEC.md). Summary: one
+Full spec in [ITEM_UX_SPEC_PHASE_4C.md](ITEM_UX_SPEC_PHASE_4C.md). Summary: one
 `getItemDisplayStats` source of truth; shared hover tooltip (armory, market,
 debrief) with headline-stat comparison deltas vs equipped; player-language
 stat lines (no formulas — math moves behind a DEV "Show math" toggle);

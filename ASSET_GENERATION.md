@@ -1,5 +1,10 @@
 # Asset Generation Workflow
 
+Status: active asset workflow. Generated gameplay art is now part of the live
+baseline for campaign backgrounds, combat effects, salvage pods, item icons, and
+many enemy sprites. Kenney assets remain credited fallback/reference art. The
+generated button skin is still URL-flagged for comparison.
+
 This project currently draws individual transparent PNG files. The packed
 `assets/SpaceShooterRedux/Spritesheet/sheet.png` atlas exists, but runtime code
 loads paths like `assets/SpaceShooterRedux/PNG/Enemies/enemyBlue2.png` and can
@@ -23,10 +28,10 @@ sprites through custom sprite paths. It is listed in the mission selector as
 
 The first generated VFX pack lives in `assets/generated/effects_projectiles_v1/`.
 It uses the same chroma-key sheet workflow as the pilot sprites and is wired as
-the `generated_v1` visual theme in `main.js`. The lab mission opts into this
-theme with `"visualTheme": "generated_v1"`, so regular missions still use the
-starter art while the lab can test generated player shots, enemy shots, impacts,
-explosion frames, and the player-death core.
+the default `generated_v1` visual theme in `main.js`. Levels can opt into
+specialized themes such as `bio_v1` or force Kenney/starter art with the legacy
+theme keys, but regular campaign play now defaults to the generated player
+shots, enemy shots, impacts, explosion frames, and player-death core.
 
 The first generated scrolling background lives in
 `assets/generated/backgrounds_v1/`. The source image was requested as a vertical
@@ -41,6 +46,10 @@ Batch E adds three OpenAI-generated combat tiles in the same pack:
 had cleaner visible joins than the rolled fallback outputs, so campaign levels
 use the native 1024 versions while the looped variants remain committed as QA
 artifacts.
+
+Campaign level JSON files now reference generated backgrounds directly. The lab
+missions remain useful because they isolate art packs and URL flags for focused
+visual QA.
 
 To jump straight into the visual test mission:
 
@@ -107,10 +116,10 @@ http://127.0.0.1:8765/?devSkip=1&devInvincible=1&devAutoFire=1&level=biological_
 
 ## Generated UI Chrome
 
-The first generated button skin lives in `assets/generated/ui_chrome_v1/`.
-It is a 4x4 chroma-key sheet of blank button/tab states processed into
-transparent PNGs. The current implementation is opt-in so we can compare it
-against the CSS-only menus:
+Generated chrome exists in `assets/generated/ui_chrome_v1/` and
+`assets/generated/ui_chrome_v2/`. The v2 pack supplies live salvage pod art by
+rarity. The generated button skin remains opt-in so we can compare it against
+the CSS-only menus:
 
 ```text
 http://127.0.0.1:8765/?devSkip=1&level=generated_sprite_lab&uiSkin=generated

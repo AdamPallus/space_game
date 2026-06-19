@@ -11,6 +11,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 - A flat scene shell for hangar, mission select, armory, Ledger market, profile, item archive, compendium, and combat.
 - Scripted JSON missions in `levels/` with variants, lab encounters, bosses, salvage pods, item drops, and enemy catalog validation.
 - A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
+- Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time.
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
 - A Ledger market with rotating stock, daily lots, pricing, dividends, bulletins, volatility, sponsored listings, and license tiers that increase visible stock through Ledger Investments.
 - Search, sort, and filter controls for armory inventory, item archive, and Ledger sell views. The Armory `Show Stats` control opens a popup with mission-ready ship stats, installed defense item internals, and selected-mission projectile damage estimates without shrinking the inventory rack.

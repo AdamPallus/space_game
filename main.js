@@ -5090,7 +5090,7 @@ async function startMission({ showIntro = false } = {}) {
     killCredits: 0,
     spawnTimer: 0,
     enemyFireTimer: 0,
-    difficulty: 1 + state.missionCount * 0.15,
+    difficulty: getMissionDifficultyAtElapsed(0),
     level,
     eventIndex: 0,
     spawnQueue: [],
@@ -5529,7 +5529,7 @@ function updateHangar() {
         "Training complete. Run one live mission to bring Economy systems online.";
     } else {
       missionBriefingText.textContent =
-        "Select a mission profile. Each sortie increases in difficulty.";
+        "Select a mission profile. Replays stay stable; harder threats come from deeper routes.";
     }
   }
 
@@ -7694,7 +7694,7 @@ function getProjectileDamageForSpec(spec, difficulty, level) {
 
 function getMissionProjectileDamageSummary(level, elapsed = 0) {
   if (!level?.events?.length) return null;
-  const difficulty = 1 + (state.missionCount || 0) * 0.15 + elapsed / 22;
+  const difficulty = getMissionDifficultyAtElapsed(elapsed);
   const rows = [];
   level.events.forEach((event) => {
     const spec = mergeLevelEnemySpec(level, event.type, event.overrides || {});
@@ -7744,7 +7744,7 @@ async function openArmoryStatsModal() {
     { label: "Build AC Base", value: `${build.armorClass ?? BASE_ARMOR_CLASS}`, math: "Composed build armorClass before class-level conversion." },
     { label: "Build AC Levels", value: `${build.armorClassLevel ?? 0}`, math: "Final armor class adds 2 per armor-class level." },
     { label: "Defense Slots", value: `${stats.defense.shieldSlots} shield / ${stats.defense.armorSlots} armor`, math: `Equipped slot ids: ${getEquippedDefenseSlotIds().join(", ")}.` },
-    { label: "Mission Count", value: `${state.missionCount || 0}`, math: "Mission count increases enemy projectile damage even on earlier missions." },
+    { label: "Mission Count", value: `${state.missionCount || 0}`, math: "Mission count tracks sorties, markets, and records; it does not scale combat difficulty." },
   ];
   const missionRows = [
     {
@@ -7947,6 +7947,10 @@ function getSelectedSupportModule() {
   if (equippedItem && isSupportSlotType(equippedItem.slotType)) return equippedItem;
   const entries = getSupportModuleEntries();
   return entries.find((entry) => entry.id === state.rmbWeapon) || entries[0] || null;
+}
+
+function getMissionDifficultyAtElapsed(elapsed = 0) {
+  return 1 + Math.max(0, elapsed) / 22;
 }
 
 function getArmorySlotDefinitions() {
@@ -9775,7 +9779,7 @@ function update(delta) {
   }
   mission.spawnTimer -= delta;
   mission.enemyFireTimer -= delta;
-  mission.difficulty = 1 + state.missionCount * 0.15 + mission.elapsed / 22;
+  mission.difficulty = getMissionDifficultyAtElapsed(mission.elapsed);
   if (player.bulwarkTimer > 0) {
     player.bulwarkTimer = Math.max(0, player.bulwarkTimer - delta);
     if (player.bulwarkTimer === 0) {

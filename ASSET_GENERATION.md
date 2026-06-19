@@ -53,11 +53,20 @@ sprites through custom sprite paths. It is listed in the mission selector as
 ## Effects, Projectiles, And Backgrounds
 
 The first generated VFX pack lives in `assets/generated/effects_projectiles_v1/`.
-It uses the same chroma-key sheet workflow as the pilot sprites and is wired as
-the default `generated_v1` visual theme in `main.js`. Levels can opt into
-specialized themes such as `bio_v1` or force Kenney/starter art with the legacy
-theme keys, but regular campaign play now defaults to the generated player
-shots, enemy shots, impacts, explosion frames, and player-death core.
+It uses the same chroma-key sheet workflow as the pilot sprites and still
+supplies generated player shots, impacts, explosion frames, and the
+player-death core for the default `generated_v1` visual theme in `main.js`.
+
+Enemy projectile art now lives in `assets/generated/enemy_projectiles_v2/`, a
+cool-palette 4x4 generated sheet. The default visual theme maps legacy enemy
+bullet aliases and authored `projectileProfiles.image` keys to this pack, so
+Threat Mix missions avoid the older orange/red enemy projectile read while
+keeping the same projectile-profile data model.
+
+Levels can opt into specialized themes such as `bio_v1` or force
+Kenney/starter art with the legacy theme keys, but regular campaign play now
+defaults to generated player shots, enemy shots, impacts, explosion frames, and
+player-death core.
 
 The first generated scrolling background lives in
 `assets/generated/backgrounds_v1/`. The source image was requested as a vertical

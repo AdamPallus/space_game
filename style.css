@@ -853,8 +853,12 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   --type-glow: rgba(125, 211, 252, 0.24);
 }
 .type-mini {
-  --type-color: #f59e0b;
-  --type-glow: rgba(245, 158, 11, 0.22);
+  --type-color: #5eead4;
+  --type-glow: rgba(94, 234, 212, 0.16);
+}
+.rarity-scrap.type-mini {
+  --type-color: #9aa3b2;
+  --type-glow: rgba(154, 163, 178, 0.12);
 }
 .type-defense {
   --type-color: #67e8f9;

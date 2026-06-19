@@ -49,6 +49,41 @@ function damageBands(levelId) {
   };
 }
 
+const projectileImageFamilies = {
+  chip: ["enemy_chip_needle", "enemy_chip_crescent", "enemy_chip_shard", "enemy_chip_wisp"],
+  standard: ["enemy_standard_bolt", "enemy_standard_lance", "enemy_standard_comet", "enemy_standard_split"],
+  heavy: ["enemy_heavy_orb", "enemy_heavy_slug", "enemy_heavy_prism"],
+  bossHazard: ["enemy_boss_core", "enemy_boss_halo", "enemy_boss_spear"],
+};
+
+const projectileImageSpecs = {
+  enemy_chip_needle: { width: 13, height: 34, animation: "lance" },
+  enemy_chip_crescent: { width: 18, height: 18, animation: "shard", spinRate: 5.6 },
+  enemy_chip_shard: { width: 16, height: 30, animation: "shard", spinRate: 4.8 },
+  enemy_chip_wisp: { width: 18, height: 22, animation: "ember", spinRate: 3.4 },
+  enemy_standard_bolt: { width: 12, height: 36, animation: "bolt" },
+  enemy_standard_lance: { width: 20, height: 42, animation: "lance" },
+  enemy_standard_comet: { width: 34, height: 42, animation: "ember", spinRate: 1.4 },
+  enemy_standard_split: { width: 32, height: 38, animation: "shard", spinRate: 2.6 },
+  enemy_spread_shard: { width: 28, height: 28, animation: "shard", spinRate: 2.2 },
+  enemy_radial_pellet: { width: 22, height: 22, animation: "orb", spinRate: 3.8 },
+  enemy_heavy_orb: { width: 52, height: 52, animation: "orb", spinRate: 2.8 },
+  enemy_heavy_slug: { width: 28, height: 58, animation: "lance" },
+  enemy_heavy_prism: { width: 34, height: 64, animation: "lance", spinRate: 1.2 },
+  enemy_boss_core: { width: 72, height: 72, animation: "orb", spinRate: 2.2 },
+  enemy_boss_halo: { width: 76, height: 76, animation: "orb", spinRate: 2.8 },
+  enemy_boss_spear: { width: 34, height: 78, animation: "lance" },
+};
+
+function projectileVisualFor(levelId, family, offset = 0) {
+  const options = projectileImageFamilies[family] || projectileImageFamilies.standard;
+  const image = options[(missionNumberFromId(levelId) + offset) % options.length];
+  return {
+    image,
+    ...(projectileImageSpecs[image] || {}),
+  };
+}
+
 function projectileProfilesFor(levelId) {
   const bands = damageBands(levelId);
   return {
@@ -57,39 +92,28 @@ function projectileProfilesFor(levelId) {
       damage: bands.chip,
       speed: 244 + bands.speedBoost,
       radius: 3,
-      image: "enemySpreadShard",
-      width: 13,
-      height: 13,
-      animation: "shard",
-      spinRate: 5.2,
+      ...projectileVisualFor(levelId, "chip"),
     },
     standardBolt: {
       threatClass: "standard",
       damage: bands.standard,
       speed: 205 + bands.speedBoost,
       radius: 4,
-      image: "enemyBullet",
-      width: 11,
-      height: 32,
-      animation: "bolt",
+      ...projectileVisualFor(levelId, "standard", 1),
     },
     heavyOrb: {
       threatClass: "heavy",
       damage: bands.heavy,
       speed: clamp(178 - missionNumberFromId(levelId) * 2, 142, 176),
       radius: 8,
-      shape: "orb",
-      color: "#fb923c",
-      animation: "orb",
+      ...projectileVisualFor(levelId, "heavy", 2),
     },
     bossHazard: {
       threatClass: "bossHazard",
       damage: bands.bossHazard,
       speed: clamp(158 - missionNumberFromId(levelId) * 2, 118, 156),
       radius: 12,
-      shape: "orb",
-      color: "#ef4444",
-      animation: "orb",
+      ...projectileVisualFor(levelId, "bossHazard", 3),
     },
   };
 }

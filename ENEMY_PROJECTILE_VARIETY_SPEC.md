@@ -1,6 +1,10 @@
 # Enemy Projectile Variety Spec
 
-Status: implemented and verified on 2026-06-19. This document records the shipped data shape, tuning intent, and verification notes for the enemy projectile variety pass.
+Status: implemented and verified on 2026-06-19, with a same-day follow-up for
+cool-palette projectile art, variant progression unlocks, starter kinetic
+tuning, and mini-weapon card accents. This document records the shipped data
+shape, tuning intent, and verification notes for the enemy projectile variety
+pass.
 
 ## Summary
 
@@ -94,6 +98,24 @@ Browser smoke coverage on `http://127.0.0.1:8765/?devSkip=1&devAutoFire=1&devInv
 - Original `level1` launched without `projectileProfiles` or attack-pattern enemies, preserving the legacy flat projectile fallback.
 - Armory/compendium helper probes reported `level11_threats` projectile damage range `8-55` and profiled boss weapon descriptions.
 
+## Follow-Up Notes
+
+The follow-up pass adds `assets/generated/enemy_projectiles_v2/`, a 4x4
+Codex-built-in imagegen sheet processed through the existing chroma-key
+workflow. Threat Mix profile generation now assigns non-red, non-orange enemy
+projectile image keys from that pack while preserving the same
+`projectileProfiles` schema.
+
+Completing any variant of `levelX`, including generated Threat Mix variants,
+now unlocks `levelX+1` through the base-level progression lookup.
+
+The starter Cadet Kinetic Frame now carries extra kinetic impulse so its focused
+shots are faster and its reported DPS is close to the other starter frames.
+Scrap-grade mini weapon cards use scrap-gray accents instead of the mini weapon
+type's cool accent color.
+
 ## Asset Rule
 
-No new generated art is required for this pass. Threat readability uses existing generated projectile art plus canvas orb styling. If future projectile art is generated, it must use Codex built-in imagegen only; API-key, SDK, or local CLI generation workflows are out of scope.
+Generated projectile art must use Codex built-in imagegen only; API-key, SDK, or
+local CLI generation workflows are out of scope. Transparent gameplay sprites
+use the repo's chroma-key sheet workflow and local alpha processing.

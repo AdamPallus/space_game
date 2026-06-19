@@ -117,6 +117,7 @@ const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
 const GENERATED_ROOT = "assets/generated";
 const GENERATED_BACKGROUND_ROOT = `${GENERATED_ROOT}/backgrounds_v1`;
 const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
+const GENERATED_ENEMY_PROJECTILE_ROOT = `${GENERATED_ROOT}/enemy_projectiles_v2`;
 const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
@@ -590,6 +591,7 @@ const defaultStarterWeaponLoadouts = [
       flowRateLevel: 0,
       flowVelocityLevel: 0,
       flowSizeLevel: 0,
+      kineticImpulseBudget: 0.6,
       defenseSlots: ["shield", "none"],
       shieldMaxLevel: 0,
       shieldRegenLevel: 0,
@@ -3328,10 +3330,28 @@ const assets = {
       playerPlasma: loadImage(`${GENERATED_EFFECT_ROOT}/player_plasma_orb.png`),
       playerPierce: loadImage(`${GENERATED_EFFECT_ROOT}/player_pierce_lance.png`),
       playerRocket: loadImage(`${GENERATED_EFFECT_ROOT}/player_rocket.png`),
-      enemyBullet: loadImage(`${GENERATED_EFFECT_ROOT}/enemy_red_bolt.png`),
-      enemyPurpleOrb: loadImage(`${GENERATED_EFFECT_ROOT}/enemy_purple_orb.png`),
-      enemySpreadShard: loadImage(`${GENERATED_EFFECT_ROOT}/enemy_spread_shard.png`),
-      enemyRadialEmber: loadImage(`${GENERATED_EFFECT_ROOT}/enemy_radial_ember.png`),
+      enemyBullet: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_bolt.png`),
+      enemyPurpleOrb: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_heavy_orb.png`),
+      enemySpreadShard: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_spread_shard.png`),
+      enemyRadialEmber: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_radial_pellet.png`),
+      enemyProjectiles: {
+        enemy_chip_needle: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_chip_needle.png`),
+        enemy_chip_crescent: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_chip_crescent.png`),
+        enemy_chip_shard: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_chip_shard.png`),
+        enemy_chip_wisp: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_chip_wisp.png`),
+        enemy_standard_bolt: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_bolt.png`),
+        enemy_standard_lance: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_lance.png`),
+        enemy_standard_comet: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_comet.png`),
+        enemy_standard_split: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_split.png`),
+        enemy_spread_shard: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_spread_shard.png`),
+        enemy_radial_pellet: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_radial_pellet.png`),
+        enemy_heavy_orb: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_heavy_orb.png`),
+        enemy_heavy_slug: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_heavy_slug.png`),
+        enemy_heavy_prism: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_heavy_prism.png`),
+        enemy_boss_core: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_boss_core.png`),
+        enemy_boss_halo: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_boss_halo.png`),
+        enemy_boss_spear: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_boss_spear.png`),
+      },
       impactSpark: loadImage(`${GENERATED_EFFECT_ROOT}/impact_spark.png`),
       shieldHitRing: loadImage(`${GENERATED_EFFECT_ROOT}/shield_hit_ring.png`),
       explosionFrames: [
@@ -5383,9 +5403,10 @@ function endMission({ ejected = false, completed = false } = {}) {
   const ledgerMissionSummary = settleLedgerAfterMission(outcome);
   let completedEntry = null;
   if (completed && mission.level?.id) {
-    completedEntry = availableLevels.find((level) => level.id === mission.level.id);
+    const completedBaseId = missionProgressionBaseIdFor(mission.level);
+    completedEntry = availableLevels.find((level) => level.id === completedBaseId);
     if (!completedEntry?.test) {
-      const currentIndex = availableLevels.findIndex((level) => level.id === mission.level.id);
+      const currentIndex = availableLevels.findIndex((level) => level.id === completedBaseId);
       if (currentIndex !== -1 && state.unlockedLevels <= currentIndex + 1) {
         state.unlockedLevels = Math.min(availableLevels.length, currentIndex + 2);
       }
@@ -6014,6 +6035,15 @@ async function ensureLevelManifestLoaded() {
 function missionBaseIdFor(levelId) {
   if (!levelId) return levelId;
   return levelVariantToBase[levelId] || levelId;
+}
+
+function missionProgressionBaseIdFor(level) {
+  if (!level?.id) return level?.id;
+  const mappedBase = missionBaseIdFor(level.id);
+  if (mappedBase && mappedBase !== level.id) return mappedBase;
+  if (typeof level.baseLevel === "string" && level.baseLevel) return level.baseLevel;
+  const match = String(level.id).match(/^(level\d+)/);
+  return match ? match[1] : level.id;
 }
 
 const missionVariantCache = new Map();
@@ -9890,6 +9920,7 @@ function resolveEnemyProjectileProfile(enemy, pattern = null, shot = null) {
 function resolveProjectileImage(imageKey, visualTheme) {
   if (!imageKey) return null;
   if (typeof imageKey !== "string") return imageKey;
+  if (visualTheme?.enemyProjectiles?.[imageKey]) return visualTheme.enemyProjectiles[imageKey];
   if (imageKey === "enemyBullet") return visualTheme?.enemyBullet || assets.enemyBullet;
   if (imageKey === "enemySpreadShard") return visualTheme?.enemySpreadShard || assets.altArc;
   if (imageKey === "enemyRadialEmber") return visualTheme?.enemyRadialEmber || assets.enemyBullet;
@@ -9901,35 +9932,54 @@ function resolveProjectileImage(imageKey, visualTheme) {
 
 function getProjectileThreatStyle(projectile, enemy) {
   const visualTheme = getLevelVisualTheme();
+  const enemyProjectiles = visualTheme?.enemyProjectiles || {};
   const threat = projectile.threatClass || projectile.visual;
   let style = {};
 
   if (threat === "chip") {
     const size = projectile.width || projectile.height || 14;
     style = {
-      image: visualTheme?.enemySpreadShard || assets.altArc,
+      image: enemyProjectiles.enemy_chip_shard || visualTheme?.enemySpreadShard || assets.altArc,
       width: size,
       height: size,
       animation: "shard",
       spinRate: 4.8,
     };
   } else if (threat === "heavy") {
-    style = {
-      shape: "orb",
-      color: "#fb923c",
-      radius: 8,
-      animation: "orb",
-    };
+    const image = enemyProjectiles.enemy_heavy_orb || visualTheme?.enemyPurpleOrb;
+    style = image
+      ? {
+        image,
+        width: 52,
+        height: 52,
+        animation: "orb",
+        spinRate: 2.8,
+      }
+      : {
+        shape: "orb",
+        color: "#38bdf8",
+        radius: 8,
+        animation: "orb",
+      };
   } else if (threat === "bossHazard") {
-    style = {
-      shape: "orb",
-      color: "#ef4444",
-      radius: 12,
-      animation: "orb",
-    };
+    const image = enemyProjectiles.enemy_boss_core || visualTheme?.enemyPurpleOrb;
+    style = image
+      ? {
+        image,
+        width: 72,
+        height: 72,
+        animation: "orb",
+        spinRate: 2.2,
+      }
+      : {
+        shape: "orb",
+        color: "#a78bfa",
+        radius: 12,
+        animation: "orb",
+      };
   } else if (threat === "standard") {
     style = {
-      image: visualTheme?.enemyBullet || assets.enemyBullet,
+      image: enemyProjectiles.enemy_standard_bolt || visualTheme?.enemyBullet || assets.enemyBullet,
       width: visualTheme?.enemyBulletWidth || 10,
       height: visualTheme?.enemyBulletHeight || 32,
       animation: "bolt",
@@ -10161,7 +10211,7 @@ function getEnemyBulletStyle(enemy) {
       const size = visualTheme.enemyRadialEmberSize || 24;
       return { image: visualTheme.enemyRadialEmber, width: size, height: size, animation: "ember", spinRate: 5.8 };
     }
-    return { shape: "orb", color: "#f97316", radius: 6, animation: "orb" };
+    return { shape: "orb", color: "#38bdf8", radius: 6, animation: "orb" };
   }
   if (enemy.fireMode === "spread") {
     return visualTheme?.enemySpreadShard
@@ -11111,7 +11161,7 @@ function render() {
       drawPlayer();
     }
     bullets.forEach(drawBullet);
-    enemyBullets.forEach((bullet) => drawBullet(bullet, "#f97316"));
+    enemyBullets.forEach((bullet) => drawBullet(bullet, "#38bdf8"));
     enemies.forEach(drawEnemy);
     salvagePods.forEach(drawSalvagePod);
     explosions.forEach(drawExplosion);

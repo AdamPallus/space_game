@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 10,
+  "sprites": [
+    { "name": "enemy_chip_needle", "cell": 0, "size": [18, 52], "componentMinArea": 8 },
+    { "name": "enemy_chip_crescent", "cell": 1, "size": [42, 42], "componentMinArea": 8 },
+    { "name": "enemy_chip_shard", "cell": 2, "size": [34, 52], "componentMinArea": 8 },
+    { "name": "enemy_chip_wisp", "cell": 3, "size": [40, 48], "componentMinArea": 8 },
+    { "name": "enemy_standard_bolt", "cell": 4, "size": [18, 72], "componentMinArea": 8 },
+    { "name": "enemy_standard_lance", "cell": 5, "size": [34, 76], "componentMinArea": 8 },
+    { "name": "enemy_standard_comet", "cell": 6, "size": [62, 72], "componentMinArea": 8 },
+    { "name": "enemy_standard_split", "cell": 7, "size": [58, 66], "componentMinArea": 8 },
+    { "name": "enemy_spread_shard", "cell": 8, "size": [64, 64], "componentMinArea": 8 },
+    { "name": "enemy_radial_pellet", "cell": 9, "size": [46, 46], "componentMinArea": 8 },
+    { "name": "enemy_heavy_orb", "cell": 10, "size": [74, 74], "componentMinArea": 8 },
+    { "name": "enemy_heavy_slug", "cell": 11, "size": [48, 92], "componentMode": "largest", "componentMinArea": 8, "rotateDegrees": 90 },
+    { "name": "enemy_heavy_prism", "cell": 12, "size": [44, 92], "componentMinArea": 8 },
+    { "name": "enemy_boss_core", "cell": 13, "size": [96, 96], "componentMinArea": 8 },
+    { "name": "enemy_boss_halo", "cell": 14, "size": [92, 92], "componentMinArea": 8 },
+    { "name": "enemy_boss_spear", "cell": 15, "size": [42, 96], "componentMinArea": 8 }
+  ]
+}

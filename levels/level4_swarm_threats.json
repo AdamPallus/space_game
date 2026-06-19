@@ -266,39 +266,42 @@
       "damage": 6,
       "speed": 256,
       "radius": 3,
-      "image": "enemySpreadShard",
+      "image": "enemy_chip_needle",
       "width": 13,
-      "height": 13,
-      "animation": "shard",
-      "spinRate": 5.2
+      "height": 34,
+      "animation": "lance"
     },
     "standardBolt": {
       "threatClass": "standard",
       "damage": 14,
       "speed": 217,
       "radius": 4,
-      "image": "enemyBullet",
-      "width": 11,
-      "height": 32,
-      "animation": "bolt"
+      "image": "enemy_standard_lance",
+      "width": 20,
+      "height": 42,
+      "animation": "lance"
     },
     "heavyOrb": {
       "threatClass": "heavy",
       "damage": 29,
       "speed": 170,
       "radius": 8,
-      "shape": "orb",
-      "color": "#fb923c",
-      "animation": "orb"
+      "image": "enemy_heavy_orb",
+      "width": 52,
+      "height": 52,
+      "animation": "orb",
+      "spinRate": 2.8
     },
     "bossHazard": {
       "threatClass": "bossHazard",
       "damage": 46,
       "speed": 150,
       "radius": 12,
-      "shape": "orb",
-      "color": "#ef4444",
-      "animation": "orb"
+      "image": "enemy_boss_halo",
+      "width": 76,
+      "height": 76,
+      "animation": "orb",
+      "spinRate": 2.8
     }
   }
 }

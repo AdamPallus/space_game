@@ -184,6 +184,9 @@ scene (see UI_DESIGN.md).
 ### Buying
 - Rotating stock of **5 lots**, refreshed after every mission (any outcome).
 - Stock is drawn from a level-appropriate pool at full list value.
+- Current implementation: Ledger license tiers are bought in Investments and
+  raise visible rotating lots from 5 to 7, 9, and 11. Market has no permanent
+  Basic Gear section.
 
 ### Exploitable on purpose (the soul of the game)
 1. **Mispriced lots.** ~1 in 8 stock refreshes, one lot appears at 35–50% of
@@ -211,6 +214,10 @@ Keep the existing three tracks and costs (200–6000¢). Reframe effects to fit:
 - **Fleet Shares** — passive dividends as before. Narratively, this is the
   Ledger's leash: the moment passive income exceeds mission income, why fly?
   Late-story beat, not a mechanic, for now.
+
+Current implementation: Investments also houses permanent hull unlocks, ship
+capabilities such as Aux tuning and Dual Fire, and Ledger license tiers. The UI
+is a connected terminal upgrade tree rather than a card grid.
 
 ## 6. Hull ownership (design locked; build after Phase 4)
 

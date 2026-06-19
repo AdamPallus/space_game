@@ -1,0 +1,15 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#00ff00",
+  "grid": {
+    "columns": 3,
+    "rows": 1
+  },
+  "defaultPadding": 8,
+  "contactSheet": "contact_sheet.png",
+  "sprites": [
+    { "name": "hull_bastion", "cell": 0, "size": [112, 112], "componentMode": "largest" },
+    { "name": "hull_relay", "cell": 1, "size": [112, 112], "componentMode": "largest" },
+    { "name": "hull_broadside", "cell": 2, "size": [112, 112], "componentMode": "largest" }
+  ]
+}

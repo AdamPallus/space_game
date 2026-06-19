@@ -13,16 +13,21 @@ source and process alpha locally with the existing sheet/removal tools.
 
 ## Overhaul Asset Notes
 
-The first player-testing follow-up for `NEXT_OVERHAUL_SPEC.md` replaces the
-placeholder/reused overhaul visuals with the generated
-`assets/generated/overhaul_player_kit_v1/` pack:
+The player-testing follow-up for `NEXT_OVERHAUL_SPEC.md` uses two related
+generated packs:
 
-- Hulls use generated chassis sprites for the Armory bench, HUD identity, and
-  in-mission player ship.
-- Mini weapons use generated mini-weapon sprites.
+- The starter hull remains `assets/generated/pilot_sprites/player_interceptor.png`.
+  Do not replace or overwrite it; it is the style/scale anchor for future
+  player-hull art.
+- Unlockable hulls use `assets/generated/overhaul_hulls_v2/`, a built-in
+  imagegen chroma-key sheet processed into 112x112 transparent sprites that
+  match the starter hull footprint.
+- Mini weapons use generated mini-weapon sprites from
+  `assets/generated/overhaul_player_kit_v1/`.
 - Shield booster and armor patch caches use generated pickup sprites.
-- Ledger license, hull unlock, dual-fire, second-bay, and fixed-shop affordances
-  use generated terminal/shop sprites from the same pack.
+- Ledger license, hull unlock, dual-fire, and second-bay affordances use
+  generated terminal/shop sprites from the same pack. The fixed Basic Gear shop
+  section has been removed from the current game.
 - The EMP projectile-clear pulse remains rendered directly in canvas, so it does
   not require a separate bitmap asset.
 

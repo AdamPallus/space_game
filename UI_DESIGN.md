@@ -91,6 +91,12 @@ logic, reskin per the rules: drone schematic center on a workbench background,
 clickable hardpoints, inventory as a physical parts rack (fixed grid, rarity
 glows), inspector panel as a diagnostic terminal screen.
 
+Current implementation note: the Armory is an equip/configure bench, not a
+purchase surface. Hull choice is a compact unlocked-hull rail; hardpoint tiles
+stay spatially placed around the hull to indicate install locations. Permanent
+unlock purchases, including hulls and Dual Fire, belong in the Ledger
+Investments tree.
+
 ### 3. Ledger Terminal
 A CRT/kiosk frame fills the scene — everything renders *inside the terminal
 screen* in monospace. Three terminal "modes" (switched by physical-looking
@@ -98,6 +104,11 @@ buttons on the kiosk bezel, not tabs): **MARKET** (5 stock lots + sell
 manifest), **INVESTMENTS** (the existing three tracks as a terminal ledger),
 **CLAIMS** (history of receipts). Demand bulletins print across the top.
 Mispriced lots get only their subtle notation — never a highlight.
+
+Current implementation note: Market shows rotating exchange lots and the sell
+manifest. Fixed Basic Gear stock is removed. Investments render as a connected
+upgrade tree for permanent tracks, hull unlocks, ship capabilities, and Ledger
+license tiers.
 
 ### 4. Mission Board
 A physical contracts board: missions are **pinned contract sheets** on a

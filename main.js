@@ -69,10 +69,9 @@ const hangarSceneButtons = document.querySelectorAll("[data-scene-target]");
 const hangarTabPanels = document.querySelectorAll("[data-tab-panel]");
 const ledgerBulletin = document.getElementById("ledger-bulletin");
 const ledgerStockList = document.getElementById("ledger-stock-list");
-const ledgerBasicStockList = document.getElementById("ledger-basic-stock-list");
 const ledgerInventoryList = document.getElementById("ledger-inventory-list");
 const ledgerReceipt = document.getElementById("ledger-receipt");
-const ledgerLicensePanel = document.getElementById("ledger-license-panel");
+const ledgerLicenseStatus = document.getElementById("ledger-license-status");
 const ledgerInventorySearch = document.getElementById("ledger-inventory-search");
 const ledgerInventorySort = document.getElementById("ledger-inventory-sort");
 const ledgerInventoryFilter = document.getElementById("ledger-inventory-filter");
@@ -123,6 +122,7 @@ const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
 const GENERATED_ITEM_ICON_ROOT_V2 = `${GENERATED_ROOT}/item_icons_v2`;
 const GENERATED_PILOT_ROOT = `${GENERATED_ROOT}/pilot_sprites`;
 const GENERATED_OVERHAUL_ROOT = `${GENERATED_ROOT}/overhaul_player_kit_v1`;
+const GENERATED_HULL_ROOT = `${GENERATED_ROOT}/overhaul_hulls_v2`;
 const BOSS_DEFEAT_DELAY_SECONDS = 2.8;
 const VALID_WEAPON_SPREADS = ["focused", "dual", "dualRapid", "rapid", "burst", "wide"];
 const VALID_ITEM_SLOT_TYPES = ["primary", "mini", "defense", "aux", "support", "hull"];
@@ -153,10 +153,10 @@ const GENERATED_BACKGROUND_URLS = {
 };
 const overhaulKit = {
   hulls: {
-    starter: `${GENERATED_OVERHAUL_ROOT}/hull_starter.png`,
-    bastion: `${GENERATED_OVERHAUL_ROOT}/hull_bastion.png`,
-    relay: `${GENERATED_OVERHAUL_ROOT}/hull_relay.png`,
-    broadside: `${GENERATED_OVERHAUL_ROOT}/hull_broadside.png`,
+    starter: `${GENERATED_PILOT_ROOT}/player_interceptor.png`,
+    bastion: `${GENERATED_HULL_ROOT}/hull_bastion.png`,
+    relay: `${GENERATED_HULL_ROOT}/hull_relay.png`,
+    broadside: `${GENERATED_HULL_ROOT}/hull_broadside.png`,
   },
   minis: {
     tickAutogun: `${GENERATED_OVERHAUL_ROOT}/mini_tick_autogun.png`,
@@ -382,15 +382,6 @@ const LEDGER_COPY = {
   sellEmpty: "No recovered inventory available for sale.",
   earlyRecallAudit: "Pattern flagged: repeated early RTB. No action taken.",
 };
-
-const BASIC_LEDGER_STOCK = [
-  { baseId: "frame_fundamentals", price: 120, icon: overhaulKit.capabilities.basicWeaponCrate },
-  { baseId: "frame_area_control", price: 150, icon: overhaulKit.capabilities.basicWeaponCrate },
-  { baseId: "frame_armor_break", price: 180, icon: overhaulKit.capabilities.basicWeaponCrate },
-  { baseId: "mini_tick_autogun", price: 100, icon: overhaulKit.minis.tickAutogun },
-  { baseId: "aux_emp", price: 220, icon: overhaulKit.capabilities.auxModuleCrate },
-  { baseId: "aux_bulwark", price: 280, icon: overhaulKit.capabilities.auxModuleCrate },
-];
 
 const upgrades = [
   {
@@ -661,7 +652,7 @@ const investments = {
 
 const investmentTreeBranches = {
   engineering: {
-    icon: "🔧",
+    icon: "ENG",
     subtitle: "Unlock consumables and repair infrastructure.",
     accent: "cyan",
     nodes: [
@@ -673,7 +664,7 @@ const investmentTreeBranches = {
     ],
   },
   operations: {
-    icon: "📡",
+    icon: "OPS",
     subtitle: "Open mission variants, objectives, and risk modifiers.",
     accent: "violet",
     nodes: [
@@ -685,7 +676,7 @@ const investmentTreeBranches = {
     ],
   },
   shares: {
-    icon: "⬡",
+    icon: "SHR",
     subtitle: "Buy into fleet operations for passive credit returns.",
     accent: "amber",
     nodes: [
@@ -700,13 +691,35 @@ const investmentTreeBranches = {
     iconPath: overhaulKit.capabilities.hullBlueprint,
     subtitle: "License new chassis types for the Armory bench.",
     accent: "amber",
-    nodes: [],
+    nodes: [
+      { x: 28, y: 50 },
+      { x: 16, y: 58 },
+      { x: 12, y: 42 },
+    ],
   },
   capabilities: {
     iconPath: overhaulKit.capabilities.dualFire,
     subtitle: "Permanent ship systems: aux tuning and dual-fire.",
     accent: "cyan",
-    nodes: [],
+    nodes: [
+      { x: 56, y: 58 },
+      { x: 66, y: 62 },
+      { x: 60, y: 71 },
+      { x: 74, y: 74 },
+      { x: 68, y: 83 },
+      { x: 82, y: 86 },
+      { x: 92, y: 74 },
+    ],
+  },
+  marketLicense: {
+    iconPath: overhaulKit.capabilities.ledgerLicense,
+    subtitle: "Increase visible rotating exchange lots.",
+    accent: "red",
+    nodes: [
+      { x: 55, y: 34 },
+      { x: 66, y: 20 },
+      { x: 80, y: 29 },
+    ],
   },
 };
 
@@ -956,6 +969,26 @@ function getActivePrimaryBay(targetState = state) {
   const desired = targetState.activePrimaryBay === 1 ? 1 : 0;
   if (desired === 1 && getPrimaryArmoryItem(targetState, 1)) return 1;
   return 0;
+}
+
+function normalizePrimaryFireMode(value) {
+  return value === "dual" ? "dual" : "swap";
+}
+
+function getPrimaryFireMode(targetState = state) {
+  return normalizePrimaryFireMode(targetState.primaryFireMode);
+}
+
+function setPrimaryFireMode(mode) {
+  const nextMode = normalizePrimaryFireMode(mode);
+  if (nextMode === "dual" && !canUseDualFireCurrentLoadout()) return;
+  state.primaryFireMode = nextMode;
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
+  saveState();
+  safeUpdateHangar();
+  updateHud();
+  updateMobileControls();
 }
 
 function getPrimaryArmoryItem(targetState = state, bayIndex = null) {
@@ -2575,41 +2608,6 @@ function createLedgerLot(index, clericalAdjustment = false, itemOptions = {}) {
     price: Math.max(1, Math.round(listValue * priceRate)),
     clericalAdjustment,
   };
-}
-
-function createBasicLedgerShopItem(stockItem) {
-  const entry = itemPoolCatalog?.entries?.[stockItem.baseId];
-  if (!entry) return null;
-  const item = createRolledItem(stockItem.baseId, entry, "scrap");
-  item.name = entry.name || item.name;
-  item.baseName = entry.name || item.baseName;
-  item.subtitle = entry.subtitle || item.subtitle || "Basic issue";
-  item.description = entry.description || item.description;
-  item.notes = entry.notes || item.notes || "Fixed Ledger basic stock.";
-  item.icon = stockItem.icon || entry.icon || item.icon;
-  item.value = Math.max(item.value || 0, Math.round(stockItem.price * ECONOMY.market.sellRate));
-  return item;
-}
-
-async function buyBasicLedgerStock(baseId) {
-  hideItemTooltip();
-  await ensureItemPoolLoaded();
-  const stockItem = BASIC_LEDGER_STOCK.find((item) => item.baseId === baseId);
-  if (!stockItem || state.credits < stockItem.price) return;
-  const item = createBasicLedgerShopItem(stockItem);
-  if (!item) return;
-  state.credits -= stockItem.price;
-  addItemsToArmoryInventory([item]);
-  setLedgerReceipt({
-    title: "Basic Stock Issue",
-    lines: [
-      { label: "Item", text: item.baseName || item.name },
-      { label: "Issue price", amount: -stockItem.price, fee: true },
-      { label: "Credits paid", amount: -stockItem.price, total: true, fee: true },
-    ],
-  });
-  saveState();
-  safeUpdateHangar();
 }
 
 function rollLedgerStock({ force = false } = {}) {
@@ -4233,6 +4231,7 @@ function loadState() {
         inventory: [],
       },
       activePrimaryBay: 0,
+      primaryFireMode: "swap",
       hulls: normalizeHullState(),
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
@@ -4327,6 +4326,7 @@ function loadState() {
     parsed.hulls = normalizeHullState(parsed.hulls);
     applyPurchasedInvestmentRewards(parsed);
     parsed.activePrimaryBay = parsed.activePrimaryBay === 1 ? 1 : 0;
+    parsed.primaryFireMode = normalizePrimaryFireMode(parsed.primaryFireMode);
     const hadShipBuild = !!parsed.shipBuild;
     parsed.shipBuild = parsed.shipBuild || createDefaultShipBuild();
     if (!hadShipBuild) {
@@ -4460,6 +4460,7 @@ function loadState() {
         inventory: [],
       },
       activePrimaryBay: 0,
+      primaryFireMode: "swap",
       hulls: normalizeHullState(),
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
@@ -4679,14 +4680,15 @@ function getDualFireDamageMult(targetState = state) {
 function isDualFireCompatibleItem(item) {
   if (!item || normalizeArmorySlotType(item.slotType) !== "primary") return false;
   const tags = Array.isArray(item.tags) ? item.tags : [];
-  const build = item.build || {};
-  if (item.rarity === "preFounding" || tags.includes("relic") || tags.includes("heavy")) return false;
-  if (build.gunDiameter === "large") return false;
-  if (build.spread === "burst" && build.effect && build.effect !== "none") return false;
-  return true;
+  return !(
+    item.swapOnly ||
+    item.fireMode === "swapOnly" ||
+    tags.includes("swap-only") ||
+    tags.includes("swapOnly")
+  );
 }
 
-function canDualFireCurrentLoadout(targetState = state) {
+function canUseDualFireCurrentLoadout(targetState = state) {
   const primary = getPrimaryArmoryItem(targetState, 0);
   const second = getSecondPrimaryArmoryItem(targetState);
   return !!(
@@ -4696,6 +4698,10 @@ function canDualFireCurrentLoadout(targetState = state) {
     isDualFireCompatibleItem(primary) &&
     isDualFireCompatibleItem(second)
   );
+}
+
+function canDualFireCurrentLoadout(targetState = state) {
+  return getPrimaryFireMode(targetState) === "dual" && canUseDualFireCurrentLoadout(targetState);
 }
 
 function purchaseEngineeringUpgrade(upgradeId) {
@@ -5322,57 +5328,165 @@ async function autoLaunchFreshPilotMission() {
 
 
 
+function getLedgerLicenseInvestmentConfig() {
+  return {
+    name: "Market License",
+    tiers: (ECONOMY.market.licenseTiers || [])
+      .slice(1)
+      .map((config, index) => {
+        const tierConfig = normalizeLedgerLicenseConfig(config, index + 1);
+        return {
+          cost: tierConfig.cost,
+          benefit: `Tier ${tierConfig.tier}: ${tierConfig.stockLots} visible exchange lots`,
+          licenseTier: tierConfig.tier,
+        };
+      }),
+  };
+}
+
+function getInvestmentEntries() {
+  return [
+    ...Object.entries(investments).map(([key, data]) => ({ key, data })),
+    { key: "marketLicense", data: getLedgerLicenseInvestmentConfig() },
+  ];
+}
+
+function getInvestmentCurrentTier(key) {
+  if (key === "marketLicense") return getLedgerLicenseTier();
+  return Math.max(0, Math.floor(state.investments?.[key] || 0));
+}
+
+function getInvestmentAccentColor(accent) {
+  const colors = {
+    cyan: "#3fd0ff",
+    amber: "#f0b429",
+    violet: "#a78bfa",
+    red: "#f87171",
+  };
+  return colors[accent] || colors.cyan;
+}
+
+function getInvestmentNodePosition(branch, index, total) {
+  if (branch.nodes?.[index]) return branch.nodes[index];
+  const angle = -110 + (220 / Math.max(1, total - 1)) * index;
+  const radius = 34;
+  return {
+    x: 50 + Math.cos((angle * Math.PI) / 180) * radius,
+    y: 50 + Math.sin((angle * Math.PI) / 180) * radius,
+  };
+}
+
+function renderInvestmentLines(entries) {
+  const lineHtml = entries
+    .flatMap(({ key, data }) => {
+      const branch = investmentTreeBranches[key] || {};
+      const color = getInvestmentAccentColor(branch.accent);
+      let previous = { x: 50, y: 50 };
+      return data.tiers.map((_, index) => {
+        const position = getInvestmentNodePosition(branch, index, data.tiers.length);
+        const line = `<line x1="${previous.x}" y1="${previous.y}" x2="${position.x}" y2="${position.y}" stroke="${color}" />`;
+        previous = position;
+        return line;
+      });
+    })
+    .join("");
+  return `<svg class="investment-tree-lines" viewBox="0 0 100 100" aria-hidden="true">${lineHtml}</svg>`;
+}
+
+function renderInvestmentNode(key, data, tierConfig, index, currentTier) {
+  const branch = investmentTreeBranches[key] || {};
+  const position = getInvestmentNodePosition(branch, index, data.tiers.length);
+  const purchased = index < currentTier;
+  const next = index === currentTier;
+  const affordable = next && state.credits >= tierConfig.cost;
+  const color = getInvestmentAccentColor(branch.accent);
+  const iconHtml = branch.iconPath
+    ? `<img src="${escapeHtml(branch.iconPath)}" alt="" />`
+    : `<span>${escapeHtml(branch.icon || String(index + 1))}</span>`;
+  return `
+    <button
+      type="button"
+      class="investment-tree-node${purchased ? " is-purchased" : ""}${next ? " is-next" : ""}${affordable ? " is-affordable" : ""}"
+      data-invest-key="${escapeHtml(key)}"
+      data-invest-tier="${index}"
+      style="left:${position.x}%; top:${position.y}%; --invest-accent:${color};"
+      ${affordable ? "" : "disabled"}
+      title="${escapeHtml(`${data.name} tier ${index + 1}: ${tierConfig.benefit}`)}"
+    >
+      ${iconHtml}
+      <small>${index + 1}</small>
+    </button>
+  `;
+}
+
+function renderInvestmentReceipt(entries) {
+  const lines = entries
+    .map(({ key, data }) => {
+      const currentTier = getInvestmentCurrentTier(key);
+      const maxTier = data.tiers.length;
+      const nextTier = currentTier < maxTier ? data.tiers[currentTier] : null;
+      const branch = investmentTreeBranches[key] || {};
+      return `
+        <div class="investment-receipt-line" style="--invest-accent:${getInvestmentAccentColor(branch.accent)};">
+          <span>${escapeHtml(data.name)}</span>
+          <strong>${currentTier}/${maxTier}</strong>
+          <em>${escapeHtml(nextTier ? `${nextTier.benefit} | ${formatCredits(nextTier.cost)}` : "Complete")}</em>
+        </div>
+      `;
+    })
+    .join("");
+  return `
+    <aside class="investment-tree-receipt">
+      <div class="ledger-title">Permanent Upgrades</div>
+      ${lines}
+    </aside>
+  `;
+}
+
 function renderInvestments() {
   const container = document.getElementById("investment-tracks");
   if (!container) return;
-  container.innerHTML = "";
-  Object.keys(investments).forEach((key) => {
-    const data = investments[key];
-    const branch = investmentTreeBranches[key] || {};
-    const currentTier = state.investments[key] ?? 0;
-    const maxTier = data.tiers.length;
-    const nextTier = currentTier < maxTier ? data.tiers[currentTier] : null;
-    const affordable = !!nextTier && state.credits >= nextTier.cost;
-
-    const card = document.createElement("section");
-    card.className = `invest-track${nextTier ? "" : " maxed"}`;
-    const iconHtml = branch.iconPath
-      ? `<span class="invest-track-icon image"><img src="${escapeHtml(branch.iconPath)}" alt="" /></span>`
-      : `<span class="invest-track-icon">${branch.icon || ""}</span>`;
-    const pips = data.tiers
-      .map((_, i) => `<span class="pip${i < currentTier ? " filled" : ""}"></span>`)
-      .join("");
-    card.innerHTML = `
-      <div class="invest-track-head">
-        ${iconHtml}
-        <div>
-          <h3>${data.name}</h3>
-          <p class="muted">${branch.subtitle || ""}</p>
-        </div>
-      </div>
-      <div class="invest-pips">${pips}<span class="invest-tier-label">Tier ${currentTier}/${maxTier}</span></div>
-      <p class="invest-benefit">${nextTier ? `Next: ${nextTier.benefit}` : `Fully invested: ${data.tiers[maxTier - 1].benefit}`}</p>
-      <button type="button" class="invest-btn" ${affordable ? "" : "disabled"}>
-        ${nextTier ? `Invest ${nextTier.cost} cr` : "Complete"}
-      </button>
-    `;
-    const btn = card.querySelector(".invest-btn");
-    if (btn && affordable) {
-      btn.addEventListener("click", () => handleInvestment(key));
-    }
-    container.appendChild(card);
+  const entries = getInvestmentEntries();
+  const nodeHtml = entries
+    .map(({ key, data }) => {
+      const currentTier = getInvestmentCurrentTier(key);
+      return data.tiers
+        .map((tierConfig, index) => renderInvestmentNode(key, data, tierConfig, index, currentTier))
+        .join("");
+    })
+    .join("");
+  container.innerHTML = `
+    <div class="investment-tree-map">
+      ${renderInvestmentLines(entries)}
+      <div class="investment-tree-core">LEDGER</div>
+      ${nodeHtml}
+    </div>
+    ${renderInvestmentReceipt(entries)}
+  `;
+  container.querySelectorAll("[data-invest-key]").forEach((button) => {
+    button.addEventListener("click", () => {
+      handleInvestment(button.dataset.investKey).catch((error) => {
+        console.error("Investment purchase failed:", error);
+      });
+    });
   });
 }
 
-function handleInvestment(key) {
-  const tier = state.investments[key];
+async function handleInvestment(key) {
+  if (key === "marketLicense") {
+    await purchaseLedgerLicense();
+    return;
+  }
   const data = investments[key];
-  if (tier >= data.tiers.length) return;
-  
+  const tier = Math.max(0, Math.floor(state.investments?.[key] || 0));
+  if (!data || tier >= data.tiers.length) return;
+
   const cost = data.tiers[tier].cost;
   if (state.credits < cost) return;
-  
+
   state.credits -= cost;
+  state.investments = state.investments || {};
+  state.investments[key] = tier;
   state.investments[key] += 1;
   applyInvestmentTierReward(state, data.tiers[tier]);
   state.hulls = normalizeHullState(state.hulls);
@@ -6568,6 +6682,33 @@ function getDenseItemRoleLabel(item) {
   return "Module";
 }
 
+function getItemTypeKey(item, slotId = null) {
+  const resolvedSlot = slotId || getComparableSlotIdForItem(item);
+  if (resolvedSlot === "primary" || resolvedSlot === "primary-2") return "primary";
+  if (resolvedSlot === "mini") return "mini";
+  if (resolvedSlot === "hull") return "hull";
+  if (resolvedSlot?.startsWith("defense-")) return "defense";
+  const slotType = normalizeArmorySlotType(item?.slotType);
+  if (slotType === "primary" || slotType === "mini" || slotType === "defense" || slotType === "hull") {
+    return slotType;
+  }
+  if (isSupportSlotType(slotType)) return "aux";
+  return "module";
+}
+
+function getItemTypeBadge(item, slotId = null) {
+  const type = getItemTypeKey(item, slotId);
+  const labels = {
+    primary: "Weapon",
+    mini: "Auto",
+    defense: "Defense",
+    aux: "Aux",
+    hull: "Hull",
+    module: "Module",
+  };
+  return labels[type] || "Module";
+}
+
 function getItemTypeLine(item, build, slotId) {
   const rarityLabel = item?.rarity ? getRarityLabel(item.rarity) : "Standard";
   if (slotId === "primary") {
@@ -6990,8 +7131,10 @@ function getItemDisplayStats(item, slotId = null) {
       { label: "Ammo", value: offense.ammo, math: offense.burnDps ? `Burn DPS = hit damage * 0.45 = ${formatNumber(offense.burnDps, 1)}.` : "" },
       {
         label: "Dual-Fire",
-        value: isDualFireCompatibleItem(item) ? "Compatible" : "Swap-only",
-        math: isDualFireCompatibleItem(item) ? "Can fire simultaneously when dual-fire tier is active." : "Heavy or special frames stay swap-only.",
+        value: isDualFireCompatibleItem(item) ? "Dual-capable" : "Swap-only",
+        math: isDualFireCompatibleItem(item)
+          ? "Can fire simultaneously when Dual Fire is selected and the coupler is unlocked."
+          : "This frame explicitly opts out of simultaneous fire.",
       },
     ];
   } else if (resolvedSlotId === "mini") {
@@ -7096,6 +7239,7 @@ function renderHeadlineDelta(headline) {
 function renderItemDisplayBlock(display, { inline = false } = {}) {
   if (!display) return "";
   const rarityStyle = display.rarity ? getRarityStyle(display.rarity) : "";
+  const typeClass = ` type-${getItemTypeKey(display.item, display.slotId)}`;
   const showMath = !!state.devShowMath;
   const lineHtml = display.lines
     .map(
@@ -7119,7 +7263,7 @@ function renderItemDisplayBlock(display, { inline = false } = {}) {
     })
     .join("");
   return `
-    <div class="item-display-block${inline ? " inline" : ""}" style="${rarityStyle}">
+    <div class="item-display-block${inline ? " inline" : ""}${typeClass}" style="${rarityStyle}">
       <div class="item-display-head">
         <div>
           <div class="item-display-name">${escapeHtml(display.name)}</div>
@@ -7251,10 +7395,20 @@ function renderShipStatsPanel() {
     { label: "Mini DPS", value: formatNumber(mini.dps, 1), math: `${formatNumber(mini.damage, 1)} damage * ${formatNumber(mini.attacksPerSecond, 2)} attacks/s.` },
     { label: "Targeting", value: `${mini.arcLabel} | ${mini.range}px`, math: mini.role },
   ];
+  const dualReady = canUseDualFireCurrentLoadout();
+  const dualSelected = canDualFireCurrentLoadout();
   const loadoutRows = [
     { label: "Hull", value: getEquippedHull().name, math: getEquippedHull().description },
     { label: "Bay State", value: loadout.label, math: loadout.label === "Second-bay strain" ? "Second primary reduces shield capacity and regen before hull mitigation." : "Open second bay grants shield capacity and regen focus." },
-    { label: "Dual-Fire", value: canDualFireCurrentLoadout() ? `${Math.round(getDualFireDamageMult() * 100)}% per weapon` : "Swap mode", math: "Dual-fire requires a tier and two compatible primary weapons." },
+    {
+      label: "Dual-Fire",
+      value: dualSelected
+        ? `${Math.round(getDualFireDamageMult() * 100)}% per weapon`
+        : dualReady
+          ? "Ready, not selected"
+          : "Locked or incomplete",
+      math: "Dual Fire is selected from the Armory fire-mode switch.",
+    },
   ];
   const capabilityRows = [
     {
@@ -7717,6 +7871,15 @@ function renderShipUpgradesPanel() {
   if (armoryBench) {
     const equippedHull = getEquippedHull();
     const ownedHullIds = new Set(getOwnedHullIds());
+    const fireMode = getPrimaryFireMode();
+    const dualReady = canUseDualFireCurrentLoadout();
+    const dualStatus = getDualFireTier() <= 0
+      ? "Unlock in Ledger"
+      : !getSecondPrimaryArmoryItem()
+        ? "Install Primary B"
+        : dualReady
+          ? `${Math.round(getDualFireDamageMult() * 100)}% per weapon`
+          : "Swap-only frame";
     const hullButtons = hullCatalog
       .map((hull) => {
         const owned = ownedHullIds.has(hull.id) || state.debugUnlock;
@@ -7730,32 +7893,31 @@ function renderShipUpgradesPanel() {
             title="${owned ? "Equip hull" : "Unlock in Ledger Investments"}"
           >
             <img src="${escapeHtml(hull.icon)}" alt="" />
-            <span>${escapeHtml(getCompactItemName(hull))}</span>
+            <span>${escapeHtml(hull.id === "starter" ? "Base" : getCompactItemName(hull).replace(" Hull", ""))}</span>
           </button>
         `;
       })
       .join("");
     armoryBench.innerHTML = `
       <div class="armory-drone">
-        <section class="armory-chassis" aria-label="Equipped hull">
-          <div class="armory-chassis-art">
-            <img class="armory-ship-base" src="${escapeHtml(equippedHull.sprite || equippedHull.icon)}" alt="" aria-hidden="true" />
-          </div>
-          <div class="armory-chassis-readout">
-            <p class="armory-kicker">Active Chassis</p>
-            <h3>${escapeHtml(equippedHull.name)}</h3>
-            <p>${escapeHtml(equippedHull.description)}</p>
-            <div class="armory-hull-strip">${hullButtons}</div>
-          </div>
-        </section>
+        <img class="armory-ship-base" src="${escapeHtml(equippedHull.sprite || equippedHull.icon)}" alt="" aria-hidden="true" />
+        <div class="armory-hull-rail" aria-label="Unlocked hulls">${hullButtons}</div>
+        <div class="armory-fire-mode" aria-label="Primary fire mode">
+          <span class="armory-fire-mode-label">Fire Mode</span>
+          <button type="button" class="${fireMode === "swap" ? "is-active" : ""}" data-fire-mode="swap">Swap</button>
+          <button type="button" class="${fireMode === "dual" ? "is-active" : ""}" data-fire-mode="dual" ${dualReady ? "" : "disabled"}>Dual</button>
+          <span>${escapeHtml(dualStatus)}</span>
+        </div>
         <div class="armory-hardpoints">
           ${slotDefs
             .map((slot) => {
               const visualRarity = getInstalledSlotVisualRarity(slot.item);
+              const typeKey = getItemTypeKey(slot.item, slot.id);
+              const typeBadge = getItemTypeBadge(slot.item, slot.id);
               return `
             <button
               type="button"
-              class="armory-slot ${slot.className} is-clickable${visualRarity ? ` rarity-${visualRarity}` : ""}${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
+              class="armory-slot ${slot.className} type-${typeKey} is-clickable${visualRarity ? ` rarity-${visualRarity}` : ""}${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
               data-armory-slot="${slot.id}"
               ${visualRarity ? `style="${getRarityStyle(visualRarity)}"` : ""}
             >
@@ -7766,7 +7928,7 @@ function renderShipUpgradesPanel() {
                   <span class="armory-slot-name">${escapeHtml(slot.name)}</span>
                   <span class="armory-slot-meta">${escapeHtml(slot.meta)}</span>
                 </span>
-                <span class="armory-slot-pill">${slot.installedId && slot.installedId !== "none" ? "Installed" : "Open"}</span>
+                <span class="armory-slot-type">${escapeHtml(typeBadge)}</span>
               </span>
             </button>
           `;
@@ -7788,6 +7950,11 @@ function renderShipUpgradesPanel() {
         safeUpdateHangar();
       });
     });
+    armoryBench.querySelectorAll("[data-fire-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setPrimaryFireMode(button.dataset.fireMode);
+      });
+    });
   }
 
   const rackMeta = getArmorySlotMeta(armorySelectedSlotId);
@@ -7796,15 +7963,10 @@ function renderShipUpgradesPanel() {
   if (armoryRackTip) armoryRackTip.textContent = rackMeta.tip;
   renderArmoryInspector(armorySelectedSlotId);
   if (armoryToggleStats) {
-    armoryToggleStats.textContent = armoryStatsExpanded ? "Hide Stats" : "Show Stats";
-    armoryToggleStats.onclick = () => {
-      armoryStatsExpanded = !armoryStatsExpanded;
-      if (shipStats) shipStats.hidden = !armoryStatsExpanded;
-      armoryToggleStats.textContent = armoryStatsExpanded ? "Hide Stats" : "Show Stats";
-    };
+    armoryToggleStats.hidden = true;
   }
   if (shipStats) {
-    shipStats.hidden = !armoryStatsExpanded;
+    shipStats.hidden = true;
   }
 
   if (!weaponInventory) return;
@@ -7823,15 +7985,16 @@ function renderShipUpgradesPanel() {
   inventoryItems.forEach((item) => {
     const button = document.createElement("button");
     const canInstall = canInstallArmoryItem(item, armorySelectedSlotId);
+    const typeKey = getItemTypeKey(item, armorySelectedSlotId);
     button.type = "button";
-    button.className = `armory-inventory-item${item.installed ? " is-installed" : ""}${canInstall ? "" : " is-locked"}${item.rarity ? ` rarity-${item.rarity}` : ""}`;
+    button.className = `armory-inventory-item type-${typeKey}${item.installed ? " is-installed" : ""}${canInstall ? "" : " is-locked"}${item.rarity ? ` rarity-${item.rarity}` : ""}`;
     if (item.rarity) {
       button.setAttribute("style", getRarityStyle(item.rarity));
     }
     button.innerHTML = `
       <span class="armory-inventory-icon"><img src="${escapeHtml(item.icon)}" alt="" /></span>
       <span class="armory-inventory-name">${escapeHtml(getCompactItemName(item))}</span>
-      <span class="armory-inventory-meta">${escapeHtml(item.installed ? "Installed" : item.owned ? getItemBrowserRole(item) : "Ledger/shop")}</span>
+      <span class="armory-inventory-meta">${escapeHtml(item.installed ? "Installed" : item.owned ? `${getItemTypeBadge(item, armorySelectedSlotId)} | ${getItemBrowserRole(item)}` : "Ledger/shop")}</span>
     `;
     attachItemTooltip(button, item, armorySelectedSlotId);
     button.addEventListener("click", () => {
@@ -7918,79 +8081,14 @@ function renderLedgerBulletinPanel(ledger) {
   `;
 }
 
-function renderLedgerLicensePanel(ledger) {
-  if (!ledgerLicensePanel) return;
+function renderLedgerLicenseStatus() {
+  if (!ledgerLicenseStatus) return;
   const tier = getLedgerLicenseTier();
   const current = getLedgerLicenseConfig(tier);
   const next = getNextLedgerLicenseConfig();
-  const canBuy = !!next && state.credits >= next.cost;
-  ledgerLicensePanel.innerHTML = `
-    <div class="ledger-license-icon">
-      <img src="${escapeHtml(overhaulKit.capabilities.ledgerLicense)}" alt="" />
-    </div>
-    <div class="ledger-license-copy">
-      <span class="ledger-bulletin-kicker">Ledger license</span>
-      <strong>Tier ${tier} | ${current.stockLots} visible lots</strong>
-      <span>${next ? `Next: ${next.stockLots} lots for ${formatCredits(next.cost)}` : "Maximum license active"}</span>
-    </div>
-    <button type="button" class="ledger-action-button license" ${canBuy ? "" : "disabled"}>
-      ${next ? "License" : "Max"}
-    </button>
-  `;
-  ledgerLicensePanel
-    .querySelector("button")
-    ?.addEventListener("click", () => purchaseLedgerLicense().catch((error) => {
-      console.error("Ledger license purchase failed:", error);
-    }));
-}
-
-function renderBasicLedgerStock() {
-  if (!ledgerBasicStockList) return;
-  ledgerBasicStockList.innerHTML = "";
-  if (!itemPoolCatalog) {
-    ledgerBasicStockList.innerHTML = `<div class="ledger-empty">Loading basic stock...</div>`;
-    return;
-  }
-  const items = BASIC_LEDGER_STOCK
-    .map((stockItem) => {
-      const entry = itemPoolCatalog.entries?.[stockItem.baseId];
-      return entry ? { stockItem, entry } : null;
-    })
-    .filter(Boolean);
-  if (!items.length) {
-    ledgerBasicStockList.innerHTML = `<div class="ledger-empty">No basic gear listed.</div>`;
-    return;
-  }
-  items.forEach(({ stockItem, entry }) => {
-    const slotType = normalizeArmorySlotType(entry.slotType);
-    const canAfford = state.credits >= stockItem.price;
-    const icon =
-      stockItem.icon ||
-      entry.icon ||
-      (slotType === "aux" ? overhaulKit.capabilities.auxModuleCrate : overhaulKit.capabilities.basicWeaponCrate);
-    const entryEl = document.createElement("div");
-    entryEl.className = "ledger-market-item ledger-basic-item rarity-scrap";
-    entryEl.setAttribute("style", getRarityStyle("scrap"));
-    entryEl.tabIndex = 0;
-    entryEl.innerHTML = `
-      <div class="ledger-item-icon">
-        <img src="${escapeHtml(icon)}" alt="" />
-      </div>
-      <div class="ledger-item-main">
-        <div class="ledger-item-kicker">Basic ${escapeHtml(getDenseItemRoleLabel(entry))}</div>
-        <div class="ledger-item-name">${escapeHtml(entry.name || stockItem.baseId)}</div>
-        <div class="ledger-item-price">${formatLedgerCredits(stockItem.price)}</div>
-      </div>
-      <button type="button" class="ledger-action-button buy" ${canAfford ? "" : "disabled"}>${canAfford ? "Issue" : "Short"}</button>
-    `;
-    const button = entryEl.querySelector("button");
-    button?.addEventListener("click", () => {
-      buyBasicLedgerStock(stockItem.baseId).catch((error) => {
-        console.error("Basic stock purchase failed:", error);
-      });
-    });
-    ledgerBasicStockList.appendChild(entryEl);
-  });
+  ledgerLicenseStatus.textContent = next
+    ? `License ${tier}: ${current.stockLots} lots | next in Investments`
+    : `License ${tier}: ${current.stockLots} lots | max`;
 }
 
 function renderLedgerStock(ledger) {
@@ -8004,8 +8102,9 @@ function renderLedgerStock(ledger) {
     const item = lot.item;
     const rarity = item.rarity || "scrap";
     const canAfford = state.credits >= lot.price;
+    const typeKey = getItemTypeKey(item);
     const entry = document.createElement("div");
-    entry.className = `ledger-market-item rarity-${rarity}`;
+    entry.className = `ledger-market-item type-${typeKey} rarity-${rarity}`;
     entry.setAttribute("style", getRarityStyle(rarity));
     entry.tabIndex = 0;
     entry.innerHTML = `
@@ -8043,8 +8142,9 @@ function renderLedgerInventory(ledger) {
     const rarity = item.rarity || "scrap";
     const quote = getItemSellQuote(item);
     const installed = isInventoryItemInstalled(item.id);
+    const typeKey = getItemTypeKey(item);
     const entry = document.createElement("div");
-    entry.className = `ledger-market-item rarity-${rarity}`;
+    entry.className = `ledger-market-item type-${typeKey} rarity-${rarity}`;
     entry.setAttribute("style", getRarityStyle(rarity));
     entry.tabIndex = 0;
     entry.innerHTML = `
@@ -8068,11 +8168,9 @@ function renderLedgerInventory(ledger) {
 async function renderLedgerMarketAsync() {
   if (!ledgerBulletin && !ledgerStockList && !ledgerInventoryList && !ledgerReceipt) return;
   if (ledgerStockList) ledgerStockList.innerHTML = `<div class="ledger-empty">Loading market lots...</div>`;
-  if (ledgerBasicStockList) ledgerBasicStockList.innerHTML = `<div class="ledger-empty">Loading basic stock...</div>`;
   const ledger = await ensureLedgerMarketReady();
   renderLedgerBulletinPanel(ledger);
-  renderLedgerLicensePanel(ledger);
-  renderBasicLedgerStock();
+  renderLedgerLicenseStatus();
   renderLedgerStock(ledger);
   renderLedgerInventory(ledger);
   renderLedgerReceiptPanel(ledger);
@@ -8834,6 +8932,12 @@ function fireCurrentPrimaryWeapons() {
 function swapPrimaryBay() {
   if (!mission?.active || player.swapCooldown > 0) return;
   if (!getSecondPrimaryArmoryItem()) return;
+  if (canDualFireCurrentLoadout()) {
+    spawnFloatingText(player.x, player.y - 42, "DUAL FIRE ACTIVE", "#f0b429");
+    updateHud();
+    updateMobileControls();
+    return;
+  }
   state.activePrimaryBay = getActivePrimaryBay(state) === 1 ? 0 : 1;
   player.swapCooldown = SECOND_PRIMARY_SWAP_COOLDOWN;
   state.shipBuild = composeShipBuildFromArmory(state);
@@ -8842,6 +8946,7 @@ function swapPrimaryBay() {
   const active = getPrimaryArmoryItem(state);
   spawnFloatingText(player.x, player.y - 42, `SWAP: ${getCompactItemName(active)}`, "#7dd3fc");
   updateHud();
+  updateMobileControls();
 }
 
 function findMiniWeaponTarget(stats) {
@@ -10536,13 +10641,16 @@ function renderWeaponStripHtml({ compact = false, cooldown = 0, showEmpty = true
     ? `<span class="weapon-token cooldown">${escapeHtml(formatNumber(cooldown, 1))}s</span>`
     : "";
   return `
-    <div class="weapon-strip${compact ? " compact" : ""}${canDualFireCurrentLoadout() ? " dual-active" : ""}">
+    <div class="weapon-strip${compact ? " compact" : ""}${canDualFireCurrentLoadout() ? " dual-active" : ""}" aria-label="Primary weapons">
       ${slots
         .map((slot) => {
           const name = slot.item ? getCompactItemName(slot.item) : "Open";
+          const icon = slot.item ? getArmoryFrameVisual(slot.item).icon : defenseVisuals.none.icon;
+          const typeKey = getItemTypeKey(slot.item, "primary");
           return `
-            <span class="weapon-token${slot.active ? " is-active" : ""}${slot.item ? "" : " is-empty"}">
+            <span class="weapon-token type-${typeKey}${slot.active ? " is-active" : ""}${slot.item ? "" : " is-empty"}" title="${escapeHtml(`${slot.label}: ${name}`)}">
               <span class="weapon-token-label">${slot.label}</span>
+              <span class="weapon-token-icon"><img src="${escapeHtml(icon)}" alt="" /></span>
               <span class="weapon-token-name">${escapeHtml(name)}</span>
             </span>
           `;
@@ -10756,7 +10864,7 @@ function updateMobileControls() {
   if (mobileSwapBtn) {
     const hasSecond = inMission && !!getSecondPrimaryArmoryItem();
     mobileSwapBtn.hidden = !hasSecond;
-    mobileSwapBtn.disabled = !hasSecond || player.swapCooldown > 0;
+    mobileSwapBtn.disabled = !hasSecond || player.swapCooldown > 0 || canDualFireCurrentLoadout();
     mobileSwapBtn.innerHTML = hasSecond
       ? renderWeaponStripHtml({ compact: true, cooldown: player.swapCooldown, showEmpty: false })
       : "Swap";

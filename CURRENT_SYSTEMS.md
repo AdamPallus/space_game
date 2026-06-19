@@ -12,9 +12,9 @@ Combat is still arcade-first. The player controls a ship in a scrolling arena, f
 
 ## Combat And Ship Systems
 
-The ship currently uses shields, armor, and hull as separate survivability layers. Weapons support kinetic and plasma identities, spread and multi-shot patterns, charged or heavy-feeling shots, generated frame stats, second-primary swapping, and advanced dual-fire for compatible loadouts. Mini weapons are a separate auto-targeting weapon slot with forward, wide, or turret targeting arcs.
+The ship currently uses shields, armor, and hull as separate survivability layers. Weapons support kinetic and plasma identities, spread and multi-shot patterns, charged or heavy-feeling shots, generated frame stats, second-primary swapping, and an explicit Dual Fire mode for compatible loadouts after the Ledger coupler unlock. Mini weapons are a separate auto-targeting weapon slot with forward, wide, or turret targeting arcs.
 
-Named hulls shape loadouts through shield, armor, aux, mini, and second-bay modifiers. One-primary builds receive a visible shield focus bonus while carrying a second primary applies a visible defense strain unless hull and engineering choices mitigate it. Existing combat UI exposes health layers, mission objective state, cargo, selected support capability, active primary bay, swap cooldown, and mini weapon state.
+Named hulls shape loadouts through shield, armor, aux, mini, and second-bay modifiers. One-primary builds receive a visible shield focus bonus while carrying a second primary applies a visible defense strain unless hull and engineering choices mitigate it. Existing combat UI exposes health layers, mission objective state, cargo, selected support capability, equipped primary weapon icons, active primary bay or Dual Fire state, swap cooldown, and mini weapon state.
 
 EMP support affects enemies and firing behavior, and now clears nearby hostile projectiles in a bounded radius around the player with a visible pulse.
 
@@ -34,13 +34,13 @@ Old Flight School save fields remain migration-compatible, but they no longer co
 
 The economy combines enemy kill bounties, explicit objective credits, mission completion credits, cargo recovery, Ledger market returns, and item collection. Score and elapsed mission time can remain as display or telemetry, but they do not silently convert into credits. Mission debrief copy breaks out kill bounties, objective credits, completion credits, recovery charges, dividends, writedowns, and market settlement.
 
-Ledger market state includes daily stock, lot purchases, dividends, price movement, bulletins, volatility, sponsored listings, mispriced opportunities, and license tiers. Ledger licenses increase visible daily stock from 5 lots to 7, 9, and 11 lots at the documented upgrade costs.
+Ledger market state includes rotating stock, lot purchases, dividends, price movement, bulletins, volatility, sponsored listings, mispriced opportunities, and license tiers. Ledger licenses increase visible stock from 5 lots to 7, 9, and 11 lots at the documented upgrade costs, but the license purchase UI lives in Ledger Investments rather than Market. Market does not include a fixed Basic Gear section.
 
 ## Items, Armory, And Archive
 
 The item system is data-driven through `items/item_pool.json` and `items/weapon_frames.json`. Implemented item categories include primary weapon frames, mini weapons, defense items, support items, named hulls, relics, and economy-facing salvage. Generated items can carry rarity, families, affixes, traits, and descriptive card copy.
 
-The armory composes the ship build from inventory instead of replacing the gear model. Item cards and tooltips expose stats, flavor, rarity, tags, combat implications, per-shot damage, volley output, sustained DPS, mini targeting behavior, dual-fire compatibility, hull bonuses, and second-bay strain. The item archive tracks collected and discovered items, including relic-style long-term finds.
+The armory composes the ship build from inventory instead of replacing the gear model. It is an equip/configure bench with spatial hardpoints around the selected hull, a compact unlocked-hull selector, and a visible Swap/Dual Fire mode selector. Item cards and tooltips expose stats, flavor, rarity, tags, combat implications, DPS first, damage per shot second, shots per second third, mini targeting behavior, dual-fire compatibility, hull bonuses, and second-bay strain. The item archive tracks collected and discovered items, including relic-style long-term finds.
 
 Armory inventory, item archive, and Ledger sell views now include text search plus sort and filter controls for recent acquisition, rarity, slot/type, value, and weapon role where relevant.
 
@@ -52,13 +52,13 @@ Current gaps:
 
 ## Assets
 
-Generated art is now part of the live visual baseline. The current UI uses generated salvage chrome, generated item icons, promoted combat fleet art, and generated mission backgrounds. Kenney assets remain credited and may still appear as fallback, historical comparison, or utility sprites. The first overhaul pass reuses existing generated item icons and Kenney power-up art for hulls, mini weapons, shield boosters, and armor patch caches, while the EMP clear pulse is rendered in canvas.
+Generated art is now part of the live visual baseline. The current UI uses generated salvage chrome, generated item icons, promoted combat fleet art, generated mission backgrounds, the original generated starter hull, and v2 generated unlockable hulls that match the starter hull scale/style. Kenney assets remain credited and may still appear as fallback, historical comparison, or utility sprites. Mini weapons, shield boosters, and armor patch caches use generated overhaul art, while the EMP clear pulse is rendered in canvas.
 
 Asset manifests and generation notes live in `ASSET_GENERATION.md`.
 
 ## Saves And Progression State
 
-Progress is stored client-side. Important save concepts include credits, lifetime credits, mission count, unlocked levels, onboarding stage, system unlocks, cargo, armory inventory, equipped hull, equipped mini weapon, optional second primary bay, engineering tiers, Ledger market state, item collections, and relic collections.
+Progress is stored client-side. Important save concepts include credits, lifetime credits, mission count, unlocked levels, onboarding stage, system unlocks, cargo, armory inventory, equipped hull, equipped mini weapon, optional second primary bay, selected primary fire mode, engineering tiers, Ledger market/license state, item collections, and relic collections.
 
 When changing save structures, preserve compatibility for existing local saves where practical. If a field is intentionally retired, document the migration or fallback behavior in the implementation commit.
 
@@ -84,4 +84,4 @@ The most important remaining design mismatches are:
 - Item durability is not implemented and remains intentionally deferred.
 - Cargo/economy hulls are not part of the first hull pass.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader economy/lore direction rather than active gameplay systems.
-- The new overhaul systems need player-testing balance passes after deployment, especially mini weapon output, dual-fire compatibility, second-bay strain, and early hard-mission pickup placement.
+- The new overhaul systems need player-testing balance passes after deployment, especially mini weapon output, dual-fire scaling, second-bay strain, and early hard-mission pickup placement.

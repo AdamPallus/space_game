@@ -1084,6 +1084,36 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   font-size: 10px;
   color: var(--muted);
 }
+.ship-stats-card {
+  width: min(720px, 100%);
+}
+.ship-stats-modal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.ship-stats-modal > .muted {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.ship-stats-modal .stat-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 10px;
+}
+.ship-stats-modal .stat-row {
+  padding: 3px 0;
+}
+.ship-stats-modal .stat-tip {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 620px) {
+  .ship-stats-modal {
+    grid-template-columns: 1fr;
+  }
+}
 
 .item-tooltip {
   position: fixed;

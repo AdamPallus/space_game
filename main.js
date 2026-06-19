@@ -24,6 +24,7 @@ const shipAmmoValue = document.getElementById("ship-ammo-value");
 const shipEffectsValue = document.getElementById("ship-effects-value");
 const shipDefensesValue = document.getElementById("ship-defenses-value");
 const shipModal = document.getElementById("ship-modal");
+const shipModalCard = shipModal?.querySelector(".modal-card");
 const shipModalTitle = document.getElementById("ship-modal-title");
 const shipModalBody = document.getElementById("ship-modal-body");
 const shipModalClose = document.getElementById("ship-modal-close");
@@ -1559,7 +1560,6 @@ const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
 let openUpgradeId = null;
 let enemyIdCounter = 1;
 let armorySelectedSlotId = "primary";
-let armoryStatsExpanded = false;
 let itemTooltipEl = null;
 let itemTooltipTimer = null;
 
@@ -4131,6 +4131,12 @@ compendiumModeButtons.forEach((button) => {
   });
 });
 
+armoryToggleStats?.addEventListener("click", () => {
+  openArmoryStatsModal().catch((error) => {
+    console.error("Failed to open Armory stats:", error);
+  });
+});
+
 [ledgerInventorySearch, ledgerInventorySort, ledgerInventoryFilter].forEach((control) => {
   control?.addEventListener(control.tagName === "INPUT" ? "input" : "change", () => {
     if (activeHangarTab === "economy") renderLedgerMarket();
@@ -4234,6 +4240,7 @@ if (resetBtn) {
 
 function closeShipModal() {
   openShipNodeId = null;
+  shipModalCard?.classList.remove("ship-stats-card");
   if (shipModal) shipModal.hidden = true;
 }
 
@@ -4345,7 +4352,7 @@ window.addEventListener("keydown", (event) => {
     if (activeHangarTab === "loadout") safeUpdateHangar();
     return;
   }
-  if (event.key === "Escape" && openShipNodeId) {
+  if (event.key === "Escape" && shipModal && !shipModal.hidden) {
     closeShipModal();
   }
 });
@@ -7615,8 +7622,8 @@ function attachItemTooltip(element, item, slotId) {
   element.addEventListener("blur", hideItemTooltip);
 }
 
-function renderShipStatRow(line) {
-  const showMath = !!state.devShowMath;
+function renderShipStatRow(line, { forceMath = false } = {}) {
+  const showMath = forceMath || !!state.devShowMath;
   return `
     <div class="stat-row">
       <span class="stat-k">${escapeHtml(line.label)}</span>
@@ -7624,6 +7631,180 @@ function renderShipStatRow(line) {
       ${showMath && line.math ? `<span class="stat-tip">${escapeHtml(line.math)}</span>` : ""}
     </div>
   `;
+}
+
+function renderDiagnosticStatRows(rows) {
+  return rows.map((row) => renderShipStatRow(row, { forceMath: true })).join("");
+}
+
+function getArmorClassForModule(item) {
+  if (!item?.build || item.defenseType !== "armor") return 0;
+  return Math.round((item.build.armorClass ?? BASE_ARMOR_CLASS) + (item.build.armorClassLevel ?? 0) * 2);
+}
+
+function getEquippedDefenseDebugRows() {
+  const slotIds = getEquippedDefenseSlotIds();
+  return slotIds.map((slotId, index) => {
+    const item = getDefenseArmoryItemById(slotId);
+    if (!item) {
+      return {
+        label: `Defense ${index + 1}`,
+        value: "Empty",
+        math: `Slot id: ${slotId || "none"}`,
+      };
+    }
+    if (item.defenseType === "armor") {
+      return {
+        label: `Defense ${index + 1}`,
+        value: `${getCompactItemName(item)} | AC ${getArmorClassForModule(item)}`,
+        math: `Saved item id: ${item.id}. Armor class uses this module's ${item.build?.armorClass ?? BASE_ARMOR_CLASS} base + 2*${item.build?.armorClassLevel ?? 0} class levels.`,
+      };
+    }
+    if (item.defenseType === "shield") {
+      return {
+        label: `Defense ${index + 1}`,
+        value: `${getCompactItemName(item)} | Shield`,
+        math: `Saved item id: ${item.id}. Shield max level ${item.build?.shieldMaxLevel ?? 0}, regen level ${item.build?.shieldRegenLevel ?? 0}.`,
+      };
+    }
+    return {
+      label: `Defense ${index + 1}`,
+      value: getCompactItemName(item),
+      math: `Saved item id: ${item.id}. Defense type: ${item.defenseType || "unknown"}.`,
+    };
+  });
+}
+
+function getProjectileDamageForSpec(spec, difficulty, level) {
+  if (!spec) return null;
+  const levelScale = level?.enemyScale || level?.scale || {};
+  const damageScale = Math.max(
+    0.05,
+    Number.isFinite(spec.damageScale)
+      ? spec.damageScale
+      : Number.isFinite(levelScale.damage)
+        ? levelScale.damage
+        : 1
+  );
+  const baseDamage = Number.isFinite(spec.bulletDamage)
+    ? spec.bulletDamage
+    : 14 + difficulty * 1.3;
+  return baseDamage * damageScale;
+}
+
+function getMissionProjectileDamageSummary(level, elapsed = 0) {
+  if (!level?.events?.length) return null;
+  const difficulty = 1 + (state.missionCount || 0) * 0.15 + elapsed / 22;
+  const rows = [];
+  level.events.forEach((event) => {
+    const spec = mergeLevelEnemySpec(level, event.type, event.overrides || {});
+    const damage = getProjectileDamageForSpec(spec, difficulty, level);
+    if (!Number.isFinite(damage)) return;
+    rows.push({
+      type: event.type,
+      damage,
+    });
+  });
+  if (!rows.length) return null;
+  const damages = rows.map((row) => row.damage);
+  const maxDamage = Math.max(...damages);
+  const minDamage = Math.min(...damages);
+  const hardest = rows
+    .slice()
+    .sort((a, b) => b.damage - a.damage)
+    .slice(0, 4)
+    .map((row) => `${row.type} ${formatNumber(row.damage, 1)}`);
+  return {
+    difficulty,
+    minDamage,
+    maxDamage,
+    hardest,
+  };
+}
+
+async function openArmoryStatsModal() {
+  if (!shipModal || !shipModalTitle || !shipModalBody) return;
+  await ensureEnemyCatalogLoaded();
+  const selectedLevel = await loadLevel(selectedLevelId);
+  const stats = getShipDisplayStatsForState(state);
+  const build = stats.build;
+  const support = stats.support;
+  const mini = stats.mini;
+  const launchDamage = getMissionProjectileDamageSummary(selectedLevel, 0);
+  const lateDamage = getMissionProjectileDamageSummary(selectedLevel, 60);
+  const layerRows = [
+    { label: "Hull", value: `${stats.defense.hull}`, math: "Hull takes raw projectile damage once armor is gone." },
+    { label: "Shield", value: `${stats.defense.shield}`, math: "Shields take raw non-collision projectile damage before armor." },
+    { label: "Shield Regen", value: `${formatNumber(stats.defense.shieldRegen, 1)}/s`, math: "Regen resumes after the recovery delay." },
+    { label: "Armor", value: `${stats.defense.armor}`, math: "Armor capacity stacks across installed armor modules." },
+    { label: "Armor Class", value: stats.defense.armorClass ? `${stats.defense.armorClass}` : "-", math: "Best installed armor class only; multiple plates do not add armor class together." },
+    { label: "Armor Drag", value: stats.defense.armorDrag ? `+${stats.defense.armorDrag}% cooldown` : "-", math: "Armor drag stacks from installed armor modules." },
+  ];
+  const buildRows = [
+    { label: "Build AC Base", value: `${build.armorClass ?? BASE_ARMOR_CLASS}`, math: "Composed build armorClass before class-level conversion." },
+    { label: "Build AC Levels", value: `${build.armorClassLevel ?? 0}`, math: "Final armor class adds 2 per armor-class level." },
+    { label: "Defense Slots", value: `${stats.defense.shieldSlots} shield / ${stats.defense.armorSlots} armor`, math: `Equipped slot ids: ${getEquippedDefenseSlotIds().join(", ")}.` },
+    { label: "Mission Count", value: `${state.missionCount || 0}`, math: "Mission count increases enemy projectile damage even on earlier missions." },
+  ];
+  const missionRows = [
+    {
+      label: "Selected Mission",
+      value: selectedLevel?.name || selectedLevelId,
+      math: selectedLevel?.validationErrors?.length
+        ? selectedLevel.validationErrors.join(" | ")
+        : `Level id: ${selectedLevel?.id || selectedLevelId}.`,
+    },
+    launchDamage
+      ? {
+          label: "Launch Bullets",
+          value: `${formatNumber(launchDamage.minDamage, 1)}-${formatNumber(launchDamage.maxDamage, 1)}`,
+          math: `Difficulty ${formatNumber(launchDamage.difficulty, 2)}. Hardest: ${launchDamage.hardest.join(", ")}.`,
+        }
+      : { label: "Launch Bullets", value: "-", math: "No projectile enemies found in selected mission." },
+    lateDamage
+      ? {
+          label: "After 60s",
+          value: `${formatNumber(lateDamage.minDamage, 1)}-${formatNumber(lateDamage.maxDamage, 1)}`,
+          math: `Difficulty ${formatNumber(lateDamage.difficulty, 2)}. Hardest: ${lateDamage.hardest.join(", ")}.`,
+        }
+      : { label: "After 60s", value: "-", math: "No projectile enemies found in selected mission." },
+  ];
+  const offenseRows = [
+    { label: "Primary DPS", value: formatNumber(stats.offense.dps, 1), math: "Current active primary bay offense." },
+    { label: "Damage/Shot", value: formatNumber(stats.offense.hitDamage, 1), math: "Per projectile damage before multi-shot count." },
+    { label: "Shots/Sec", value: formatNumber(stats.offense.attacksPerSecond, 2), math: "Current active primary cadence." },
+    { label: "Mini DPS", value: formatNumber(mini.dps, 1), math: `${getCompactItemName(getSelectedMiniWeapon())}: ${formatNumber(mini.damage, 1)} damage every ${formatNumber(mini.cooldown, 2)}s.` },
+    { label: "Support", value: support.name, math: support.effect },
+  ];
+  shipModalTitle.textContent = "Ship Stats";
+  shipModalBody.innerHTML = `
+    <div class="ship-stats-modal">
+      <p class="muted">Mission-ready values from the current Armory build. Armor class only applies after shields are depleted.</p>
+      <div class="stat-section">
+        <div class="stat-section-title">Defense Layers</div>
+        ${renderDiagnosticStatRows(layerRows)}
+      </div>
+      <div class="stat-section">
+        <div class="stat-section-title">Installed Defense Items</div>
+        ${renderDiagnosticStatRows(getEquippedDefenseDebugRows())}
+      </div>
+      <div class="stat-section">
+        <div class="stat-section-title">Mission Projectile Check</div>
+        ${renderDiagnosticStatRows(missionRows)}
+      </div>
+      <div class="stat-section">
+        <div class="stat-section-title">Build Internals</div>
+        ${renderDiagnosticStatRows(buildRows)}
+      </div>
+      <div class="stat-section">
+        <div class="stat-section-title">Offense And Support</div>
+        ${renderDiagnosticStatRows(offenseRows)}
+      </div>
+    </div>
+  `;
+  openShipNodeId = "armory-stats";
+  shipModalCard?.classList.add("ship-stats-card");
+  shipModal.hidden = false;
 }
 
 function renderShipStatsPanel() {
@@ -8255,7 +8436,8 @@ function renderShipUpgradesPanel() {
   if (armoryRackTip) armoryRackTip.textContent = rackMeta.tip;
   renderArmoryInspector(armorySelectedSlotId);
   if (armoryToggleStats) {
-    armoryToggleStats.hidden = true;
+    armoryToggleStats.hidden = false;
+    armoryToggleStats.textContent = "Show Stats";
   }
   if (shipStats) {
     shipStats.hidden = true;

@@ -13,7 +13,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 - A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
 - A Ledger market with rotating stock, daily lots, pricing, dividends, bulletins, volatility, sponsored listings, and license tiers that increase visible stock through Ledger Investments.
-- Search, sort, and filter controls for armory inventory, item archive, and Ledger sell views.
+- Search, sort, and filter controls for armory inventory, item archive, and Ledger sell views. The Armory `Show Stats` control opens a popup with mission-ready ship stats, installed defense item internals, and selected-mission projectile damage estimates without shrinking the inventory rack.
 - Mini weapons with rarity-scaled output/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, one-primary focus bonuses, aux engineering upgrades, and opt-in dual-fire tiers for compatible loadouts. Shield layers take raw projectile damage before armor; armor class mitigates only hits that reach armor, uses the best installed armor class, and does not add duplicate armor-class values from multiple plates.
 - Generated salvage/UI chrome, mission background art, item icons, and combat fleet art promoted into the live UI, with Kenney assets still available as fallback or comparison art.
 

@@ -92,10 +92,12 @@ clickable hardpoints, inventory as a physical parts rack (fixed grid, rarity
 glows), inspector panel as a diagnostic terminal screen.
 
 Current implementation note: the Armory is an equip/configure bench, not a
-purchase surface. Hull choice is a compact unlocked-hull rail; hardpoint tiles
-stay spatially placed around the hull to indicate install locations. Permanent
-unlock purchases, including hulls and Dual Fire, belong in the Ledger
-Investments tree.
+purchase surface. Hull choice is a tiny equipped-hull button that opens a
+compact selector popover only when needed; hardpoint tiles stay spatially placed
+around the hull to indicate install locations. The selected-item inspector caps
+long stat/affix/lore detail in a small scroll area so the inventory rack keeps
+usable height. Permanent unlock purchases, including hulls and Dual Fire,
+belong in the Ledger Investments tree.
 
 ### 3. Ledger Terminal
 A CRT/kiosk frame fills the scene — everything renders *inside the terminal

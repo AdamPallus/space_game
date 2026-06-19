@@ -624,17 +624,56 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   object-fit: contain;
   filter: drop-shadow(0 0 18px rgba(63, 208, 255, 0.34));
 }
-.armory-hull-rail {
+.armory-hull-picker {
   position: absolute;
-  z-index: 4;
+  z-index: 7;
   top: 8px;
-  right: 8px;
+  left: 8px;
+}
+.armory-hull-trigger {
+  width: 60px;
+  min-height: 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid rgba(125, 210, 255, 0.22);
+  border-radius: var(--radius-sm);
+  background: rgba(6, 10, 18, 0.68);
+  color: var(--ink);
+  cursor: pointer;
+}
+.armory-hull-trigger img {
+  width: 30px;
+  height: 24px;
+  object-fit: contain;
+}
+.armory-hull-trigger span {
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 8px;
+  font-weight: 700;
+}
+.armory-hull-trigger:hover,
+.armory-hull-picker.is-open .armory-hull-trigger {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(63, 208, 255, 0.2);
+}
+.armory-hull-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
   display: flex;
   gap: 5px;
   padding: 5px;
   border: 1px solid rgba(125, 210, 255, 0.22);
   border-radius: var(--radius-sm);
-  background: rgba(6, 10, 18, 0.68);
+  background: rgba(6, 10, 18, 0.9);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.42);
 }
 .armory-hull-option {
   width: 42px;
@@ -841,7 +880,10 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   gap: var(--gap);
 }
 .armory-inspector {
-  flex: 0 0 auto;
+  flex: 0 0 min(220px, 34%);
+  min-height: 96px;
+  max-height: 220px;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
@@ -850,7 +892,6 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-height: 96px;
 }
 .armory-inspector-head { display: flex; align-items: center; gap: 10px; }
 .armory-inspector-title { font-weight: 700; font-size: 14px; }
@@ -887,7 +928,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 
 .armory-rack {
   flex: 1;
-  min-height: 0;
+  min-height: 230px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1068,6 +1109,10 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   box-shadow: none;
   padding: 0;
   border: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 .item-display-head {
   display: flex;
@@ -1121,6 +1166,15 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+.item-display-scroll {
+  min-height: 0;
+  max-height: 96px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.item-display-scroll .item-stat-lines {
+  padding-bottom: 2px;
 }
 .item-stat-line {
   display: grid;
@@ -2013,6 +2067,9 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .hub-drone { width: min(200px, 55vw); }
   .armory-main { grid-template-columns: 1fr; overflow-y: auto; }
   .armory-stage-panel { min-height: 430px; flex: 0 0 auto; }
+  .armory-inspector { flex: 0 0 auto; max-height: 210px; }
+  .armory-rack { min-height: 320px; }
+  .item-display-scroll { max-height: 86px; }
   .armory-slot { width: 142px; min-height: 80px; }
   .armory-ship-base { width: min(190px, 44vw); }
   .browser-controls { grid-template-columns: 1fr 1fr; }
@@ -2042,6 +2099,12 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .armory-stage-panel {
     min-height: 560px;
   }
+  .armory-inspector {
+    max-height: 196px;
+  }
+  .item-display-scroll {
+    max-height: 78px;
+  }
   .armory-bench,
   .armory-drone {
     height: 100%;
@@ -2050,7 +2113,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .armory-ship-base {
     width: min(150px, 42vw);
   }
-  .armory-hull-rail {
+  .armory-hull-picker {
     left: 8px;
     right: auto;
     top: 8px;

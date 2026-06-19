@@ -33,6 +33,18 @@ const ECONOMY = {
   },
 };
 
+const MINI_RARITY_TUNING = {
+  scrap: { damageMult: 1, cooldownMult: 1, rangeMult: 1, speedMult: 1 },
+  certified: { damageMult: 1.35, cooldownMult: 0.9, rangeMult: 1.04, speedMult: 1.03 },
+  prototype: { damageMult: 1.75, cooldownMult: 0.8, rangeMult: 1.08, speedMult: 1.06 },
+  preFounding: { damageMult: 2.25, cooldownMult: 0.72, rangeMult: 1.12, speedMult: 1.1 },
+};
+const FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
+  small: 1.25,
+  medium: 1.6,
+  large: 2.25,
+};
+
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
@@ -193,6 +205,7 @@ function rollSampleItem(pool, id, entry, rarity, seed) {
       ])
     ),
     build,
+    miniWeapon: entry.miniWeapon ? tuneMiniWeaponForRarity(entry.miniWeapon, rarity) : null,
   };
 }
 
@@ -202,6 +215,33 @@ function getKineticImpulseBudget(build, gunDiameter = "medium") {
   const velocityBonus = Math.max(0, build.flowVelocityLevel || 0) * kinetic.velocityLevelBudgetBonus;
   const itemBonus = Number.isFinite(build.kineticImpulseBudget) ? build.kineticImpulseBudget : 0;
   return Math.max(0.2, baseBudget + velocityBonus + itemBonus);
+}
+
+function roundTunedStat(value, decimals = 1) {
+  const scale = Math.pow(10, decimals);
+  return Math.round(value * scale) / scale;
+}
+
+function getMiniRarityTuning(rarity) {
+  return MINI_RARITY_TUNING[rarity] || MINI_RARITY_TUNING.scrap;
+}
+
+function tuneMiniWeaponForRarity(mini, rarity = "scrap") {
+  const tuning = getMiniRarityTuning(rarity);
+  return {
+    ...clone(mini || {}),
+    damage: roundTunedStat((Number(mini?.damage) || 0) * tuning.damageMult, 1),
+    cooldown: Math.max(0.16, roundTunedStat((Number(mini?.cooldown) || 0.8) * tuning.cooldownMult, 2)),
+    range: Number.isFinite(mini?.range) ? Math.round(mini.range * tuning.rangeMult) : 0,
+    speed: Number.isFinite(mini?.speed) ? Math.round(mini.speed * tuning.speedMult) : 0,
+  };
+}
+
+function getFocusedSingleShotDamageMult({ spread, gunDiameter, cooldown }) {
+  if (spread !== "focused") return 1;
+  const base = FOCUSED_SINGLE_SHOT_DAMAGE_MULT[gunDiameter] || FOCUSED_SINGLE_SHOT_DAMAGE_MULT.medium;
+  const slowBonus = Math.max(0, Math.min(0.75, (cooldown - 0.28) * 1.8));
+  return roundTunedStat(base + slowBonus, 2);
 }
 
 function getPrimaryFireConfig(build) {
@@ -256,6 +296,8 @@ function getPrimaryFireConfig(build) {
   if (spread === "rapid") cooldown *= 0.46;
   if (spread === "burst") cooldown *= 2.15;
   if (spread === "wide") cooldown *= 1.15;
+  cooldown = Math.max(0.08, cooldown);
+  const shotDamageMult = getFocusedSingleShotDamageMult({ spread, gunDiameter, cooldown });
   const isRapidPattern = spread === "rapid" || spread === "dualRapid";
   return {
     ammo,
@@ -264,21 +306,22 @@ function getPrimaryFireConfig(build) {
     spread,
     bulletSpeed: ECONOMY.kinetic.baseVelocity * velocityFactor,
     projectileRadius,
-    cooldown: Math.max(0.08, cooldown),
+    cooldown,
+    shotDamageMult,
     armorChipFloorRate: isRapidPattern ? 0.035 : ECONOMY.minDamageFloor,
     minArmorChipDamage: isRapidPattern ? 0.25 : 1,
   };
 }
 
-function computePrimaryDamage({ ammo, speed, radius }) {
+function computePrimaryDamage({ ammo, speed, radius, shotDamageMult = 1 }) {
   const sizeFactor = Math.max(0.05, radius / 4);
   const velocityFactor = Math.max(0.2, speed / ECONOMY.kinetic.baseVelocity);
-  if (ammo === "plasma") return ECONOMY.plasma.baseDamage * sizeFactor;
-  return (
-    ECONOMY.kinetic.baseDamage *
-    sizeFactor *
-    Math.pow(velocityFactor, ECONOMY.kinetic.velocityExponent)
-  );
+  const baseDamage = ammo === "plasma"
+    ? ECONOMY.plasma.baseDamage * sizeFactor
+    : ECONOMY.kinetic.baseDamage *
+      sizeFactor *
+      Math.pow(velocityFactor, ECONOMY.kinetic.velocityExponent);
+  return baseDamage * (Number.isFinite(shotDamageMult) ? shotDamageMult : 1);
 }
 
 function projectileCountForSpread(spread) {
@@ -298,6 +341,7 @@ function summarizePrimaryBuild(build) {
     ammo: cfg.ammo,
     speed: cfg.bulletSpeed,
     radius: cfg.projectileRadius,
+    shotDamageMult: cfg.shotDamageMult,
   });
   const projectiles = projectileCountForSpread(cfg.spread);
   const volley = perShot * projectiles;
@@ -532,9 +576,28 @@ matrix
     );
   });
 
+function average(values) {
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+}
+
+const basePrimaryRows = matrix.filter((row) => row.id.startsWith("base:"));
+const focusedDps = basePrimaryRows
+  .filter((row) => row.offense.spread === "focused")
+  .map((row) => row.offense.dps);
+const multiDps = basePrimaryRows
+  .filter((row) => row.offense.spread !== "focused")
+  .map((row) => row.offense.dps);
+console.log(
+  `\nFocused vs multi-shot DPS: focused avg ${average(focusedDps).toFixed(1)} / max ${Math.max(...focusedDps).toFixed(1)} | multi avg ${average(multiDps).toFixed(1)} / max ${Math.max(...multiDps).toFixed(1)}`
+);
+
 const miniRows = Object.entries(pool.entries || {})
   .filter(([, entry]) => normalizeSlotType(entry.slotType) === "mini")
-  .map(([id, entry]) => summarizeMiniWeapon(id, entry));
+  .flatMap(([id, entry], index) => [
+    summarizeMiniWeapon(id, entry),
+    summarizeMiniWeapon(`${id}:certified`, rollSampleItem(pool, id, entry, "certified", 4000 + index)),
+    summarizeMiniWeapon(`${id}:prototype`, rollSampleItem(pool, id, entry, "prototype", 5000 + index)),
+  ]);
 
 console.log("\nMini weapon coverage");
 miniRows.forEach((row) => {
@@ -568,7 +631,7 @@ const primaryDpsSamples = matrix
 const medianPrimaryDps = primaryDpsSamples[Math.floor(primaryDpsSamples.length / 2)] || 0;
 if (medianPrimaryDps > 0) {
   miniRows.forEach((row) => {
-    if (row.dps > medianPrimaryDps * 0.45) {
+    if (!row.id.includes(":") && row.dps > medianPrimaryDps * 0.45) {
       failures.push(`${row.name} mini DPS ${row.dps.toFixed(1)} is too close to primary median ${medianPrimaryDps.toFixed(1)}.`);
     }
   });

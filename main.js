@@ -361,6 +361,44 @@ const ECONOMY = {
   },
 };
 
+const MINI_WEAPON_BALANCE_VERSION = 2;
+const MINI_EFFECTS = ["homing", "pierce", "explosive", "vampiric"];
+const MINI_RARITY_TUNING = {
+  scrap: {
+    damageMult: 1,
+    cooldownMult: 1,
+    rangeMult: 1,
+    speedMult: 1,
+    effectChance: 0,
+  },
+  certified: {
+    damageMult: 1.35,
+    cooldownMult: 0.9,
+    rangeMult: 1.04,
+    speedMult: 1.03,
+    effectChance: 0.28,
+  },
+  prototype: {
+    damageMult: 1.75,
+    cooldownMult: 0.8,
+    rangeMult: 1.08,
+    speedMult: 1.06,
+    effectChance: 0.58,
+  },
+  preFounding: {
+    damageMult: 2.25,
+    cooldownMult: 0.72,
+    rangeMult: 1.12,
+    speedMult: 1.1,
+    effectChance: 0.88,
+  },
+};
+const FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
+  small: 1.25,
+  medium: 1.6,
+  large: 2.25,
+};
+
 const LEDGER_COPY = {
   cargoFull: "CARGO FULL",
   shieldCache: "SHIELD CACHE",
@@ -1179,6 +1217,7 @@ function normalizeStarterArmoryState(targetState) {
           tags: Array.isArray(item.tags) ? item.tags : [],
           affixes: Array.isArray(item.affixes) ? item.affixes : [],
         }))
+        .map(normalizeSavedMiniItem)
     : [];
   const grantedIds = getStarterLoadoutIdsForStage(
     targetState.onboardingStage,
@@ -1934,6 +1973,103 @@ function applyBuildAdd(build, patch = {}) {
   });
 }
 
+function roundTunedStat(value, decimals = 1) {
+  const scale = Math.pow(10, decimals);
+  return Math.round(value * scale) / scale;
+}
+
+function getMiniRarityTuning(rarity) {
+  return MINI_RARITY_TUNING[rarity] || MINI_RARITY_TUNING.scrap;
+}
+
+function hashUnitFromString(text) {
+  const input = String(text || "");
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) / 0x100000000;
+}
+
+function normalizeMiniEffect(effect) {
+  return MINI_EFFECTS.includes(effect) ? effect : "none";
+}
+
+function getMiniEffectLabel(effect) {
+  return {
+    homing: "Homing mini trace",
+    pierce: "Pierce mini trace",
+    explosive: "Explosive mini trace",
+    vampiric: "Vampiric mini trace",
+  }[effect] || "Mini trace";
+}
+
+function chooseMiniEffectForRarity(rarity, seed = "", { random = false } = {}) {
+  const tuning = getMiniRarityTuning(rarity);
+  const chance = Math.max(0, Math.min(1, tuning.effectChance || 0));
+  const roll = random ? Math.random() : hashUnitFromString(`${seed}:chance`);
+  if (roll >= chance) return "none";
+  const pick = random ? Math.random() : hashUnitFromString(`${seed}:effect`);
+  return MINI_EFFECTS[Math.floor(pick * MINI_EFFECTS.length) % MINI_EFFECTS.length] || "none";
+}
+
+function tuneMiniWeaponConfig(baseMini, rarity = "scrap", { seed = "", randomEffect = false } = {}) {
+  if (!baseMini || typeof baseMini !== "object" || Array.isArray(baseMini)) return null;
+  const tuning = getMiniRarityTuning(rarity);
+  const tuned = cloneShipBuild(baseMini);
+  tuned.damage = roundTunedStat((Number(tuned.damage) || 0) * tuning.damageMult, 1);
+  tuned.cooldown = Math.max(0.16, roundTunedStat((Number(tuned.cooldown) || 0.8) * tuning.cooldownMult, 2));
+  if (Number.isFinite(tuned.range)) tuned.range = Math.round(tuned.range * tuning.rangeMult);
+  if (Number.isFinite(tuned.speed)) tuned.speed = Math.round(tuned.speed * tuning.speedMult);
+  const existingEffect = normalizeMiniEffect(tuned.effect);
+  tuned.effect = existingEffect !== "none"
+    ? existingEffect
+    : chooseMiniEffectForRarity(rarity, seed, { random: randomEffect });
+  if (tuned.effect !== "none" && existingEffect === "none") {
+    tuned.role = `${capitalize(tuned.effect)} ${tuned.role || "mini weapon"}`;
+  }
+  tuned.balanceVersion = MINI_WEAPON_BALANCE_VERSION;
+  tuned.rarityTuning = rarity;
+  return tuned;
+}
+
+function addMiniEffectMetadata(item, effect) {
+  const normalizedEffect = normalizeMiniEffect(effect);
+  if (!item || normalizedEffect === "none") return;
+  const effectTag = normalizedEffect;
+  item.tags = Array.from(new Set([...(Array.isArray(item.tags) ? item.tags : []), effectTag]));
+  item.affixes = Array.isArray(item.affixes) ? item.affixes.slice() : [];
+  const affixId = `mini_${normalizedEffect}_trace`;
+  if (!item.affixes.some((affix) => affix?.id === affixId)) {
+    item.affixes.push({
+      id: affixId,
+      name: getMiniEffectLabel(normalizedEffect),
+      tags: [effectTag, "mini"],
+    });
+  }
+}
+
+function normalizeSavedMiniItem(item) {
+  if (!item || normalizeArmorySlotType(item.slotType) !== "mini" || !item.miniWeapon) return item;
+  const rarity = item.rarity || "scrap";
+  if (
+    item.miniWeapon.balanceVersion === MINI_WEAPON_BALANCE_VERSION &&
+    item.miniWeapon.rarityTuning === rarity
+  ) {
+    return item;
+  }
+  const tuned = tuneMiniWeaponConfig(item.miniWeapon, rarity, {
+    seed: `${item.id || ""}:${item.sourceId || ""}:${item.baseId || ""}:${rarity}`,
+    randomEffect: false,
+  });
+  if (!tuned) return item;
+  item.miniWeapon = tuned;
+  item.miniBalanceVersion = MINI_WEAPON_BALANCE_VERSION;
+  addMiniEffectMetadata(item, tuned.effect);
+  return item;
+}
+
 function getCatalogAffix(affixId) {
   const catalog = itemPoolCatalog || { affixes: {} };
   const affix = catalog.affixes?.[affixId];
@@ -2000,6 +2136,7 @@ function normalizeUniqueProperty(entry) {
 }
 
 function createRolledItem(baseId, baseEntry, rarity) {
+  const instanceId = generateItemInstanceId();
   const rarityConfig = getRarityConfig(rarity);
   const affixCount = rarityConfig.affixCount ?? 0;
   const build = cloneShipBuild(baseEntry.build || {});
@@ -2057,8 +2194,15 @@ function createRolledItem(baseId, baseEntry, rarity) {
   );
   if (baseEntry.relicLore && !tags.includes("relic")) tags.push("relic");
 
-  return {
-    id: generateItemInstanceId(),
+  const miniWeapon = baseEntry.miniWeapon
+    ? tuneMiniWeaponConfig(baseEntry.miniWeapon, rarity, {
+        seed: `${instanceId}:${baseId}:${rarity}`,
+        randomEffect: true,
+      })
+    : null;
+
+  const item = {
+    id: instanceId,
     baseId,
     sourceId: baseEntry.sourceId || baseId,
     slotType: normalizeArmorySlotType(baseEntry.slotType),
@@ -2072,7 +2216,8 @@ function createRolledItem(baseId, baseEntry, rarity) {
     icon: baseEntry.icon || getDefaultItemIcon(rarity),
     tags,
     build,
-    miniWeapon: baseEntry.miniWeapon ? cloneShipBuild(baseEntry.miniWeapon) : null,
+    miniWeapon,
+    miniBalanceVersion: miniWeapon ? MINI_WEAPON_BALANCE_VERSION : null,
     rarity,
     value,
     relicId: baseEntry.relicLore ? baseId : null,
@@ -2092,6 +2237,10 @@ function createRolledItem(baseId, baseEntry, rarity) {
       tags: Array.isArray(affix.tags) ? affix.tags : [],
     })),
   };
+  if (miniWeapon) {
+    addMiniEffectMetadata(item, miniWeapon.effect);
+  }
+  return item;
 }
 
 function getCampaignProgressLevelForItemPools({ includeActiveMission = false } = {}) {
@@ -2374,10 +2523,11 @@ function addItemsToArmoryInventory(items, { recordRelics = true } = {}) {
   const existingIds = new Set(inventory.map((item) => item.id));
   items.forEach((item) => {
     if (!item?.id || existingIds.has(item.id)) return;
-    if (recordRelics) recordRelicDiscovery(item);
-    recordItemDiscovery(item);
-    inventory.push(cloneItem(item));
-    existingIds.add(item.id);
+    const normalizedItem = normalizeSavedMiniItem(cloneItem(item));
+    if (recordRelics) recordRelicDiscovery(normalizedItem);
+    recordItemDiscovery(normalizedItem);
+    inventory.push(normalizedItem);
+    existingIds.add(normalizedItem.id);
   });
 }
 
@@ -2929,6 +3079,7 @@ const player = {
   shieldRechargeDelay: 2.5,
   healthBarTimer: 0,
   fireCooldown: 0,
+  primaryBayCooldowns: [0, 0],
   miniFireCooldown: 0,
   swapCooldown: 0,
   spriteScale: 0.75,
@@ -3219,6 +3370,7 @@ let activeLedgerMode = "market";
 let activeCompendiumMode = "drones";
 let hangarNeedsRefresh = false;
 let openShipNodeId = null;
+let armoryHullPickerOpen = false;
 let openMissionInfoBaseId = null;
 let missionIntroActive = false;
 let rtbConfirmActive = false;
@@ -3634,6 +3786,11 @@ window.addEventListener("keydown", (event) => {
   enableAudio();
   keyState.add(event.key.toLowerCase());
   if (event.key === "Escape" && (!mission || !mission.active) && overlay && !overlay.hidden) {
+    if (armoryHullPickerOpen) {
+      armoryHullPickerOpen = false;
+      if (activeHangarTab === "loadout") safeUpdateHangar();
+      return;
+    }
     if (debriefPanel && !debriefPanel.hidden) {
       if (returnBtn) returnBtn.click();
       return;
@@ -3803,6 +3960,9 @@ function setHangarTab(tabId, { renderLevels = true } = {}) {
   const availability = getTabAvailability();
   if (!(availability[tabId] ?? true)) {
     tabId = "hub";
+  }
+  if (tabId !== "loadout") {
+    armoryHullPickerOpen = false;
   }
   activeHangarTab = tabId;
   if (hangarPanel) hangarPanel.dataset.activeScene = tabId;
@@ -4099,6 +4259,11 @@ window.addEventListener("keydown", (event) => {
     hideRtbConfirm({ restorePause: true });
     return;
   }
+  if (event.key === "Escape" && armoryHullPickerOpen) {
+    armoryHullPickerOpen = false;
+    if (activeHangarTab === "loadout") safeUpdateHangar();
+    return;
+  }
   if (event.key === "Escape" && openShipNodeId) {
     closeShipModal();
   }
@@ -4136,6 +4301,10 @@ document.addEventListener("click", (event) => {
       openUpgradeId = null;
       safeUpdateHangar();
     }
+  }
+  if (armoryHullPickerOpen && !event.target.closest(".armory-hull-picker")) {
+    armoryHullPickerOpen = false;
+    if (activeHangarTab === "loadout") safeUpdateHangar();
   }
 });
 
@@ -4863,6 +5032,7 @@ async function startMission({ showIntro = false } = {}) {
   pointer.y = player.y;
   pointer.active = true;
   player.fireCooldown = 0;
+  player.primaryBayCooldowns = [0, 0];
   player.miniFireCooldown = 0;
   player.swapCooldown = 0;
   player.altCooldown = 0;
@@ -6513,8 +6683,11 @@ function getRarityRank(rarity) {
 
 function getMiniWeaponConfigFromItem(item) {
   if (!item) return null;
-  if (item.miniWeapon && typeof item.miniWeapon === "object") return item.miniWeapon;
-  if (starterMiniWeaponsById[item.id]) return starterMiniWeaponsById[item.id].miniWeapon;
+  if (starterMiniWeaponsById[item.id] && !item.rarity) return starterMiniWeaponsById[item.id].miniWeapon;
+  if (item.miniWeapon && typeof item.miniWeapon === "object") {
+    normalizeSavedMiniItem(item);
+    return item.miniWeapon;
+  }
   return null;
 }
 
@@ -6835,6 +7008,7 @@ function getOffenseStatsForBuild(build, targetState = state) {
     radius: cfg.projectileRadius,
     damageBoostMult: 1,
     buildDamageMult: build.primaryDamageMult ?? 1,
+    shotDamageMult: cfg.shotDamageMult,
   });
   const attacksPerSecond = cfg.cooldown > 0 ? 1 / cfg.cooldown : 0;
   const volleyDamage = hitDamage * totalProjectiles;
@@ -7105,8 +7279,8 @@ function getItemDisplayStats(item, slotId = null) {
         label: "Damage per Shot",
         value: formatNumber(offense.hitDamage, 1),
         math: offense.cfg.ammo === "plasma"
-          ? `Plasma hit damage = ${ECONOMY.plasma.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)}.`
-          : `Kinetic hit damage = ${ECONOMY.kinetic.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)} * ${formatNumber(offense.cfg.velocityFactor, 2)}^${ECONOMY.kinetic.velocityExponent}.`,
+          ? `Plasma hit damage = ${ECONOMY.plasma.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`
+          : `Kinetic hit damage = ${ECONOMY.kinetic.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)} * ${formatNumber(offense.cfg.velocityFactor, 2)}^${ECONOMY.kinetic.velocityExponent}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`,
       },
       {
         label: "Shots per Second",
@@ -7140,6 +7314,7 @@ function getItemDisplayStats(item, slotId = null) {
   } else if (resolvedSlotId === "mini") {
     const mini = getMiniWeaponStatsForItem(item, previewState);
     const currentMini = currentStats.mini;
+    const miniTuning = getMiniRarityTuning(item?.rarity || "scrap");
     headline = {
       label: "Mini DPS",
       value: mini.dps,
@@ -7150,10 +7325,17 @@ function getItemDisplayStats(item, slotId = null) {
     lines = [
       { label: "Shot Damage", value: formatNumber(mini.damage, 1), math: "Mini damage includes hull mini modifiers." },
       { label: "Shots per Second", value: formatNumber(mini.attacksPerSecond, 2), math: `1 / ${formatNumber(mini.cooldown, 2)}s cooldown.` },
+      item?.rarity
+        ? {
+            label: "Rarity Tune",
+            value: `${Math.round(miniTuning.damageMult * 100)}% dmg | ${Math.round(miniTuning.cooldownMult * 100)}% cd`,
+            math: "Rarity-scaled mini output is saved on the item.",
+          }
+        : null,
       { label: "Targeting", value: `${mini.arcLabel} | ${mini.range}px`, math: `${mini.config?.arcDegrees || (mini.config?.arc === "turret" ? 360 : 70)} degree targeting arc.` },
       { label: "Ammo", value: `${capitalize(mini.config?.ammo || "kinetic")} | ${capitalize(mini.config?.cadence || "mini")}`, math: "" },
       { label: "Effect", value: capitalize(mini.config?.effect || "none"), math: mini.role },
-    ];
+    ].filter(Boolean);
   } else if (resolvedSlotId?.startsWith("defense-")) {
     const defense = previewStats.defense;
     const currentDefense = currentStats.defense;
@@ -7262,6 +7444,13 @@ function renderItemDisplayBlock(display, { inline = false } = {}) {
       return `<div class="item-affix-line">${prefix}${escapeHtml(text)}</div>`;
     })
     .join("");
+  const detailHtml = `
+    <div class="${inline ? "item-display-scroll" : "item-display-details"}">
+      <div class="item-stat-lines">${lineHtml}${innateHtml}${affixHtml}</div>
+      ${display.lore ? `<div class="item-lore">${escapeHtml(display.lore)}</div>` : ""}
+      ${display.footer ? `<div class="item-footer">${escapeHtml(display.footer)}</div>` : ""}
+    </div>
+  `;
   return `
     <div class="item-display-block${inline ? " inline" : ""}${typeClass}" style="${rarityStyle}">
       <div class="item-display-head">
@@ -7276,9 +7465,7 @@ function renderItemDisplayBlock(display, { inline = false } = {}) {
         <span class="item-headline-label">${escapeHtml(display.headline.label)}</span>
         ${renderHeadlineDelta(display.headline)}
       </div>
-      <div class="item-stat-lines">${lineHtml}${innateHtml}${affixHtml}</div>
-      ${display.lore ? `<div class="item-lore">${escapeHtml(display.lore)}</div>` : ""}
-      ${display.footer ? `<div class="item-footer">${escapeHtml(display.footer)}</div>` : ""}
+      ${detailHtml}
     </div>
   `;
 }
@@ -7898,10 +8085,25 @@ function renderShipUpgradesPanel() {
         `;
       })
       .join("");
+    const hullPicker = `
+      <div class="armory-hull-picker${armoryHullPickerOpen ? " is-open" : ""}">
+        <button
+          type="button"
+          class="armory-hull-trigger"
+          data-hull-toggle="true"
+          aria-expanded="${armoryHullPickerOpen ? "true" : "false"}"
+          title="Select hull"
+        >
+          <img src="${escapeHtml(equippedHull.icon || equippedHull.sprite)}" alt="" />
+          <span>${escapeHtml(equippedHull.id === "starter" ? "Base" : getCompactItemName(equippedHull).replace(" Hull", ""))}</span>
+        </button>
+        ${armoryHullPickerOpen ? `<div class="armory-hull-popover" aria-label="Unlocked hulls">${hullButtons}</div>` : ""}
+      </div>
+    `;
     armoryBench.innerHTML = `
       <div class="armory-drone">
         <img class="armory-ship-base" src="${escapeHtml(equippedHull.sprite || equippedHull.icon)}" alt="" aria-hidden="true" />
-        <div class="armory-hull-rail" aria-label="Unlocked hulls">${hullButtons}</div>
+        ${hullPicker}
         <div class="armory-fire-mode" aria-label="Primary fire mode">
           <span class="armory-fire-mode-label">Fire Mode</span>
           <button type="button" class="${fireMode === "swap" ? "is-active" : ""}" data-fire-mode="swap">Swap</button>
@@ -7937,9 +8139,15 @@ function renderShipUpgradesPanel() {
         </div>
       </div>
     `;
+    armoryBench.querySelector("[data-hull-toggle]")?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      armoryHullPickerOpen = !armoryHullPickerOpen;
+      safeUpdateHangar();
+    });
     armoryBench.querySelectorAll("[data-hull-id]").forEach((button) => {
       button.addEventListener("click", () => {
         equipHull(button.dataset.hullId);
+        armoryHullPickerOpen = false;
         safeUpdateHangar();
       });
     });
@@ -8623,6 +8831,13 @@ function getKineticImpulseBudget(build, gunDiameter = "medium") {
   return Math.max(0.2, baseBudget + velocityBonus + itemBonus);
 }
 
+function getFocusedSingleShotDamageMult({ spread, gunDiameter, cooldown }) {
+  if (spread !== "focused") return 1;
+  const base = FOCUSED_SINGLE_SHOT_DAMAGE_MULT[gunDiameter] || FOCUSED_SINGLE_SHOT_DAMAGE_MULT.medium;
+  const slowBonus = Math.max(0, Math.min(0.75, (cooldown - 0.28) * 1.8));
+  return roundTunedStat(base + slowBonus, 2);
+}
+
 function getPrimaryFireConfig(buildOverride = null) {
   const build = buildOverride || getShipBuild();
   const baseSpeed = ECONOMY.kinetic.baseVelocity;
@@ -8689,6 +8904,7 @@ function getPrimaryFireConfig(buildOverride = null) {
   if (spread === "burst") cooldown *= 2.15; // 5 shots at once
   if (spread === "wide") cooldown *= 1.15; // still 5 shots, but meant to be spammy
   cooldown = Math.max(0.08, cooldown);
+  const shotDamageMult = getFocusedSingleShotDamageMult({ spread, gunDiameter, cooldown });
 
   const jitter =
     spread === "burst"
@@ -8746,12 +8962,13 @@ function getPrimaryFireConfig(buildOverride = null) {
     sizeFactor,
     velocityFactor,
     kineticImpulseBudget,
+    shotDamageMult,
     armorChipFloorRate,
     minArmorChipDamage,
   };
 }
 
-function computePrimaryDamage({ ammo, speed, radius, damageBoostMult = null, buildDamageMult = null }) {
+function computePrimaryDamage({ ammo, speed, radius, damageBoostMult = null, buildDamageMult = null, shotDamageMult = 1 }) {
   const sizeFactor = Math.max(0.05, radius / 4);
   const velFactor = Math.max(0.2, speed / ECONOMY.kinetic.baseVelocity);
   const baseKinetic = ECONOMY.kinetic.baseDamage;
@@ -8766,6 +8983,7 @@ function computePrimaryDamage({ ammo, speed, radius, damageBoostMult = null, bui
     ? getShipBuild().primaryDamageMult
     : 1;
   damage *= effectiveBuildDamageMult;
+  damage *= Number.isFinite(shotDamageMult) ? shotDamageMult : 1;
   damage *= Number.isFinite(damageBoostMult) ? damageBoostMult : player.damageBoostMult || 1;
   return damage;
 }
@@ -8797,6 +9015,7 @@ function firePlayerBullet({ build = null, damageScale = 1, xOffset = 0 } = {}) {
         speed,
         radius,
         buildDamageMult: build?.primaryDamageMult,
+        shotDamageMult: cfg.shotDamageMult,
       }) * damageScale,
       image: extra.image || image,
       width: extra.width ?? (
@@ -8902,27 +9121,58 @@ function getPrimaryBuildForItem(item) {
 
 function getCurrentPrimaryFireCooldown() {
   if (canDualFireCurrentLoadout()) {
-    const primaryBuild = getPrimaryBuildForItem(getPrimaryArmoryItem(state, 0));
-    const secondBuild = getPrimaryBuildForItem(getSecondPrimaryArmoryItem());
-    return Math.max(
-      getPrimaryFireConfig(primaryBuild).cooldown,
-      getPrimaryFireConfig(secondBuild).cooldown
-    );
+    const cooldowns = ensurePrimaryBayCooldowns();
+    return Math.min(...cooldowns.map((value) => Math.max(0, value)));
   }
   return getPrimaryFireConfig(getPrimaryBuildForItem(getPrimaryArmoryItem(state))).cooldown;
 }
 
-function fireCurrentPrimaryWeapons() {
-  if (canDualFireCurrentLoadout()) {
+function ensurePrimaryBayCooldowns() {
+  if (!Array.isArray(player.primaryBayCooldowns) || player.primaryBayCooldowns.length < 2) {
+    player.primaryBayCooldowns = [0, 0];
+  }
+  player.primaryBayCooldowns[0] = Math.max(0, Number(player.primaryBayCooldowns[0]) || 0);
+  player.primaryBayCooldowns[1] = Math.max(0, Number(player.primaryBayCooldowns[1]) || 0);
+  return player.primaryBayCooldowns;
+}
+
+function tickPrimaryCooldowns(delta) {
+  player.fireCooldown = Math.max(0, player.fireCooldown - delta);
+  const cooldowns = ensurePrimaryBayCooldowns();
+  cooldowns[0] = Math.max(0, cooldowns[0] - delta);
+  cooldowns[1] = Math.max(0, cooldowns[1] - delta);
+}
+
+function getPrimaryBayBuildAndConfig(bayIndex) {
+  const item = bayIndex === 1 ? getSecondPrimaryArmoryItem() : getPrimaryArmoryItem(state, 0);
+  if (!item) return null;
+  const build = getPrimaryBuildForItem(item);
+  return {
+    item,
+    build,
+    cfg: getPrimaryFireConfig(build),
+  };
+}
+
+function fireCurrentPrimaryWeapons({ dualMode = canDualFireCurrentLoadout() } = {}) {
+  if (dualMode && canDualFireCurrentLoadout()) {
     const damageScale = getDualFireDamageMult();
-    const primaryBuild = getPrimaryBuildForItem(getPrimaryArmoryItem(state, 0));
-    const secondBuild = getPrimaryBuildForItem(getSecondPrimaryArmoryItem());
-    firePlayerBullet({ build: primaryBuild, damageScale, xOffset: -10 });
-    firePlayerBullet({ build: secondBuild, damageScale, xOffset: 10 });
-    return Math.max(
-      getPrimaryFireConfig(primaryBuild).cooldown,
-      getPrimaryFireConfig(secondBuild).cooldown
-    );
+    const cooldowns = ensurePrimaryBayCooldowns();
+    const bayMounts = [
+      { bayIndex: 0, xOffset: -10 },
+      { bayIndex: 1, xOffset: 10 },
+    ];
+    let fired = false;
+    bayMounts.forEach(({ bayIndex, xOffset }) => {
+      if (cooldowns[bayIndex] > 0) return;
+      const setup = getPrimaryBayBuildAndConfig(bayIndex);
+      if (!setup) return;
+      firePlayerBullet({ build: setup.build, damageScale, xOffset });
+      cooldowns[bayIndex] = setup.cfg.cooldown;
+      fired = true;
+    });
+    player.fireCooldown = getCurrentPrimaryFireCooldown();
+    return fired ? player.fireCooldown : null;
   }
   const activeBuild = getPrimaryBuildForItem(getPrimaryArmoryItem(state));
   firePlayerBullet({ build: activeBuild });
@@ -9355,15 +9605,20 @@ function update(delta) {
     player.x = Math.max(40, Math.min(width - 40, player.x));
     player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
 
-    player.fireCooldown -= delta;
+    tickPrimaryCooldowns(delta);
     player.miniFireCooldown = Math.max(0, player.miniFireCooldown - delta);
     player.swapCooldown = Math.max(0, player.swapCooldown - delta);
     player.altCooldown -= delta;
-    if ((pointerButtons.left || devAutoFire) && player.fireCooldown <= 0) {
-      player.fireCooldown = fireCurrentPrimaryWeapons();
-    }
-    if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
-      player.fireCooldown = fireCurrentPrimaryWeapons();
+    const wantsPrimaryFire =
+      pointerButtons.left ||
+      devAutoFire ||
+      (inputMode === "touch" && touchState.active);
+    if (wantsPrimaryFire) {
+      if (canDualFireCurrentLoadout()) {
+        fireCurrentPrimaryWeapons({ dualMode: true });
+      } else if (player.fireCooldown <= 0) {
+        player.fireCooldown = fireCurrentPrimaryWeapons({ dualMode: false });
+      }
     }
     if (player.miniFireCooldown <= 0) {
       fireMiniWeapon();

@@ -107,6 +107,7 @@ Reuse the armory prototype item shape (`slotType`, `name`, `subtitle`,
 
 ### Slots (v1)
 - **Primary weapon** (1 hardpoint) — weapon items
+- **Mini weapon** (1 hardpoint) — auto-targeting secondary weapons
 - **Defense** (2 slots) — shield/armor modules
 - **Aux** (1 slot) — ability modules (cloak/EMP/bulwark become items)
 
@@ -168,6 +169,14 @@ Consequences this buys:
 The existing `flowVelocityLevel` / `flowSizeLevel` / `gunDiameter` fields are
 the inputs. Current weapon tuning uses these concepts, and future changes should
 adjust the model through those fields instead of adding one-off damage tags.
+
+Current balance note: focused single-projectile primaries are allowed to sit at
+or above multi-shot and burst DPS in raw stats because they pay practical costs
+in aim precision, overkill, fewer effect procs, and weak swarm coverage. Mini
+weapons scale separately by rarity through damage/cooldown/range/speed tuning,
+and higher-rarity minis can roll supported weapon effects. Existing saved mini
+loot self-heals through a balance-version marker instead of requiring save
+resets.
 
 ---
 

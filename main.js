@@ -1133,11 +1133,15 @@ function composeShipBuildFromArmory(targetState, options = {}) {
     if (module.defenseType === "armor") {
       merged.defenseSlots[index] = "armor";
       merged.armorAmountLevel += module.build.armorAmountLevel ?? 0;
-      const moduleArmorClass = Number.isFinite(module.build.armorClass)
-        ? module.build.armorClass
-        : BASE_ARMOR_CLASS;
-      merged.armorClass += Math.max(0, moduleArmorClass - BASE_ARMOR_CLASS);
-      merged.armorClassLevel += module.build.armorClassLevel ?? 0;
+      const moduleArmorClass = module.build.armorClass ?? BASE_ARMOR_CLASS;
+      const moduleArmorClassLevel = module.build.armorClassLevel ?? 0;
+      const currentArmorClassTotal =
+        (merged.armorClass ?? BASE_ARMOR_CLASS) + (merged.armorClassLevel ?? 0) * 2;
+      const moduleArmorClassTotal = moduleArmorClass + moduleArmorClassLevel * 2;
+      if (moduleArmorClassTotal > currentArmorClassTotal) {
+        merged.armorClass = moduleArmorClass;
+        merged.armorClassLevel = moduleArmorClassLevel;
+      }
       merged.armorDragLevel += module.build.armorDragLevel ?? 0;
     }
   });
@@ -7431,7 +7435,7 @@ function getItemDisplayStats(item, slotId = null) {
       ? [
           { label: "Armor Class", value: defense.armorClass ? `${defense.armorClass}` : "-", math: `Armor Class = base + 2 per armor-class level.` },
           { label: "Armor Drag", value: defense.armorDrag ? `+${defense.armorDrag}% cooldown` : "-", math: "Armor drag increases primary weapon cooldown." },
-          { label: "Effect", value: "Reduces incoming hit damage", math: "Armor class reduces projectile hits before shields and armor spend." },
+          { label: "Effect", value: "Reduces incoming hit damage", math: "Shields absorb first; armor class reduces projectile hits that reach armor." },
         ]
       : [
           { label: "Shield Regen", value: `${formatNumber(defense.shieldRegen, 1)}/s`, math: `12/s per shield slot * shield regen tuning.` },
@@ -7648,7 +7652,7 @@ function renderShipStatsPanel() {
     { label: "Shield Regen", value: `${formatNumber(stats.defense.shieldRegen, 1)}/s`, math: `12/s per shield slot, scaled by regen tuning.` },
     { label: "Recovery Delay", value: stats.defense.shieldRechargeDelay ? `${formatNumber(stats.defense.shieldRechargeDelay, 1)}s` : "-", math: `Base 2.5s, shifted by shield recovery tuning.` },
     { label: "Armor", value: `${stats.defense.armor}`, math: `80 per armor slot, scaled by armor mass tuning.` },
-    { label: "Armor Class", value: stats.defense.armorClass ? `${stats.defense.armorClass}` : "-", math: `Base class + stacked module class + 2 per armor-class level.` },
+    { label: "Armor Class", value: stats.defense.armorClass ? `${stats.defense.armorClass}` : "-", math: `Best installed armor class + 2 per armor-class level.` },
     { label: "Armor Drag", value: stats.defense.armorDrag ? `+${stats.defense.armorDrag}% cooldown` : "-", math: `Armor modules increase primary weapon cooldown by their drag rating.` },
   ];
   const supportRows = [
@@ -10396,11 +10400,6 @@ function applyDamage(amount, { collision = false, sourceX = null, sourceY = null
   let shieldHit = false;
   let absorbedShield = 0;
   let absorbedBulwark = 0;
-  let armorClassApplied = false;
-  if (!collision && amount > 0 && player.armor > 0 && player.armorClass > 0) {
-    amount = Math.max(0, amount - player.armorClass);
-    armorClassApplied = true;
-  }
   if (player.bulwarkShield > 0) {
     const absorbed = Math.min(player.bulwarkShield, amount);
     player.bulwarkShield -= absorbed;
@@ -10417,7 +10416,7 @@ function applyDamage(amount, { collision = false, sourceX = null, sourceY = null
   }
 
   if (amount > 0 && player.armor > 0) {
-    const effective = armorClassApplied ? amount : Math.max(0, amount - (player.armorClass || 0));
+    const effective = collision ? amount : Math.max(0, amount - (player.armorClass || 0));
     if (effective > 0) {
       const toArmor = Math.min(player.armor, effective);
       player.armor -= toArmor;

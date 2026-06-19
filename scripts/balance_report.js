@@ -458,20 +458,6 @@ function summarizeDefenseItem(id, entry) {
   };
 }
 
-function summarizeArmorPair(rowA, rowB) {
-  const a = rowA.build || {};
-  const b = rowB.build || {};
-  const baseA = Number.isFinite(a.armorClass) ? a.armorClass : BASE_ARMOR_CLASS;
-  const baseB = Number.isFinite(b.armorClass) ? b.armorClass : BASE_ARMOR_CLASS;
-  const classLevel = (a.armorClassLevel || 0) + (b.armorClassLevel || 0);
-  return Math.round(
-    BASE_ARMOR_CLASS +
-      Math.max(0, baseA - BASE_ARMOR_CLASS) +
-      Math.max(0, baseB - BASE_ARMOR_CLASS) +
-      classLevel * 2
-  );
-}
-
 function normalizeEnemy(id, entry) {
   const spec = entry.template || {};
   const hull = spec.hull ?? spec.hp ?? 20;
@@ -488,6 +474,28 @@ function normalizeEnemy(id, entry) {
     armorClass: armor > 0 ? spec.armorClass || 0 : 0,
     boss: !!entry.boss || !!spec.isBoss,
   };
+}
+
+function simulatePlayerProjectileHit({ shield, armor, hull, armorClass }, damage) {
+  let remaining = damage;
+  let nextShield = shield;
+  let nextArmor = armor;
+  let nextHull = hull;
+  if (nextShield > 0) {
+    const absorbed = Math.min(nextShield, remaining);
+    nextShield -= absorbed;
+    remaining -= absorbed;
+  }
+  if (remaining > 0 && nextArmor > 0) {
+    const effective = Math.max(0, remaining - armorClass);
+    const absorbed = Math.min(nextArmor, effective);
+    nextArmor -= absorbed;
+    remaining = effective - absorbed;
+  }
+  if (remaining > 0) {
+    nextHull -= remaining;
+  }
+  return { shield: nextShield, armor: nextArmor, hull: nextHull, armorClass };
 }
 
 function applyDamageToEnemy(
@@ -730,20 +738,33 @@ defenseRows.forEach((row) => {
     );
   }
 });
-const armorSampleItems = Object.entries(pool.entries || {})
-  .filter(([, entry]) => normalizeSlotType(entry.slotType) === "defense" && entry.defenseType === "armor")
-  .map(([id, entry], index) => rollSampleItem(pool, id, entry, "prototype", 10000 + index));
-const bestArmorPairClass =
-  armorSampleItems.length >= 2
-    ? Math.max(
-        ...armorSampleItems.flatMap((itemA, indexA) =>
-          armorSampleItems
-            .slice(indexA + 1)
-            .map((itemB) => summarizeArmorPair(itemA, itemB))
-        )
-      )
-    : 0;
-console.log(`Two-armor prototype stack check: best paired AC ${bestArmorPairClass}`);
+const firstLayerCheck = simulatePlayerProjectileHit(
+  { shield: 60, armor: 60, hull: 100, armorClass: 13 },
+  20
+);
+const shieldDrainedCheck = [0, 1, 2].reduce(
+  (layers) => simulatePlayerProjectileHit(layers, 20),
+  { shield: 60, armor: 60, hull: 100, armorClass: 13 }
+);
+const armorMitigationCheck = simulatePlayerProjectileHit(
+  { shield: 0, armor: 60, hull: 100, armorClass: 13 },
+  20
+);
+const armorDeletesCheck = simulatePlayerProjectileHit(
+  { shield: 0, armor: 60, hull: 100, armorClass: 20 },
+  20
+);
+const rawHullCheck = simulatePlayerProjectileHit(
+  { shield: 0, armor: 0, hull: 100, armorClass: 20 },
+  20
+);
+console.log(
+  `Player layer check: shield-first ${firstLayerCheck.shield}/${firstLayerCheck.armor}/${firstLayerCheck.hull}; ` +
+    `shield drained ${shieldDrainedCheck.shield}/${shieldDrainedCheck.armor}/${shieldDrainedCheck.hull}; ` +
+    `AC13 armor hit ${armorMitigationCheck.shield}/${armorMitigationCheck.armor}/${armorMitigationCheck.hull}; ` +
+    `AC20 armor hit ${armorDeletesCheck.shield}/${armorDeletesCheck.armor}/${armorDeletesCheck.hull}; ` +
+    `raw hull hit ${rawHullCheck.shield}/${rawHullCheck.armor}/${rawHullCheck.hull}`
+);
 
 const toughestPlated = enemies
   .filter((enemy) => enemy.maxArmor > 0)
@@ -774,8 +795,20 @@ defenseRows.forEach((row) => {
     failures.push(`${row.name} has invalid shield defense output coverage.`);
   }
 });
-if (armorSampleItems.length >= 2 && bestArmorPairClass < 18) {
-  failures.push(`Expected two prototype armor modules to reach at least AC 18; got ${bestArmorPairClass}.`);
+if (firstLayerCheck.shield !== 40 || firstLayerCheck.armor !== 60 || firstLayerCheck.hull !== 100) {
+  failures.push(`Shield-first layer check failed: ${JSON.stringify(firstLayerCheck)}.`);
+}
+if (shieldDrainedCheck.shield !== 0 || shieldDrainedCheck.armor !== 60 || shieldDrainedCheck.hull !== 100) {
+  failures.push(`Shield drain layer check failed: ${JSON.stringify(shieldDrainedCheck)}.`);
+}
+if (armorMitigationCheck.armor !== 53 || armorMitigationCheck.hull !== 100) {
+  failures.push(`Armor class mitigation check failed: ${JSON.stringify(armorMitigationCheck)}.`);
+}
+if (armorDeletesCheck.armor !== 60 || armorDeletesCheck.hull !== 100) {
+  failures.push(`Armor class delete check failed: ${JSON.stringify(armorDeletesCheck)}.`);
+}
+if (rawHullCheck.hull !== 80) {
+  failures.push(`Raw hull damage check failed: ${JSON.stringify(rawHullCheck)}.`);
 }
 const primaryDpsSamples = matrix
   .filter((row) => row.id.startsWith("base:"))

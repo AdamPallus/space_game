@@ -15,6 +15,7 @@ const bossArmorFill = document.getElementById("boss-armor-fill");
 const bossProgressFill = document.getElementById("boss-progress-fill");
 const hudCargoPips = document.getElementById("hud-cargo-pips");
 const hudCargoStatus = document.getElementById("hud-cargo-status");
+const hudWeapons = document.getElementById("hud-weapons");
 const hudItem1 = document.getElementById("hud-item-1");
 const hudItem2 = document.getElementById("hud-item-2");
 const shipGunValue = document.getElementById("ship-gun-value");
@@ -30,6 +31,9 @@ const missionIntroModal = document.getElementById("mission-intro-modal");
 const missionIntroConfirm = document.getElementById("mission-intro-confirm");
 const missionIntroTitle = document.getElementById("mission-intro-title");
 const missionIntroText = document.getElementById("mission-intro-text");
+const rtbConfirmModal = document.getElementById("rtb-confirm-modal");
+const rtbConfirmButton = document.getElementById("rtb-confirm");
+const rtbCancelButton = document.getElementById("rtb-cancel");
 const shipNodeButtons = document.querySelectorAll("[data-ship-node]");
 const shipStats = document.getElementById("ship-stats");
 const armoryBench = document.getElementById("armory-bench");
@@ -65,6 +69,7 @@ const hangarSceneButtons = document.querySelectorAll("[data-scene-target]");
 const hangarTabPanels = document.querySelectorAll("[data-tab-panel]");
 const ledgerBulletin = document.getElementById("ledger-bulletin");
 const ledgerStockList = document.getElementById("ledger-stock-list");
+const ledgerBasicStockList = document.getElementById("ledger-basic-stock-list");
 const ledgerInventoryList = document.getElementById("ledger-inventory-list");
 const ledgerReceipt = document.getElementById("ledger-receipt");
 const ledgerLicensePanel = document.getElementById("ledger-license-panel");
@@ -117,6 +122,7 @@ const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
 const GENERATED_ITEM_ICON_ROOT_V2 = `${GENERATED_ROOT}/item_icons_v2`;
 const GENERATED_PILOT_ROOT = `${GENERATED_ROOT}/pilot_sprites`;
+const GENERATED_OVERHAUL_ROOT = `${GENERATED_ROOT}/overhaul_player_kit_v1`;
 const BOSS_DEFEAT_DELAY_SECONDS = 2.8;
 const VALID_WEAPON_SPREADS = ["focused", "dual", "dualRapid", "rapid", "burst", "wide"];
 const VALID_ITEM_SLOT_TYPES = ["primary", "mini", "defense", "aux", "support", "hull"];
@@ -144,6 +150,32 @@ const GENERATED_BACKGROUND_URLS = {
   generatedBioNebulaLooped: `${GENERATED_BACKGROUND_ROOT}/bio_nebula_looped_1024.png`,
   generatedDeepVoid: `${GENERATED_BACKGROUND_ROOT}/deep_void_native_1024.png`,
   generatedDeepVoidLooped: `${GENERATED_BACKGROUND_ROOT}/deep_void_looped_1024.png`,
+};
+const overhaulKit = {
+  hulls: {
+    starter: `${GENERATED_OVERHAUL_ROOT}/hull_starter.png`,
+    bastion: `${GENERATED_OVERHAUL_ROOT}/hull_bastion.png`,
+    relay: `${GENERATED_OVERHAUL_ROOT}/hull_relay.png`,
+    broadside: `${GENERATED_OVERHAUL_ROOT}/hull_broadside.png`,
+  },
+  minis: {
+    tickAutogun: `${GENERATED_OVERHAUL_ROOT}/mini_tick_autogun.png`,
+    plasmaWisp: `${GENERATED_OVERHAUL_ROOT}/mini_plasma_wisp.png`,
+    guardianTurret: `${GENERATED_OVERHAUL_ROOT}/mini_guardian_turret.png`,
+    seekerLash: `${GENERATED_OVERHAUL_ROOT}/mini_seeker_lash.png`,
+  },
+  pickups: {
+    shieldBooster: `${GENERATED_OVERHAUL_ROOT}/pickup_shield_booster.png`,
+    armorPatch: `${GENERATED_OVERHAUL_ROOT}/pickup_armor_patch.png`,
+  },
+  capabilities: {
+    dualFire: `${GENERATED_OVERHAUL_ROOT}/capability_dual_fire.png`,
+    secondBay: `${GENERATED_OVERHAUL_ROOT}/capability_second_bay.png`,
+    hullBlueprint: `${GENERATED_OVERHAUL_ROOT}/ledger_hull_blueprint.png`,
+    basicWeaponCrate: `${GENERATED_OVERHAUL_ROOT}/shop_basic_weapon_crate.png`,
+    auxModuleCrate: `${GENERATED_OVERHAUL_ROOT}/shop_aux_module_crate.png`,
+    ledgerLicense: `${GENERATED_OVERHAUL_ROOT}/ledger_license_chip.png`,
+  },
 };
 let shouldAutoLaunchFreshPilotMission = false;
 const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
@@ -350,6 +382,15 @@ const LEDGER_COPY = {
   sellEmpty: "No recovered inventory available for sale.",
   earlyRecallAudit: "Pattern flagged: repeated early RTB. No action taken.",
 };
+
+const BASIC_LEDGER_STOCK = [
+  { baseId: "frame_fundamentals", price: 120, icon: overhaulKit.capabilities.basicWeaponCrate },
+  { baseId: "frame_area_control", price: 150, icon: overhaulKit.capabilities.basicWeaponCrate },
+  { baseId: "frame_armor_break", price: 180, icon: overhaulKit.capabilities.basicWeaponCrate },
+  { baseId: "mini_tick_autogun", price: 100, icon: overhaulKit.minis.tickAutogun },
+  { baseId: "aux_emp", price: 220, icon: overhaulKit.capabilities.auxModuleCrate },
+  { baseId: "aux_bulwark", price: 280, icon: overhaulKit.capabilities.auxModuleCrate },
+];
 
 const upgrades = [
   {
@@ -596,6 +637,26 @@ const investments = {
       { cost: 6000, benefit: "+20% + Boss bounty shares", dividend: 0.20 },
     ],
   },
+  hulls: {
+    name: "Hull Licenses",
+    tiers: [
+      { cost: 600, benefit: "Unlock Bastion defensive hull", hullId: "bastion" },
+      { cost: 1100, benefit: "Unlock Relay tech/control hull", hullId: "relay" },
+      { cost: 1800, benefit: "Unlock Broadside gunship hull", hullId: "broadside" },
+    ],
+  },
+  capabilities: {
+    name: "Ship Capabilities",
+    tiers: [
+      { cost: 420, benefit: "Aux Port Tuning tier 1", upgradeId: "auxPower", upgradeLevel: 1 },
+      { cost: 900, benefit: "Dual-Fire Coupler tier 1", upgradeId: "dualFire", upgradeLevel: 1 },
+      { cost: 1300, benefit: "Aux Port Tuning tier 2", upgradeId: "auxPower", upgradeLevel: 2 },
+      { cost: 1800, benefit: "Dual-Fire Coupler tier 2", upgradeId: "dualFire", upgradeLevel: 2 },
+      { cost: 2600, benefit: "Aux Port Tuning tier 3", upgradeId: "auxPower", upgradeLevel: 3 },
+      { cost: 3400, benefit: "Dual-Fire Coupler tier 3", upgradeId: "dualFire", upgradeLevel: 3 },
+      { cost: 4600, benefit: "Dual-Fire Coupler tier 4", upgradeId: "dualFire", upgradeLevel: 4 },
+    ],
+  },
 };
 
 const investmentTreeBranches = {
@@ -635,6 +696,18 @@ const investmentTreeBranches = {
       { x: 63, y: 88 },
     ],
   },
+  hulls: {
+    iconPath: overhaulKit.capabilities.hullBlueprint,
+    subtitle: "License new chassis types for the Armory bench.",
+    accent: "amber",
+    nodes: [],
+  },
+  capabilities: {
+    iconPath: overhaulKit.capabilities.dualFire,
+    subtitle: "Permanent ship systems: aux tuning and dual-fire.",
+    accent: "cyan",
+    nodes: [],
+  },
 };
 
 function getSharesDividendRate() {
@@ -650,6 +723,36 @@ function getSharesDividendRate() {
 function calculateDividends(baseCredits) {
   const rate = getSharesDividendRate();
   return Math.round(baseCredits * rate);
+}
+
+function applyInvestmentTierReward(targetState, tierConfig) {
+  if (!tierConfig || !targetState) return;
+  if (tierConfig.hullId && hullsById[tierConfig.hullId]) {
+    targetState.hulls = normalizeHullState(targetState.hulls);
+    if (!targetState.hulls.ownedIds.includes(tierConfig.hullId)) {
+      targetState.hulls.ownedIds.push(tierConfig.hullId);
+    }
+  }
+  if (tierConfig.upgradeId && Number.isFinite(tierConfig.upgradeLevel)) {
+    targetState.upgrades = targetState.upgrades || {};
+    const current = Math.max(0, Math.floor(targetState.upgrades[tierConfig.upgradeId] || 0));
+    targetState.upgrades[tierConfig.upgradeId] = Math.max(current, tierConfig.upgradeLevel);
+  }
+}
+
+function applyPurchasedInvestmentRewards(targetState = state) {
+  if (!targetState.investments) targetState.investments = {};
+  Object.entries(investments).forEach(([key, config]) => {
+    const purchased = Math.max(
+      0,
+      Math.min(config.tiers.length, Math.floor(targetState.investments[key] || 0))
+    );
+    targetState.investments[key] = purchased;
+    for (let i = 0; i < purchased; i += 1) {
+      applyInvestmentTierReward(targetState, config.tiers[i]);
+    }
+  });
+  targetState.hulls = normalizeHullState(targetState.hulls);
 }
 
 const ONBOARDING_STAGE_TRAINING_COMPLETE = 3;
@@ -1249,8 +1352,7 @@ function equipHull(hullId) {
   if (!hull) return;
   state.hulls = normalizeHullState(state.hulls);
   if (!state.hulls.ownedIds.includes(hullId)) {
-    if (state.credits < (hull.cost || 0)) return;
-    state.credits -= hull.cost || 0;
+    if (!state.debugUnlock) return;
     state.hulls.ownedIds.push(hullId);
   }
   state.hulls.equippedId = hullId;
@@ -1468,7 +1570,7 @@ const starterMiniWeapons = [
     subtitle: "Forward kinetic mini",
     description: "A compact nose-linked autogun that chips nearby targets in the forward arc.",
     notes: "Starter mini weapon. It assists pressure without replacing the primary hardpoint.",
-    icon: `${GENERATED_ITEM_ICON_ROOT}/cadet_kinetic_cannon.png`,
+    icon: overhaulKit.minis.tickAutogun,
     tags: ["mini", "kinetic", "rapid", "forward", "starter"],
     owned: true,
     miniWeapon: {
@@ -1498,7 +1600,8 @@ const hullCatalog = [
     subtitle: "Balanced default",
     description: "Balanced starter chassis with no strain mitigation or specialty penalties.",
     notes: "Reliable baseline for learning weapons, salvage, and Ledger flow.",
-    icon: `${GENERATED_PILOT_ROOT}/player_interceptor.png`,
+    icon: overhaulKit.hulls.starter,
+    sprite: overhaulKit.hulls.starter,
     cost: 0,
     tags: ["hull", "starter", "balanced"],
     bonuses: {
@@ -1521,7 +1624,8 @@ const hullCatalog = [
     subtitle: "Defense chassis",
     description: "Defense-focused hull with stronger shield and armor capacity and cleaner armor coupling.",
     notes: "Bastion favors one-primary or swap builds that expect sustained fire.",
-    icon: `${GENERATED_ITEM_ICON_ROOT_V2}/ablative_plate.png`,
+    icon: overhaulKit.hulls.bastion,
+    sprite: overhaulKit.hulls.bastion,
     cost: 900,
     tags: ["hull", "defense", "shield", "armor"],
     bonuses: {
@@ -1544,7 +1648,8 @@ const hullCatalog = [
     subtitle: "Tech chassis",
     description: "Aux-focused hull with cleaner support output and tighter mini weapon control.",
     notes: "Relay is built for EMP control, mini coverage, and support-heavy builds.",
-    icon: `${GENERATED_ITEM_ICON_ROOT}/emp_burst_module.png`,
+    icon: overhaulKit.hulls.relay,
+    sprite: overhaulKit.hulls.relay,
     cost: 1400,
     tags: ["hull", "aux", "mini", "control"],
     bonuses: {
@@ -1567,7 +1672,8 @@ const hullCatalog = [
     subtitle: "Gunship chassis",
     description: "Weapon-focused hull with the best second-bay and dual-fire scaling.",
     notes: "Broadside accepts heavier weapon coupling but gives up some defensive quiet.",
-    icon: `${GENERATED_ITEM_ICON_ROOT_V2}/twin_driver.png`,
+    icon: overhaulKit.hulls.broadside,
+    sprite: overhaulKit.hulls.broadside,
     cost: 2200,
     tags: ["hull", "gunship", "second-bay", "dual-fire"],
     bonuses: {
@@ -1607,6 +1713,11 @@ function getEquippedHull(targetState = state) {
 
 function getHullBonuses(targetState = state) {
   return getEquippedHull(targetState)?.bonuses || hullsById.starter.bonuses;
+}
+
+function getEquippedHullSpriteRecord(targetState = state) {
+  const hull = getEquippedHull(targetState);
+  return assets?.hulls?.[hull.id] || loadImageCached(hull.sprite || hull.icon);
 }
 
 const ITEM_POOL_PATH = "items/item_pool.json";
@@ -2266,7 +2377,7 @@ function normalizeLedgerMarketState(targetState = state) {
     0,
     ...Object.keys(ECONOMY.market.licenseTiers || {}).map((tier) => Number(tier) || 0)
   );
-  targetState.ledgerMarket = {
+  const normalized = {
     ...defaults,
     ...existing,
     stock: isCurrentStockVersion && Array.isArray(existing.stock)
@@ -2310,6 +2421,15 @@ function normalizeLedgerMarketState(targetState = state) {
     ),
     lastReceipt: existing.lastReceipt || null,
   };
+  if (existing && typeof existing === "object" && !Array.isArray(existing)) {
+    Object.keys(existing).forEach((key) => {
+      delete existing[key];
+    });
+    Object.assign(existing, normalized);
+    targetState.ledgerMarket = existing;
+  } else {
+    targetState.ledgerMarket = normalized;
+  }
   return targetState.ledgerMarket;
 }
 
@@ -2347,7 +2467,8 @@ function getNextLedgerLicenseConfig(targetState = state) {
   return config ? normalizeLedgerLicenseConfig(config, nextTier) : null;
 }
 
-function purchaseLedgerLicense() {
+async function purchaseLedgerLicense() {
+  await ensureItemPoolLoaded();
   const ledger = getLedgerMarketState();
   const next = getNextLedgerLicenseConfig();
   if (!next || state.credits < next.cost) return;
@@ -2456,6 +2577,41 @@ function createLedgerLot(index, clericalAdjustment = false, itemOptions = {}) {
   };
 }
 
+function createBasicLedgerShopItem(stockItem) {
+  const entry = itemPoolCatalog?.entries?.[stockItem.baseId];
+  if (!entry) return null;
+  const item = createRolledItem(stockItem.baseId, entry, "scrap");
+  item.name = entry.name || item.name;
+  item.baseName = entry.name || item.baseName;
+  item.subtitle = entry.subtitle || item.subtitle || "Basic issue";
+  item.description = entry.description || item.description;
+  item.notes = entry.notes || item.notes || "Fixed Ledger basic stock.";
+  item.icon = stockItem.icon || entry.icon || item.icon;
+  item.value = Math.max(item.value || 0, Math.round(stockItem.price * ECONOMY.market.sellRate));
+  return item;
+}
+
+async function buyBasicLedgerStock(baseId) {
+  hideItemTooltip();
+  await ensureItemPoolLoaded();
+  const stockItem = BASIC_LEDGER_STOCK.find((item) => item.baseId === baseId);
+  if (!stockItem || state.credits < stockItem.price) return;
+  const item = createBasicLedgerShopItem(stockItem);
+  if (!item) return;
+  state.credits -= stockItem.price;
+  addItemsToArmoryInventory([item]);
+  setLedgerReceipt({
+    title: "Basic Stock Issue",
+    lines: [
+      { label: "Item", text: item.baseName || item.name },
+      { label: "Issue price", amount: -stockItem.price, fee: true },
+      { label: "Credits paid", amount: -stockItem.price, total: true, fee: true },
+    ],
+  });
+  saveState();
+  safeUpdateHangar();
+}
+
 function rollLedgerStock({ force = false } = {}) {
   const ledger = getLedgerMarketState();
   if (!itemPoolCatalog) return ledger.stock;
@@ -2495,7 +2651,12 @@ async function ensureLedgerMarketReady() {
   await ensureItemPoolLoaded();
   refreshDemandBulletin();
   const ledger = getLedgerMarketState();
-  if (ledger.stockMissionCount === null) {
+  const missionCount = state.missionCount || 0;
+  const needsStock =
+    ledger.stockMissionCount === null ||
+    !Array.isArray(ledger.stock) ||
+    (!ledger.stock.length && ledger.stockMissionCount !== missionCount);
+  if (needsStock) {
     rollLedgerStock({ force: true });
     saveState();
   }
@@ -2840,8 +3001,14 @@ const assets = {
   shield: loadImage(`${ASSET_ROOT}/Effects/shield3.png`),
   salvagePod: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_certified.png`),
   salvagePodFallback: loadImage(`${ASSET_ROOT}/Power-ups/powerupBlue.png`),
-  shieldBooster: loadImage(`${ASSET_ROOT}/Power-ups/powerupBlue_shield.png`),
-  armorPatch: loadImage(`${ASSET_ROOT}/Power-ups/powerupYellow_star.png`),
+  shieldBooster: loadImage(overhaulKit.pickups.shieldBooster),
+  armorPatch: loadImage(overhaulKit.pickups.armorPatch),
+  hulls: {
+    starter: loadImage(overhaulKit.hulls.starter),
+    bastion: loadImage(overhaulKit.hulls.bastion),
+    relay: loadImage(overhaulKit.hulls.relay),
+    broadside: loadImage(overhaulKit.hulls.broadside),
+  },
   salvagePods: {
     scrap: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_scrap.png`),
     certified: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_certified.png`),
@@ -2964,9 +3131,20 @@ const availableLevels = [
   // { id: "level2_skirmish", label: "Mission 2: Skirmish" },
 ];
 
-// Variant naming convention: the Mission Select carousel will probe for these files.
-// (No directory listing in a static webapp, so we try known suffixes.)
-const VARIANT_SUFFIXES = ["_swarm", "_armored"];
+const LEVEL_MANIFEST_PATH = "levels/manifest.json";
+const DEFAULT_LEVEL_VARIANT_MANIFEST = {
+  level1: ["level1_swarm", "level1_armored", "level1_patrol"],
+  level2: ["level2_swarm", "level2_armored", "level2_skirmish"],
+  level3: ["level3_swarm", "level3_armored"],
+  level4: ["level4_swarm", "level4_armored"],
+  level5: ["level5_swarm", "level5_armored"],
+  level6: ["level6_swarm", "level6_armored"],
+  level7: ["level7_swarm", "level7_armored"],
+  level8: ["level8_swarm", "level8_armored"],
+};
+let levelVariantManifest = { ...DEFAULT_LEVEL_VARIANT_MANIFEST };
+let levelVariantToBase = buildLevelVariantToBase(levelVariantManifest);
+let levelManifestPromise = null;
 
 const levelFallback = {
   id: "level1",
@@ -3045,6 +3223,8 @@ let hangarNeedsRefresh = false;
 let openShipNodeId = null;
 let openMissionInfoBaseId = null;
 let missionIntroActive = false;
+let rtbConfirmActive = false;
+let rtbRestorePaused = false;
 let debriefLaunchMode = null;
 let hangarStatusMessage = "";
 const cameraShake = {
@@ -3465,11 +3645,11 @@ window.addEventListener("keydown", (event) => {
       return;
     }
   }
-  if (event.key.toLowerCase() === "p" && mission && mission.active && !missionIntroActive) {
+  if (event.key.toLowerCase() === "p" && mission && mission.active && !missionIntroActive && !rtbConfirmActive) {
     paused = !paused;
   }
   if (event.key.toLowerCase() === "e" && mission && mission.active) {
-    endMission({ ejected: true });
+    showRtbConfirm();
   }
   if (event.key.toLowerCase() === "q" && mission && mission.active) {
     swapPrimaryBay();
@@ -3564,7 +3744,7 @@ bindMobileButton(mobileSwapBtn, () => {
 
 bindMobileButton(mobileEjectBtn, () => {
   if (mission && mission.active) {
-    endMission({ ejected: true });
+    showRtbConfirm();
   }
 }, () => {});
 
@@ -3848,6 +4028,35 @@ function resumeMissionFromIntro() {
   }
 }
 
+function hideRtbConfirm({ restorePause = false } = {}) {
+  if (rtbConfirmModal) rtbConfirmModal.hidden = true;
+  const previousPaused = rtbRestorePaused;
+  rtbConfirmActive = false;
+  rtbRestorePaused = false;
+  if (restorePause && mission && mission.active) {
+    paused = previousPaused;
+  }
+}
+
+function showRtbConfirm() {
+  if (!mission || !mission.active || rtbConfirmActive) return;
+  hideMissionIntro();
+  rtbRestorePaused = paused;
+  rtbConfirmActive = true;
+  paused = true;
+  if (rtbConfirmModal) rtbConfirmModal.hidden = false;
+  updateMobileControls();
+}
+
+function confirmRtb() {
+  if (!mission || !mission.active) {
+    hideRtbConfirm();
+    return;
+  }
+  hideRtbConfirm();
+  endMission({ ejected: true });
+}
+
 if (shipModalClose) {
   shipModalClose.addEventListener("click", () => {
     closeShipModal();
@@ -3861,13 +4070,37 @@ if (missionIntroConfirm) {
   });
 }
 
+if (rtbConfirmButton) {
+  rtbConfirmButton.addEventListener("click", () => {
+    enableAudio();
+    confirmRtb();
+  });
+}
+
+if (rtbCancelButton) {
+  rtbCancelButton.addEventListener("click", () => {
+    enableAudio();
+    hideRtbConfirm({ restorePause: true });
+  });
+}
+
 if (shipModal) {
   shipModal.addEventListener("click", (event) => {
     if (event.target === shipModal) closeShipModal();
   });
 }
 
+if (rtbConfirmModal) {
+  rtbConfirmModal.addEventListener("click", (event) => {
+    if (event.target === rtbConfirmModal) hideRtbConfirm({ restorePause: true });
+  });
+}
+
 window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && rtbConfirmActive) {
+    hideRtbConfirm({ restorePause: true });
+    return;
+  }
   if (event.key === "Escape" && openShipNodeId) {
     closeShipModal();
   }
@@ -4046,6 +4279,8 @@ function loadState() {
         engineering: 0,
         operations: 0,
         shares: 0,
+        hulls: 0,
+        capabilities: 0,
       },
       rmbWeapon: "cloak",
       missionCarouselIndex: {},
@@ -4071,6 +4306,8 @@ function loadState() {
       engineering: parsed.investments?.engineering ?? 0,
       operations: parsed.investments?.operations ?? 0,
       shares: parsed.investments?.shares ?? 0,
+      hulls: parsed.investments?.hulls ?? 0,
+      capabilities: parsed.investments?.capabilities ?? 0,
     };
     if (!parsed.rmbWeapon || parsed.rmbWeapon === "none") {
       parsed.rmbWeapon = "cloak";
@@ -4088,6 +4325,7 @@ function loadState() {
     parsed.itemCollection = normalizeItemCollection(parsed.itemCollection);
     parsed.cargo = Array.isArray(parsed.cargo) ? parsed.cargo : [];
     parsed.hulls = normalizeHullState(parsed.hulls);
+    applyPurchasedInvestmentRewards(parsed);
     parsed.activePrimaryBay = parsed.activePrimaryBay === 1 ? 1 : 0;
     const hadShipBuild = !!parsed.shipBuild;
     parsed.shipBuild = parsed.shipBuild || createDefaultShipBuild();
@@ -4268,6 +4506,8 @@ function loadState() {
         engineering: 0,
         operations: 0,
         shares: 0,
+        hulls: 0,
+        capabilities: 0,
       },
       rmbWeapon: "cloak",
       missionCarouselIndex: {},
@@ -4648,6 +4888,7 @@ function endMission({ ejected = false, completed = false } = {}) {
   activeShipBuildOverride = null;
   closeShipModal();
   hideMissionIntro();
+  hideRtbConfirm();
   paused = false;
   setHangarMusic();
   setHangarTab("hub", { renderLevels: false });
@@ -5095,12 +5336,15 @@ function renderInvestments() {
 
     const card = document.createElement("section");
     card.className = `invest-track${nextTier ? "" : " maxed"}`;
+    const iconHtml = branch.iconPath
+      ? `<span class="invest-track-icon image"><img src="${escapeHtml(branch.iconPath)}" alt="" /></span>`
+      : `<span class="invest-track-icon">${branch.icon || ""}</span>`;
     const pips = data.tiers
       .map((_, i) => `<span class="pip${i < currentTier ? " filled" : ""}"></span>`)
       .join("");
     card.innerHTML = `
       <div class="invest-track-head">
-        <span class="invest-track-icon">${branch.icon || ""}</span>
+        ${iconHtml}
         <div>
           <h3>${data.name}</h3>
           <p class="muted">${branch.subtitle || ""}</p>
@@ -5130,6 +5374,10 @@ function handleInvestment(key) {
   
   state.credits -= cost;
   state.investments[key] += 1;
+  applyInvestmentTierReward(state, data.tiers[tier]);
+  state.hulls = normalizeHullState(state.hulls);
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
   saveState();
   safeUpdateHangar();
 }
@@ -5169,12 +5417,51 @@ function getMissionLockReason(levelId) {
   return `Defeat Mission ${requiredIndex} to unlock.`;
 }
 
+function buildLevelVariantToBase(variantManifest) {
+  const map = {};
+  Object.entries(variantManifest || {}).forEach(([baseId, variants]) => {
+    (Array.isArray(variants) ? variants : []).forEach((variantId) => {
+      map[variantId] = baseId;
+    });
+  });
+  return map;
+}
+
+function normalizeLevelVariantManifest(manifest) {
+  const source = manifest?.variants && typeof manifest.variants === "object"
+    ? manifest.variants
+    : DEFAULT_LEVEL_VARIANT_MANIFEST;
+  const baseIds = new Set(availableLevels.map((level) => level.id));
+  const normalized = {};
+  Object.entries(source).forEach(([baseId, variants]) => {
+    if (!baseIds.has(baseId) || !Array.isArray(variants)) return;
+    normalized[baseId] = variants
+      .map((id) => String(id || "").trim())
+      .filter((id) => id && id !== baseId);
+  });
+  return normalized;
+}
+
+async function ensureLevelManifestLoaded() {
+  if (levelManifestPromise) return levelManifestPromise;
+  levelManifestPromise = (async () => {
+    try {
+      const response = await fetch(LEVEL_MANIFEST_PATH, { cache: "no-store" });
+      if (!response.ok) throw new Error("level manifest load failed");
+      levelVariantManifest = normalizeLevelVariantManifest(await response.json());
+    } catch (error) {
+      console.warn("Level manifest load failed; using built-in variant manifest.", error);
+      levelVariantManifest = normalizeLevelVariantManifest({ variants: DEFAULT_LEVEL_VARIANT_MANIFEST });
+    }
+    levelVariantToBase = buildLevelVariantToBase(levelVariantManifest);
+    return levelVariantManifest;
+  })();
+  return levelManifestPromise;
+}
+
 function missionBaseIdFor(levelId) {
   if (!levelId) return levelId;
-  for (const suf of VARIANT_SUFFIXES) {
-    if (levelId.endsWith(suf)) return levelId.slice(0, -suf.length);
-  }
-  return levelId;
+  return levelVariantToBase[levelId] || levelId;
 }
 
 const missionVariantCache = new Map();
@@ -5186,12 +5473,8 @@ async function getMissionGroupIds(baseId) {
   if (missionVariantCache.has(base)) {
     return [base, ...(missionVariantCache.get(base) || [])];
   }
-  const variants = [];
-  for (const suf of VARIANT_SUFFIXES) {
-    const id = `${base}${suf}`;
-    const meta = await loadLevelMetaStrict(id);
-    if (meta) variants.push(id);
-  }
+  await ensureLevelManifestLoaded();
+  const variants = (levelVariantManifest[base] || []).slice();
   missionVariantCache.set(base, variants);
   return [base, ...variants];
 }
@@ -5199,6 +5482,7 @@ async function getMissionGroupIds(baseId) {
 async function warmMissionVariantCache() {
   if (missionVariantWarmupPromise) return missionVariantWarmupPromise;
   missionVariantWarmupPromise = (async () => {
+    await ensureLevelManifestLoaded();
     const groups = await Promise.all(availableLevels.map((level) => getMissionGroupIds(level.id)));
     const ids = new Set();
     groups.forEach((group) => group.forEach((id) => ids.add(id)));
@@ -5562,13 +5846,15 @@ async function buildCompendium() {
   if (compendiumLoading) return compendiumLoading;
   compendiumLoading = (async () => {
     await ensureEnemyCatalogLoaded();
-    const baseIds = availableLevels.map((level) => level.id);
-    const probeIds = [];
-    baseIds.forEach((id) => {
-      probeIds.push(id);
-      VARIANT_SUFFIXES.forEach((suf) => probeIds.push(`${id}${suf}`));
-    });
-    const uniqueIds = Array.from(new Set(probeIds));
+    await ensureLevelManifestLoaded();
+    const uniqueIds = Array.from(
+      new Set(
+        availableLevels.flatMap((level) => [
+          level.id,
+          ...(levelVariantManifest[level.id] || []),
+        ])
+      )
+    );
     const levels = (
       await Promise.all(uniqueIds.map((id) => loadLevelMetaStrict(id)))
     ).filter(Boolean);
@@ -6667,19 +6953,24 @@ function getItemDisplayStats(item, slotId = null) {
       ? getOffenseStatsForBuild(composeShipBuildFromArmory(previewState, { primaryItem: item }), previewState)
       : previewStats.offense;
     headline = {
-      label: "Per Shot",
-      value: offense.hitDamage,
-      display: formatNumber(offense.hitDamage, 1),
-      delta: isInstalled ? 0 : offense.hitDamage - currentStats.offense.hitDamage,
+      label: "DPS",
+      value: offense.dps,
+      display: formatNumber(offense.dps, 1),
+      delta: isInstalled ? 0 : offense.dps - currentStats.offense.dps,
       lowerIsGood: false,
     };
     lines = [
       {
-        label: "Shot Damage",
+        label: "Damage per Shot",
         value: formatNumber(offense.hitDamage, 1),
         math: offense.cfg.ammo === "plasma"
           ? `Plasma hit damage = ${ECONOMY.plasma.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)}.`
           : `Kinetic hit damage = ${ECONOMY.kinetic.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)} * ${formatNumber(offense.cfg.velocityFactor, 2)}^${ECONOMY.kinetic.velocityExponent}.`,
+      },
+      {
+        label: "Shots per Second",
+        value: formatNumber(offense.attacksPerSecond, 2),
+        math: `1 / ${formatNumber(offense.cfg.cooldown, 2)}s cooldown.`,
       },
       {
         label: "Volley Output",
@@ -6692,11 +6983,10 @@ function getItemDisplayStats(item, slotId = null) {
         math: `Volley ${formatNumber(offense.volleyDamage, 1)} * ${formatNumber(offense.attacksPerSecond, 2)} triggers/s${offense.burnDps ? ` + ${formatNumber(offense.burnDps, 1)} burn DPS` : ""}.`,
       },
       {
-        label: "Attacks per Second",
-        value: formatNumber(offense.attacksPerSecond, 2),
-        math: `1 / ${formatNumber(offense.cfg.cooldown, 2)}s cooldown.`,
+        label: "Pattern",
+        value: offense.pattern,
+        math: `${offense.totalProjectiles} projectile${offense.totalProjectiles === 1 ? "" : "s"} per trigger.`,
       },
-      { label: "Pattern", value: offense.pattern, math: `${offense.totalProjectiles} projectile${offense.totalProjectiles === 1 ? "" : "s"} per trigger.` },
       { label: "Ammo", value: offense.ammo, math: offense.burnDps ? `Burn DPS = hit damage * 0.45 = ${formatNumber(offense.burnDps, 1)}.` : "" },
       {
         label: "Dual-Fire",
@@ -6716,7 +7006,7 @@ function getItemDisplayStats(item, slotId = null) {
     };
     lines = [
       { label: "Shot Damage", value: formatNumber(mini.damage, 1), math: "Mini damage includes hull mini modifiers." },
-      { label: "Attacks per Second", value: formatNumber(mini.attacksPerSecond, 2), math: `1 / ${formatNumber(mini.cooldown, 2)}s cooldown.` },
+      { label: "Shots per Second", value: formatNumber(mini.attacksPerSecond, 2), math: `1 / ${formatNumber(mini.cooldown, 2)}s cooldown.` },
       { label: "Targeting", value: `${mini.arcLabel} | ${mini.range}px`, math: `${mini.config?.arcDegrees || (mini.config?.arc === "turret" ? 360 : 70)} degree targeting arc.` },
       { label: "Ammo", value: `${capitalize(mini.config?.ammo || "kinetic")} | ${capitalize(mini.config?.cadence || "mini")}`, math: "" },
       { label: "Effect", value: capitalize(mini.config?.effect || "none"), math: mini.role },
@@ -6936,7 +7226,7 @@ function renderShipStatsPanel() {
         {
           label: display.headline.label,
           value: display.headline.display,
-          math: display.lines.find((line) => line.label === "Shot Damage")?.math || "",
+          math: display.lines.find((line) => line.label === "Damage per Shot")?.math || "",
         },
         ...display.lines,
       ]
@@ -6966,27 +7256,18 @@ function renderShipStatsPanel() {
     { label: "Bay State", value: loadout.label, math: loadout.label === "Second-bay strain" ? "Second primary reduces shield capacity and regen before hull mitigation." : "Open second bay grants shield capacity and regen focus." },
     { label: "Dual-Fire", value: canDualFireCurrentLoadout() ? `${Math.round(getDualFireDamageMult() * 100)}% per weapon` : "Swap mode", math: "Dual-fire requires a tier and two compatible primary weapons." },
   ];
-  const engineeringHtml = ["auxPower", "dualFire"]
-    .map((upgradeId) => {
-      const definition = getUpgradeDefinition(upgradeId);
-      if (!definition) return "";
-      const current = state.upgrades?.[upgradeId] || 0;
-      const max = definition.maxLevel || 0;
-      const complete = current >= max;
-      const cost = complete ? 0 : upgradeCost(upgradeId);
-      const affordable = !complete && state.credits >= cost;
-      const currentText = upgradeId === "auxPower"
-        ? `Tier ${current}/${max} | strength ${Math.round((getAuxStrengthMult() - 1) * 100)}%`
-        : `Tier ${current}/${max} | dual ${Math.round(getDualFireDamageMult() * 100)}%`;
-      return `
-        <button type="button" class="engineering-upgrade" data-engineering-upgrade="${upgradeId}" ${affordable ? "" : "disabled"}>
-          <span class="name">${escapeHtml(definition.name)}</span>
-          <span class="desc">${escapeHtml(currentText)}</span>
-          <span class="cost">${complete ? "Complete" : formatCredits(cost)}</span>
-        </button>
-      `;
-    })
-    .join("");
+  const capabilityRows = [
+    {
+      label: "Aux Tier",
+      value: `${state.upgrades?.auxPower || 0}/3`,
+      math: "Permanent aux tuning is purchased in Ledger Investments.",
+    },
+    {
+      label: "Dual-Fire Tier",
+      value: `${state.upgrades?.dualFire || 0}/4`,
+      math: "Dual-fire coupling is purchased in Ledger Investments.",
+    },
+  ];
   shipStats.innerHTML = `
     <h3>Ship Stats</h3>
     <div class="stat-sections">
@@ -7011,14 +7292,11 @@ function renderShipStatsPanel() {
         ${loadoutRows.map(renderShipStatRow).join("")}
       </div>
       <div class="stat-section">
-        <div class="stat-section-title">Engineering</div>
-        <div class="engineering-upgrades">${engineeringHtml}</div>
+        <div class="stat-section-title">Capabilities</div>
+        ${capabilityRows.map(renderShipStatRow).join("")}
       </div>
     </div>
   `;
-  shipStats.querySelectorAll("[data-engineering-upgrade]").forEach((button) => {
-    button.addEventListener("click", () => purchaseEngineeringUpgrade(button.dataset.engineeringUpgrade));
-  });
 }
 
 function formatFrameDefenseSummary(build) {
@@ -7069,23 +7347,11 @@ function getArmorySlotDefinitions() {
   const equippedWeapon = getPrimaryArmoryItem(state, 0);
   const secondWeapon = getSecondPrimaryArmoryItem();
   const mini = getSelectedMiniWeapon();
-  const hull = getEquippedHull();
   const defenseSlotIds = getEquippedDefenseSlotIds();
   const defenseA = getDefenseArmoryItemById(defenseSlotIds[0]) || null;
   const defenseB = getDefenseArmoryItemById(defenseSlotIds[1]) || null;
   const support = getSelectedSupportModule();
   return [
-    {
-      id: "hull",
-      label: "Hull",
-      className: "armory-slot-hull",
-      installedId: hull?.id || "starter",
-      item: hull || null,
-      name: hull ? getCompactItemName(hull) : "Starter Hull",
-      meta: hull?.subtitle || "Balanced chassis",
-      note: hull?.description || "Select a hull chassis.",
-      icon: hull?.icon || `${GENERATED_PILOT_ROOT}/player_interceptor.png`,
-    },
     {
       id: "primary",
       label: "Primary A",
@@ -7283,7 +7549,7 @@ function getArmorySlotMeta(slotId) {
     hull: {
       title: "Hull Chassis",
       copy: "Select the ship hull that shapes defense, mini control, aux strength, and second-bay strain.",
-      tip: "Click icon to equip or buy",
+      tip: "Unlock hulls in Ledger",
     },
     primary: {
       title: "Primary Hardpoint A",
@@ -7339,14 +7605,13 @@ function getArmorySlotLabel(slotId) {
 function canInstallSupportItem(item) {
   if (!item) return false;
   if (item.owned || state.debugUnlock) return true;
-  const rankOk = (state.lifetimeCredits ?? 0) >= (item.unlockAt ?? 0) || state.debugUnlock;
-  return rankOk && state.credits >= (item.cost ?? 0);
+  return false;
 }
 
 function canInstallArmoryItem(item, slotId) {
   if (!item) return false;
   if (slotId === "support") return canInstallSupportItem(item);
-  if (slotId === "hull") return !!item.owned || state.debugUnlock || state.credits >= (item.cost || 0);
+  if (slotId === "hull") return !!item.owned || state.debugUnlock;
   return !!item.owned || state.debugUnlock;
 }
 
@@ -7370,11 +7635,7 @@ function installSupportItem(itemId) {
   const item = getSupportModuleEntries().find((entry) => entry.id === itemId);
   if (!item) return;
   if (!item.owned && !state.debugUnlock) {
-    const rankOk = (state.lifetimeCredits ?? 0) >= (item.unlockAt ?? 0);
-    if (!rankOk || state.credits < (item.cost ?? 0)) return;
-    state.credits -= item.cost ?? 0;
-    if (!state.unlocked.aux) state.unlocked.aux = {};
-    state.unlocked.aux[item.id] = true;
+    return;
   }
   state.rmbWeapon = item.id;
   if (state.armory) state.armory.equippedSupportItemId = null;
@@ -7447,41 +7708,79 @@ function renderArmoryInspector(slotId) {
 function renderShipUpgradesPanel() {
   const equipped = getEquippedStarterLoadout();
   if (!equipped) return;
-  if (!["hull", "primary", "primary-2", "mini", "defense-0", "defense-1", "support"].includes(armorySelectedSlotId)) {
+  if (!["primary", "primary-2", "mini", "defense-0", "defense-1", "support"].includes(armorySelectedSlotId)) {
     armorySelectedSlotId = "primary";
   }
 
   renderShipStatsPanel();
   const slotDefs = getArmorySlotDefinitions();
   if (armoryBench) {
-    armoryBench.innerHTML = `
-      <div class="armory-drone">
-        <img class="armory-ship-base" src="${GENERATED_PILOT_ROOT}/player_interceptor.png" alt="" aria-hidden="true" />
-        ${slotDefs
-          .map((slot) => {
-            const visualRarity = getInstalledSlotVisualRarity(slot.item);
-            return `
+    const equippedHull = getEquippedHull();
+    const ownedHullIds = new Set(getOwnedHullIds());
+    const hullButtons = hullCatalog
+      .map((hull) => {
+        const owned = ownedHullIds.has(hull.id) || state.debugUnlock;
+        const active = equippedHull.id === hull.id;
+        return `
           <button
             type="button"
-            class="armory-slot ${slot.className} is-clickable${visualRarity ? ` rarity-${visualRarity}` : ""}${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
-            data-armory-slot="${slot.id}"
-            ${visualRarity ? `style="${getRarityStyle(visualRarity)}"` : ""}
+            class="armory-hull-option${active ? " is-active" : ""}${owned ? "" : " is-locked"}"
+            data-hull-id="${hull.id}"
+            ${owned ? "" : "disabled"}
+            title="${owned ? "Equip hull" : "Unlock in Ledger Investments"}"
           >
-            <span class="armory-slot-label">${slot.label}</span>
-            <span class="armory-slot-head">
-              <span class="armory-slot-icon-frame"><img class="armory-slot-icon" src="${escapeHtml(slot.icon)}" alt="" /></span>
-              <span class="armory-slot-copy">
-                <span class="armory-slot-name">${escapeHtml(slot.name)}</span>
-                <span class="armory-slot-meta">${escapeHtml(slot.meta)}</span>
-              </span>
-              <span class="armory-slot-pill">${slot.installedId && slot.installedId !== "none" ? "Installed" : "Open"}</span>
-            </span>
+            <img src="${escapeHtml(hull.icon)}" alt="" />
+            <span>${escapeHtml(getCompactItemName(hull))}</span>
           </button>
         `;
-          })
-          .join("")}
+      })
+      .join("");
+    armoryBench.innerHTML = `
+      <div class="armory-drone">
+        <section class="armory-chassis" aria-label="Equipped hull">
+          <div class="armory-chassis-art">
+            <img class="armory-ship-base" src="${escapeHtml(equippedHull.sprite || equippedHull.icon)}" alt="" aria-hidden="true" />
+          </div>
+          <div class="armory-chassis-readout">
+            <p class="armory-kicker">Active Chassis</p>
+            <h3>${escapeHtml(equippedHull.name)}</h3>
+            <p>${escapeHtml(equippedHull.description)}</p>
+            <div class="armory-hull-strip">${hullButtons}</div>
+          </div>
+        </section>
+        <div class="armory-hardpoints">
+          ${slotDefs
+            .map((slot) => {
+              const visualRarity = getInstalledSlotVisualRarity(slot.item);
+              return `
+            <button
+              type="button"
+              class="armory-slot ${slot.className} is-clickable${visualRarity ? ` rarity-${visualRarity}` : ""}${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
+              data-armory-slot="${slot.id}"
+              ${visualRarity ? `style="${getRarityStyle(visualRarity)}"` : ""}
+            >
+              <span class="armory-slot-label">${slot.label}</span>
+              <span class="armory-slot-head">
+                <span class="armory-slot-icon-frame"><img class="armory-slot-icon" src="${escapeHtml(slot.icon)}" alt="" /></span>
+                <span class="armory-slot-copy">
+                  <span class="armory-slot-name">${escapeHtml(slot.name)}</span>
+                  <span class="armory-slot-meta">${escapeHtml(slot.meta)}</span>
+                </span>
+                <span class="armory-slot-pill">${slot.installedId && slot.installedId !== "none" ? "Installed" : "Open"}</span>
+              </span>
+            </button>
+          `;
+            })
+            .join("")}
+        </div>
       </div>
     `;
+    armoryBench.querySelectorAll("[data-hull-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        equipHull(button.dataset.hullId);
+        safeUpdateHangar();
+      });
+    });
     armoryBench.querySelectorAll("[data-armory-slot]").forEach((slotButton) => {
       const slotId = slotButton.dataset.armorySlot || null;
       slotButton.addEventListener("click", () => {
@@ -7532,7 +7831,7 @@ function renderShipUpgradesPanel() {
     button.innerHTML = `
       <span class="armory-inventory-icon"><img src="${escapeHtml(item.icon)}" alt="" /></span>
       <span class="armory-inventory-name">${escapeHtml(getCompactItemName(item))}</span>
-      <span class="armory-inventory-meta">${escapeHtml(item.installed ? "Installed" : item.owned ? getItemBrowserRole(item) : `${item.cost || 0} cr`)}</span>
+      <span class="armory-inventory-meta">${escapeHtml(item.installed ? "Installed" : item.owned ? getItemBrowserRole(item) : "Ledger/shop")}</span>
     `;
     attachItemTooltip(button, item, armorySelectedSlotId);
     button.addEventListener("click", () => {
@@ -7626,6 +7925,9 @@ function renderLedgerLicensePanel(ledger) {
   const next = getNextLedgerLicenseConfig();
   const canBuy = !!next && state.credits >= next.cost;
   ledgerLicensePanel.innerHTML = `
+    <div class="ledger-license-icon">
+      <img src="${escapeHtml(overhaulKit.capabilities.ledgerLicense)}" alt="" />
+    </div>
     <div class="ledger-license-copy">
       <span class="ledger-bulletin-kicker">Ledger license</span>
       <strong>Tier ${tier} | ${current.stockLots} visible lots</strong>
@@ -7637,7 +7939,58 @@ function renderLedgerLicensePanel(ledger) {
   `;
   ledgerLicensePanel
     .querySelector("button")
-    ?.addEventListener("click", () => purchaseLedgerLicense());
+    ?.addEventListener("click", () => purchaseLedgerLicense().catch((error) => {
+      console.error("Ledger license purchase failed:", error);
+    }));
+}
+
+function renderBasicLedgerStock() {
+  if (!ledgerBasicStockList) return;
+  ledgerBasicStockList.innerHTML = "";
+  if (!itemPoolCatalog) {
+    ledgerBasicStockList.innerHTML = `<div class="ledger-empty">Loading basic stock...</div>`;
+    return;
+  }
+  const items = BASIC_LEDGER_STOCK
+    .map((stockItem) => {
+      const entry = itemPoolCatalog.entries?.[stockItem.baseId];
+      return entry ? { stockItem, entry } : null;
+    })
+    .filter(Boolean);
+  if (!items.length) {
+    ledgerBasicStockList.innerHTML = `<div class="ledger-empty">No basic gear listed.</div>`;
+    return;
+  }
+  items.forEach(({ stockItem, entry }) => {
+    const slotType = normalizeArmorySlotType(entry.slotType);
+    const canAfford = state.credits >= stockItem.price;
+    const icon =
+      stockItem.icon ||
+      entry.icon ||
+      (slotType === "aux" ? overhaulKit.capabilities.auxModuleCrate : overhaulKit.capabilities.basicWeaponCrate);
+    const entryEl = document.createElement("div");
+    entryEl.className = "ledger-market-item ledger-basic-item rarity-scrap";
+    entryEl.setAttribute("style", getRarityStyle("scrap"));
+    entryEl.tabIndex = 0;
+    entryEl.innerHTML = `
+      <div class="ledger-item-icon">
+        <img src="${escapeHtml(icon)}" alt="" />
+      </div>
+      <div class="ledger-item-main">
+        <div class="ledger-item-kicker">Basic ${escapeHtml(getDenseItemRoleLabel(entry))}</div>
+        <div class="ledger-item-name">${escapeHtml(entry.name || stockItem.baseId)}</div>
+        <div class="ledger-item-price">${formatLedgerCredits(stockItem.price)}</div>
+      </div>
+      <button type="button" class="ledger-action-button buy" ${canAfford ? "" : "disabled"}>${canAfford ? "Issue" : "Short"}</button>
+    `;
+    const button = entryEl.querySelector("button");
+    button?.addEventListener("click", () => {
+      buyBasicLedgerStock(stockItem.baseId).catch((error) => {
+        console.error("Basic stock purchase failed:", error);
+      });
+    });
+    ledgerBasicStockList.appendChild(entryEl);
+  });
 }
 
 function renderLedgerStock(ledger) {
@@ -7715,9 +8068,11 @@ function renderLedgerInventory(ledger) {
 async function renderLedgerMarketAsync() {
   if (!ledgerBulletin && !ledgerStockList && !ledgerInventoryList && !ledgerReceipt) return;
   if (ledgerStockList) ledgerStockList.innerHTML = `<div class="ledger-empty">Loading market lots...</div>`;
+  if (ledgerBasicStockList) ledgerBasicStockList.innerHTML = `<div class="ledger-empty">Loading basic stock...</div>`;
   const ledger = await ensureLedgerMarketReady();
   renderLedgerBulletinPanel(ledger);
   renderLedgerLicensePanel(ledger);
+  renderBasicLedgerStock();
   renderLedgerStock(ledger);
   renderLedgerInventory(ledger);
   renderLedgerReceiptPanel(ledger);
@@ -9744,8 +10099,9 @@ function drawPlayer() {
     ctx.globalAlpha = 0.35;
   }
   const visualTheme = getLevelVisualTheme();
+  const hullSprite = getEquippedHullSpriteRecord(state);
   const usedSprite = drawSpriteCentered(
-    visualTheme?.player || assets.player,
+    hullSprite?.loaded ? hullSprite : visualTheme?.player || assets.player,
     player.x,
     player.y,
     player.spriteScale
@@ -10155,6 +10511,48 @@ function drawHangarScene(width, height) {
   ctx.restore();
 }
 
+function getWeaponHudSlots() {
+  const primary = getPrimaryArmoryItem(state, 0);
+  const second = getSecondPrimaryArmoryItem();
+  const activeBay = getActivePrimaryBay(state);
+  const dualActive = canDualFireCurrentLoadout();
+  return [
+    {
+      label: "A",
+      item: primary,
+      active: dualActive || activeBay === 0,
+    },
+    {
+      label: "B",
+      item: second,
+      active: dualActive || activeBay === 1,
+    },
+  ];
+}
+
+function renderWeaponStripHtml({ compact = false, cooldown = 0, showEmpty = true } = {}) {
+  const slots = getWeaponHudSlots().filter((slot) => showEmpty || slot.item);
+  const cooldownHtml = cooldown > 0
+    ? `<span class="weapon-token cooldown">${escapeHtml(formatNumber(cooldown, 1))}s</span>`
+    : "";
+  return `
+    <div class="weapon-strip${compact ? " compact" : ""}${canDualFireCurrentLoadout() ? " dual-active" : ""}">
+      ${slots
+        .map((slot) => {
+          const name = slot.item ? getCompactItemName(slot.item) : "Open";
+          return `
+            <span class="weapon-token${slot.active ? " is-active" : ""}${slot.item ? "" : " is-empty"}">
+              <span class="weapon-token-label">${slot.label}</span>
+              <span class="weapon-token-name">${escapeHtml(name)}</span>
+            </span>
+          `;
+        })
+        .join("")}
+      ${cooldownHtml}
+    </div>
+  `;
+}
+
 function updateHud() {
   if (!mission) {
     hudHull.textContent = "-";
@@ -10164,6 +10562,7 @@ function updateHud() {
     hudTime.textContent = "00:00";
     hudCredits.textContent = state.credits.toString();
     if (hudMini) hudMini.textContent = getCompactItemName(getSelectedMiniWeapon());
+    if (hudWeapons) hudWeapons.innerHTML = renderWeaponStripHtml({ showEmpty: true });
     setBossBarLayer(bossShieldFill, 0, 0);
     setBossBarLayer(bossArmorFill, 0, 0);
     setBossBarLayer(bossProgressFill, 0, 0);
@@ -10192,6 +10591,7 @@ function updateHud() {
           : getCompactItemName(mini)
         : "-";
     }
+    if (hudWeapons) hudWeapons.innerHTML = renderWeaponStripHtml({ showEmpty: true });
     updateBossProgress();
   }
   updateCargoHud();
@@ -10357,7 +10757,9 @@ function updateMobileControls() {
     const hasSecond = inMission && !!getSecondPrimaryArmoryItem();
     mobileSwapBtn.hidden = !hasSecond;
     mobileSwapBtn.disabled = !hasSecond || player.swapCooldown > 0;
-    mobileSwapBtn.textContent = player.swapCooldown > 0 ? `${formatNumber(player.swapCooldown, 1)}s` : "Swap";
+    mobileSwapBtn.innerHTML = hasSecond
+      ? renderWeaponStripHtml({ compact: true, cooldown: player.swapCooldown, showEmpty: false })
+      : "Swap";
   }
   if (mobileEjectBtn) {
     mobileEjectBtn.hidden = !inMission;

@@ -1,24 +1,30 @@
 # Asset Generation Workflow
 
 Status: active asset workflow. Generated gameplay art is now part of the live
-baseline for campaign backgrounds, combat effects, salvage pods, item icons, and
-many enemy sprites. Kenney assets remain credited fallback/reference art. The
+baseline for campaign backgrounds, combat effects, salvage pods, item icons,
+hulls, and many enemy sprites. Kenney assets remain credited reference art for
+legacy comparisons, not the preferred source for new shipped items. The
 generated button skin is still URL-flagged for comparison.
+
+Project rule: all new generated bitmap assets must use Codex built-in imagegen.
+Do not use API-key, SDK, Gemini, or local CLI image-generation workflows for new
+game art. If a transparent sprite is needed, generate a built-in chroma-key
+source and process alpha locally with the existing sheet/removal tools.
 
 ## Overhaul Asset Notes
 
-The first `NEXT_OVERHAUL_SPEC.md` implementation reuses the existing generated
-item-icon pack and Kenney power-up art where that keeps the build playable:
+The first player-testing follow-up for `NEXT_OVERHAUL_SPEC.md` replaces the
+placeholder/reused overhaul visuals with the generated
+`assets/generated/overhaul_player_kit_v1/` pack:
 
-- Shield booster pickups use `assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png`.
-- Armor patch caches use `assets/SpaceShooterRedux/PNG/Power-ups/powerupYellow_star.png`.
-- Mini weapon and hull cards use existing generated item icons until a dedicated chassis/mini pack is produced.
-- The EMP projectile-clear pulse is rendered directly in canvas, so it does not require a separate bitmap asset.
-
-Future visual polish can replace these with a dedicated generated pack for cache
-pickups, mini weapon silhouettes, hull/chassis icons, and small UI badges for
-Ledger licenses, second-bay strain, dual-fire compatibility, and one-primary
-focus.
+- Hulls use generated chassis sprites for the Armory bench, HUD identity, and
+  in-mission player ship.
+- Mini weapons use generated mini-weapon sprites.
+- Shield booster and armor patch caches use generated pickup sprites.
+- Ledger license, hull unlock, dual-fire, second-bay, and fixed-shop affordances
+  use generated terminal/shop sprites from the same pack.
+- The EMP projectile-clear pulse remains rendered directly in canvas, so it does
+  not require a separate bitmap asset.
 
 This project currently draws individual transparent PNG files. The packed
 `assets/SpaceShooterRedux/Spritesheet/sheet.png` atlas exists, but runtime code

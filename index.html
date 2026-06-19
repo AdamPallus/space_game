@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=clean-1" />
+    <link rel="stylesheet" href="style.css?v=followup-1" />
   </head>
   <body>
     <div id="app">
@@ -38,6 +38,7 @@
             <div class="cargo-pips" id="hud-cargo-pips"></div>
             <div class="cargo-status" id="hud-cargo-status" hidden>CARGO FULL</div>
           </div>
+          <div class="weapon-hud" id="hud-weapons" aria-label="Primary weapons"></div>
         </div>
         <div class="hud-right">
           <div class="hud-row"><span>Credits</span><span id="hud-credits">0</span></div>
@@ -202,6 +203,17 @@
                         <span class="ledger-pane-note">Rerolls after every mission</span>
                       </div>
                       <div class="ledger-license-panel" id="ledger-license-panel"></div>
+                      <div class="ledger-basic-stock">
+                        <div class="ledger-pane-head compact">
+                          <h4>Basic Gear</h4>
+                          <span class="ledger-pane-note">Fixed issue stock</span>
+                        </div>
+                        <div class="ledger-market-list basic" id="ledger-basic-stock-list"></div>
+                      </div>
+                      <div class="ledger-pane-head compact">
+                        <h4>Exchange Lots</h4>
+                        <span class="ledger-pane-note">Rotating stock</span>
+                      </div>
                       <div class="ledger-market-list" id="ledger-stock-list"></div>
                     </section>
                     <section class="ledger-market-pane">
@@ -376,8 +388,27 @@
           </div>
         </div>
       </div>
+
+      <div class="modal" id="rtb-confirm-modal" hidden>
+        <div
+          class="modal-card rtb-confirm-card"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rtb-confirm-title"
+        >
+          <div class="modal-body mission-intro-body">
+            <span class="kicker">Recall Confirmation</span>
+            <h2 id="rtb-confirm-title">Return To Base?</h2>
+            <p>Current cargo and bounty will be settled. The mission will end immediately.</p>
+            <div class="actions">
+              <button id="rtb-cancel" class="btn ghost" type="button">Cancel</button>
+              <button id="rtb-confirm" class="btn primary" type="button">Confirm RTB</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script src="main.js?v=clean-1"></script>
+    <script src="main.js?v=followup-1"></script>
   </body>
 </html>

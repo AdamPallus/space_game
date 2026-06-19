@@ -806,7 +806,7 @@
       "subtitle": "Forward kinetic mini",
       "description": "Compact nose-linked kinetic autogun for forward chip pressure.",
       "notes": "Mini weapons fire independently and do not replace the primary hardpoint.",
-      "icon": "assets/generated/item_icons_v1/cadet_kinetic_cannon.png",
+      "icon": "assets/generated/overhaul_player_kit_v1/mini_tick_autogun.png",
       "tags": ["mini", "kinetic", "rapid", "forward", "starter"],
       "build": {},
       "miniWeapon": {
@@ -832,7 +832,7 @@
       "subtitle": "Wide plasma mini",
       "description": "Small plasma emitter that covers a wider forward arc with slower heavier shots.",
       "notes": "Wider targeting reduces aiming pressure but remains a secondary damage source.",
-      "icon": "assets/generated/item_icons_v1/plasma_cell_module.png",
+      "icon": "assets/generated/overhaul_player_kit_v1/mini_plasma_wisp.png",
       "tags": ["mini", "plasma", "wide", "slow", "area"],
       "build": {},
       "miniWeapon": {
@@ -858,7 +858,7 @@
       "subtitle": "360 kinetic mini",
       "description": "Low-output turret that can pick threats anywhere around the ship.",
       "notes": "Full coverage trades away peak output so the primary remains the main weapon.",
-      "icon": "assets/generated/item_icons_v1/module_variant_twin_sensor.png",
+      "icon": "assets/generated/overhaul_player_kit_v1/mini_guardian_turret.png",
       "tags": ["mini", "kinetic", "turret", "coverage"],
       "build": {},
       "miniWeapon": {
@@ -884,7 +884,7 @@
       "subtitle": "Homing mini",
       "description": "Prototype mini emitter with modest homing correction inside a forward arc.",
       "notes": "Homing helps finish evasive targets, but the weapon stays below primary output.",
-      "icon": "assets/generated/item_icons_v2/seeker_array.png",
+      "icon": "assets/generated/overhaul_player_kit_v1/mini_seeker_lash.png",
       "tags": ["mini", "plasma", "forward", "homing", "tracking"],
       "build": {},
       "miniWeapon": {

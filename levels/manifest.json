@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "level1": ["level1_swarm", "level1_armored", "level1_patrol"],
+    "level2": ["level2_swarm", "level2_armored", "level2_skirmish"],
+    "level3": ["level3_swarm", "level3_armored"],
+    "level4": ["level4_swarm", "level4_armored"],
+    "level5": ["level5_swarm", "level5_armored"],
+    "level6": ["level6_swarm", "level6_armored"],
+    "level7": ["level7_swarm", "level7_armored"],
+    "level8": ["level8_swarm", "level8_armored"]
+  }
+}

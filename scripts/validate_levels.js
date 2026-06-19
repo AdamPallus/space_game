@@ -5,6 +5,7 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 const LEVELS_DIR = path.join(ROOT, "levels");
+const LEVEL_MANIFEST_PATH = path.join(LEVELS_DIR, "manifest.json");
 const CATALOG_PATH = path.join(ROOT, "enemies", "enemy_catalog.json");
 const ITEM_POOL_PATH = path.join(ROOT, "items", "item_pool.json");
 
@@ -78,7 +79,7 @@ function listLevelFiles(dir) {
       if (entry.isDirectory()) {
         return entry.name === "legacy_pre_overhaul" ? [] : listLevelFiles(full);
       }
-      return entry.name.endsWith(".json") ? [full] : [];
+      return entry.name.endsWith(".json") && entry.name !== "manifest.json" ? [full] : [];
     })
     .sort();
 }
@@ -348,6 +349,45 @@ function validateItemPool() {
   return errors;
 }
 
+function validateLevelManifest() {
+  const errors = [];
+  if (!fs.existsSync(LEVEL_MANIFEST_PATH)) {
+    return ["levels/manifest.json is missing."];
+  }
+  const manifest = JSON.parse(fs.readFileSync(LEVEL_MANIFEST_PATH, "utf8"));
+  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
+    return ["level manifest root must be an object."];
+  }
+  const variants = manifest.variants;
+  if (!variants || typeof variants !== "object" || Array.isArray(variants)) {
+    return ["level manifest must define a variants object."];
+  }
+  Object.entries(variants).forEach(([baseId, variantIds]) => {
+    const basePath = path.join(LEVELS_DIR, `${baseId}.json`);
+    if (!fs.existsSync(basePath)) {
+      errors.push(`Manifest base '${baseId}' does not exist.`);
+    }
+    if (!Array.isArray(variantIds)) {
+      errors.push(`Manifest variants for '${baseId}' must be an array.`);
+      return;
+    }
+    variantIds.forEach((variantId) => {
+      if (typeof variantId !== "string" || !variantId.trim()) {
+        errors.push(`Manifest base '${baseId}' contains an invalid variant id.`);
+        return;
+      }
+      if (variantId === baseId) {
+        errors.push(`Manifest base '${baseId}' repeats itself as a variant.`);
+      }
+      const variantPath = path.join(LEVELS_DIR, `${variantId}.json`);
+      if (!fs.existsSync(variantPath)) {
+        errors.push(`Manifest variant '${variantId}' for '${baseId}' does not exist.`);
+      }
+    });
+  });
+  return errors;
+}
+
 const failures = [];
 for (const file of listLevelFiles(LEVELS_DIR)) {
   const level = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -359,6 +399,10 @@ for (const file of listLevelFiles(LEVELS_DIR)) {
 const itemPoolErrors = validateItemPool();
 if (itemPoolErrors.length) {
   failures.push({ file: ITEM_POOL_PATH, errors: itemPoolErrors });
+}
+const manifestErrors = validateLevelManifest();
+if (manifestErrors.length) {
+  failures.push({ file: LEVEL_MANIFEST_PATH, errors: manifestErrors });
 }
 
 if (failures.length) {

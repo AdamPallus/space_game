@@ -62,6 +62,20 @@ git diff --check
 
 For UI-affecting work, also run a browser smoke test against the local static server. Static-server 404 probes for browser-favored files are not enough by themselves to call the run broken.
 
+## Deployment
+
+The Vercel project is synced to the Git repo. Pushing the verified branch is the
+deployment step; Vercel builds from Git automatically. Do not run a separate
+manual `vercel deploy` for routine player-testing releases. After pushing,
+inspect the Git-triggered deployment and smoke-test the live URL.
+
+## Image Generation Rule
+
+Generated bitmap assets for this project must use Codex built-in imagegen only.
+Do not use API-key, SDK, or local CLI image-generation workflows for new game
+art. For transparent sprites, use the built-in chroma-key workflow and local
+alpha processing described in `ASSET_GENERATION.md`.
+
 ## Important Files
 
 - `index.html`, `style.css`, `main.js`: the single-page game shell, visual system, and gameplay runtime.

@@ -1,0 +1,28 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "defaultPadding": 8,
+  "contactSheet": "contact_sheet.png",
+  "sprites": [
+    { "name": "hull_starter", "cell": 0, "size": [180, 180], "componentMode": "largest" },
+    { "name": "hull_bastion", "cell": 1, "size": [196, 196], "componentMode": "largest" },
+    { "name": "hull_relay", "cell": 2, "size": [196, 196], "componentMode": "largest" },
+    { "name": "hull_broadside", "cell": 3, "size": [196, 196], "componentMode": "largest" },
+    { "name": "mini_tick_autogun", "cell": 4, "size": [96, 96], "componentMode": "largest" },
+    { "name": "mini_plasma_wisp", "cell": 5, "size": [96, 96], "componentMode": "largest" },
+    { "name": "mini_guardian_turret", "cell": 6, "size": [96, 96], "componentMode": "largest" },
+    { "name": "mini_seeker_lash", "cell": 7, "size": [96, 96], "componentMode": "largest" },
+    { "name": "pickup_shield_booster", "cell": 8, "size": [92, 92], "componentMode": "largest" },
+    { "name": "pickup_armor_patch", "cell": 9, "size": [92, 92], "componentMode": "largest" },
+    { "name": "capability_dual_fire", "cell": 10, "size": [96, 96], "componentMode": "largest" },
+    { "name": "capability_second_bay", "cell": 11, "size": [96, 96], "componentMode": "largest" },
+    { "name": "ledger_hull_blueprint", "cell": 12, "size": [96, 96], "componentMode": "largest" },
+    { "name": "shop_basic_weapon_crate", "cell": 13, "size": [96, 96], "componentMode": "largest" },
+    { "name": "shop_aux_module_crate", "cell": 14, "size": [96, 96], "componentMode": "largest" },
+    { "name": "ledger_license_chip", "cell": 15, "size": [96, 96], "componentMode": "largest" }
+  ]
+}

@@ -177,11 +177,13 @@ weapons scale separately by rarity through damage/cooldown/range/speed tuning,
 and higher-rarity minis can roll supported weapon effects. Existing saved mini
 loot self-heals through a balance-version marker instead of requiring save
 resets. Defense loot also scales by rarity: high-rarity armor doubles the
-armor-class benefit above starter baselines at Pre-Founding, and high-rarity
-shields scale useful capacity, regen, and recovery strengths while preserving
-their drawbacks. If that makes projectile density too forgiving, the intended
-counterbalance is more obvious high-damage projectile threats rather than a
-flat enemy DPS increase.
+armor-class benefit above starter baselines at Pre-Founding, installed armor
+modules stack their class bonuses, and high-rarity shields scale useful
+capacity, regen, and recovery strengths while preserving their drawbacks.
+Player armor class mitigates projectile hits before shield/armor/hull layers
+spend, so true low-damage shots can be ignored. If that makes projectile
+density too forgiving, the intended counterbalance is more obvious high-damage
+projectile threats rather than a flat enemy DPS increase.
 
 ---
 

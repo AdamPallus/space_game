@@ -45,6 +45,7 @@ const DEFENSE_RARITY_TUNING = {
   prototype: 1.66,
   preFounding: 2,
 };
+const BASE_ARMOR_CLASS = 10;
 const FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
   small: 1.25,
   medium: 1.6,
@@ -253,12 +254,11 @@ function tuneDefenseBuildForRarity(build, defenseType, rarity = "scrap") {
   const scale = getDefenseRarityScale(rarity);
   const tuned = clone(build);
   if (defenseType === "armor") {
-    const baselineArmorClass = 10;
     const armorClass = Number.isFinite(tuned.armorClass)
       ? tuned.armorClass
-      : baselineArmorClass;
-    const armorClassBonus = Math.max(0, armorClass - baselineArmorClass);
-    tuned.armorClass = roundTunedStat(baselineArmorClass + armorClassBonus * scale, 1);
+      : BASE_ARMOR_CLASS;
+    const armorClassBonus = Math.max(0, armorClass - BASE_ARMOR_CLASS);
+    tuned.armorClass = roundTunedStat(BASE_ARMOR_CLASS + armorClassBonus * scale, 1);
     if (Number.isFinite(tuned.armorClassLevel)) {
       tuned.armorClassLevel = roundTunedStat(tuned.armorClassLevel * scale, 2);
     }
@@ -456,6 +456,20 @@ function summarizeDefenseItem(id, entry) {
     armorClass,
     lightProjectileDamage,
   };
+}
+
+function summarizeArmorPair(rowA, rowB) {
+  const a = rowA.build || {};
+  const b = rowB.build || {};
+  const baseA = Number.isFinite(a.armorClass) ? a.armorClass : BASE_ARMOR_CLASS;
+  const baseB = Number.isFinite(b.armorClass) ? b.armorClass : BASE_ARMOR_CLASS;
+  const classLevel = (a.armorClassLevel || 0) + (b.armorClassLevel || 0);
+  return Math.round(
+    BASE_ARMOR_CLASS +
+      Math.max(0, baseA - BASE_ARMOR_CLASS) +
+      Math.max(0, baseB - BASE_ARMOR_CLASS) +
+      classLevel * 2
+  );
 }
 
 function normalizeEnemy(id, entry) {
@@ -716,6 +730,20 @@ defenseRows.forEach((row) => {
     );
   }
 });
+const armorSampleItems = Object.entries(pool.entries || {})
+  .filter(([, entry]) => normalizeSlotType(entry.slotType) === "defense" && entry.defenseType === "armor")
+  .map(([id, entry], index) => rollSampleItem(pool, id, entry, "prototype", 10000 + index));
+const bestArmorPairClass =
+  armorSampleItems.length >= 2
+    ? Math.max(
+        ...armorSampleItems.flatMap((itemA, indexA) =>
+          armorSampleItems
+            .slice(indexA + 1)
+            .map((itemB) => summarizeArmorPair(itemA, itemB))
+        )
+      )
+    : 0;
+console.log(`Two-armor prototype stack check: best paired AC ${bestArmorPairClass}`);
 
 const toughestPlated = enemies
   .filter((enemy) => enemy.maxArmor > 0)
@@ -746,6 +774,9 @@ defenseRows.forEach((row) => {
     failures.push(`${row.name} has invalid shield defense output coverage.`);
   }
 });
+if (armorSampleItems.length >= 2 && bestArmorPairClass < 18) {
+  failures.push(`Expected two prototype armor modules to reach at least AC 18; got ${bestArmorPairClass}.`);
+}
 const primaryDpsSamples = matrix
   .filter((row) => row.id.startsWith("base:"))
   .map((row) => row.offense.dps)

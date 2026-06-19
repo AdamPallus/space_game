@@ -1,12 +1,73 @@
 {
   "variants": {
-    "level1": ["level1_swarm", "level1_armored", "level1_patrol"],
-    "level2": ["level2_swarm", "level2_armored", "level2_skirmish"],
-    "level3": ["level3_swarm", "level3_armored"],
-    "level4": ["level4_swarm", "level4_armored"],
-    "level5": ["level5_swarm", "level5_armored"],
-    "level6": ["level6_swarm", "level6_armored"],
-    "level7": ["level7_swarm", "level7_armored"],
-    "level8": ["level8_swarm", "level8_armored"]
+    "level1": [
+      "level1_swarm",
+      "level1_armored",
+      "level1_patrol",
+      "level1_armored_threats",
+      "level1_patrol_threats",
+      "level1_swarm_threats",
+      "level1_threats"
+    ],
+    "level2": [
+      "level2_swarm",
+      "level2_armored",
+      "level2_skirmish",
+      "level2_armored_threats",
+      "level2_skirmish_threats",
+      "level2_swarm_threats",
+      "level2_threats"
+    ],
+    "level3": [
+      "level3_swarm",
+      "level3_armored",
+      "level3_armored_threats",
+      "level3_swarm_threats",
+      "level3_threats"
+    ],
+    "level4": [
+      "level4_swarm",
+      "level4_armored",
+      "level4_armored_threats",
+      "level4_swarm_threats",
+      "level4_threats"
+    ],
+    "level5": [
+      "level5_swarm",
+      "level5_armored",
+      "level5_armored_threats",
+      "level5_swarm_threats",
+      "level5_threats"
+    ],
+    "level6": [
+      "level6_swarm",
+      "level6_armored",
+      "level6_armored_threats",
+      "level6_swarm_threats",
+      "level6_threats"
+    ],
+    "level7": [
+      "level7_swarm",
+      "level7_armored",
+      "level7_armored_threats",
+      "level7_swarm_threats",
+      "level7_threats"
+    ],
+    "level8": [
+      "level8_swarm",
+      "level8_armored",
+      "level8_armored_threats",
+      "level8_swarm_threats",
+      "level8_threats"
+    ],
+    "level9": [
+      "level9_threats"
+    ],
+    "level10": [
+      "level10_threats"
+    ],
+    "level11": [
+      "level11_threats"
+    ]
   }
 }

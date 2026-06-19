@@ -34,6 +34,9 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "fireSpread",
   "bulletSpeed",
   "bulletDamage",
+  "bulletStyle",
+  "projectileProfile",
+  "attackPatterns",
   "collisionDamage",
   "damageScale",
   "aggroRadius",
@@ -41,6 +44,43 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "isBoss",
   "hpScale",
 ]);
+const PROJECTILE_PROFILE_KEYS = new Set([
+  "id",
+  "profile",
+  "damage",
+  "speed",
+  "radius",
+  "width",
+  "height",
+  "visual",
+  "image",
+  "color",
+  "shape",
+  "animation",
+  "spinRate",
+  "threatClass",
+]);
+const PROJECTILE_ATTACK_PATTERN_KEYS = new Set([
+  "id",
+  "mode",
+  "fireMode",
+  "profile",
+  "count",
+  "spread",
+  "spreadDeg",
+  "fireRate",
+  "weight",
+  "speedJitter",
+  "shots",
+]);
+const PROJECTILE_SHOT_KEYS = new Set([
+  ...PROJECTILE_PROFILE_KEYS,
+  "angleDeg",
+  "angleOffsetDeg",
+  "speedJitter",
+]);
+const PROJECTILE_ATTACK_MODES = new Set(["aim", "spread", "radial"]);
+const PROJECTILE_THREAT_CLASSES = new Set(["chip", "standard", "heavy", "bossHazard"]);
 
 const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8")).entries || {};
 const allowedItemSlotTypes = new Set(["primary", "mini", "defense", "aux", "support"]);
@@ -84,9 +124,123 @@ function listLevelFiles(dir) {
     .sort();
 }
 
+function isPlainObject(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function validateProjectileProfile(id, profile, errors, context = `Projectile profile '${id}'`) {
+  if (!isPlainObject(profile)) {
+    errors.push(`${context} must be an object.`);
+    return;
+  }
+  for (const key of Object.keys(profile)) {
+    if (!PROJECTILE_PROFILE_KEYS.has(key)) {
+      errors.push(`${context} uses unsupported field '${key}'.`);
+    }
+  }
+  if (profile.threatClass && !PROJECTILE_THREAT_CLASSES.has(profile.threatClass)) {
+    errors.push(`${context} has invalid threatClass '${profile.threatClass}'.`);
+  }
+  ["damage", "speed", "radius", "width", "height", "spinRate"].forEach((key) => {
+    if (profile[key] !== undefined && !Number.isFinite(profile[key])) {
+      errors.push(`${context} field '${key}' must be numeric.`);
+    }
+  });
+}
+
+function validateProjectileProfileRef(ref, profiles, errors, context) {
+  if (ref === undefined) return;
+  if (typeof ref === "string") {
+    if (!profiles[ref]) errors.push(`${context} references unknown projectile profile '${ref}'.`);
+    return;
+  }
+  if (isPlainObject(ref)) {
+    validateProjectileProfile("inline", ref, errors, context);
+    if (typeof ref.profile === "string") validateProjectileProfileRef(ref.profile, profiles, errors, context);
+    return;
+  }
+  errors.push(`${context} must reference a named projectile profile or inline profile object.`);
+}
+
+function validateAttackPattern(pattern, index, profiles, errors, context) {
+  const label = `${context} attackPatterns[${index}]`;
+  if (!isPlainObject(pattern)) {
+    errors.push(`${label} must be an object.`);
+    return;
+  }
+  for (const key of Object.keys(pattern)) {
+    if (!PROJECTILE_ATTACK_PATTERN_KEYS.has(key)) {
+      errors.push(`${label} uses unsupported field '${key}'.`);
+    }
+  }
+  const mode = pattern.mode || pattern.fireMode;
+  if (mode && !PROJECTILE_ATTACK_MODES.has(mode)) {
+    errors.push(`${label} has invalid mode '${mode}'.`);
+  }
+  validateProjectileProfileRef(pattern.profile, profiles, errors, `${label}.profile`);
+  ["count", "spread", "spreadDeg", "fireRate", "weight", "speedJitter"].forEach((key) => {
+    if (pattern[key] !== undefined && !Number.isFinite(pattern[key])) {
+      errors.push(`${label} field '${key}' must be numeric.`);
+    }
+  });
+  if (Number.isFinite(pattern.speedJitter) && (pattern.speedJitter < 0 || pattern.speedJitter > 1)) {
+    errors.push(`${label} field 'speedJitter' must be between 0 and 1.`);
+  }
+  if (Number.isFinite(pattern.count) && pattern.count < 1) {
+    errors.push(`${label} field 'count' must be at least 1.`);
+  }
+  if (Number.isFinite(pattern.fireRate) && pattern.fireRate <= 0) {
+    errors.push(`${label} field 'fireRate' must be greater than 0.`);
+  }
+  if (Number.isFinite(pattern.weight) && pattern.weight < 0) {
+    errors.push(`${label} field 'weight' must be non-negative.`);
+  }
+  if (pattern.shots !== undefined) {
+    if (!Array.isArray(pattern.shots)) {
+      errors.push(`${label}.shots must be an array.`);
+    } else {
+      pattern.shots.forEach((shot, shotIndex) => {
+        const shotLabel = `${label}.shots[${shotIndex}]`;
+        if (typeof shot === "string") {
+          validateProjectileProfileRef(shot, profiles, errors, shotLabel);
+          return;
+        }
+        if (!isPlainObject(shot)) {
+          errors.push(`${shotLabel} must be a profile id or object.`);
+          return;
+        }
+        for (const key of Object.keys(shot)) {
+          if (!PROJECTILE_SHOT_KEYS.has(key)) {
+            errors.push(`${shotLabel} uses unsupported field '${key}'.`);
+          }
+        }
+        validateProjectileProfileRef(shot.profile, profiles, errors, `${shotLabel}.profile`);
+        ["damage", "speed", "radius", "width", "height", "spinRate", "angleDeg", "angleOffsetDeg", "speedJitter"].forEach((key) => {
+          if (shot[key] !== undefined && !Number.isFinite(shot[key])) {
+            errors.push(`${shotLabel} field '${key}' must be numeric.`);
+          }
+        });
+        if (Number.isFinite(shot.speedJitter) && (shot.speedJitter < 0 || shot.speedJitter > 1)) {
+          errors.push(`${shotLabel} field 'speedJitter' must be between 0 and 1.`);
+        }
+      });
+    }
+  }
+}
+
 function validateLevel(level) {
   const errors = [];
   const levelId = level.id || "unknown";
+  const projectileProfiles = isPlainObject(level.projectileProfiles) ? level.projectileProfiles : {};
+  if (level.projectileProfiles !== undefined) {
+    if (!isPlainObject(level.projectileProfiles)) {
+      errors.push(`Mission '${levelId}' projectileProfiles must be an object.`);
+    } else {
+      Object.entries(level.projectileProfiles).forEach(([profileId, profile]) => {
+        validateProjectileProfile(profileId, profile, errors);
+      });
+    }
+  }
   const enemyTypes = level.enemyTypes;
   if (!enemyTypes || typeof enemyTypes !== "object" || Array.isArray(enemyTypes)) {
     errors.push("Mission package is missing enemyTypes.");
@@ -100,6 +254,16 @@ function validateLevel(level) {
     for (const key of Object.keys(config)) {
       if (!LEVEL_ENEMY_OVERRIDE_KEYS.has(key)) {
         errors.push(`Enemy '${typeId}' uses unsupported field '${key}'.`);
+      }
+    }
+    validateProjectileProfileRef(config.projectileProfile, projectileProfiles, errors, `Enemy '${typeId}' projectileProfile`);
+    if (config.attackPatterns !== undefined) {
+      if (!Array.isArray(config.attackPatterns)) {
+        errors.push(`Enemy '${typeId}' attackPatterns must be an array.`);
+      } else {
+        config.attackPatterns.forEach((pattern, patternIndex) => {
+          validateAttackPattern(pattern, patternIndex, projectileProfiles, errors, `Enemy '${typeId}'`);
+        });
       }
     }
     if (typeId === "boss") {

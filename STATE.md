@@ -9,9 +9,9 @@ This is the first file to read before changing the game. It summarizes what is i
 The project is a browser-based extraction shmup. Players launch from the hangar, fight through scripted mission waves, collect salvage pods and item drops, then extract or lose part of the haul. The current build already includes:
 
 - A flat scene shell for hangar, mission select, armory, Ledger market, profile, item archive, compendium, and combat.
-- Scripted JSON missions in `levels/` with variants, lab encounters, bosses, salvage pods, item drops, and enemy catalog validation.
+- Scripted JSON missions in `levels/` with variants, lab encounters, bosses, salvage pods, item drops, enemy projectile profiles/attack patterns, and enemy catalog validation.
 - A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
-- Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time.
+- Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time or through explicit level-authored projectile profiles.
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
 - A Ledger market with rotating stock, daily lots, pricing, dividends, bulletins, volatility, sponsored listings, and license tiers that increase visible stock through Ledger Investments.
 - Search, sort, and filter controls for armory inventory, item archive, and Ledger sell views. The Armory `Show Stats` control opens a popup with mission-ready ship stats, installed defense item internals, and selected-mission projectile damage estimates without shrinking the inventory rack.
@@ -80,11 +80,12 @@ alpha processing described in `ASSET_GENERATION.md`.
 ## Important Files
 
 - `index.html`, `style.css`, `main.js`: the single-page game shell, visual system, and gameplay runtime.
-- `levels/*.json`: scripted missions and variants.
+- `levels/*.json`: scripted missions, variants, projectile profiles, and attack patterns.
 - `enemies/enemy_catalog.json`: enemy definitions referenced by level scripts.
 - `items/item_pool.json`: generated item archetypes, affixes, relics, and support items.
 - `items/weapon_frames.json`: guaranteed and generated weapon-frame definitions.
 - `scripts/validate_levels.js`: level and item-pool structural validation.
+- `scripts/generate_projectile_threat_levels.js`: generator for checked-in Threat Mix mission variants.
 - `scripts/validate_weapon_frames.js`: weapon-frame schema validation.
 - `scripts/balance_report.js`: economy, item, and mission-balance checks.
 
@@ -101,6 +102,7 @@ Recent history shows these major pieces have already landed:
 - Weapon variety passes: additional projectile patterns, plasma visuals, and combat UI tuning.
 - Generated asset passes: UI chrome, item icon pack, combat fleet art, and mission backgrounds.
 - Next Overhaul playable pass: hangar-first onboarding, explicit reward settlement, scripted caches, EMP projectile clear, browsing controls, Ledger license investment tiers, mini weapons with rarity scaling/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, aux engineering, explicit dual-fire mode selection, and independent dual-fire weapon timing.
+- Enemy projectile variety pass: root level `projectileProfiles`, weighted `attackPatterns`, per-shot overrides, Threat Mix variants for player-facing missions, compendium/stat summaries, and validator coverage for profile references and threat classes.
 
 ## Documentation Map
 

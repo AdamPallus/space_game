@@ -204,12 +204,66 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "fireSpread",
   "bulletSpeed",
   "bulletDamage",
+  "bulletStyle",
+  "projectileProfile",
+  "attackPatterns",
   "collisionDamage",
   "damageScale",
   "aggroRadius",
   "empImmune",
   "isBoss",
   "hpScale",
+]);
+const PROJECTILE_PROFILE_KEYS = new Set([
+  "id",
+  "profile",
+  "damage",
+  "speed",
+  "radius",
+  "width",
+  "height",
+  "visual",
+  "image",
+  "color",
+  "shape",
+  "animation",
+  "spinRate",
+  "threatClass",
+]);
+const PROJECTILE_ATTACK_PATTERN_KEYS = new Set([
+  "id",
+  "mode",
+  "fireMode",
+  "profile",
+  "count",
+  "spread",
+  "spreadDeg",
+  "fireRate",
+  "weight",
+  "speedJitter",
+  "shots",
+]);
+const PROJECTILE_SHOT_KEYS = new Set([
+  ...PROJECTILE_PROFILE_KEYS,
+  "angleDeg",
+  "angleOffsetDeg",
+  "speedJitter",
+]);
+const PROJECTILE_ATTACK_MODES = new Set(["aim", "spread", "radial"]);
+const PROJECTILE_THREAT_CLASSES = new Set(["chip", "standard", "heavy", "bossHazard"]);
+const PROJECTILE_RUNTIME_PROFILE_KEYS = new Set([
+  "damage",
+  "speed",
+  "radius",
+  "width",
+  "height",
+  "visual",
+  "image",
+  "color",
+  "shape",
+  "animation",
+  "spinRate",
+  "threatClass",
 ]);
 
 const ECONOMY = {
@@ -3363,14 +3417,17 @@ const availableLevels = [
 
 const LEVEL_MANIFEST_PATH = "levels/manifest.json";
 const DEFAULT_LEVEL_VARIANT_MANIFEST = {
-  level1: ["level1_swarm", "level1_armored", "level1_patrol"],
-  level2: ["level2_swarm", "level2_armored", "level2_skirmish"],
-  level3: ["level3_swarm", "level3_armored"],
-  level4: ["level4_swarm", "level4_armored"],
-  level5: ["level5_swarm", "level5_armored"],
-  level6: ["level6_swarm", "level6_armored"],
-  level7: ["level7_swarm", "level7_armored"],
-  level8: ["level8_swarm", "level8_armored"],
+  level1: ["level1_swarm", "level1_armored", "level1_patrol", "level1_armored_threats", "level1_patrol_threats", "level1_swarm_threats", "level1_threats"],
+  level2: ["level2_swarm", "level2_armored", "level2_skirmish", "level2_armored_threats", "level2_skirmish_threats", "level2_swarm_threats", "level2_threats"],
+  level3: ["level3_swarm", "level3_armored", "level3_armored_threats", "level3_swarm_threats", "level3_threats"],
+  level4: ["level4_swarm", "level4_armored", "level4_armored_threats", "level4_swarm_threats", "level4_threats"],
+  level5: ["level5_swarm", "level5_armored", "level5_armored_threats", "level5_swarm_threats", "level5_threats"],
+  level6: ["level6_swarm", "level6_armored", "level6_armored_threats", "level6_swarm_threats", "level6_threats"],
+  level7: ["level7_swarm", "level7_armored", "level7_armored_threats", "level7_swarm_threats", "level7_threats"],
+  level8: ["level8_swarm", "level8_armored", "level8_armored_threats", "level8_swarm_threats", "level8_threats"],
+  level9: ["level9_threats"],
+  level10: ["level10_threats"],
+  level11: ["level11_threats"],
 };
 let levelVariantManifest = { ...DEFAULT_LEVEL_VARIANT_MANIFEST };
 let levelVariantToBase = buildLevelVariantToBase(levelVariantManifest);
@@ -3734,12 +3791,122 @@ function mergeLevelEnemySpec(level, typeId, overrides = {}) {
   return merged;
 }
 
+function validateProjectileProfile(id, profile, errors, context = `Projectile profile '${id}'`) {
+  if (!profile || typeof profile !== "object" || Array.isArray(profile)) {
+    errors.push(`${context} must be an object.`);
+    return;
+  }
+  Object.keys(profile).forEach((key) => {
+    if (!PROJECTILE_PROFILE_KEYS.has(key)) {
+      errors.push(`${context} uses unsupported field '${key}'.`);
+    }
+  });
+  if (profile.threatClass && !PROJECTILE_THREAT_CLASSES.has(profile.threatClass)) {
+    errors.push(`${context} has invalid threatClass '${profile.threatClass}'.`);
+  }
+  ["damage", "speed", "radius", "width", "height", "spinRate"].forEach((key) => {
+    if (profile[key] !== undefined && !Number.isFinite(profile[key])) {
+      errors.push(`${context} field '${key}' must be numeric.`);
+    }
+  });
+}
+
+function validateProjectileProfileRef(ref, profiles, errors, context) {
+  if (ref === undefined) return;
+  if (typeof ref === "string") {
+    if (!profiles[ref]) errors.push(`${context} references unknown projectile profile '${ref}'.`);
+    return;
+  }
+  if (ref && typeof ref === "object" && !Array.isArray(ref)) {
+    validateProjectileProfile("inline", ref, errors, context);
+    if (typeof ref.profile === "string") validateProjectileProfileRef(ref.profile, profiles, errors, context);
+    return;
+  }
+  errors.push(`${context} must reference a named projectile profile or inline profile object.`);
+}
+
+function validateAttackPattern(pattern, index, profiles, errors, context) {
+  const label = `${context} attackPatterns[${index}]`;
+  if (!pattern || typeof pattern !== "object" || Array.isArray(pattern)) {
+    errors.push(`${label} must be an object.`);
+    return;
+  }
+  Object.keys(pattern).forEach((key) => {
+    if (!PROJECTILE_ATTACK_PATTERN_KEYS.has(key)) {
+      errors.push(`${label} uses unsupported field '${key}'.`);
+    }
+  });
+  const mode = pattern.mode || pattern.fireMode;
+  if (mode && !PROJECTILE_ATTACK_MODES.has(mode)) {
+    errors.push(`${label} has invalid mode '${mode}'.`);
+  }
+  validateProjectileProfileRef(pattern.profile, profiles, errors, `${label}.profile`);
+  ["count", "spread", "spreadDeg", "fireRate", "weight", "speedJitter"].forEach((key) => {
+    if (pattern[key] !== undefined && !Number.isFinite(pattern[key])) {
+      errors.push(`${label} field '${key}' must be numeric.`);
+    }
+  });
+  if (Number.isFinite(pattern.speedJitter) && (pattern.speedJitter < 0 || pattern.speedJitter > 1)) {
+    errors.push(`${label} field 'speedJitter' must be between 0 and 1.`);
+  }
+  if (Number.isFinite(pattern.count) && pattern.count < 1) {
+    errors.push(`${label} field 'count' must be at least 1.`);
+  }
+  if (Number.isFinite(pattern.fireRate) && pattern.fireRate <= 0) {
+    errors.push(`${label} field 'fireRate' must be greater than 0.`);
+  }
+  if (Number.isFinite(pattern.weight) && pattern.weight < 0) {
+    errors.push(`${label} field 'weight' must be non-negative.`);
+  }
+  if (pattern.shots !== undefined) {
+    if (!Array.isArray(pattern.shots)) {
+      errors.push(`${label}.shots must be an array.`);
+    } else {
+      pattern.shots.forEach((shot, shotIndex) => {
+        const shotLabel = `${label}.shots[${shotIndex}]`;
+        if (typeof shot === "string") {
+          validateProjectileProfileRef(shot, profiles, errors, shotLabel);
+          return;
+        }
+        if (!shot || typeof shot !== "object" || Array.isArray(shot)) {
+          errors.push(`${shotLabel} must be a profile id or object.`);
+          return;
+        }
+        Object.keys(shot).forEach((key) => {
+          if (!PROJECTILE_SHOT_KEYS.has(key)) {
+            errors.push(`${shotLabel} uses unsupported field '${key}'.`);
+          }
+        });
+        validateProjectileProfileRef(shot.profile, profiles, errors, `${shotLabel}.profile`);
+        ["damage", "speed", "radius", "width", "height", "spinRate", "angleDeg", "angleOffsetDeg", "speedJitter"].forEach((key) => {
+          if (shot[key] !== undefined && !Number.isFinite(shot[key])) {
+            errors.push(`${shotLabel} field '${key}' must be numeric.`);
+          }
+        });
+        if (Number.isFinite(shot.speedJitter) && (shot.speedJitter < 0 || shot.speedJitter > 1)) {
+          errors.push(`${shotLabel} field 'speedJitter' must be between 0 and 1.`);
+        }
+      });
+    }
+  }
+}
+
 function validateLevelData(level) {
   const errors = [];
   if (!level || typeof level !== "object") {
     return ["Mission package is not a valid object."];
   }
   const levelId = level.id || "unknown";
+  const projectileProfiles = isPlainObject(level.projectileProfiles) ? level.projectileProfiles : {};
+  if (level.projectileProfiles !== undefined) {
+    if (!isPlainObject(level.projectileProfiles)) {
+      errors.push(`Mission '${levelId}' projectileProfiles must be an object.`);
+    } else {
+      Object.entries(level.projectileProfiles).forEach(([profileId, profile]) => {
+        validateProjectileProfile(profileId, profile, errors);
+      });
+    }
+  }
   const enemyTypes = level.enemyTypes;
   if (!enemyTypes || typeof enemyTypes !== "object" || Array.isArray(enemyTypes)) {
     errors.push("Mission package is missing enemyTypes.");
@@ -3755,6 +3922,16 @@ function validateLevelData(level) {
         errors.push(`Enemy '${typeId}' uses unsupported field '${key}'.`);
       }
     });
+    validateProjectileProfileRef(config.projectileProfile, projectileProfiles, errors, `Enemy '${typeId}' projectileProfile`);
+    if (config.attackPatterns !== undefined) {
+      if (!Array.isArray(config.attackPatterns)) {
+        errors.push(`Enemy '${typeId}' attackPatterns must be an array.`);
+      } else {
+        config.attackPatterns.forEach((pattern, patternIndex) => {
+          validateAttackPattern(pattern, patternIndex, projectileProfiles, errors, `Enemy '${typeId}'`);
+        });
+      }
+    }
     if (typeId === "boss") {
       if (typeof config.template !== "string" || !config.template) {
         errors.push(`Boss entry in '${levelId}' must declare a catalog template.`);
@@ -6171,6 +6348,19 @@ function describeMovement(spec) {
 }
 
 function describeWeapons(spec) {
+  if (Array.isArray(spec.attackPatterns) && spec.attackPatterns.length) {
+    const patterns = spec.attackPatterns
+      .filter((pattern) => isPlainObject(pattern))
+      .slice(0, 3)
+      .map((pattern) => {
+        const mode = pattern.mode || pattern.fireMode || "aim";
+        const count = getPatternCount(pattern, mode === "aim" ? 1 : mode === "radial" ? 18 : 5);
+        const profile = pattern.profile || (Array.isArray(pattern.shots) && pattern.shots[0]?.profile) || "mixed";
+        const rate = Number.isFinite(pattern.fireRate) ? pattern.fireRate : spec.fireRate ?? 2.2;
+        return `${capitalize(mode)} ${count > 1 ? `x${count}` : "shot"} (${profile}, ${formatNumber(rate, 2)}s)`;
+      });
+    return `Profiled attack patterns: ${patterns.join("; ")}.`;
+  }
   const mode = spec.fireMode || "aim";
   const rate = spec.fireRate ?? 2.2;
   const speed = spec.bulletSpeed;
@@ -7677,6 +7867,8 @@ function getEquippedDefenseDebugRows() {
 
 function getProjectileDamageForSpec(spec, difficulty, level) {
   if (!spec) return null;
+  const projectileProfile = resolveLevelProjectileProfile(spec.projectileProfile, level);
+  if (Number.isFinite(projectileProfile.damage)) return projectileProfile.damage;
   const levelScale = level?.enemyScale || level?.scale || {};
   const damageScale = Math.max(
     0.05,
@@ -7698,11 +7890,13 @@ function getMissionProjectileDamageSummary(level, elapsed = 0) {
   const rows = [];
   level.events.forEach((event) => {
     const spec = mergeLevelEnemySpec(level, event.type, event.overrides || {});
-    const damage = getProjectileDamageForSpec(spec, difficulty, level);
-    if (!Number.isFinite(damage)) return;
-    rows.push({
-      type: event.type,
-      damage,
+    const values = getEnemyProjectileDamageValues(spec, difficulty, level);
+    values.forEach((damage) => {
+      if (!Number.isFinite(damage)) return;
+      rows.push({
+        type: event.type,
+        damage,
+      });
     });
   });
   if (!rows.length) return null;
@@ -8729,6 +8923,8 @@ function spawnEnemyFromSpec(spec) {
     fireMode: spec.fireMode || "aim",
     bulletSpeed: spec.bulletSpeed,
     bulletDamage: spec.bulletDamage,
+    projectileProfile: spec.projectileProfile,
+    attackPatterns: Array.isArray(spec.attackPatterns) ? spec.attackPatterns : null,
     collisionDamage: spec.collisionDamage,
     damageScale: spec.damageScale ?? 1,
     aggroRadius: spec.aggroRadius,
@@ -9640,7 +9836,184 @@ function useConsumable(slotIndex) {
   }
 }
 
-function fireEnemyBullet(enemy, angleOverride, speedOverride) {
+function isPlainObject(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function degToRad(degrees) {
+  return (degrees * Math.PI) / 180;
+}
+
+function getLevelProjectileProfiles(level = mission?.level) {
+  return isPlainObject(level?.projectileProfiles) ? level.projectileProfiles : {};
+}
+
+function pickProjectileRuntimeFields(source) {
+  if (!isPlainObject(source)) return {};
+  const fields = {};
+  PROJECTILE_RUNTIME_PROFILE_KEYS.forEach((key) => {
+    if (source[key] !== undefined) fields[key] = source[key];
+  });
+  return fields;
+}
+
+function resolveLevelProjectileProfile(ref, level = mission?.level) {
+  if (!ref) return {};
+  const profiles = getLevelProjectileProfiles(level);
+  if (typeof ref === "string") {
+    const profile = profiles[ref];
+    return isPlainObject(profile) ? { id: ref, ...pickProjectileRuntimeFields(profile) } : { id: ref };
+  }
+  if (!isPlainObject(ref)) return {};
+  const baseRef = typeof ref.profile === "string"
+    ? ref.profile
+    : typeof ref.id === "string" && profiles[ref.id]
+      ? ref.id
+      : null;
+  const base = baseRef ? resolveLevelProjectileProfile(baseRef, level) : {};
+  return { ...base, ...pickProjectileRuntimeFields(ref) };
+}
+
+function resolveEnemyProjectileProfile(enemy, pattern = null, shot = null) {
+  const parts = [];
+  if (enemy?.projectileProfile) parts.push(resolveLevelProjectileProfile(enemy.projectileProfile));
+  if (pattern?.profile) parts.push(resolveLevelProjectileProfile(pattern.profile));
+  if (typeof shot === "string") {
+    parts.push(resolveLevelProjectileProfile(shot));
+  } else if (isPlainObject(shot)) {
+    if (shot.profile) parts.push(resolveLevelProjectileProfile(shot.profile));
+    parts.push(pickProjectileRuntimeFields(shot));
+  }
+  return Object.assign({}, ...parts);
+}
+
+function resolveProjectileImage(imageKey, visualTheme) {
+  if (!imageKey) return null;
+  if (typeof imageKey !== "string") return imageKey;
+  if (imageKey === "enemyBullet") return visualTheme?.enemyBullet || assets.enemyBullet;
+  if (imageKey === "enemySpreadShard") return visualTheme?.enemySpreadShard || assets.altArc;
+  if (imageKey === "enemyRadialEmber") return visualTheme?.enemyRadialEmber || assets.enemyBullet;
+  if (imageKey === "enemyPurpleOrb") return visualTheme?.enemyPurpleOrb || assets.enemyBullet;
+  if (imageKey === "altArc") return assets.altArc;
+  if (imageKey === "assets.enemyBullet") return assets.enemyBullet;
+  return loadImageCached(imageKey);
+}
+
+function getProjectileThreatStyle(projectile, enemy) {
+  const visualTheme = getLevelVisualTheme();
+  const threat = projectile.threatClass || projectile.visual;
+  let style = {};
+
+  if (threat === "chip") {
+    const size = projectile.width || projectile.height || 14;
+    style = {
+      image: visualTheme?.enemySpreadShard || assets.altArc,
+      width: size,
+      height: size,
+      animation: "shard",
+      spinRate: 4.8,
+    };
+  } else if (threat === "heavy") {
+    style = {
+      shape: "orb",
+      color: "#fb923c",
+      radius: 8,
+      animation: "orb",
+    };
+  } else if (threat === "bossHazard") {
+    style = {
+      shape: "orb",
+      color: "#ef4444",
+      radius: 12,
+      animation: "orb",
+    };
+  } else if (threat === "standard") {
+    style = {
+      image: visualTheme?.enemyBullet || assets.enemyBullet,
+      width: visualTheme?.enemyBulletWidth || 10,
+      height: visualTheme?.enemyBulletHeight || 32,
+      animation: "bolt",
+    };
+  } else {
+    style = getEnemyBulletStyle(enemy);
+  }
+
+  const image = resolveProjectileImage(projectile.image, visualTheme);
+  return {
+    ...style,
+    ...(projectile.shape ? { shape: projectile.shape } : {}),
+    ...(projectile.color ? { color: projectile.color } : {}),
+    ...(image ? { image } : {}),
+    ...(Number.isFinite(projectile.radius) ? { radius: projectile.radius } : {}),
+    ...(Number.isFinite(projectile.width) ? { width: projectile.width } : {}),
+    ...(Number.isFinite(projectile.height) ? { height: projectile.height } : {}),
+    ...(projectile.animation ? { animation: projectile.animation } : {}),
+    ...(Number.isFinite(projectile.spinRate) ? { spinRate: projectile.spinRate } : {}),
+  };
+}
+
+function getProjectileBaseDamage(enemy, projectile) {
+  if (Number.isFinite(projectile.damage)) return projectile.damage;
+  const baseDamage = enemy.bulletDamage ?? (14 + mission.difficulty * 1.3);
+  return baseDamage * (enemy.damageScale ?? 1);
+}
+
+function getProjectileBaseSpeed(enemy, projectile) {
+  return Number.isFinite(projectile.speed)
+    ? projectile.speed
+    : enemy.bulletSpeed ?? 200 + mission.difficulty * 15;
+}
+
+function applyProjectileSpeedJitter(speed, pattern, shot) {
+  const jitter = Number.isFinite(shot?.speedJitter)
+    ? shot.speedJitter
+    : Number.isFinite(pattern?.speedJitter)
+      ? pattern.speedJitter
+      : 0;
+  if (!jitter) return speed;
+  const spread = Math.min(1, Math.max(0, jitter));
+  return speed * (1 - spread + Math.random() * spread * 2);
+}
+
+function getAimedEnemyAngle(enemy) {
+  return player.cloakTimer > 0
+    ? Math.random() * Math.PI * 2
+    : Math.atan2(player.y - enemy.y, player.x - enemy.x);
+}
+
+function getPatternShot(pattern, index) {
+  if (!Array.isArray(pattern?.shots) || !pattern.shots.length) return null;
+  return pattern.shots[index % pattern.shots.length];
+}
+
+function getPatternCount(pattern, fallback) {
+  if (Number.isFinite(pattern?.count)) return Math.max(1, Math.round(pattern.count));
+  if (Array.isArray(pattern?.shots) && pattern.shots.length) return pattern.shots.length;
+  return fallback;
+}
+
+function getPatternSpreadRadians(pattern, fallback) {
+  if (Number.isFinite(pattern?.spreadDeg)) return degToRad(pattern.spreadDeg);
+  if (Number.isFinite(pattern?.spread)) return pattern.spread;
+  return fallback;
+}
+
+function chooseEnemyAttackPattern(enemy) {
+  const patterns = Array.isArray(enemy.attackPatterns)
+    ? enemy.attackPatterns.filter((pattern) => isPlainObject(pattern))
+    : [];
+  if (!patterns.length) return null;
+  const totalWeight = patterns.reduce((sum, pattern) => sum + Math.max(0, pattern.weight ?? 1), 0);
+  if (totalWeight <= 0) return patterns[0];
+  let roll = Math.random() * totalWeight;
+  for (const pattern of patterns) {
+    roll -= Math.max(0, pattern.weight ?? 1);
+    if (roll <= 0) return pattern;
+  }
+  return patterns[patterns.length - 1];
+}
+
+function fireEnemyBullet(enemy, angleOverride, speedOverride, context = {}) {
   const cloaked = player.cloakTimer > 0;
   const fallbackAngle = Math.random() * Math.PI * 2;
   const angle =
@@ -9648,12 +10021,15 @@ function fireEnemyBullet(enemy, angleOverride, speedOverride) {
     (cloaked && enemy.fireMode === "aim"
       ? fallbackAngle
       : Math.atan2(player.y - enemy.y, player.x - enemy.x));
-  const speed =
-    speedOverride ?? enemy.bulletSpeed ?? 200 + mission.difficulty * 15;
-  const baseDamage = enemy.bulletDamage ?? (14 + mission.difficulty * 1.3);
-  const damage = baseDamage * (enemy.damageScale ?? 1);
+  const projectile = resolveEnemyProjectileProfile(enemy, context.pattern, context.shot);
+  const speed = applyProjectileSpeedJitter(
+    speedOverride ?? getProjectileBaseSpeed(enemy, projectile),
+    context.pattern,
+    isPlainObject(context.shot) ? context.shot : null
+  );
+  const damage = getProjectileBaseDamage(enemy, projectile);
 
-  const style = enemy.bulletStyle || getEnemyBulletStyle(enemy);
+  const style = enemy.bulletStyle || getProjectileThreatStyle(projectile, enemy);
   if (style.shape === "orb") {
     enemyBullets.push({
       x: enemy.x,
@@ -9664,6 +10040,7 @@ function fireEnemyBullet(enemy, angleOverride, speedOverride) {
       color: style.color || "#fb7185",
       shape: "orb",
       damage,
+      threatClass: projectile.threatClass || projectile.visual || null,
       age: 0,
       animation: style.animation || "orb",
     });
@@ -9681,33 +10058,100 @@ function fireEnemyBullet(enemy, angleOverride, speedOverride) {
     height: style.height || 32,
     rotation: angle + Math.PI / 2,
     damage,
+    threatClass: projectile.threatClass || projectile.visual || null,
     age: 0,
     animation: style.animation || "bolt",
     spinRate: style.spinRate || 0,
   });
 }
 
-function fireEnemySpread(enemy, count = 5, spread = 0.6) {
-  const cloaked = player.cloakTimer > 0;
-  const base = cloaked
-    ? Math.random() * Math.PI * 2
-    : Math.atan2(player.y - enemy.y, player.x - enemy.x);
-  const start = base - spread / 2;
-  const step = spread / Math.max(1, count - 1);
-  for (let i = 0; i < count; i += 1) {
+function fireEnemySpread(enemy, count = 5, spread = 0.6, pattern = null) {
+  const base = getAimedEnemyAngle(enemy);
+  const resolvedCount = getPatternCount(pattern, count);
+  const resolvedSpread = getPatternSpreadRadians(pattern, spread);
+  const start = resolvedCount === 1 ? base : base - resolvedSpread / 2;
+  const step = resolvedCount === 1 ? 0 : resolvedSpread / (resolvedCount - 1);
+  for (let i = 0; i < resolvedCount; i += 1) {
+    const shot = getPatternShot(pattern, i);
     const angle = start + step * i;
-    fireEnemyBullet(enemy, angle);
+    const offset = isPlainObject(shot) && Number.isFinite(shot.angleOffsetDeg) ? degToRad(shot.angleOffsetDeg) : 0;
+    fireEnemyBullet(enemy, angle + offset, undefined, { pattern, shot });
   }
 }
 
-function fireEnemyRadial(enemy, count = 16) {
-  const step = (Math.PI * 2) / count;
-  for (let i = 0; i < count; i += 1) {
-    const angle = i * step;
-    const speed =
-      (enemy.bulletSpeed ?? 160) * (0.8 + Math.random() * 0.6);
-    fireEnemyBullet(enemy, angle, speed);
+function fireEnemyRadial(enemy, count = 16, pattern = null) {
+  const resolvedCount = getPatternCount(pattern, count);
+  const step = (Math.PI * 2) / resolvedCount;
+  for (let i = 0; i < resolvedCount; i += 1) {
+    const shot = getPatternShot(pattern, i);
+    const angleFromShot = isPlainObject(shot) && Number.isFinite(shot.angleDeg) ? degToRad(shot.angleDeg) : null;
+    const offset = isPlainObject(shot) && Number.isFinite(shot.angleOffsetDeg) ? degToRad(shot.angleOffsetDeg) : 0;
+    const angle = (angleFromShot ?? i * step) + offset;
+    const speed = pattern
+      ? undefined
+      : (enemy.bulletSpeed ?? 160) * (0.8 + Math.random() * 0.6);
+    fireEnemyBullet(enemy, angle, speed, { pattern, shot });
   }
+}
+
+function fireEnemyAttackPattern(enemy, pattern) {
+  const mode = pattern.mode || pattern.fireMode || enemy.fireMode || "aim";
+  if (mode === "spread") {
+    fireEnemySpread(enemy, pattern.count || enemy.fireCount || 5, pattern.spread || enemy.fireSpread || 0.8, pattern);
+    return;
+  }
+  if (mode === "radial") {
+    fireEnemyRadial(enemy, pattern.count || enemy.fireCount || 18, pattern);
+    return;
+  }
+  const resolvedCount = getPatternCount(pattern, 1);
+  const base = getAimedEnemyAngle(enemy);
+  for (let index = 0; index < resolvedCount; index += 1) {
+    const shot = getPatternShot(pattern, index);
+    const fallbackOffset = resolvedCount > 1 ? (index - (resolvedCount - 1) / 2) * degToRad(pattern.spreadDeg || 0) : 0;
+    const offset = isPlainObject(shot) && Number.isFinite(shot.angleOffsetDeg)
+      ? degToRad(shot.angleOffsetDeg)
+      : fallbackOffset;
+    fireEnemyBullet(enemy, base + offset, undefined, { pattern, shot });
+  }
+}
+
+function getEnemyFireCooldown(enemy, pattern = null) {
+  const rate = Number.isFinite(pattern?.fireRate) ? pattern.fireRate : enemy.fireRate;
+  return Math.max(0.4, rate * 0.95);
+}
+
+function getEnemyProjectileDamageValues(spec, difficulty, level) {
+  if (!spec) return [];
+  const collectProfileDamage = (ref) => {
+    const profile = resolveLevelProjectileProfile(ref, level);
+    return Number.isFinite(profile.damage) ? [profile.damage] : [];
+  };
+  if (Array.isArray(spec.attackPatterns) && spec.attackPatterns.length) {
+    const values = [];
+    spec.attackPatterns.forEach((pattern) => {
+      if (!isPlainObject(pattern)) return;
+      const patternValues = [];
+      if (pattern.profile) patternValues.push(...collectProfileDamage(pattern.profile));
+      if (Array.isArray(pattern.shots)) {
+        pattern.shots.forEach((shot) => {
+          if (typeof shot === "string") {
+            patternValues.push(...collectProfileDamage(shot));
+          } else if (isPlainObject(shot)) {
+            if (shot.profile) patternValues.push(...collectProfileDamage(shot.profile));
+            if (Number.isFinite(shot.damage)) patternValues.push(shot.damage);
+          }
+        });
+      }
+      if (!patternValues.length && spec.projectileProfile) {
+        patternValues.push(...collectProfileDamage(spec.projectileProfile));
+      }
+      values.push(...patternValues);
+    });
+    if (values.length) return values;
+  }
+  const value = getProjectileDamageForSpec(spec, difficulty, level);
+  return Number.isFinite(value) ? [value] : [];
 }
 
 function getEnemyBulletStyle(enemy) {
@@ -9844,14 +10288,17 @@ function update(delta) {
       if (enemy.fireCooldown > 0) return;
       if (enemy.y < 40) return;
       if (enemy.isBoss || enemy.y < canvas.height * 0.75) {
-        if (enemy.fireMode === "spread") {
+        const attackPattern = chooseEnemyAttackPattern(enemy);
+        if (attackPattern) {
+          fireEnemyAttackPattern(enemy, attackPattern);
+        } else if (enemy.fireMode === "spread") {
           fireEnemySpread(enemy, enemy.fireCount || 5, enemy.fireSpread || 0.8);
         } else if (enemy.fireMode === "radial") {
           fireEnemyRadial(enemy, enemy.fireCount || 18);
         } else {
           fireEnemyBullet(enemy);
         }
-        enemy.fireCooldown = Math.max(0.4, enemy.fireRate * 0.95);
+        enemy.fireCooldown = getEnemyFireCooldown(enemy, attackPattern);
       }
     });
   }

@@ -13,6 +13,8 @@ Enemy identities come from [enemies/enemy_catalog.json](/Users/pallusa/space_sho
 - The `boss` entry must declare a catalog template such as `"level1:boss"`.
 - Every `events[*].type` must exist in `enemyTypes`.
 - Optional `pickups` entries must use a supported pickup type and valid timing/position data.
+- Optional root `projectileProfiles` define reusable enemy projectile damage, speed, size, and visual identities.
+- Optional enemy `projectileProfile` and `attackPatterns` override firing with named profiles while keeping legacy flat fire fields valid.
 - Unknown enemy ids cancel the mission at runtime and fail validation in `scripts/validate_levels.js`.
 
 ## Example
@@ -62,6 +64,51 @@ Pickup fields:
 - `rarity`: optional for `salvage`; must be a legal generated-item rarity when present.
 - `slotType`: optional for `salvage`; must be a legal generated-item slot type when present.
 
+## Enemy Projectile Profiles
+
+Legacy missions may keep using `fireMode`, `fireCount`, `fireSpread`, `bulletSpeed`, `bulletDamage`, `bulletStyle`, and `damageScale`. These fields remain valid and are still the fallback whenever an enemy does not define `attackPatterns`.
+
+New authored projectile variety uses a root `projectileProfiles` object plus enemy-level `projectileProfile` or `attackPatterns` fields:
+
+```json
+{
+  "projectileProfiles": {
+    "chipNeedle": {
+      "threatClass": "chip",
+      "damage": 6,
+      "speed": 250,
+      "radius": 3,
+      "image": "enemySpreadShard",
+      "width": 13,
+      "height": 13,
+      "animation": "shard",
+      "spinRate": 5.2
+    },
+    "heavyOrb": {
+      "threatClass": "heavy",
+      "damage": 30,
+      "speed": 168,
+      "radius": 8,
+      "shape": "orb",
+      "color": "#fb923c",
+      "animation": "orb"
+    }
+  },
+  "enemyTypes": {
+    "fighter": {
+      "attackPatterns": [
+        { "id": "standard_burst", "mode": "aim", "profile": "chipNeedle", "fireRate": 2.1, "weight": 3 },
+        { "id": "heavy_warning", "mode": "aim", "profile": "heavyOrb", "fireRate": 3.6, "weight": 1 }
+      ]
+    }
+  }
+}
+```
+
+Supported profile fields are `damage`, `speed`, `radius`, `width`, `height`, `threatClass`, `visual`, `image`, `color`, `shape`, `animation`, and `spinRate`. `threatClass` must be one of `chip`, `standard`, `heavy`, or `bossHazard`.
+
+Supported attack-pattern fields are `id`, `mode`, `fireMode`, `profile`, `count`, `spread`, `spreadDeg`, `fireRate`, `weight`, `speedJitter`, and `shots`. `mode` must be `aim`, `spread`, or `radial`. `profile` may name a root profile or provide an inline profile object. `shots` may contain profile ids or inline per-shot overrides; shot objects may also set `angleDeg`, `angleOffsetDeg`, and `speedJitter`.
+
 ## Allowed Enemy Override Fields
 
-`sprite`, `spriteScale`, `color`, `hull`, `hp`, `shield`, `shieldRegen`, `armor`, `armorClass`, `speed`, `score`, `baseCredit`, `radius`, `pattern`, `patternParams`, `ai`, `aiParams`, `fireRate`, `fireMode`, `fireCount`, `fireSpread`, `bulletSpeed`, `bulletDamage`, `collisionDamage`, `damageScale`, `aggroRadius`, `empImmune`, `isBoss`, `hpScale`
+`sprite`, `spriteScale`, `color`, `hull`, `hp`, `shield`, `shieldRegen`, `armor`, `armorClass`, `speed`, `score`, `baseCredit`, `radius`, `pattern`, `patternParams`, `ai`, `aiParams`, `fireRate`, `fireMode`, `fireCount`, `fireSpread`, `bulletSpeed`, `bulletDamage`, `bulletStyle`, `projectileProfile`, `attackPatterns`, `collisionDamage`, `damageScale`, `aggroRadius`, `empImmune`, `isBoss`, `hpScale`

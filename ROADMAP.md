@@ -17,6 +17,16 @@ The broad cleanup and loadout overhaul from `NEXT_OVERHAUL_SPEC.md` has been imp
 - Weapon stats show per-shot damage, volley output, and sustained DPS.
 - Mini weapons, named hulls, second-primary swapping, one-primary focus bonuses, aux engineering, and compatible dual-fire tiers are implemented.
 
+## Enemy Projectile Variety Implemented
+
+The `ENEMY_PROJECTILE_VARIETY_SPEC.md` pass has been implemented for player testing:
+
+- Level JSON supports root `projectileProfiles`, enemy `projectileProfile`, weighted `attackPatterns`, and per-shot overrides.
+- Legacy flat enemy fields still drive baseline missions when attack patterns are absent.
+- Threat Mix variants exist for every player-facing `level*.json` mission so armor class can be tested against chip, standard, heavy, and boss-hazard projectiles without replacing original missions.
+- The Armory stats popup and compendium descriptions read the new authored projectile damage ranges.
+- `scripts/validate_levels.js` validates projectile profile references, attack-pattern structure, shot overrides, numeric fields, and threat classes.
+
 ## Next Player-Testing Priorities
 
 These should be tuned with deployed player feedback before adding another broad system:
@@ -27,6 +37,7 @@ These should be tuned with deployed player feedback before adding another broad 
 - Ledger license costs and whether broader daily stock creates too much market noise.
 - Early hard-mission pickup placement and whether it encourages extraction decisions without making failure farming optimal.
 - Cache readability at combat scale.
+- Armor-class readability against Threat Mix missions, especially chip-fire erasure versus heavy and boss-hazard threat.
 - Armory hardpoint layout and browser density on phone-sized viewports.
 
 ## Deferred

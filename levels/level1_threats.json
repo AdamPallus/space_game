@@ -1,0 +1,330 @@
+{
+  "id": "level1_threats",
+  "name": "First Contact: Threat Mix",
+  "background": "generatedDeepVoid",
+  "music": "01_lift_off_b.ogg",
+  "difficulty": "Easy",
+  "description": "Basic pirate patrols with one shielded drone wing. Learn target priority. Variant with per-shot projectile damage, speed, and threat visuals for armor-class testing.",
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "scout": {
+      "hull": 18,
+      "shield": 0,
+      "armor": 0,
+      "speed": 86,
+      "score": 88,
+      "baseCredit": 12,
+      "patternParams": {
+        "amplitude": 95,
+        "frequency": 3.2
+      },
+      "attackPatterns": [
+        {
+          "id": "chip_snap",
+          "mode": "aim",
+          "profile": "chipNeedle",
+          "fireRate": 1.98,
+          "weight": 1,
+          "speedJitter": 0.08
+        }
+      ]
+    },
+    "fighter": {
+      "hull": 28,
+      "shield": 0,
+      "armor": 0,
+      "speed": 74,
+      "score": 124,
+      "baseCredit": 16,
+      "patternParams": {
+        "amplitude": 70,
+        "frequency": 2.9
+      },
+      "attackPatterns": [
+        {
+          "id": "standard_burst",
+          "mode": "aim",
+          "profile": "standardBolt",
+          "count": 1,
+          "fireRate": 2.2,
+          "weight": 3
+        },
+        {
+          "id": "heavy_warning",
+          "mode": "aim",
+          "profile": "heavyOrb",
+          "fireRate": 3.74,
+          "weight": 1
+        }
+      ]
+    },
+    "drone": {
+      "hull": 22,
+      "shield": 16,
+      "score": 120,
+      "baseCredit": 14,
+      "patternParams": {
+        "amplitude": 75,
+        "frequency": 2.8
+      },
+      "shieldRegen": 7,
+      "attackPatterns": [
+        {
+          "id": "standard_snap",
+          "mode": "aim",
+          "profile": "standardBolt",
+          "count": 1,
+          "fireRate": 2.2,
+          "weight": 3,
+          "speedJitter": 0.1
+        },
+        {
+          "id": "pressure_bolt",
+          "mode": "aim",
+          "profile": "standardBolt",
+          "fireRate": 2.97,
+          "weight": 1
+        }
+      ]
+    },
+    "lurker": {
+      "hull": 24,
+      "shield": 0,
+      "armor": 0,
+      "speed": 70,
+      "score": 290,
+      "baseCredit": 20,
+      "aggroRadius": 240,
+      "fireRate": 2.3,
+      "fireMode": "aim",
+      "shieldRegen": 10,
+      "attackPatterns": [
+        {
+          "id": "standard_snap",
+          "mode": "aim",
+          "profile": "standardBolt",
+          "count": 1,
+          "fireRate": 2.3,
+          "weight": 3,
+          "speedJitter": 0.1
+        },
+        {
+          "id": "pressure_bolt",
+          "mode": "aim",
+          "profile": "standardBolt",
+          "fireRate": 3.11,
+          "weight": 1
+        }
+      ]
+    },
+    "transport": {
+      "hull": 28,
+      "shield": 0,
+      "armor": 0,
+      "speed": 18,
+      "score": 420,
+      "baseCredit": 62,
+      "radius": 30,
+      "pattern": "stall",
+      "patternParams": {
+        "stallY": 145,
+        "stallDuration": 8,
+        "strafeAmp": 72,
+        "strafeFreq": 1.1,
+        "postSpeedMult": 0.8
+      },
+      "ai": "transport",
+      "attackPatterns": [
+        {
+          "id": "heavy_shot",
+          "mode": "aim",
+          "profile": "heavyOrb",
+          "fireRate": 2.6,
+          "weight": 3
+        },
+        {
+          "id": "escort_fan",
+          "mode": "spread",
+          "profile": "standardBolt",
+          "count": 5,
+          "spreadDeg": 42,
+          "fireRate": 3.19,
+          "weight": 1,
+          "shots": [
+            {
+              "profile": "chipNeedle"
+            },
+            {
+              "profile": "standardBolt"
+            },
+            {
+              "profile": "heavyOrb"
+            },
+            {
+              "profile": "standardBolt"
+            },
+            {
+              "profile": "chipNeedle"
+            }
+          ]
+        }
+      ]
+    },
+    "boss": {
+      "template": "level1:boss",
+      "attackPatterns": [
+        {
+          "id": "chip_ring",
+          "mode": "radial",
+          "profile": "chipNeedle",
+          "count": 12,
+          "fireRate": 1.26,
+          "weight": 4,
+          "speedJitter": 0.16
+        },
+        {
+          "id": "mixed_fan",
+          "mode": "spread",
+          "profile": "standardBolt",
+          "count": 5,
+          "spreadDeg": 58,
+          "fireRate": 1.1,
+          "weight": 3,
+          "shots": [
+            {
+              "profile": "chipNeedle"
+            },
+            {
+              "profile": "standardBolt"
+            },
+            {
+              "profile": "bossHazard",
+              "speedJitter": 0.05
+            },
+            {
+              "profile": "standardBolt"
+            },
+            {
+              "profile": "chipNeedle"
+            }
+          ]
+        },
+        {
+          "id": "hazard_pair",
+          "mode": "aim",
+          "profile": "heavyOrb",
+          "fireRate": 1.71,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "heavyOrb",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "bossHazard",
+              "angleOffsetDeg": 8
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "time": 1,
+      "type": "scout",
+      "count": 6,
+      "interval": 0.45
+    },
+    {
+      "time": 6,
+      "type": "fighter",
+      "count": 4,
+      "interval": 0.8
+    },
+    {
+      "time": 10,
+      "type": "drone",
+      "count": 2,
+      "interval": 1.1
+    },
+    {
+      "time": 13,
+      "type": "scout",
+      "count": 8,
+      "interval": 0.35
+    },
+    {
+      "time": 18,
+      "type": "lurker",
+      "count": 2,
+      "interval": 1.3
+    },
+    {
+      "time": 16,
+      "type": "transport",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 24,
+      "type": "fighter",
+      "count": 6,
+      "interval": 0.65
+    },
+    {
+      "time": 32,
+      "type": "drone",
+      "count": 3,
+      "interval": 1
+    },
+    {
+      "time": 42,
+      "type": "boss",
+      "count": 1
+    }
+  ],
+  "baseLevel": "level1",
+  "variant": "threats",
+  "projectileProfiles": {
+    "chipNeedle": {
+      "threatClass": "chip",
+      "damage": 5,
+      "speed": 247,
+      "radius": 3,
+      "image": "enemySpreadShard",
+      "width": 13,
+      "height": 13,
+      "animation": "shard",
+      "spinRate": 5.2
+    },
+    "standardBolt": {
+      "threatClass": "standard",
+      "damage": 13,
+      "speed": 208,
+      "radius": 4,
+      "image": "enemyBullet",
+      "width": 11,
+      "height": 32,
+      "animation": "bolt"
+    },
+    "heavyOrb": {
+      "threatClass": "heavy",
+      "damage": 26,
+      "speed": 176,
+      "radius": 8,
+      "shape": "orb",
+      "color": "#fb923c",
+      "animation": "orb"
+    },
+    "bossHazard": {
+      "threatClass": "bossHazard",
+      "damage": 42,
+      "speed": 156,
+      "radius": 12,
+      "shape": "orb",
+      "color": "#ef4444",
+      "animation": "orb"
+    }
+  }
+}

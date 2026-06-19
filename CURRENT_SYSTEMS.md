@@ -12,7 +12,7 @@ Combat is still arcade-first. The player controls a ship in a scrolling arena, f
 
 ## Combat And Ship Systems
 
-The ship currently uses shields, armor, and hull as separate survivability layers. Weapons support kinetic and plasma identities, spread and multi-shot patterns, charged or heavy-feeling shots, generated frame stats, second-primary swapping, and an explicit Dual Fire mode for compatible loadouts after the Ledger coupler unlock. In Dual Fire mode, each equipped primary uses its own cooldown rather than sharing one cadence. Mini weapons are a separate auto-targeting weapon slot with forward, wide, or turret targeting arcs.
+The ship currently uses shields, armor, and hull as separate survivability layers. Armor class subtracts from incoming non-collision damage after shields, so sufficiently high-class armor can fully negate small projectiles while larger hits still punch through. Weapons support kinetic and plasma identities, spread and multi-shot patterns, charged or heavy-feeling shots, generated frame stats, second-primary swapping, and an explicit Dual Fire mode for compatible loadouts after the Ledger coupler unlock. In Dual Fire mode, each equipped primary uses its own cooldown rather than sharing one cadence. Mini weapons are a separate auto-targeting weapon slot with forward, wide, or turret targeting arcs.
 
 Named hulls shape loadouts through shield, armor, aux, mini, and second-bay modifiers. One-primary builds receive a visible shield focus bonus while carrying a second primary applies a visible defense strain unless hull and engineering choices mitigate it. Existing combat UI exposes health layers, mission objective state, cargo, selected support capability, equipped primary weapon icons, active primary bay or Dual Fire state, swap cooldown, and mini weapon state.
 
@@ -38,7 +38,7 @@ Ledger market state includes rotating stock, lot purchases, dividends, price mov
 
 ## Items, Armory, And Archive
 
-The item system is data-driven through `items/item_pool.json` and `items/weapon_frames.json`. Implemented item categories include primary weapon frames, mini weapons, defense items, support items, named hulls, relics, and economy-facing salvage. Generated items can carry rarity, families, affixes, traits, and descriptive card copy. Mini weapons apply rarity-scaled damage/cooldown/range/speed tuning, can roll supported effects at higher rarities, and existing saved mini loot self-heals through a one-time balance-version marker.
+The item system is data-driven through `items/item_pool.json` and `items/weapon_frames.json`. Implemented item categories include primary weapon frames, mini weapons, defense items, support items, named hulls, relics, and economy-facing salvage. Generated items can carry rarity, families, affixes, traits, and descriptive card copy. Mini weapons apply rarity-scaled damage/cooldown/range/speed tuning and can roll supported effects at higher rarities. Defense loot applies rarity-scaled armor-class and useful shield-strength tuning, with Pre-Founding defense doubling the current scaling above starter baselines. Existing saved mini and defense loot self-heals through one-time balance-version markers.
 
 The armory composes the ship build from inventory instead of replacing the gear model. It is an equip/configure bench with spatial hardpoints around the selected hull, a compact equipped-hull button that opens a small selector popover, and a visible Swap/Dual Fire mode selector. The selected-item inspector caps long stat/affix/lore detail in an internal scroll region so the inventory rack remains usable. Item cards and tooltips expose stats, flavor, rarity, tags, combat implications, DPS first, damage per shot second, shots per second third, mini targeting behavior, dual-fire compatibility, hull bonuses, and second-bay strain. The item archive tracks collected and discovered items, including relic-style long-term finds.
 
@@ -75,7 +75,7 @@ node scripts/balance_report.js
 git diff --check
 ```
 
-`balance_report.js` is the main guardrail for economy and item-pool drift. It mirrors primary damage math, mini rarity tuning, and reports focused single-shot DPS against multi-shot/burst output. `validate_levels.js` and `validate_weapon_frames.js` protect data contracts. UI work should also receive a real browser smoke test.
+`balance_report.js` is the main guardrail for economy and item-pool drift. It mirrors primary damage math, mini rarity tuning, defense rarity tuning, and reports focused single-shot DPS against multi-shot/burst output. `validate_levels.js` and `validate_weapon_frames.js` protect data contracts. UI work should also receive a real browser smoke test.
 
 ## Current Divergences From Desired Next State
 
@@ -84,4 +84,4 @@ The most important remaining design mismatches are:
 - Item durability is not implemented and remains intentionally deferred.
 - Cargo/economy hulls are not part of the first hull pass.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader economy/lore direction rather than active gameplay systems.
-- The new overhaul systems need player-testing balance passes after deployment, especially second-bay strain and early hard-mission pickup placement.
+- The new overhaul systems need player-testing balance passes after deployment, especially second-bay strain, high-rarity defense strength, and early hard-mission pickup placement. If high armor class over-solves projectile density, the preferred counterbalance is adding visually obvious high-damage projectiles rather than simply raising all enemy DPS.

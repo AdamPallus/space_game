@@ -14,7 +14,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
 - A Ledger market with rotating stock, daily lots, pricing, dividends, bulletins, volatility, sponsored listings, and license tiers that increase visible stock through Ledger Investments.
 - Search, sort, and filter controls for armory inventory, item archive, and Ledger sell views.
-- Mini weapons with rarity-scaled output/effects, named hulls, second-primary swapping, one-primary focus bonuses, aux engineering upgrades, and opt-in dual-fire tiers for compatible loadouts.
+- Mini weapons with rarity-scaled output/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, one-primary focus bonuses, aux engineering upgrades, and opt-in dual-fire tiers for compatible loadouts.
 - Generated salvage/UI chrome, mission background art, item icons, and combat fleet art promoted into the live UI, with Kenney assets still available as fallback or comparison art.
 
 ## Known Current Gaps
@@ -25,7 +25,7 @@ These are intentional follow-up targets, not bugs in the docs:
 - Item durability remains deferred.
 - Cargo/economy hulls remain deferred.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader design direction rather than current gameplay systems.
-- The new overhaul systems still need player testing around second-bay strain, early hard-mission pickups, cache readability, and hull art/readability. Recent tuning already made mini rarity matter, gave focused single-shot primaries competitive DPS, and changed Dual Fire to independent per-weapon cadence.
+- The new overhaul systems still need player testing around second-bay strain, early hard-mission pickups, cache readability, hull art/readability, and whether high-rarity defense is now too strong. Recent tuning already made mini rarity matter, made defense rarity matter, gave focused single-shot primaries competitive DPS, and changed Dual Fire to independent per-weapon cadence.
 
 ## Run Locally
 
@@ -99,7 +99,7 @@ Recent history shows these major pieces have already landed:
 - Phase 4c communication UI: richer armory/item cards, tooltips, and item archive.
 - Weapon variety passes: additional projectile patterns, plasma visuals, and combat UI tuning.
 - Generated asset passes: UI chrome, item icon pack, combat fleet art, and mission backgrounds.
-- Next Overhaul playable pass: hangar-first onboarding, explicit reward settlement, scripted caches, EMP projectile clear, browsing controls, Ledger license investment tiers, mini weapons with rarity scaling/effects, named hulls, second-primary swapping, aux engineering, explicit dual-fire mode selection, and independent dual-fire weapon timing.
+- Next Overhaul playable pass: hangar-first onboarding, explicit reward settlement, scripted caches, EMP projectile clear, browsing controls, Ledger license investment tiers, mini weapons with rarity scaling/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, aux engineering, explicit dual-fire mode selection, and independent dual-fire weapon timing.
 
 ## Documentation Map
 

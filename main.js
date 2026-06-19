@@ -362,6 +362,7 @@ const ECONOMY = {
 };
 
 const MINI_WEAPON_BALANCE_VERSION = 2;
+const DEFENSE_BALANCE_VERSION = 1;
 const MINI_EFFECTS = ["homing", "pierce", "explosive", "vampiric"];
 const MINI_RARITY_TUNING = {
   scrap: {
@@ -392,6 +393,12 @@ const MINI_RARITY_TUNING = {
     speedMult: 1.1,
     effectChance: 0.88,
   },
+};
+const DEFENSE_RARITY_TUNING = {
+  scrap: 1,
+  certified: 1.33,
+  prototype: 1.66,
+  preFounding: 2,
 };
 const FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
   small: 1.25,
@@ -1217,7 +1224,7 @@ function normalizeStarterArmoryState(targetState) {
           tags: Array.isArray(item.tags) ? item.tags : [],
           affixes: Array.isArray(item.affixes) ? item.affixes : [],
         }))
-        .map(normalizeSavedMiniItem)
+        .map(normalizeSavedArmoryItem)
     : [];
   const grantedIds = getStarterLoadoutIdsForStage(
     targetState.onboardingStage,
@@ -1982,6 +1989,40 @@ function getMiniRarityTuning(rarity) {
   return MINI_RARITY_TUNING[rarity] || MINI_RARITY_TUNING.scrap;
 }
 
+function getDefenseRarityScale(rarity) {
+  return DEFENSE_RARITY_TUNING[rarity] || DEFENSE_RARITY_TUNING.scrap;
+}
+
+function tuneDefenseBuildForRarity(build, defenseType, rarity = "scrap") {
+  if (!build || typeof build !== "object" || Array.isArray(build)) return null;
+  const normalizedType = defenseType === "armor" || defenseType === "shield" ? defenseType : null;
+  if (!normalizedType) return null;
+  const scale = getDefenseRarityScale(rarity);
+  const tuned = cloneShipBuild(build);
+  if (normalizedType === "armor") {
+    const baselineArmorClass = 10;
+    const armorClass = Number.isFinite(tuned.armorClass)
+      ? tuned.armorClass
+      : baselineArmorClass;
+    const armorClassBonus = Math.max(0, armorClass - baselineArmorClass);
+    tuned.armorClass = roundTunedStat(baselineArmorClass + armorClassBonus * scale, 1);
+    if (Number.isFinite(tuned.armorClassLevel)) {
+      tuned.armorClassLevel = roundTunedStat(tuned.armorClassLevel * scale, 2);
+    }
+  } else {
+    if (Number.isFinite(tuned.shieldMaxLevel) && tuned.shieldMaxLevel > 0) {
+      tuned.shieldMaxLevel = roundTunedStat(tuned.shieldMaxLevel * scale, 2);
+    }
+    if (Number.isFinite(tuned.shieldRegenLevel) && tuned.shieldRegenLevel > 0) {
+      tuned.shieldRegenLevel = roundTunedStat(tuned.shieldRegenLevel * scale, 2);
+    }
+    if (Number.isFinite(tuned.shieldCooldownLevel) && tuned.shieldCooldownLevel < 0) {
+      tuned.shieldCooldownLevel = roundTunedStat(tuned.shieldCooldownLevel * scale, 2);
+    }
+  }
+  return tuned;
+}
+
 function hashUnitFromString(text) {
   const input = String(text || "");
   let hash = 2166136261;
@@ -2070,6 +2111,30 @@ function normalizeSavedMiniItem(item) {
   return item;
 }
 
+function normalizeSavedDefenseItem(item) {
+  if (!item || normalizeArmorySlotType(item.slotType) !== "defense" || !item.build) return item;
+  if (!item.rarity) return item;
+  const rarity = item.rarity || "scrap";
+  if (
+    item.defenseBalanceVersion === DEFENSE_BALANCE_VERSION &&
+    item.defenseRarityTuning === rarity
+  ) {
+    return item;
+  }
+  const tuned = tuneDefenseBuildForRarity(item.build, item.defenseType, rarity);
+  if (!tuned) return item;
+  item.build = tuned;
+  item.defenseBalanceVersion = DEFENSE_BALANCE_VERSION;
+  item.defenseRarityTuning = rarity;
+  return item;
+}
+
+function normalizeSavedArmoryItem(item) {
+  normalizeSavedMiniItem(item);
+  normalizeSavedDefenseItem(item);
+  return item;
+}
+
 function getCatalogAffix(affixId) {
   const catalog = itemPoolCatalog || { affixes: {} };
   const affix = catalog.affixes?.[affixId];
@@ -2139,7 +2204,8 @@ function createRolledItem(baseId, baseEntry, rarity) {
   const instanceId = generateItemInstanceId();
   const rarityConfig = getRarityConfig(rarity);
   const affixCount = rarityConfig.affixCount ?? 0;
-  const build = cloneShipBuild(baseEntry.build || {});
+  const slotType = normalizeArmorySlotType(baseEntry.slotType);
+  let build = cloneShipBuild(baseEntry.build || {});
   build.effectUpgrades = {
     ...cloneShipBuild(createDefaultShipBuild().effectUpgrades),
     ...cloneShipBuild(build.effectUpgrades || {}),
@@ -2176,6 +2242,11 @@ function createRolledItem(baseId, baseEntry, rarity) {
     applyBuildPatch(build, uniqueProperty.build || {});
     applyBuildAdd(build, uniqueProperty.buildAdd || {});
   }
+  const tunedDefenseBuild =
+    slotType === "defense" ? tuneDefenseBuildForRarity(build, baseEntry.defenseType, rarity) : null;
+  if (tunedDefenseBuild) {
+    build = tunedDefenseBuild;
+  }
 
   const affixNames = [
     ...affixes.map((affix) => affix.name).filter(Boolean),
@@ -2205,7 +2276,7 @@ function createRolledItem(baseId, baseEntry, rarity) {
     id: instanceId,
     baseId,
     sourceId: baseEntry.sourceId || baseId,
-    slotType: normalizeArmorySlotType(baseEntry.slotType),
+    slotType,
     defenseType: baseEntry.defenseType || null,
     ability: baseEntry.ability || null,
     name,
@@ -2218,6 +2289,12 @@ function createRolledItem(baseId, baseEntry, rarity) {
     build,
     miniWeapon,
     miniBalanceVersion: miniWeapon ? MINI_WEAPON_BALANCE_VERSION : null,
+    ...(tunedDefenseBuild
+      ? {
+          defenseBalanceVersion: DEFENSE_BALANCE_VERSION,
+          defenseRarityTuning: rarity,
+        }
+      : {}),
     rarity,
     value,
     relicId: baseEntry.relicLore ? baseId : null,
@@ -2523,7 +2600,7 @@ function addItemsToArmoryInventory(items, { recordRelics = true } = {}) {
   const existingIds = new Set(inventory.map((item) => item.id));
   items.forEach((item) => {
     if (!item?.id || existingIds.has(item.id)) return;
-    const normalizedItem = normalizeSavedMiniItem(cloneItem(item));
+    const normalizedItem = normalizeSavedArmoryItem(cloneItem(item));
     if (recordRelics) recordRelicDiscovery(normalizedItem);
     recordItemDiscovery(normalizedItem);
     inventory.push(normalizedItem);

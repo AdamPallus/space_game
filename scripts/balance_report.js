@@ -39,6 +39,12 @@ const MINI_RARITY_TUNING = {
   prototype: { damageMult: 1.75, cooldownMult: 0.8, rangeMult: 1.08, speedMult: 1.06 },
   preFounding: { damageMult: 2.25, cooldownMult: 0.72, rangeMult: 1.12, speedMult: 1.1 },
 };
+const DEFENSE_RARITY_TUNING = {
+  scrap: 1,
+  certified: 1.33,
+  prototype: 1.66,
+  preFounding: 2,
+};
 const FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
   small: 1.25,
   medium: 1.6,
@@ -126,7 +132,7 @@ function makeRng(seed) {
   };
 }
 
-function getApplicableAffixes(pool, slotType, baseBuild = {}) {
+function getApplicableAffixes(pool, slotType, baseBuild = {}, baseEntry = {}) {
   const normalizedSlot = normalizeSlotType(slotType);
   const baseEffect = baseBuild.effect && baseBuild.effect !== "none" ? "weapon-effect" : null;
   return Object.entries(pool.affixes || {})
@@ -134,15 +140,23 @@ function getApplicableAffixes(pool, slotType, baseBuild = {}) {
     .filter((affix) => {
       const allowedSlots = Array.isArray(affix.slotTypes) ? affix.slotTypes : [];
       if (!allowedSlots.map(normalizeSlotType).includes(normalizedSlot)) return false;
+      if (
+        normalizedSlot === "defense" &&
+        Array.isArray(affix.defenseTypes) &&
+        baseEntry.defenseType &&
+        !affix.defenseTypes.includes(baseEntry.defenseType)
+      ) {
+        return false;
+      }
       if (baseEffect && affix.exclusiveGroup === baseEffect) return false;
       return true;
     });
 }
 
-function pickAffixes(pool, slotType, baseBuild, count, rng) {
+function pickAffixes(pool, slotType, baseBuild, count, rng, baseEntry = {}) {
   const selected = [];
   const usedGroups = new Set();
-  const candidates = getApplicableAffixes(pool, slotType, baseBuild);
+  const candidates = getApplicableAffixes(pool, slotType, baseBuild, baseEntry);
   while (selected.length < count && candidates.length) {
     const index = Math.floor(rng() * candidates.length);
     const affix = candidates.splice(index, 1)[0];
@@ -178,7 +192,8 @@ function rollSampleItem(pool, id, entry, rarity, seed) {
   build.kineticImpulseBudget = Number.isFinite(build.kineticImpulseBudget)
     ? build.kineticImpulseBudget
     : 0;
-  const affixes = pickAffixes(pool, entry.slotType, build, rarityConfig.affixCount || 0, rng);
+  const slotType = normalizeSlotType(entry.slotType);
+  const affixes = pickAffixes(pool, entry.slotType, build, rarityConfig.affixCount || 0, rng, entry);
   affixes.forEach((affix) => {
     applyBuildPatch(build, affix.build || {});
     applyBuildAdd(build, affix.buildAdd || {});
@@ -189,6 +204,8 @@ function rollSampleItem(pool, id, entry, rarity, seed) {
     applyBuildPatch(build, unique.build || {});
     applyBuildAdd(build, unique.buildAdd || {});
   }
+  const tunedDefenseBuild =
+    slotType === "defense" ? tuneDefenseBuildForRarity(build, entry.defenseType, rarity) : null;
   const affixNames = [
     ...affixes.map((affix) => affix.name).filter(Boolean),
     unique?.name,
@@ -204,7 +221,8 @@ function rollSampleItem(pool, id, entry, rarity, seed) {
         rarity,
       ])
     ),
-    build,
+    build: tunedDefenseBuild || build,
+    defenseType: entry.defenseType || null,
     miniWeapon: entry.miniWeapon ? tuneMiniWeaponForRarity(entry.miniWeapon, rarity) : null,
   };
 }
@@ -224,6 +242,40 @@ function roundTunedStat(value, decimals = 1) {
 
 function getMiniRarityTuning(rarity) {
   return MINI_RARITY_TUNING[rarity] || MINI_RARITY_TUNING.scrap;
+}
+
+function getDefenseRarityScale(rarity) {
+  return DEFENSE_RARITY_TUNING[rarity] || DEFENSE_RARITY_TUNING.scrap;
+}
+
+function tuneDefenseBuildForRarity(build, defenseType, rarity = "scrap") {
+  if (!build || typeof build !== "object" || Array.isArray(build)) return null;
+  const scale = getDefenseRarityScale(rarity);
+  const tuned = clone(build);
+  if (defenseType === "armor") {
+    const baselineArmorClass = 10;
+    const armorClass = Number.isFinite(tuned.armorClass)
+      ? tuned.armorClass
+      : baselineArmorClass;
+    const armorClassBonus = Math.max(0, armorClass - baselineArmorClass);
+    tuned.armorClass = roundTunedStat(baselineArmorClass + armorClassBonus * scale, 1);
+    if (Number.isFinite(tuned.armorClassLevel)) {
+      tuned.armorClassLevel = roundTunedStat(tuned.armorClassLevel * scale, 2);
+    }
+  } else if (defenseType === "shield") {
+    if (Number.isFinite(tuned.shieldMaxLevel) && tuned.shieldMaxLevel > 0) {
+      tuned.shieldMaxLevel = roundTunedStat(tuned.shieldMaxLevel * scale, 2);
+    }
+    if (Number.isFinite(tuned.shieldRegenLevel) && tuned.shieldRegenLevel > 0) {
+      tuned.shieldRegenLevel = roundTunedStat(tuned.shieldRegenLevel * scale, 2);
+    }
+    if (Number.isFinite(tuned.shieldCooldownLevel) && tuned.shieldCooldownLevel < 0) {
+      tuned.shieldCooldownLevel = roundTunedStat(tuned.shieldCooldownLevel * scale, 2);
+    }
+  } else {
+    return null;
+  }
+  return tuned;
 }
 
 function tuneMiniWeaponForRarity(mini, rarity = "scrap") {
@@ -372,6 +424,37 @@ function summarizeMiniWeapon(id, entry) {
     damage,
     cooldown,
     dps: cooldown > 0 ? damage / cooldown : 0,
+  };
+}
+
+function summarizeDefenseItem(id, entry) {
+  const build = entry.build || {};
+  const defenseType = entry.defenseType || "shield";
+  const shieldSlots = defenseType === "shield" ? 1 : 0;
+  const armorSlots = defenseType === "armor" ? 1 : 0;
+  const shieldCapacitySlots = Math.max(0.25, shieldSlots + (build.shieldMaxLevel ?? 0) * 0.18);
+  const shield = shieldSlots > 0 ? Math.round(40 * shieldCapacitySlots) : 0;
+  const shieldRegenSlots = Math.max(0.2, shieldSlots + (build.shieldRegenLevel ?? 0) * 0.22);
+  const shieldRegen = shieldSlots > 0 ? 12 * shieldRegenSlots : 0;
+  const shieldRechargeDelay = shieldSlots > 0
+    ? Math.max(0.7, 2.5 * (1 + (build.shieldCooldownLevel ?? 0) * 0.16))
+    : 0;
+  const armorCapacitySlots = Math.max(0.25, armorSlots + (build.armorAmountLevel ?? 0) * 0.18);
+  const armor = armorSlots > 0 ? Math.round(80 * armorCapacitySlots) : 0;
+  const armorClass = armorSlots > 0
+    ? Math.round((build.armorClass ?? 10) + (build.armorClassLevel ?? 0) * 2)
+    : 0;
+  const lightProjectileDamage = armorSlots > 0 ? Math.max(0, 12 - armorClass) : null;
+  return {
+    id,
+    name: entry.name || id,
+    defenseType,
+    shield,
+    shieldRegen,
+    shieldRechargeDelay,
+    armor,
+    armorClass,
+    lightProjectileDamage,
   };
 }
 
@@ -606,6 +689,34 @@ miniRows.forEach((row) => {
   );
 });
 
+const defenseRows = [
+  ...Object.entries(pool.entries || {})
+    .filter(([, entry]) => normalizeSlotType(entry.slotType) === "defense")
+    .flatMap(([id, entry], index) => [
+      summarizeDefenseItem(`${id}:scrap`, rollSampleItem(pool, id, entry, "scrap", 6000 + index)),
+      summarizeDefenseItem(`${id}:certified`, rollSampleItem(pool, id, entry, "certified", 7000 + index)),
+      summarizeDefenseItem(`${id}:prototype`, rollSampleItem(pool, id, entry, "prototype", 8000 + index)),
+    ]),
+  ...Object.entries(pool.relics || {})
+    .filter(([, entry]) => normalizeSlotType(entry.slotType) === "defense")
+    .map(([id, entry], index) =>
+      summarizeDefenseItem(`${id}:preFounding`, rollSampleItem(pool, id, entry, "preFounding", 9000 + index))
+    ),
+];
+
+console.log("\nDefense item coverage");
+defenseRows.forEach((row) => {
+  if (row.defenseType === "armor") {
+    console.log(
+      `${row.name}: armor ${row.armor} | AC ${row.armorClass} | 12-damage hit -> ${row.lightProjectileDamage.toFixed(1)}`
+    );
+  } else {
+    console.log(
+      `${row.name}: shield ${row.shield} | regen ${row.shieldRegen.toFixed(1)}/s | recovery ${row.shieldRechargeDelay.toFixed(2)}s`
+    );
+  }
+});
+
 const toughestPlated = enemies
   .filter((enemy) => enemy.maxArmor > 0)
   .sort(
@@ -621,6 +732,18 @@ if (miniRows.length < 4) {
 miniRows.forEach((row) => {
   if (!(row.damage > 0 && row.cooldown > 0 && row.dps > 0 && row.range > 0)) {
     failures.push(`${row.name} has invalid mini weapon output coverage.`);
+  }
+});
+if (defenseRows.length < 4) {
+  failures.push(`Expected at least 4 defense item samples; found ${defenseRows.length}.`);
+}
+defenseRows.forEach((row) => {
+  if (row.defenseType === "armor") {
+    if (!(row.armor > 0 && row.armorClass >= 10 && row.lightProjectileDamage >= 0)) {
+      failures.push(`${row.name} has invalid armor defense output coverage.`);
+    }
+  } else if (!(row.shield > 0 && row.shieldRegen > 0 && row.shieldRechargeDelay > 0)) {
+    failures.push(`${row.name} has invalid shield defense output coverage.`);
   }
 });
 const primaryDpsSamples = matrix

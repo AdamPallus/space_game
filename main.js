@@ -7,6 +7,7 @@ const hudShield = document.getElementById("hud-shield");
 const hudCredits = document.getElementById("hud-credits");
 const hudScore = document.getElementById("hud-score");
 const hudTime = document.getElementById("hud-time");
+const hudMini = document.getElementById("hud-mini");
 const hudMission = document.getElementById("hud-mission");
 const bossLabel = document.getElementById("boss-label");
 const bossShieldFill = document.getElementById("boss-shield-fill");
@@ -38,6 +39,9 @@ const armoryRackTitle = document.getElementById("armory-rack-title");
 const armoryRackCopy = document.getElementById("armory-rack-copy");
 const armoryRackTip = document.getElementById("armory-rack-tip");
 const armoryToggleStats = document.getElementById("armory-toggle-stats");
+const armoryBrowserSearch = document.getElementById("armory-browser-search");
+const armoryBrowserSort = document.getElementById("armory-browser-sort");
+const armoryBrowserFilter = document.getElementById("armory-browser-filter");
 
 const overlay = document.getElementById("overlay");
 const hangarPanel = document.getElementById("hangar");
@@ -63,6 +67,10 @@ const ledgerBulletin = document.getElementById("ledger-bulletin");
 const ledgerStockList = document.getElementById("ledger-stock-list");
 const ledgerInventoryList = document.getElementById("ledger-inventory-list");
 const ledgerReceipt = document.getElementById("ledger-receipt");
+const ledgerLicensePanel = document.getElementById("ledger-license-panel");
+const ledgerInventorySearch = document.getElementById("ledger-inventory-search");
+const ledgerInventorySort = document.getElementById("ledger-inventory-sort");
+const ledgerInventoryFilter = document.getElementById("ledger-inventory-filter");
 const ledgerModeButtons = document.querySelectorAll("[data-ledger-mode]");
 const ledgerModePanels = document.querySelectorAll("[data-ledger-panel]");
 
@@ -82,6 +90,7 @@ const debriefStamp = document.getElementById("debrief-stamp");
 const mobileAltBtn = document.getElementById("mobile-alt");
 const mobileAltIcon = document.getElementById("mobile-alt-icon");
 const mobileAltLabel = document.getElementById("mobile-alt-label");
+const mobileSwapBtn = document.getElementById("mobile-swap");
 const mobileItem1 = document.getElementById("mobile-item-1");
 const mobileItem2 = document.getElementById("mobile-item-2");
 const mobileEjectBtn = document.getElementById("mobile-eject");
@@ -91,6 +100,8 @@ const levelList = document.getElementById("level-list");
 const compendiumList = document.getElementById("compendium-list");
 const compendiumSearch = document.getElementById("compendium-search");
 const compendiumShowBosses = document.getElementById("compendium-show-bosses");
+const archiveSort = document.getElementById("archive-sort");
+const archiveFilter = document.getElementById("archive-filter");
 const archiveTitle = document.getElementById("archive-title");
 const compendiumModeButtons = document.querySelectorAll("[data-compendium-mode]");
 const relicArchive = document.getElementById("relic-archive");
@@ -104,9 +115,17 @@ const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
 const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
+const GENERATED_ITEM_ICON_ROOT_V2 = `${GENERATED_ROOT}/item_icons_v2`;
 const GENERATED_PILOT_ROOT = `${GENERATED_ROOT}/pilot_sprites`;
 const BOSS_DEFEAT_DELAY_SECONDS = 2.8;
 const VALID_WEAPON_SPREADS = ["focused", "dual", "dualRapid", "rapid", "burst", "wide"];
+const VALID_ITEM_SLOT_TYPES = ["primary", "mini", "defense", "aux", "support", "hull"];
+const VALID_MINI_ARCS = ["forward", "wide", "turret"];
+const EMP_CLEAR_BASE_RADIUS = 190;
+const SECOND_PRIMARY_SWAP_COOLDOWN = 1.0;
+const SECOND_PRIMARY_STRAIN_RATE = 0.15;
+const SINGLE_PRIMARY_FOCUS_RATE = 0.1;
+const DUAL_FIRE_DAMAGE_MULTS = [0, 0.6, 0.7, 0.85, 1.0];
 const WEAPON_SPREAD_LABELS = {
   focused: "Single",
   dual: "Dual",
@@ -163,6 +182,7 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
 const ECONOMY = {
   cargoSize: 3,
   salvagePodSpeed: 40,
+  fieldPickupSpeed: 46,
   cargoFullFlashSeconds: 1.1,
   minDamageFloor: 0.2,
   kinetic: {
@@ -187,9 +207,10 @@ const ECONOMY = {
   },
   dropSources: {
     defaultSlotWeights: {
-      primary: 0.58,
-      defense: 0.24,
-      aux: 0.18,
+      primary: 0.5,
+      mini: 0.12,
+      defense: 0.22,
+      aux: 0.16,
     },
     ordinary: {
       chance: 0.02,
@@ -262,8 +283,14 @@ const ECONOMY = {
     buyRate: 1,
     sellRate: 0.4,
     handlingFeeRate: 0.6,
-    stockVersion: 3,
+    stockVersion: 4,
     stockLots: 5,
+    licenseTiers: [
+      { tier: 0, lots: 5, cost: 0 },
+      { tier: 1, lots: 7, cost: 800 },
+      { tier: 2, lots: 9, cost: 1800 },
+      { tier: 3, lots: 11, cost: 4000 },
+    ],
     bulletinCadence: 3,
     bulletinBonusRate: 0.4,
     mispricedLotChance: 0.125,
@@ -304,6 +331,9 @@ const ECONOMY = {
 
 const LEDGER_COPY = {
   cargoFull: "CARGO FULL",
+  shieldCache: "SHIELD CACHE",
+  armorCache: "ARMOR PATCH",
+  salvageCache: "FIELD SALVAGE",
   rtbComplete: "RTB complete. Bounty and cargo secured.",
   bossComplete: "Contract settled. Recovery crew attached boss salvage.",
   droneDestroyed: "Drone destroyed. Hull writedown applied; cargo claim voided.",
@@ -358,6 +388,20 @@ const upgrades = [
     desc: "+12% ability duration per level.",
     baseCost: 200,
   },
+  {
+    id: "auxPower",
+    name: "Aux Port Tuning",
+    desc: "+10% aux strength/radius/duration and -5% cooldown per tier, max 3.",
+    baseCost: 420,
+    maxLevel: 3,
+  },
+  {
+    id: "dualFire",
+    name: "Dual-Fire Coupler",
+    desc: "Unlock simultaneous compatible primary fire at 60%, 70%, 85%, then 100% damage.",
+    baseCost: 900,
+    maxLevel: 4,
+  },
 ];
 
 function createDefaultShipBuild() {
@@ -385,6 +429,12 @@ function createDefaultShipBuild() {
     armorClassLevel: 0,
     armorDragLevel: 0,
     kineticImpulseBudget: 0,
+    hullMult: 1,
+    shieldMaxMult: 1,
+    shieldRegenMult: 1,
+    armorCapacityMult: 1,
+    armorDragMult: 1,
+    primaryDamageMult: 1,
   };
 }
 
@@ -605,9 +655,9 @@ function calculateDividends(baseCredits) {
 const ONBOARDING_STAGE_TRAINING_COMPLETE = 3;
 const ONBOARDING_STAGE_COMPLETE = 4;
 const DEFAULT_SYSTEM_UNLOCKS = {
-  loadout: false,
-  economy: false,
-  compendium: false,
+  loadout: true,
+  economy: true,
+  compendium: true,
 };
 
 const onboardingTrainingMissionSpecs = [
@@ -756,22 +806,11 @@ function getStarterLoadoutIdsForStage(stage, skipOnboarding = false) {
   const starterFrames = starterWeaponLoadouts.filter((item) =>
     Number.isFinite(item.starterUnlockStage)
   );
-  if (skipOnboarding || stage >= ONBOARDING_STAGE_TRAINING_COMPLETE) {
-    return starterFrames.map((item) => item.id);
-  }
-  return starterFrames
-    .filter((item) => item.starterUnlockStage <= stage)
-    .map((item) => item.id);
+  return starterFrames.map((item) => item.id);
 }
 
 function getStarterDefenseModuleIdsForStage(stage, skipOnboarding = false) {
-  if (skipOnboarding || stage >= ONBOARDING_STAGE_TRAINING_COMPLETE) {
-    return defenseModules.map((item) => item.id);
-  }
-  if (stage >= 2) {
-    return ["shield_module", "armor_module"];
-  }
-  return ["shield_module"];
+  return defenseModules.map((item) => item.id);
 }
 
 function getSupportModuleEntries() {
@@ -805,11 +844,36 @@ function deriveDefenseSlotsFromBuild(build) {
   });
 }
 
-function getPrimaryArmoryItem(targetState = state) {
-  const equippedItem = findInventoryItem(targetState.armory?.equippedPrimaryItemId, targetState);
+function getPrimaryBayId(targetState = state, bayIndex = 0) {
+  if (bayIndex === 1) return targetState.armory?.equippedSecondPrimaryItemId || null;
+  return targetState.armory?.equippedPrimaryItemId || null;
+}
+
+function getActivePrimaryBay(targetState = state) {
+  const desired = targetState.activePrimaryBay === 1 ? 1 : 0;
+  if (desired === 1 && getPrimaryArmoryItem(targetState, 1)) return 1;
+  return 0;
+}
+
+function getPrimaryArmoryItem(targetState = state, bayIndex = null) {
+  const bay = bayIndex === null ? getActivePrimaryBay(targetState) : bayIndex;
+  const equippedItem = findInventoryItem(getPrimaryBayId(targetState, bay), targetState);
   if (equippedItem?.slotType === "primary") return equippedItem;
-  const equippedId = targetState.armory?.equippedLoadoutId;
+  const equippedId =
+    bay === 1
+      ? targetState.armory?.equippedSecondLoadoutId
+      : targetState.armory?.equippedLoadoutId;
+  if (bay === 1 && !equippedId) return null;
   return starterWeaponLoadoutsById[equippedId] || starterWeaponLoadouts[0];
+}
+
+function getSecondPrimaryArmoryItem(targetState = state) {
+  const equippedItem = findInventoryItem(targetState.armory?.equippedSecondPrimaryItemId, targetState);
+  if (equippedItem?.slotType === "primary") return equippedItem;
+  const equippedId = targetState.armory?.equippedSecondLoadoutId;
+  return equippedId && starterWeaponLoadoutsById[equippedId]
+    ? starterWeaponLoadoutsById[equippedId]
+    : null;
 }
 
 function getDefenseArmoryItemById(moduleId, targetState = state) {
@@ -817,9 +881,41 @@ function getDefenseArmoryItemById(moduleId, targetState = state) {
   return defenseModulesById[moduleId] || findInventoryItem(moduleId, targetState);
 }
 
-function composeShipBuildFromArmory(targetState) {
+function getPrimaryLoadoutDefenseModifiers(targetState = state) {
+  const hasSecondPrimary = !!getSecondPrimaryArmoryItem(targetState);
+  const hullBonuses = getHullBonuses(targetState);
+  const mitigation = Math.max(0, hullBonuses.secondBayStrainReduction || 0);
+  if (hasSecondPrimary) {
+    const strain = Math.max(0, SECOND_PRIMARY_STRAIN_RATE - mitigation);
+    return {
+      label: "Second-bay strain",
+      shieldMaxMult: 1 - strain,
+      shieldRegenMult: 1 - strain,
+    };
+  }
+  return {
+    label: "Single-primary focus",
+    shieldMaxMult: 1 + SINGLE_PRIMARY_FOCUS_RATE,
+    shieldRegenMult: 1 + SINGLE_PRIMARY_FOCUS_RATE,
+  };
+}
+
+function applyHullAndLoadoutModifiers(build, targetState = state) {
+  const hullBonuses = getHullBonuses(targetState);
+  const loadout = getPrimaryLoadoutDefenseModifiers(targetState);
+  build.hullMult = hullBonuses.hullMult ?? 1;
+  build.shieldMaxMult = (hullBonuses.shieldMaxMult ?? 1) * loadout.shieldMaxMult;
+  build.shieldRegenMult = (hullBonuses.shieldRegenMult ?? 1) * loadout.shieldRegenMult;
+  build.armorCapacityMult = hullBonuses.armorCapacityMult ?? 1;
+  build.armorDragMult = hullBonuses.armorDragMult ?? 1;
+  build.primaryDamageMult = hullBonuses.primaryDamageMult ?? 1;
+  build.loadoutModifierLabel = loadout.label;
+  return build;
+}
+
+function composeShipBuildFromArmory(targetState, options = {}) {
   const base = createDefaultShipBuild();
-  const frame = getPrimaryArmoryItem(targetState);
+  const frame = options.primaryItem || getPrimaryArmoryItem(targetState);
   const frameBuild = frame?.build || {};
   const merged = {
     ...cloneShipBuild(base),
@@ -897,7 +993,7 @@ function composeShipBuildFromArmory(targetState) {
     });
   }
 
-  return merged;
+  return applyHullAndLoadoutModifiers(merged, targetState);
 }
 
 function findClosestStarterLoadoutId(build) {
@@ -977,12 +1073,26 @@ function normalizeStarterArmoryState(targetState) {
   )
     ? existingPrimaryItemId
     : null;
+  const existingSecondPrimaryItemId =
+    typeof existingArmory.equippedSecondPrimaryItemId === "string"
+      ? existingArmory.equippedSecondPrimaryItemId
+      : null;
+  const equippedSecondPrimaryItemId = existingInventory.some(
+    (item) => item.id === existingSecondPrimaryItemId && item.slotType === "primary"
+  )
+    ? existingSecondPrimaryItemId
+    : null;
   const desiredEquippedId =
     existingArmory.equippedLoadoutId && ownedLoadoutIds.includes(existingArmory.equippedLoadoutId)
       ? existingArmory.equippedLoadoutId
       : ownedLoadoutIds.includes(findClosestStarterLoadoutId(targetState.shipBuild))
         ? findClosestStarterLoadoutId(targetState.shipBuild)
         : ownedLoadoutIds[0] || starterWeaponLoadouts[0].id;
+  const desiredSecondEquippedId =
+    existingArmory.equippedSecondLoadoutId &&
+    ownedLoadoutIds.includes(existingArmory.equippedSecondLoadoutId)
+      ? existingArmory.equippedSecondLoadoutId
+      : null;
   const inventoryDefenseIds = new Set(
     existingInventory.filter((item) => item.slotType === "defense").map((item) => item.id)
   );
@@ -1013,16 +1123,39 @@ function normalizeStarterArmoryState(targetState) {
   )
     ? existingSupportItemId
     : null;
+  const existingMiniItemId =
+    typeof existingArmory.equippedMiniItemId === "string"
+      ? existingArmory.equippedMiniItemId
+      : null;
+  const ownedMiniWeaponIds = Array.from(
+    new Set([
+      ...(Array.isArray(existingArmory.ownedMiniWeaponIds) ? existingArmory.ownedMiniWeaponIds : []),
+      ...starterMiniWeapons.map((item) => item.id),
+    ])
+  ).filter((id) => !!starterMiniWeaponsById[id]);
+  const equippedMiniItemId = existingInventory.some(
+    (item) => item.id === existingMiniItemId && normalizeArmorySlotType(item.slotType) === "mini"
+  )
+    ? existingMiniItemId
+    : ownedMiniWeaponIds.includes(existingMiniItemId)
+      ? existingMiniItemId
+      : ownedMiniWeaponIds[0] || null;
 
   targetState.armory = {
     ownedLoadoutIds,
     ownedDefenseModuleIds,
+    ownedMiniWeaponIds,
     equippedLoadoutId: desiredEquippedId,
     equippedPrimaryItemId,
+    equippedSecondLoadoutId: equippedSecondPrimaryItemId ? null : desiredSecondEquippedId,
+    equippedSecondPrimaryItemId,
     equippedDefenseSlotIds,
     equippedSupportItemId,
+    equippedMiniItemId,
     inventory: existingInventory,
   };
+  targetState.activePrimaryBay = targetState.activePrimaryBay === 1 && getSecondPrimaryArmoryItem(targetState) ? 1 : 0;
+  targetState.hulls = normalizeHullState(targetState.hulls);
   targetState.shipBuild = composeShipBuildFromArmory(targetState);
 }
 
@@ -1034,7 +1167,7 @@ function getEquippedStarterLoadout() {
   return getPrimaryArmoryItem(state);
 }
 
-function equipStarterLoadout(loadoutId) {
+function equipStarterLoadout(loadoutId, bayIndex = 0) {
   const item = starterWeaponLoadoutsById[loadoutId];
   if (!item) return;
   if (!getOwnedStarterLoadoutIds().includes(loadoutId)) return;
@@ -1044,14 +1177,24 @@ function equipStarterLoadout(loadoutId) {
     equippedLoadoutId: loadoutId,
     equippedDefenseSlotIds: ["shield_module", "none"],
   };
-  state.armory.equippedLoadoutId = loadoutId;
-  state.armory.equippedPrimaryItemId = null;
+  if (bayIndex === 1) {
+    if (!state.armory.equippedPrimaryItemId && state.armory.equippedLoadoutId === loadoutId) return;
+    state.armory.equippedSecondLoadoutId = loadoutId;
+    state.armory.equippedSecondPrimaryItemId = null;
+  } else {
+    state.armory.equippedLoadoutId = loadoutId;
+    state.armory.equippedPrimaryItemId = null;
+    if (state.armory.equippedSecondLoadoutId === loadoutId) {
+      state.armory.equippedSecondLoadoutId = null;
+      state.activePrimaryBay = 0;
+    }
+  }
   state.shipBuild = composeShipBuildFromArmory(state);
   syncShipBuildToLegacy();
   saveState();
 }
 
-function equipPrimaryInventoryItem(itemId) {
+function equipPrimaryInventoryItem(itemId, bayIndex = 0) {
   const item = findInventoryItem(itemId);
   if (!item || item.slotType !== "primary") return;
   state.armory = state.armory || {
@@ -1061,7 +1204,56 @@ function equipPrimaryInventoryItem(itemId) {
     equippedDefenseSlotIds: ["shield_module", "none"],
     inventory: [],
   };
-  state.armory.equippedPrimaryItemId = item.id;
+  if (bayIndex === 1) {
+    if (state.armory.equippedPrimaryItemId === item.id) return;
+    state.armory.equippedSecondPrimaryItemId = item.id;
+    state.armory.equippedSecondLoadoutId = null;
+  } else {
+    if (state.armory.equippedSecondPrimaryItemId === item.id) {
+      state.armory.equippedSecondPrimaryItemId = null;
+      state.armory.equippedSecondLoadoutId = null;
+      state.activePrimaryBay = 0;
+    }
+    state.armory.equippedPrimaryItemId = item.id;
+  }
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
+  saveState();
+}
+
+function clearSecondPrimaryBay() {
+  if (!state.armory) return;
+  state.armory.equippedSecondLoadoutId = null;
+  state.armory.equippedSecondPrimaryItemId = null;
+  state.activePrimaryBay = 0;
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
+  saveState();
+}
+
+function equipMiniWeapon(itemId) {
+  if (!state.armory) return;
+  const inventoryItem = findInventoryItem(itemId);
+  if (inventoryItem && normalizeArmorySlotType(inventoryItem.slotType) === "mini") {
+    state.armory.equippedMiniItemId = inventoryItem.id;
+  } else if (starterMiniWeaponsById[itemId]) {
+    state.armory.equippedMiniItemId = itemId;
+  } else {
+    return;
+  }
+  saveState();
+}
+
+function equipHull(hullId) {
+  const hull = hullsById[hullId];
+  if (!hull) return;
+  state.hulls = normalizeHullState(state.hulls);
+  if (!state.hulls.ownedIds.includes(hullId)) {
+    if (state.credits < (hull.cost || 0)) return;
+    state.credits -= hull.cost || 0;
+    state.hulls.ownedIds.push(hullId);
+  }
+  state.hulls.equippedId = hullId;
   state.shipBuild = composeShipBuildFromArmory(state);
   syncShipBuildToLegacy();
   saveState();
@@ -1103,26 +1295,14 @@ function equipDefenseModule(slotIndex, moduleId) {
 }
 
 function buildSystemUnlocksForStage(stage, skipOnboarding = false) {
-  if (skipOnboarding || stage >= ONBOARDING_STAGE_COMPLETE) {
-    return { loadout: true, economy: true, compendium: true };
-  }
-  if (stage >= ONBOARDING_STAGE_TRAINING_COMPLETE) {
-    return { loadout: true, economy: false, compendium: true };
-  }
   return { ...DEFAULT_SYSTEM_UNLOCKS };
 }
 
 function normalizeOnboardingState(parsed) {
   const explicitSkip = !!parsed.debugSkipOnboarding;
-  let stage = Number.isFinite(parsed.onboardingStage) ? parsed.onboardingStage : null;
-  if (stage === null) {
-    // Existing pilots keep access; only fresh saves run onboarding.
-    stage = (parsed.missionCount ?? 0) > 0 ? ONBOARDING_STAGE_COMPLETE : 0;
-  }
-  stage = Math.max(0, Math.min(ONBOARDING_STAGE_COMPLETE, Math.floor(stage)));
-  parsed.onboardingStage = stage;
+  parsed.onboardingStage = ONBOARDING_STAGE_COMPLETE;
   parsed.debugSkipOnboarding = explicitSkip;
-  const unlocks = buildSystemUnlocksForStage(stage, explicitSkip);
+  const unlocks = buildSystemUnlocksForStage(parsed.onboardingStage, explicitSkip);
   parsed.systemUnlocks = {
     loadout: !!(parsed.systemUnlocks?.loadout || unlocks.loadout),
     economy: !!(parsed.systemUnlocks?.economy || unlocks.economy),
@@ -1135,7 +1315,7 @@ function isOnboardingSkipped() {
 }
 
 function isOnboardingTrainingActive() {
-  return !isOnboardingSkipped() && state.onboardingStage < ONBOARDING_STAGE_TRAINING_COMPLETE;
+  return false;
 }
 
 function getCurrentOnboardingMission() {
@@ -1149,8 +1329,7 @@ function getOnboardingMissionForStage(stage) {
 }
 
 function isSystemUnlocked(systemId) {
-  if (isOnboardingSkipped()) return true;
-  return !!state.systemUnlocks?.[systemId];
+  return true;
 }
 
 function syncStarterArmoryState() {
@@ -1281,6 +1460,155 @@ const defenseModules = [
 
 const defenseModulesById = Object.fromEntries(defenseModules.map((item) => [item.id, item]));
 
+const starterMiniWeapons = [
+  {
+    id: "mini_tick_autogun",
+    slotType: "mini",
+    name: "Tick Autogun",
+    subtitle: "Forward kinetic mini",
+    description: "A compact nose-linked autogun that chips nearby targets in the forward arc.",
+    notes: "Starter mini weapon. It assists pressure without replacing the primary hardpoint.",
+    icon: `${GENERATED_ITEM_ICON_ROOT}/cadet_kinetic_cannon.png`,
+    tags: ["mini", "kinetic", "rapid", "forward", "starter"],
+    owned: true,
+    miniWeapon: {
+      ammo: "kinetic",
+      cadence: "rapid",
+      shotSize: "small",
+      arc: "forward",
+      arcDegrees: 70,
+      range: 430,
+      cooldown: 0.58,
+      damage: 5.5,
+      speed: 540,
+      radius: 2.8,
+      effect: "none",
+      role: "Forward chip gun",
+    },
+  },
+];
+
+const starterMiniWeaponsById = Object.fromEntries(starterMiniWeapons.map((item) => [item.id, item]));
+
+const hullCatalog = [
+  {
+    id: "starter",
+    slotType: "hull",
+    name: "Starter Hull",
+    subtitle: "Balanced default",
+    description: "Balanced starter chassis with no strain mitigation or specialty penalties.",
+    notes: "Reliable baseline for learning weapons, salvage, and Ledger flow.",
+    icon: `${GENERATED_PILOT_ROOT}/player_interceptor.png`,
+    cost: 0,
+    tags: ["hull", "starter", "balanced"],
+    bonuses: {
+      hullMult: 1,
+      shieldMaxMult: 1,
+      shieldRegenMult: 1,
+      armorCapacityMult: 1,
+      armorDragMult: 1,
+      miniDamageMult: 1,
+      miniCooldownMult: 1,
+      auxPowerBonus: 0,
+      secondBayStrainReduction: 0,
+      dualFireTierBonus: 0,
+    },
+  },
+  {
+    id: "bastion",
+    slotType: "hull",
+    name: "Bastion Hull",
+    subtitle: "Defense chassis",
+    description: "Defense-focused hull with stronger shield and armor capacity and cleaner armor coupling.",
+    notes: "Bastion favors one-primary or swap builds that expect sustained fire.",
+    icon: `${GENERATED_ITEM_ICON_ROOT_V2}/ablative_plate.png`,
+    cost: 900,
+    tags: ["hull", "defense", "shield", "armor"],
+    bonuses: {
+      hullMult: 1.12,
+      shieldMaxMult: 1.18,
+      shieldRegenMult: 1.08,
+      armorCapacityMult: 1.22,
+      armorDragMult: 0.78,
+      miniDamageMult: 0.95,
+      miniCooldownMult: 1.04,
+      auxPowerBonus: 0,
+      secondBayStrainReduction: 0.05,
+      dualFireTierBonus: 0,
+    },
+  },
+  {
+    id: "relay",
+    slotType: "hull",
+    name: "Relay Hull",
+    subtitle: "Tech chassis",
+    description: "Aux-focused hull with cleaner support output and tighter mini weapon control.",
+    notes: "Relay is built for EMP control, mini coverage, and support-heavy builds.",
+    icon: `${GENERATED_ITEM_ICON_ROOT}/emp_burst_module.png`,
+    cost: 1400,
+    tags: ["hull", "aux", "mini", "control"],
+    bonuses: {
+      hullMult: 0.98,
+      shieldMaxMult: 1.02,
+      shieldRegenMult: 1.12,
+      armorCapacityMult: 0.95,
+      armorDragMult: 0.92,
+      miniDamageMult: 1.12,
+      miniCooldownMult: 0.9,
+      auxPowerBonus: 1,
+      secondBayStrainReduction: 0.05,
+      dualFireTierBonus: 0,
+    },
+  },
+  {
+    id: "broadside",
+    slotType: "hull",
+    name: "Broadside Hull",
+    subtitle: "Gunship chassis",
+    description: "Weapon-focused hull with the best second-bay and dual-fire scaling.",
+    notes: "Broadside accepts heavier weapon coupling but gives up some defensive quiet.",
+    icon: `${GENERATED_ITEM_ICON_ROOT_V2}/twin_driver.png`,
+    cost: 2200,
+    tags: ["hull", "gunship", "second-bay", "dual-fire"],
+    bonuses: {
+      hullMult: 1.04,
+      shieldMaxMult: 0.96,
+      shieldRegenMult: 0.96,
+      armorCapacityMult: 1.02,
+      armorDragMult: 1,
+      miniDamageMult: 1.04,
+      miniCooldownMult: 0.98,
+      auxPowerBonus: 0,
+      secondBayStrainReduction: 0.1,
+      dualFireTierBonus: 1,
+    },
+  },
+];
+
+const hullsById = Object.fromEntries(hullCatalog.map((item) => [item.id, item]));
+
+function normalizeHullState(hulls = {}) {
+  const owned = Array.isArray(hulls?.ownedIds) ? hulls.ownedIds : [];
+  const ownedIds = Array.from(new Set(["starter", ...owned])).filter((id) => !!hullsById[id]);
+  const equippedId = ownedIds.includes(hulls?.equippedId) ? hulls.equippedId : "starter";
+  return { ownedIds, equippedId };
+}
+
+function getOwnedHullIds(targetState = state) {
+  const owned = Array.isArray(targetState.hulls?.ownedIds) ? targetState.hulls.ownedIds : ["starter"];
+  return Array.from(new Set(["starter", ...owned])).filter((id) => !!hullsById[id]);
+}
+
+function getEquippedHull(targetState = state) {
+  const owned = getOwnedHullIds(targetState);
+  const equippedId = owned.includes(targetState.hulls?.equippedId) ? targetState.hulls.equippedId : "starter";
+  return hullsById[equippedId] || hullsById.starter;
+}
+
+function getHullBonuses(targetState = state) {
+  return getEquippedHull(targetState)?.bonuses || hullsById.starter.bonuses;
+}
+
 const ITEM_POOL_PATH = "items/item_pool.json";
 let itemPoolCatalog = null;
 let itemPoolCatalogPromise = null;
@@ -1389,6 +1717,20 @@ function buildRuntimeItemPoolFromExistingGear() {
       icon: mobileAltIcons[item.id] || getDefaultItemIcon("certified"),
       tags: ["aux", item.id],
       build: {},
+    };
+  });
+  starterMiniWeapons.forEach((item) => {
+    entries[`runtime_mini_${item.id}`] = {
+      slotType: "mini",
+      sourceId: item.id,
+      name: item.name,
+      subtitle: item.subtitle || "Mini weapon",
+      description: item.description,
+      notes: item.notes || "",
+      icon: item.icon,
+      tags: item.tags || [],
+      build: {},
+      miniWeapon: cloneShipBuild(item.miniWeapon || {}),
     };
   });
   return { version: 1, entries, affixes: {}, relics: {} };
@@ -1586,6 +1928,7 @@ function createRolledItem(baseId, baseEntry, rarity) {
     icon: baseEntry.icon || getDefaultItemIcon(rarity),
     tags,
     build,
+    miniWeapon: baseEntry.miniWeapon ? cloneShipBuild(baseEntry.miniWeapon) : null,
     rarity,
     value,
     relicId: baseEntry.relicLore ? baseId : null,
@@ -1641,7 +1984,7 @@ function getItemBaseTier(entry, fallbackTier = 1) {
 
 function itemEntryMatchesRollOptions(baseId, entry, options = {}) {
   const slotType = normalizeArmorySlotType(entry.slotType);
-  if (!["primary", "defense", "aux"].includes(slotType)) return false;
+  if (!["primary", "mini", "defense", "aux"].includes(slotType)) return false;
   if (options.slotType && slotType !== normalizeArmorySlotType(options.slotType)) return false;
   if (options.excludeBaseIds?.has?.(baseId)) return false;
   const tags = Array.isArray(entry.tags) ? entry.tags : [];
@@ -1898,6 +2241,7 @@ function createDefaultLedgerMarketState() {
   return {
     stock: [],
     stockVersion: ECONOMY.market.stockVersion,
+    licenseTier: 0,
     stockMissionCount: null,
     bulletin: null,
     pendingBulletinSales: {
@@ -1918,6 +2262,10 @@ function normalizeLedgerMarketState(targetState = state) {
   const stockVersion =
     Number.isFinite(existing.stockVersion) ? existing.stockVersion : 0;
   const isCurrentStockVersion = stockVersion === ECONOMY.market.stockVersion;
+  const maxLicenseTier = Math.max(
+    0,
+    ...Object.keys(ECONOMY.market.licenseTiers || {}).map((tier) => Number(tier) || 0)
+  );
   targetState.ledgerMarket = {
     ...defaults,
     ...existing,
@@ -1937,6 +2285,10 @@ function normalizeLedgerMarketState(targetState = state) {
     stockMissionCount: isCurrentStockVersion && Number.isFinite(existing.stockMissionCount)
       ? existing.stockMissionCount
       : defaults.stockMissionCount,
+    licenseTier: Math.max(
+      0,
+      Math.min(maxLicenseTier, Math.round(Number(existing.licenseTier) || 0))
+    ),
     bulletin: existing.bulletin?.tag
       ? {
           tag: String(existing.bulletin.tag),
@@ -1963,6 +2315,55 @@ function normalizeLedgerMarketState(targetState = state) {
 
 function getLedgerMarketState(targetState = state) {
   return normalizeLedgerMarketState(targetState);
+}
+
+function getLedgerLicenseTier(targetState = state) {
+  return getLedgerMarketState(targetState).licenseTier || 0;
+}
+
+function normalizeLedgerLicenseConfig(config, tier = 0) {
+  const stockLots = Number(config?.stockLots ?? config?.lots);
+  return {
+    tier: Number(config?.tier ?? tier) || 0,
+    stockLots: Number.isFinite(stockLots)
+      ? Math.max(1, Math.round(stockLots))
+      : ECONOMY.market.stockLots,
+    cost: Math.max(0, Math.round(Number(config?.cost) || 0)),
+  };
+}
+
+function getLedgerLicenseConfig(tier = getLedgerLicenseTier()) {
+  const config = ECONOMY.market.licenseTiers?.[tier] || ECONOMY.market.licenseTiers?.[0];
+  return normalizeLedgerLicenseConfig(config, tier);
+}
+
+function getLedgerStockLotCount(targetState = state) {
+  return getLedgerLicenseConfig(getLedgerLicenseTier(targetState)).stockLots || ECONOMY.market.stockLots;
+}
+
+function getNextLedgerLicenseConfig(targetState = state) {
+  const nextTier = getLedgerLicenseTier(targetState) + 1;
+  const config = ECONOMY.market.licenseTiers?.[nextTier];
+  return config ? normalizeLedgerLicenseConfig(config, nextTier) : null;
+}
+
+function purchaseLedgerLicense() {
+  const ledger = getLedgerMarketState();
+  const next = getNextLedgerLicenseConfig();
+  if (!next || state.credits < next.cost) return;
+  state.credits -= next.cost;
+  ledger.licenseTier = next.tier;
+  rollLedgerStock({ force: true });
+  setLedgerReceipt({
+    title: `Ledger License ${next.tier}`,
+    lines: [
+      { label: "Visible lots", text: `${next.stockLots} lots`, memo: true },
+      { label: "License cost", amount: -next.cost, fee: true },
+      { label: "Credits paid", amount: -next.cost, total: true, fee: true },
+    ],
+  });
+  saveState();
+  safeUpdateHangar();
 }
 
 function getItemListValue(item) {
@@ -2061,17 +2462,20 @@ function rollLedgerStock({ force = false } = {}) {
   if (!force && ledger.stock.length) return ledger.stock;
   const lots = [];
   const usedBaseIds = new Set();
+  const lotCount = getLedgerStockLotCount();
   const mispricedIndex =
     Math.random() < ECONOMY.market.mispricedLotChance
-      ? Math.floor(Math.random() * ECONOMY.market.stockLots)
+      ? Math.floor(Math.random() * lotCount)
       : -1;
   const stockSpecs = [
     { slotType: "primary", anyTags: ["dual", "rapid", "burst", "plasma", "anti-armor", "homing", "explosive"] },
+    { slotType: "mini" },
     { slotType: "primary", anyTags: ["dual", "rapid", "burst", "wide", "focused", "swarm", "heavy", "multi-shot"] },
     { slotType: "defense" },
+    { slotType: "aux" },
   ];
-  for (let i = 0; i < ECONOMY.market.stockLots; i += 1) {
-    const spec = stockSpecs[i] || {};
+  for (let i = 0; i < lotCount; i += 1) {
+    const spec = stockSpecs[i % stockSpecs.length] || {};
     const lot = createLedgerLot(i, i === mispricedIndex, {
       ...spec,
       excludeBaseIds: usedBaseIds,
@@ -2150,6 +2554,14 @@ function unequipSoldInventoryItem(itemId) {
     state.armory.equippedLoadoutId =
       state.armory.equippedLoadoutId || starterWeaponLoadouts[0]?.id || "fundamentals";
   }
+  if (state.armory.equippedSecondPrimaryItemId === itemId) {
+    state.armory.equippedSecondPrimaryItemId = null;
+    state.armory.equippedSecondLoadoutId = null;
+    state.activePrimaryBay = 0;
+  }
+  if (state.armory.equippedMiniItemId === itemId) {
+    state.armory.equippedMiniItemId = starterMiniWeapons[0]?.id || null;
+  }
   if (Array.isArray(state.armory.equippedDefenseSlotIds)) {
     state.armory.equippedDefenseSlotIds = state.armory.equippedDefenseSlotIds.map((slotId) =>
       slotId === itemId ? "none" : slotId
@@ -2166,6 +2578,8 @@ function unequipSoldInventoryItem(itemId) {
 function isInventoryItemInstalled(itemId) {
   if (!itemId || !state.armory) return false;
   if (state.armory.equippedPrimaryItemId === itemId) return true;
+  if (state.armory.equippedSecondPrimaryItemId === itemId) return true;
+  if (state.armory.equippedMiniItemId === itemId) return true;
   if (state.armory.equippedSupportItemId === itemId) return true;
   return Array.isArray(state.armory.equippedDefenseSlotIds)
     ? state.armory.equippedDefenseSlotIds.includes(itemId)
@@ -2356,6 +2770,8 @@ const player = {
   shieldRechargeDelay: 2.5,
   healthBarTimer: 0,
   fireCooldown: 0,
+  miniFireCooldown: 0,
+  swapCooldown: 0,
   spriteScale: 0.75,
   spreadLevel: 0,
   altCooldown: 0,
@@ -2370,6 +2786,7 @@ const player = {
   damageBoostMult: 1,
   empCooldownTime: 8,
   empDuration: 1.6,
+  empClearRadius: EMP_CLEAR_BASE_RADIUS,
   bulwarkDuration: 1.2,
   bulwarkShield: 0,
   bulwarkShieldBonus: 200,
@@ -2423,6 +2840,8 @@ const assets = {
   shield: loadImage(`${ASSET_ROOT}/Effects/shield3.png`),
   salvagePod: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_certified.png`),
   salvagePodFallback: loadImage(`${ASSET_ROOT}/Power-ups/powerupBlue.png`),
+  shieldBooster: loadImage(`${ASSET_ROOT}/Power-ups/powerupBlue_shield.png`),
+  armorPatch: loadImage(`${ASSET_ROOT}/Power-ups/powerupYellow_star.png`),
   salvagePods: {
     scrap: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_scrap.png`),
     certified: loadImage(`${GENERATED_UI_CHROME_ROOT}/salvage_pod_certified.png`),
@@ -3052,6 +3471,9 @@ window.addEventListener("keydown", (event) => {
   if (event.key.toLowerCase() === "e" && mission && mission.active) {
     endMission({ ejected: true });
   }
+  if (event.key.toLowerCase() === "q" && mission && mission.active) {
+    swapPrimaryBay();
+  }
   if (event.key.toLowerCase() === "1") {
     useConsumable(0);
   }
@@ -3135,6 +3557,10 @@ bindMobileButton(
     pointerButtons.right = false;
   }
 );
+
+bindMobileButton(mobileSwapBtn, () => {
+  swapPrimaryBay();
+}, () => {});
 
 bindMobileButton(mobileEjectBtn, () => {
   if (mission && mission.active) {
@@ -3268,10 +3694,27 @@ if (compendiumShowBosses) {
     if (activeHangarTab === "compendium") renderArchiveCompendium();
   });
 }
+[archiveSort, archiveFilter].forEach((control) => {
+  control?.addEventListener("change", () => {
+    if (activeHangarTab === "compendium") renderArchiveCompendium();
+  });
+});
 compendiumModeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     activeCompendiumMode = button.dataset.compendiumMode === "items" ? "items" : "drones";
     if (activeHangarTab === "compendium") renderArchiveCompendium();
+  });
+});
+
+[armoryBrowserSearch, armoryBrowserSort, armoryBrowserFilter].forEach((control) => {
+  control?.addEventListener(control.tagName === "INPUT" ? "input" : "change", () => {
+    if (activeHangarTab === "loadout") renderShipUpgradesPanel();
+  });
+});
+
+[ledgerInventorySearch, ledgerInventorySort, ledgerInventoryFilter].forEach((control) => {
+  control?.addEventListener(control.tagName === "INPUT" ? "input" : "change", () => {
+    if (activeHangarTab === "economy") renderLedgerMarket();
   });
 });
 
@@ -3523,14 +3966,14 @@ if (debugSkipOnboarding) {
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
-    shouldAutoLaunchFreshPilotMission = true;
+    shouldAutoLaunchFreshPilotMission = false;
     return {
       credits: 0,
       lifetimeCredits: 0,
       missionCount: 0,
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
-      onboardingStage: 0,
+      onboardingStage: ONBOARDING_STAGE_COMPLETE,
       debugSkipOnboarding: false,
       systemUnlocks: { ...DEFAULT_SYSTEM_UNLOCKS },
       debugUnlock: false,
@@ -3544,14 +3987,20 @@ function loadState() {
       itemCollection: {},
       cargo: [],
       armory: {
-        ownedLoadoutIds: ["fundamentals"],
+        ownedLoadoutIds: ["fundamentals", "area_control", "armor_break"],
         equippedLoadoutId: "fundamentals",
         equippedPrimaryItemId: null,
-        ownedDefenseModuleIds: ["shield_module"],
+        equippedSecondLoadoutId: null,
+        equippedSecondPrimaryItemId: null,
+        ownedDefenseModuleIds: ["shield_module", "armor_module"],
         equippedDefenseSlotIds: ["shield_module", "none"],
         equippedSupportItemId: null,
+        ownedMiniWeaponIds: ["mini_tick_autogun"],
+        equippedMiniItemId: "mini_tick_autogun",
         inventory: [],
       },
+      activePrimaryBay: 0,
+      hulls: normalizeHullState(),
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
         gunDiameter: { medium: true },
@@ -3590,6 +4039,8 @@ function loadState() {
         auxDamage: 0,
         auxCooldown: 0,
         cloakDuration: 0,
+        auxPower: 0,
+        dualFire: 0,
       },
       investments: {
         engineering: 0,
@@ -3613,6 +4064,8 @@ function loadState() {
       auxDamage: parsed.upgrades?.auxDamage ?? 0,
       auxCooldown: parsed.upgrades?.auxCooldown ?? 0,
       cloakDuration: parsed.upgrades?.cloakDuration ?? 0,
+      auxPower: parsed.upgrades?.auxPower ?? 0,
+      dualFire: parsed.upgrades?.dualFire ?? 0,
     };
     parsed.investments = {
       engineering: parsed.investments?.engineering ?? 0,
@@ -3634,6 +4087,8 @@ function loadState() {
     parsed.relicCollection = normalizeRelicCollection(parsed.relicCollection);
     parsed.itemCollection = normalizeItemCollection(parsed.itemCollection);
     parsed.cargo = Array.isArray(parsed.cargo) ? parsed.cargo : [];
+    parsed.hulls = normalizeHullState(parsed.hulls);
+    parsed.activePrimaryBay = parsed.activePrimaryBay === 1 ? 1 : 0;
     const hadShipBuild = !!parsed.shipBuild;
     parsed.shipBuild = parsed.shipBuild || createDefaultShipBuild();
     if (!hadShipBuild) {
@@ -3733,14 +4188,14 @@ function loadState() {
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
-    shouldAutoLaunchFreshPilotMission = true;
+    shouldAutoLaunchFreshPilotMission = false;
     return {
       credits: 0,
       lifetimeCredits: 0,
       missionCount: 0,
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
-      onboardingStage: 0,
+      onboardingStage: ONBOARDING_STAGE_COMPLETE,
       debugSkipOnboarding: false,
       systemUnlocks: { ...DEFAULT_SYSTEM_UNLOCKS },
       debugUnlock: false,
@@ -3754,14 +4209,20 @@ function loadState() {
       itemCollection: {},
       cargo: [],
       armory: {
-        ownedLoadoutIds: ["fundamentals"],
+        ownedLoadoutIds: ["fundamentals", "area_control", "armor_break"],
         equippedLoadoutId: "fundamentals",
         equippedPrimaryItemId: null,
-        ownedDefenseModuleIds: ["shield_module"],
+        equippedSecondLoadoutId: null,
+        equippedSecondPrimaryItemId: null,
+        ownedDefenseModuleIds: ["shield_module", "armor_module"],
         equippedDefenseSlotIds: ["shield_module", "none"],
         equippedSupportItemId: null,
+        ownedMiniWeaponIds: ["mini_tick_autogun"],
+        equippedMiniItemId: "mini_tick_autogun",
         inventory: [],
       },
+      activePrimaryBay: 0,
+      hulls: normalizeHullState(),
       shipBuild: createDefaultShipBuild(),
       shipUnlocked: {
         gunDiameter: { medium: true },
@@ -3800,6 +4261,8 @@ function loadState() {
         auxDamage: 0,
         auxCooldown: 0,
         cloakDuration: 0,
+        auxPower: 0,
+        dualFire: 0,
       },
       investments: {
         engineering: 0,
@@ -3836,6 +4299,12 @@ function getShipBuild() {
   state.shipBuild.cooldownMult = Number.isFinite(state.shipBuild.cooldownMult)
     ? Math.max(0.35, state.shipBuild.cooldownMult)
     : 1;
+  state.shipBuild.hullMult = Number.isFinite(state.shipBuild.hullMult) ? state.shipBuild.hullMult : 1;
+  state.shipBuild.shieldMaxMult = Number.isFinite(state.shipBuild.shieldMaxMult) ? state.shipBuild.shieldMaxMult : 1;
+  state.shipBuild.shieldRegenMult = Number.isFinite(state.shipBuild.shieldRegenMult) ? state.shipBuild.shieldRegenMult : 1;
+  state.shipBuild.armorCapacityMult = Number.isFinite(state.shipBuild.armorCapacityMult) ? state.shipBuild.armorCapacityMult : 1;
+  state.shipBuild.armorDragMult = Number.isFinite(state.shipBuild.armorDragMult) ? state.shipBuild.armorDragMult : 1;
+  state.shipBuild.primaryDamageMult = Number.isFinite(state.shipBuild.primaryDamageMult) ? state.shipBuild.primaryDamageMult : 1;
   return state.shipBuild;
 }
 
@@ -3928,9 +4397,81 @@ function syncShipBuildToLegacy() {
 }
 
 function upgradeCost(upgradeId) {
-  const level = state.upgrades[upgradeId];
-  const base = upgrades.find((item) => item.id === upgradeId).baseCost;
+  const definition = getUpgradeDefinition(upgradeId);
+  if (!definition) return Infinity;
+  const level = state.upgrades[upgradeId] || 0;
+  const base = definition.baseCost;
   return Math.round(base * Math.pow(1.35, level));
+}
+
+function getUpgradeDefinition(upgradeId) {
+  return upgrades.find((item) => item.id === upgradeId) || null;
+}
+
+function getAuxPowerTier(targetState = state) {
+  const base = Math.max(0, Math.min(3, Math.floor(targetState.upgrades?.auxPower || 0)));
+  const hullBonus = Math.max(0, Math.floor(getHullBonuses(targetState).auxPowerBonus || 0));
+  return Math.max(0, Math.min(3, base + hullBonus));
+}
+
+function getAuxStrengthMult(targetState = state) {
+  return 1 + getAuxPowerTier(targetState) * 0.1;
+}
+
+function getAuxCooldownMult(targetState = state) {
+  return Math.max(0.7, 1 - getAuxPowerTier(targetState) * 0.05);
+}
+
+function getEmpClearRadiusForState(targetState = state) {
+  return Math.round(EMP_CLEAR_BASE_RADIUS * getAuxStrengthMult(targetState));
+}
+
+function getDualFireTier(targetState = state) {
+  const base = Math.max(0, Math.min(4, Math.floor(targetState.upgrades?.dualFire || 0)));
+  const hullBonus = Math.max(0, Math.floor(getHullBonuses(targetState).dualFireTierBonus || 0));
+  return Math.max(0, Math.min(4, base + hullBonus));
+}
+
+function getDualFireDamageMult(targetState = state) {
+  return DUAL_FIRE_DAMAGE_MULTS[getDualFireTier(targetState)] || 0;
+}
+
+function isDualFireCompatibleItem(item) {
+  if (!item || normalizeArmorySlotType(item.slotType) !== "primary") return false;
+  const tags = Array.isArray(item.tags) ? item.tags : [];
+  const build = item.build || {};
+  if (item.rarity === "preFounding" || tags.includes("relic") || tags.includes("heavy")) return false;
+  if (build.gunDiameter === "large") return false;
+  if (build.spread === "burst" && build.effect && build.effect !== "none") return false;
+  return true;
+}
+
+function canDualFireCurrentLoadout(targetState = state) {
+  const primary = getPrimaryArmoryItem(targetState, 0);
+  const second = getSecondPrimaryArmoryItem(targetState);
+  return !!(
+    primary &&
+    second &&
+    getDualFireDamageMult(targetState) > 0 &&
+    isDualFireCompatibleItem(primary) &&
+    isDualFireCompatibleItem(second)
+  );
+}
+
+function purchaseEngineeringUpgrade(upgradeId) {
+  const definition = getUpgradeDefinition(upgradeId);
+  if (!definition) return;
+  const current = state.upgrades[upgradeId] || 0;
+  const maxLevel = definition.maxLevel || 0;
+  if (current >= maxLevel) return;
+  const cost = upgradeCost(upgradeId);
+  if (state.credits < cost) return;
+  state.credits -= cost;
+  state.upgrades[upgradeId] = current + 1;
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
+  saveState();
+  safeUpdateHangar();
 }
 
 function applyUpgrades() {
@@ -3938,21 +4479,25 @@ function applyUpgrades() {
   const auxCooldownLevel = state.upgrades.auxCooldown;
   const cloakDurationLevel = state.upgrades.cloakDuration;
 
-  player.maxHull = Math.round(100 * (1 + hullLevel * 0.08));
+  const build = getShipBuild();
+  player.maxHull = Math.round(100 * (1 + hullLevel * 0.08) * (build.hullMult ?? 1));
   player.hull = player.maxHull;
 
-  const build = getShipBuild();
   const defenseSlots = Array.isArray(build.defenseSlots) ? build.defenseSlots : ["shield", "none"];
   const shieldSlots = defenseSlots.filter((slot) => slot === "shield").length;
   const armorSlots = defenseSlots.filter((slot) => slot === "armor").length;
 
   const baseShieldPerSlot = 40;
   const shieldCapacitySlots = Math.max(0.25, shieldSlots + (build.shieldMaxLevel ?? 0) * 0.18);
-  player.maxShield = shieldSlots > 0 ? Math.round(baseShieldPerSlot * shieldCapacitySlots) : 0;
+  player.maxShield = shieldSlots > 0
+    ? Math.round(baseShieldPerSlot * shieldCapacitySlots * (build.shieldMaxMult ?? 1))
+    : 0;
   player.shield = player.maxShield;
   const baseShieldRegen = 12;
   const shieldRegenSlots = Math.max(0.2, shieldSlots + (build.shieldRegenLevel ?? 0) * 0.22);
-  player.shieldRegen = shieldSlots > 0 ? baseShieldRegen * shieldRegenSlots : 0;
+  player.shieldRegen = shieldSlots > 0
+    ? baseShieldRegen * shieldRegenSlots * (build.shieldRegenMult ?? 1)
+    : 0;
   player.shieldCooldown = 0;
   player.shieldRechargeDelay =
     shieldSlots > 0
@@ -3962,7 +4507,7 @@ function applyUpgrades() {
   const baseArmorPerSlot = 80;
   const armorCapacitySlots = Math.max(0.25, armorSlots + (build.armorAmountLevel ?? 0) * 0.18);
   player.maxArmor =
-    armorSlots > 0 ? Math.round(baseArmorPerSlot * armorCapacitySlots) : 0;
+    armorSlots > 0 ? Math.round(baseArmorPerSlot * armorCapacitySlots * (build.armorCapacityMult ?? 1)) : 0;
   player.armor = player.maxArmor;
   const baseArmorClass = build.armorClass ?? 10;
   player.armorClass =
@@ -3970,12 +4515,15 @@ function applyUpgrades() {
 
   player.spreadLevel = 0;
   player.altCooldownTime = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel));
-  player.cloakDuration = 2.5 * (1 + cloakDurationLevel * 0.12);
-  player.empDuration = 1.6 * (1 + cloakDurationLevel * 0.12);
-  player.bulwarkDuration = 1.2 * (1 + cloakDurationLevel * 0.12);
-  player.bulwarkShieldBonus = 200 * (1 + cloakDurationLevel * 0.1);
-  player.cloakCooldownTime = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel));
-  player.empCooldownTime = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel));
+  const auxStrength = getAuxStrengthMult(state);
+  const auxCooldownMult = getAuxCooldownMult(state);
+  player.cloakDuration = 2.5 * (1 + cloakDurationLevel * 0.12) * auxStrength;
+  player.empDuration = 1.6 * (1 + cloakDurationLevel * 0.12) * auxStrength;
+  player.empClearRadius = getEmpClearRadiusForState(state);
+  player.bulwarkDuration = 1.2 * (1 + cloakDurationLevel * 0.12) * auxStrength;
+  player.bulwarkShieldBonus = 200 * (1 + cloakDurationLevel * 0.1) * auxStrength;
+  player.cloakCooldownTime = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel) * auxCooldownMult);
+  player.empCooldownTime = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel) * auxCooldownMult);
 }
 
 function initConsumablesForMission() {
@@ -4045,6 +4593,7 @@ async function startMission({ showIntro = false } = {}) {
     bossFinishTimer: 0,
     bossSpawnTime: getBossSpawnTime(level),
     empTimer: 0,
+    pickupIndex: 0,
     consumableSlots: consumablesState.slots,
     consumableUses: consumablesState.uses,
     consumableCooldowns: consumablesState.cooldowns,
@@ -4068,6 +4617,8 @@ async function startMission({ showIntro = false } = {}) {
   pointer.y = player.y;
   pointer.active = true;
   player.fireCooldown = 0;
+  player.miniFireCooldown = 0;
+  player.swapCooldown = 0;
   player.altCooldown = 0;
   player.shieldCooldown = 0;
   player.empCooldown = 0;
@@ -4101,7 +4652,10 @@ function endMission({ ejected = false, completed = false } = {}) {
   setHangarMusic();
   setHangarTab("hub", { renderLevels: false });
 
-  const grossBounty = creditRewardFor(mission);
+  const killBounty = Math.round(mission.killCredits || 0);
+  const objectiveCredits = objectiveCreditRewardFor(mission, completed);
+  const completionCredits = missionCompletionCreditFor(mission, completed);
+  const grossBounty = killBounty + objectiveCredits + completionCredits;
   const recoveryRate = completed
     ? ECONOMY.recoveryBonusRate.min +
       Math.random() * (ECONOMY.recoveryBonusRate.max - ECONOMY.recoveryBonusRate.min)
@@ -4195,6 +4749,9 @@ function endMission({ ejected = false, completed = false } = {}) {
   renderDebriefSummary({
     outcome,
     grossBounty,
+    killBounty,
+    objectiveCredits,
+    completionCredits,
     bountyKept,
     recoveryBonus,
     recoveryRate,
@@ -4264,7 +4821,9 @@ function renderDebriefSummary(summary) {
 
   if (debriefLedger) {
     const rows = [
-      { label: "Bounty", amount: summary.grossBounty },
+      { label: "Kill bounties", amount: summary.killBounty || 0 },
+      { label: "Objective credits", amount: summary.objectiveCredits || 0 },
+      { label: "Mission completion", amount: summary.completionCredits || 0 },
       {
         label: LEDGER_COPY.recoveryBonus,
         amount: summary.recoveryBonus,
@@ -5092,6 +5651,8 @@ function renderArchiveChrome() {
   });
   const bossToggle = compendiumShowBosses?.closest("label");
   if (bossToggle) bossToggle.hidden = isItemMode;
+  if (archiveSort) archiveSort.hidden = !isItemMode;
+  if (archiveFilter) archiveFilter.hidden = !isItemMode;
   if (relicArchive) relicArchive.hidden = isItemMode;
 }
 
@@ -5242,7 +5803,7 @@ function getItemCatalogEntries() {
     tier: entry.tier || 4,
     ...entry,
   }));
-  const slotOrder = { primary: 0, defense: 1, aux: 2 };
+  const slotOrder = { primary: 0, mini: 1, defense: 2, aux: 3 };
   return [...regularItems, ...relicItems].sort((a, b) => {
     const aSlot = slotOrder[normalizeArmorySlotType(a.slotType)] ?? 9;
     const bSlot = slotOrder[normalizeArmorySlotType(b.slotType)] ?? 9;
@@ -5265,6 +5826,7 @@ function getDiscoveredItemBaseIds() {
   });
   (state.armory?.ownedLoadoutIds || []).forEach((id) => addSourceItemDiscovery(ids, id, "primary"));
   (state.armory?.ownedDefenseModuleIds || []).forEach((id) => addSourceItemDiscovery(ids, id, "defense"));
+  (state.armory?.ownedMiniWeaponIds || []).forEach((id) => addSourceItemDiscovery(ids, id, "mini"));
   Object.entries(state.unlocked?.aux || {}).forEach(([id, unlocked]) => {
     if (unlocked) addSourceItemDiscovery(ids, id, "aux");
   });
@@ -5282,6 +5844,10 @@ function getItemCatalogSubtitle(entry, foundCount) {
   }
   if (slot === "defense") {
     return `${tier} | ${capitalize(entry.defenseType || "defense")} module${found}`;
+  }
+  if (slot === "mini") {
+    const mini = entry.miniWeapon || {};
+    return `${tier} | ${getMiniArcLabel(mini)} mini${found}`;
   }
   return `${tier} | ${capitalize(entry.ability || "aux")} support${found}`;
 }
@@ -5325,10 +5891,21 @@ function getDefenseCatalogDetails(entry) {
   return "Defense module.";
 }
 
+function getMiniCatalogDetails(entry) {
+  const mini = entry.miniWeapon || {};
+  return [
+    `Damage: ${formatNumber(mini.damage || 0, 1)} per shot`,
+    `Cadence: ${formatNumber(mini.cooldown || 0, 2)}s cooldown`,
+    `Targeting: ${getMiniArcLabel(mini)} | ${mini.range || 0}px`,
+    `Ammo: ${capitalize(mini.ammo || "kinetic")}`,
+  ].join("\n");
+}
+
 function getItemCatalogDetails(entry) {
   const slot = normalizeArmorySlotType(entry.slotType);
   if (slot === "primary") return getPrimaryCatalogDetails(entry);
   if (slot === "defense") return getDefenseCatalogDetails(entry);
+  if (slot === "mini") return getMiniCatalogDetails(entry);
   return `Support system: ${capitalize(entry.ability || entry.sourceId || "aux")}`;
 }
 
@@ -5348,6 +5925,10 @@ function itemCatalogMatchesQuery(entry, query) {
     build.spread,
     build.ammo,
     build.effect,
+    entry.miniWeapon?.ammo,
+    entry.miniWeapon?.cadence,
+    entry.miniWeapon?.arc,
+    entry.miniWeapon?.role,
     tags,
   ]
     .filter(Boolean)
@@ -5362,12 +5943,23 @@ async function renderItemCompendiumAsync() {
   await ensureItemPoolLoaded();
   if (activeCompendiumMode !== "items") return;
   const query = (compendiumSearch?.value || "").trim().toLowerCase();
+  const sort = archiveSort?.value || "recent";
+  const filter = archiveFilter?.value || "all";
   const showAll = !!state.debugShowAllItems;
   const discovered = getDiscoveredItemBaseIds();
   const collection = getItemCollection(state);
   const list = getItemCatalogEntries();
   const gatedList = showAll ? list : list.filter((entry) => discovered.has(entry.baseId));
-  const filtered = gatedList.filter((entry) => itemCatalogMatchesQuery(entry, query));
+  const filtered = filterAndSortBrowserItems(
+    gatedList
+      .filter((entry) => itemCatalogMatchesQuery(entry, query))
+      .map((entry) => ({
+        ...entry,
+        id: entry.baseId,
+        rarity: entry.isRelic ? "preFounding" : entry.rarity || "",
+      })),
+    { filter, sort }
+  );
 
   compendiumList.innerHTML = "";
   filtered.forEach((entry) => {
@@ -5514,10 +6106,146 @@ function getSpreadLabel(spread) {
   return WEAPON_SPREAD_LABELS[spread] || capitalize(spread || "focused");
 }
 
+function getRarityRank(rarity) {
+  const index = ECONOMY.rarityOrder.indexOf(rarity);
+  return index === -1 ? -1 : index;
+}
+
+function getMiniWeaponConfigFromItem(item) {
+  if (!item) return null;
+  if (item.miniWeapon && typeof item.miniWeapon === "object") return item.miniWeapon;
+  if (starterMiniWeaponsById[item.id]) return starterMiniWeaponsById[item.id].miniWeapon;
+  return null;
+}
+
+function getMiniArcLabel(config) {
+  if (!config) return "Mini";
+  if (config.arc === "turret") return "360";
+  if (config.arc === "wide") return "Wide arc";
+  return "Forward arc";
+}
+
+function getItemBrowserRole(item) {
+  const slotType = normalizeArmorySlotType(item?.slotType);
+  if (slotType === "primary") {
+    const build = item?.build || {};
+    return `${getSpreadLabel(build.spread || "focused")} ${capitalize(build.ammo || "kinetic")}`;
+  }
+  if (slotType === "mini") {
+    const cfg = getMiniWeaponConfigFromItem(item);
+    return `${getMiniArcLabel(cfg)} ${capitalize(cfg?.cadence || "mini")} ${capitalize(cfg?.ammo || "kinetic")}`;
+  }
+  if (slotType === "defense") return item?.defenseType ? capitalize(item.defenseType) : "Defense";
+  if (slotType === "hull") return item?.subtitle || "Hull";
+  if (isSupportSlotType(slotType)) return capitalize(item?.ability || item?.sourceId || "Support");
+  return "Module";
+}
+
+function isItemRelic(item) {
+  const tags = Array.isArray(item?.tags) ? item.tags : [];
+  return !!(item?.relicId || item?.rarity === "preFounding" || tags.includes("relic"));
+}
+
+function getItemBrowserValue(item, valueResolver = null) {
+  if (valueResolver) return valueResolver(item);
+  if (Number.isFinite(item?.value)) return item.value;
+  if (Number.isFinite(item?.cost)) return item.cost;
+  return 0;
+}
+
+function isItemBrowserInstalled(item) {
+  if (!item) return false;
+  if (item.installed) return true;
+  if (normalizeArmorySlotType(item.slotType) === "hull") {
+    return getEquippedHull()?.id === item.id;
+  }
+  return isInventoryItemInstalled(item.id);
+}
+
+function getItemBrowserSearchText(item) {
+  const tags = Array.isArray(item?.tags) ? item.tags.join(" ") : "";
+  const rarity = item?.rarity ? `${item.rarity} ${getRarityLabel(item.rarity)}` : "";
+  const build = item?.build || {};
+  const mini = getMiniWeaponConfigFromItem(item) || {};
+  return [
+    item?.name,
+    item?.baseName,
+    item?.subtitle,
+    item?.description,
+    item?.notes,
+    item?.baseId,
+    item?.sourceId,
+    item?.slotType,
+    item?.defenseType,
+    item?.ability,
+    build.spread,
+    build.ammo,
+    build.effect,
+    mini.ammo,
+    mini.cadence,
+    mini.arc,
+    mini.role,
+    getItemBrowserRole(item),
+    rarity,
+    tags,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function itemMatchesBrowserQuery(item, query) {
+  if (!query) return true;
+  return getItemBrowserSearchText(item).includes(String(query).toLowerCase());
+}
+
+function itemMatchesBrowserFilter(item, filter) {
+  const slotType = normalizeArmorySlotType(item?.slotType);
+  if (!filter || filter === "all") return true;
+  if (filter === "equipped") return isItemBrowserInstalled(item);
+  if (filter === "sellable") return !isItemBrowserInstalled(item);
+  if (filter === "relic") return isItemRelic(item);
+  if (filter === "aux") return isSupportSlotType(slotType);
+  return slotType === normalizeArmorySlotType(filter);
+}
+
+function filterAndSortBrowserItems(
+  items,
+  { query = "", filter = "all", sort = "recent", valueResolver = null } = {}
+) {
+  const slotOrder = { hull: 0, primary: 1, mini: 2, defense: 3, aux: 4, support: 4 };
+  return items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => itemMatchesBrowserQuery(item, query))
+    .filter(({ item }) => itemMatchesBrowserFilter(item, filter))
+    .sort((a, b) => {
+      if (sort === "rarity") {
+        const rarityDiff = getRarityRank(b.item.rarity) - getRarityRank(a.item.rarity);
+        if (rarityDiff) return rarityDiff;
+      } else if (sort === "slot") {
+        const aSlot = slotOrder[normalizeArmorySlotType(a.item.slotType)] ?? 9;
+        const bSlot = slotOrder[normalizeArmorySlotType(b.item.slotType)] ?? 9;
+        if (aSlot !== bSlot) return aSlot - bSlot;
+      } else if (sort === "value") {
+        const valueDiff = getItemBrowserValue(b.item, valueResolver) - getItemBrowserValue(a.item, valueResolver);
+        if (valueDiff) return valueDiff;
+      } else if (sort === "role") {
+        const roleDiff = getItemBrowserRole(a.item).localeCompare(getItemBrowserRole(b.item));
+        if (roleDiff) return roleDiff;
+      } else {
+        return b.index - a.index;
+      }
+      return String(a.item.name || a.item.id).localeCompare(String(b.item.name || b.item.id));
+    })
+    .map(({ item }) => item);
+}
+
 function getComparableSlotIdForItem(item, slotId = null) {
   if (slotId) return slotId;
   const slotType = normalizeArmorySlotType(item?.slotType);
   if (slotType === "defense") return "defense-0";
+  if (slotType === "mini") return "mini";
+  if (slotType === "hull") return "hull";
   if (isSupportSlotType(slotType)) return "support";
   return "primary";
 }
@@ -5547,7 +6275,9 @@ function getInstalledSlotVisualRarity(item) {
 function getDenseItemRoleLabel(item) {
   const slotType = normalizeArmorySlotType(item?.slotType);
   if (slotType === "primary") return "Primary";
+  if (slotType === "mini") return "Mini";
   if (slotType === "defense") return item?.defenseType ? capitalize(item.defenseType) : "Defense";
+  if (slotType === "hull") return "Hull";
   if (isSupportSlotType(slotType)) return "Support";
   return "Module";
 }
@@ -5556,6 +6286,16 @@ function getItemTypeLine(item, build, slotId) {
   const rarityLabel = item?.rarity ? getRarityLabel(item.rarity) : "Standard";
   if (slotId === "primary") {
     return `${rarityLabel} ${capitalize(build?.ammo || "kinetic")} Cannon`;
+  }
+  if (slotId === "primary-2") {
+    return `${rarityLabel} ${capitalize(build?.ammo || "kinetic")} Swap Cannon`;
+  }
+  if (slotId === "mini") {
+    const cfg = getMiniWeaponConfigFromItem(item);
+    return `${rarityLabel} ${getMiniArcLabel(cfg)} Mini Weapon`;
+  }
+  if (slotId === "hull") {
+    return `${rarityLabel} Hull Chassis`;
   }
   if (slotId?.startsWith("defense-")) {
     const kind = item?.id === "none" ? "Open Bay" : capitalize(item?.defenseType || "Defense");
@@ -5575,13 +6315,16 @@ function getSupportAbilityId(targetState = state) {
 function getSupportStatsForState(targetState = state) {
   const auxCooldownLevel = targetState.upgrades?.auxCooldown ?? 0;
   const durationLevel = targetState.upgrades?.cloakDuration ?? 0;
+  const auxStrength = getAuxStrengthMult(targetState);
+  const auxCooldownMult = getAuxCooldownMult(targetState);
   const ability = getSupportAbilityId(targetState);
-  const genericCooldown = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel));
-  const cloakDuration = 2.5 * (1 + durationLevel * 0.12);
-  const empDuration = 1.6 * (1 + durationLevel * 0.12);
-  const bulwarkDuration = 1.2 * (1 + durationLevel * 0.12);
-  const cloakCooldown = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel));
-  const empCooldown = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel));
+  const genericCooldown = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel) * auxCooldownMult);
+  const cloakDuration = 2.5 * (1 + durationLevel * 0.12) * auxStrength;
+  const empDuration = 1.6 * (1 + durationLevel * 0.12) * auxStrength;
+  const empClearRadius = getEmpClearRadiusForState(targetState);
+  const bulwarkDuration = 1.2 * (1 + durationLevel * 0.12) * auxStrength;
+  const cloakCooldown = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel) * auxCooldownMult);
+  const empCooldown = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel) * auxCooldownMult);
   const abilityConfig = {
     cloak: {
       name: "Cloaking Device",
@@ -5594,15 +6337,15 @@ function getSupportStatsForState(targetState = state) {
       name: "EMP Burst",
       cooldown: empCooldown,
       duration: empDuration,
-      effect: `Disables enemy fire and slows ships for ${formatNumber(empDuration, 1)}s.`,
-      math: `Cooldown = max(5, 8 * 0.95^${auxCooldownLevel}); duration = 1.6 * (1 + 0.12*${durationLevel}).`,
+      effect: `Disables enemy fire for ${formatNumber(empDuration, 1)}s and clears hostile shots within ${empClearRadius}px.`,
+      math: `Radius = ${EMP_CLEAR_BASE_RADIUS} * aux strength ${formatNumber(auxStrength, 2)}; cooldown includes aux tier ${getAuxPowerTier(targetState)}.`,
     },
     bulwark: {
       name: "Bulwark Field",
       cooldown: genericCooldown,
       duration: bulwarkDuration,
-      effect: `Adds a temporary ${Math.round(200 * (1 + durationLevel * 0.1))} shield buffer.`,
-      math: `Cooldown = max(0.35, 0.9 * 0.92^${auxCooldownLevel}); duration = 1.2 * (1 + 0.12*${durationLevel}).`,
+      effect: `Adds a temporary ${Math.round(200 * (1 + durationLevel * 0.1) * auxStrength)} shield buffer.`,
+      math: `Aux tier ${getAuxPowerTier(targetState)} scales strength/duration and reduces cooldown.`,
     },
   };
   return abilityConfig[ability] || {
@@ -5619,27 +6362,27 @@ function getDefenseStatsForBuild(build, targetState = state) {
   const shieldSlots = defenseSlots.filter((slot) => slot === "shield").length;
   const armorSlots = defenseSlots.filter((slot) => slot === "armor").length;
   const hullLevel = targetState.upgrades?.hull ?? 0;
-  const hull = Math.round(100 * (1 + hullLevel * 0.08));
+  const hull = Math.round(100 * (1 + hullLevel * 0.08) * (build.hullMult ?? 1));
   const shieldCapacitySlots = Math.max(0.25, shieldSlots + (build.shieldMaxLevel ?? 0) * 0.18);
   const shield = shieldSlots > 0
-    ? Math.round(40 * shieldCapacitySlots)
+    ? Math.round(40 * shieldCapacitySlots * (build.shieldMaxMult ?? 1))
     : 0;
   const shieldRegenSlots = Math.max(0.2, shieldSlots + (build.shieldRegenLevel ?? 0) * 0.22);
   const shieldRegen = shieldSlots > 0
-    ? 12 * shieldRegenSlots
+    ? 12 * shieldRegenSlots * (build.shieldRegenMult ?? 1)
     : 0;
   const shieldRechargeDelay = shieldSlots > 0
     ? Math.max(0.7, 2.5 * (1 + (build.shieldCooldownLevel ?? 0) * 0.16))
     : 0;
   const armorCapacitySlots = Math.max(0.25, armorSlots + (build.armorAmountLevel ?? 0) * 0.18);
   const armor = armorSlots > 0
-    ? Math.round(80 * armorCapacitySlots)
+    ? Math.round(80 * armorCapacitySlots * (build.armorCapacityMult ?? 1))
     : 0;
   const armorClass = armorSlots > 0
     ? Math.round((build.armorClass ?? 10) + (build.armorClassLevel ?? 0) * 2)
     : 0;
   const armorDrag = armorSlots > 0
-    ? Math.round((armorSlots * 0.1 + Math.max(0, build.armorDragLevel ?? 0) * 0.06) * 100)
+    ? Math.round((armorSlots * 0.1 + Math.max(0, build.armorDragLevel ?? 0) * 0.06) * (build.armorDragMult ?? 1) * 100)
     : 0;
   return {
     hull,
@@ -5664,8 +6407,10 @@ function getOffenseStatsForBuild(build, targetState = state) {
     speed: cfg.bulletSpeed,
     radius: cfg.projectileRadius,
     damageBoostMult: 1,
+    buildDamageMult: build.primaryDamageMult ?? 1,
   });
   const attacksPerSecond = cfg.cooldown > 0 ? 1 / cfg.cooldown : 0;
+  const volleyDamage = hitDamage * totalProjectiles;
   const burnDps = cfg.ammo === "plasma" ? hitDamage * 0.45 : 0;
   const dps = hitDamage * totalProjectiles * attacksPerSecond + burnDps;
   const burnText = cfg.ammo === "plasma" ? ` (burns ${formatNumber(burnDps, 1)}/s)` : "";
@@ -5673,6 +6418,7 @@ function getOffenseStatsForBuild(build, targetState = state) {
     cfg,
     dps,
     hitDamage,
+    volleyDamage,
     attacksPerSecond,
     totalProjectiles,
     burnDps,
@@ -5681,11 +6427,50 @@ function getOffenseStatsForBuild(build, targetState = state) {
   };
 }
 
+function getSelectedMiniWeapon(targetState = state) {
+  const equippedId = targetState.armory?.equippedMiniItemId;
+  const inventoryItem = findInventoryItem(equippedId, targetState);
+  if (inventoryItem && normalizeArmorySlotType(inventoryItem.slotType) === "mini") return inventoryItem;
+  return starterMiniWeaponsById[equippedId] || starterMiniWeapons[0] || null;
+}
+
+function getMiniWeaponStatsForItem(item, targetState = state) {
+  const cfg = getMiniWeaponConfigFromItem(item);
+  if (!cfg) {
+    return {
+      config: null,
+      damage: 0,
+      cooldown: 0,
+      attacksPerSecond: 0,
+      dps: 0,
+      range: 0,
+      arcLabel: "No mini",
+      role: "No mini weapon linked.",
+    };
+  }
+  const hullBonuses = getHullBonuses(targetState);
+  const damage = (cfg.damage || 0) * (hullBonuses.miniDamageMult ?? 1);
+  const cooldown = Math.max(0.16, (cfg.cooldown || 0.8) * (hullBonuses.miniCooldownMult ?? 1));
+  const attacksPerSecond = cooldown > 0 ? 1 / cooldown : 0;
+  return {
+    config: cfg,
+    damage,
+    cooldown,
+    attacksPerSecond,
+    dps: damage * attacksPerSecond,
+    range: cfg.range || 360,
+    arcLabel: getMiniArcLabel(cfg),
+    role: cfg.role || getItemBrowserRole(item),
+  };
+}
+
 function getShipDisplayStatsForState(targetState = state) {
   const build = composeShipBuildFromArmory(targetState);
+  const miniItem = getSelectedMiniWeapon(targetState);
   return {
     build,
     offense: getOffenseStatsForBuild(build, targetState),
+    mini: getMiniWeaponStatsForItem(miniItem, targetState),
     defense: getDefenseStatsForBuild(build, targetState),
     support: getSupportStatsForState(targetState),
   };
@@ -5709,13 +6494,26 @@ function createPreviewStateWithItem(item, slotId) {
     ? previewState.armory.inventory
     : [];
   const resolvedSlotId = getComparableSlotIdForItem(item, slotId);
-  if (resolvedSlotId === "primary") {
+  if (resolvedSlotId === "primary" || resolvedSlotId === "primary-2") {
     if (starterWeaponLoadoutsById[item?.id]) {
-      previewState.armory.equippedLoadoutId = item.id;
-      previewState.armory.equippedPrimaryItemId = null;
+      if (resolvedSlotId === "primary-2") {
+        previewState.armory.equippedSecondLoadoutId = item.id;
+        previewState.armory.equippedSecondPrimaryItemId = null;
+      } else {
+        previewState.armory.equippedLoadoutId = item.id;
+        previewState.armory.equippedPrimaryItemId = null;
+      }
+    } else if (item?.id === "none_second_primary") {
+      previewState.armory.equippedSecondLoadoutId = null;
+      previewState.armory.equippedSecondPrimaryItemId = null;
     } else {
       ensurePreviewInventoryItem(previewState, item);
-      previewState.armory.equippedPrimaryItemId = item?.id || null;
+      if (resolvedSlotId === "primary-2") {
+        previewState.armory.equippedSecondPrimaryItemId = item?.id || null;
+        previewState.armory.equippedSecondLoadoutId = null;
+      } else {
+        previewState.armory.equippedPrimaryItemId = item?.id || null;
+      }
     }
   } else if (resolvedSlotId?.startsWith("defense-")) {
     const slotIndex = Number(resolvedSlotId.split("-")[1] || 0);
@@ -5735,6 +6533,15 @@ function createPreviewStateWithItem(item, slotId) {
       previewState.armory.equippedSupportItemId = item?.id || null;
       previewState.rmbWeapon = item?.ability || item?.sourceId || previewState.rmbWeapon || "cloak";
     }
+  } else if (resolvedSlotId === "mini") {
+    if (!starterMiniWeaponsById[item?.id]) ensurePreviewInventoryItem(previewState, item);
+    previewState.armory.equippedMiniItemId = item?.id || null;
+  } else if (resolvedSlotId === "hull") {
+    previewState.hulls = normalizeHullState(previewState.hulls);
+    if (item?.id && !previewState.hulls.ownedIds.includes(item.id)) {
+      previewState.hulls.ownedIds.push(item.id);
+    }
+    previewState.hulls.equippedId = item?.id || "starter";
   }
   return previewState;
 }
@@ -5789,7 +6596,9 @@ function getBaseEntryForItem(item) {
   return catalog.entries?.[item.baseId] ||
     catalog.relics?.[item.baseId] ||
     starterWeaponLoadoutsById[item.id] ||
+    starterMiniWeaponsById[item.id] ||
     defenseModulesById[item.id] ||
+    hullsById[item.id] ||
     getSupportModuleEntries().find((entry) => entry.id === item.id) ||
     null;
 }
@@ -5838,22 +6647,49 @@ function getItemDisplayStats(item, slotId = null) {
   ].filter(Boolean).join("   ");
   let headline;
   let lines = [];
-  if (resolvedSlotId === "primary") {
-    const offense = previewStats.offense;
+  if (resolvedSlotId === "primary-2" && item?.id === "none_second_primary") {
+    const defense = previewStats.defense;
+    const currentDefense = currentStats.defense;
     headline = {
-      label: "DPS",
-      value: offense.dps,
-      display: formatNumber(offense.dps, 1),
-      delta: isInstalled ? 0 : offense.dps - currentStats.offense.dps,
+      label: "Focus",
+      value: SINGLE_PRIMARY_FOCUS_RATE,
+      display: `+${Math.round(SINGLE_PRIMARY_FOCUS_RATE * 100)}%`,
+      delta: isInstalled ? 0 : defense.shield - currentDefense.shield,
+      lowerIsGood: false,
+    };
+    lines = [
+      { label: "Shield", value: `${defense.shield}`, math: "Empty second bay restores the single-primary focus bonus." },
+      { label: "Shield Regen", value: `${formatNumber(defense.shieldRegen, 1)}/s`, math: "Single-primary focus increases max shield and shield regen." },
+      { label: "Effect", value: "Clear second bay", math: "" },
+    ];
+  } else if (resolvedSlotId === "primary" || resolvedSlotId === "primary-2") {
+    const offense = resolvedSlotId === "primary-2"
+      ? getOffenseStatsForBuild(composeShipBuildFromArmory(previewState, { primaryItem: item }), previewState)
+      : previewStats.offense;
+    headline = {
+      label: "Per Shot",
+      value: offense.hitDamage,
+      display: formatNumber(offense.hitDamage, 1),
+      delta: isInstalled ? 0 : offense.hitDamage - currentStats.offense.hitDamage,
       lowerIsGood: false,
     };
     lines = [
       {
-        label: "Damage per Hit",
+        label: "Shot Damage",
         value: formatNumber(offense.hitDamage, 1),
         math: offense.cfg.ammo === "plasma"
           ? `Plasma hit damage = ${ECONOMY.plasma.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)}.`
           : `Kinetic hit damage = ${ECONOMY.kinetic.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)} * ${formatNumber(offense.cfg.velocityFactor, 2)}^${ECONOMY.kinetic.velocityExponent}.`,
+      },
+      {
+        label: "Volley Output",
+        value: formatNumber(offense.volleyDamage, 1),
+        math: `${formatNumber(offense.hitDamage, 1)} per shot * ${offense.totalProjectiles} projectile${offense.totalProjectiles === 1 ? "" : "s"}.`,
+      },
+      {
+        label: "Sustained DPS",
+        value: formatNumber(offense.dps, 1),
+        math: `Volley ${formatNumber(offense.volleyDamage, 1)} * ${formatNumber(offense.attacksPerSecond, 2)} triggers/s${offense.burnDps ? ` + ${formatNumber(offense.burnDps, 1)} burn DPS` : ""}.`,
       },
       {
         label: "Attacks per Second",
@@ -5862,6 +6698,28 @@ function getItemDisplayStats(item, slotId = null) {
       },
       { label: "Pattern", value: offense.pattern, math: `${offense.totalProjectiles} projectile${offense.totalProjectiles === 1 ? "" : "s"} per trigger.` },
       { label: "Ammo", value: offense.ammo, math: offense.burnDps ? `Burn DPS = hit damage * 0.45 = ${formatNumber(offense.burnDps, 1)}.` : "" },
+      {
+        label: "Dual-Fire",
+        value: isDualFireCompatibleItem(item) ? "Compatible" : "Swap-only",
+        math: isDualFireCompatibleItem(item) ? "Can fire simultaneously when dual-fire tier is active." : "Heavy or special frames stay swap-only.",
+      },
+    ];
+  } else if (resolvedSlotId === "mini") {
+    const mini = getMiniWeaponStatsForItem(item, previewState);
+    const currentMini = currentStats.mini;
+    headline = {
+      label: "Mini DPS",
+      value: mini.dps,
+      display: formatNumber(mini.dps, 1),
+      delta: isInstalled ? 0 : mini.dps - currentMini.dps,
+      lowerIsGood: false,
+    };
+    lines = [
+      { label: "Shot Damage", value: formatNumber(mini.damage, 1), math: "Mini damage includes hull mini modifiers." },
+      { label: "Attacks per Second", value: formatNumber(mini.attacksPerSecond, 2), math: `1 / ${formatNumber(mini.cooldown, 2)}s cooldown.` },
+      { label: "Targeting", value: `${mini.arcLabel} | ${mini.range}px`, math: `${mini.config?.arcDegrees || (mini.config?.arc === "turret" ? 360 : 70)} degree targeting arc.` },
+      { label: "Ammo", value: `${capitalize(mini.config?.ammo || "kinetic")} | ${capitalize(mini.config?.cadence || "mini")}`, math: "" },
+      { label: "Effect", value: capitalize(mini.config?.effect || "none"), math: mini.role },
     ];
   } else if (resolvedSlotId?.startsWith("defense-")) {
     const defense = previewStats.defense;
@@ -5885,6 +6743,25 @@ function getItemDisplayStats(item, slotId = null) {
           { label: "Recovery Delay", value: `${formatNumber(defense.shieldRechargeDelay, 1)}s`, math: `Base 2.5s, shifted by shield recovery tuning.` },
           { label: "Effect", value: "Regenerates after damage pause", math: "Collision damage bypasses shields." },
         ];
+  } else if (resolvedSlotId === "hull") {
+    const defense = previewStats.defense;
+    const currentDefense = currentStats.defense;
+    const bonuses = hullsById[item?.id]?.bonuses || {};
+    headline = {
+      label: "Hull",
+      value: defense.hull,
+      display: `${defense.hull}`,
+      delta: isInstalled ? 0 : defense.hull - currentDefense.hull,
+      lowerIsGood: false,
+    };
+    lines = [
+      { label: "Shield", value: `${defense.shield} | ${formatNumber(defense.shieldRegen, 1)}/s`, math: "Hull bonuses and second-bay focus/strain are included." },
+      { label: "Armor", value: `${defense.armor}`, math: `Armor capacity x${formatNumber(bonuses.armorCapacityMult ?? 1, 2)}.` },
+      { label: "Mini Control", value: `${Math.round((bonuses.miniDamageMult ?? 1) * 100)}% dmg | ${Math.round((bonuses.miniCooldownMult ?? 1) * 100)}% cd`, math: "Lower mini cooldown percentages are better." },
+      { label: "Aux Power", value: `+${bonuses.auxPowerBonus || 0} tier`, math: "Hull aux tier stacks with Armory aux upgrades." },
+      { label: "Second Bay", value: `${Math.round((bonuses.secondBayStrainReduction || 0) * 100)}% strain mitigation`, math: "Baseline second-bay strain is 15% shield and regen." },
+      { label: "Dual-Fire", value: `+${bonuses.dualFireTierBonus || 0} tier`, math: "Hull bonus stacks with Armory dual-fire upgrades." },
+    ];
   } else {
     const support = previewStats.support;
     const currentSupport = currentStats.support;
@@ -6052,12 +6929,14 @@ function renderShipStatsPanel() {
     : null;
   const stats = getShipDisplayStatsForState(state);
   const support = stats.support;
+  const mini = stats.mini;
+  const loadout = getPrimaryLoadoutDefenseModifiers(state);
   const offenseRows = display
     ? [
         {
           label: display.headline.label,
           value: display.headline.display,
-          math: display.lines.find((line) => line.label === "Damage per Hit")?.math || "",
+          math: display.lines.find((line) => line.label === "Shot Damage")?.math || "",
         },
         ...display.lines,
       ]
@@ -6077,6 +6956,37 @@ function renderShipStatsPanel() {
     { label: "Duration", value: support.duration ? `${formatNumber(support.duration, 1)}s` : "-", math: support.math },
     { label: "Effect", value: support.effect, math: support.math },
   ];
+  const miniRows = [
+    { label: "Weapon", value: getCompactItemName(getSelectedMiniWeapon()), math: "" },
+    { label: "Mini DPS", value: formatNumber(mini.dps, 1), math: `${formatNumber(mini.damage, 1)} damage * ${formatNumber(mini.attacksPerSecond, 2)} attacks/s.` },
+    { label: "Targeting", value: `${mini.arcLabel} | ${mini.range}px`, math: mini.role },
+  ];
+  const loadoutRows = [
+    { label: "Hull", value: getEquippedHull().name, math: getEquippedHull().description },
+    { label: "Bay State", value: loadout.label, math: loadout.label === "Second-bay strain" ? "Second primary reduces shield capacity and regen before hull mitigation." : "Open second bay grants shield capacity and regen focus." },
+    { label: "Dual-Fire", value: canDualFireCurrentLoadout() ? `${Math.round(getDualFireDamageMult() * 100)}% per weapon` : "Swap mode", math: "Dual-fire requires a tier and two compatible primary weapons." },
+  ];
+  const engineeringHtml = ["auxPower", "dualFire"]
+    .map((upgradeId) => {
+      const definition = getUpgradeDefinition(upgradeId);
+      if (!definition) return "";
+      const current = state.upgrades?.[upgradeId] || 0;
+      const max = definition.maxLevel || 0;
+      const complete = current >= max;
+      const cost = complete ? 0 : upgradeCost(upgradeId);
+      const affordable = !complete && state.credits >= cost;
+      const currentText = upgradeId === "auxPower"
+        ? `Tier ${current}/${max} | strength ${Math.round((getAuxStrengthMult() - 1) * 100)}%`
+        : `Tier ${current}/${max} | dual ${Math.round(getDualFireDamageMult() * 100)}%`;
+      return `
+        <button type="button" class="engineering-upgrade" data-engineering-upgrade="${upgradeId}" ${affordable ? "" : "disabled"}>
+          <span class="name">${escapeHtml(definition.name)}</span>
+          <span class="desc">${escapeHtml(currentText)}</span>
+          <span class="cost">${complete ? "Complete" : formatCredits(cost)}</span>
+        </button>
+      `;
+    })
+    .join("");
   shipStats.innerHTML = `
     <h3>Ship Stats</h3>
     <div class="stat-sections">
@@ -6092,8 +7002,23 @@ function renderShipStatsPanel() {
         <div class="stat-section-title">Support</div>
         ${supportRows.map(renderShipStatRow).join("")}
       </div>
+      <div class="stat-section">
+        <div class="stat-section-title">Mini</div>
+        ${miniRows.map(renderShipStatRow).join("")}
+      </div>
+      <div class="stat-section">
+        <div class="stat-section-title">Loadout</div>
+        ${loadoutRows.map(renderShipStatRow).join("")}
+      </div>
+      <div class="stat-section">
+        <div class="stat-section-title">Engineering</div>
+        <div class="engineering-upgrades">${engineeringHtml}</div>
+      </div>
     </div>
   `;
+  shipStats.querySelectorAll("[data-engineering-upgrade]").forEach((button) => {
+    button.addEventListener("click", () => purchaseEngineeringUpgrade(button.dataset.engineeringUpgrade));
+  });
 }
 
 function formatFrameDefenseSummary(build) {
@@ -6117,7 +7042,7 @@ function getArmoryFrameVisual(item) {
 function getArmoryUnlockText(item, owned) {
   if (owned) return "Owned";
   if (Number.isFinite(item?.starterUnlockStage)) {
-    return `Flight School ${item.starterUnlockStage + 1}`;
+    return "Starter kit";
   }
   if (Number.isFinite(item?.unlockAt) && item.unlockAt > 0) {
     return `Rank ${item.unlockAt}`;
@@ -6141,15 +7066,29 @@ function getSelectedSupportModule() {
 }
 
 function getArmorySlotDefinitions() {
-  const equippedWeapon = getEquippedStarterLoadout();
+  const equippedWeapon = getPrimaryArmoryItem(state, 0);
+  const secondWeapon = getSecondPrimaryArmoryItem();
+  const mini = getSelectedMiniWeapon();
+  const hull = getEquippedHull();
   const defenseSlotIds = getEquippedDefenseSlotIds();
   const defenseA = getDefenseArmoryItemById(defenseSlotIds[0]) || null;
   const defenseB = getDefenseArmoryItemById(defenseSlotIds[1]) || null;
   const support = getSelectedSupportModule();
   return [
     {
+      id: "hull",
+      label: "Hull",
+      className: "armory-slot-hull",
+      installedId: hull?.id || "starter",
+      item: hull || null,
+      name: hull ? getCompactItemName(hull) : "Starter Hull",
+      meta: hull?.subtitle || "Balanced chassis",
+      note: hull?.description || "Select a hull chassis.",
+      icon: hull?.icon || `${GENERATED_PILOT_ROOT}/player_interceptor.png`,
+    },
+    {
       id: "primary",
-      label: "Primary Hardpoint",
+      label: "Primary A",
       className: "armory-slot-primary",
       installedId: equippedWeapon?.id || null,
       item: equippedWeapon || null,
@@ -6159,6 +7098,32 @@ function getArmorySlotDefinitions() {
         : "No weapon linked",
       note: "Weapon modules change the projectile profile and hidden fire tuning.",
       icon: equippedWeapon ? getArmoryFrameVisual(equippedWeapon).icon : getDefaultItemIcon("certified"),
+    },
+    {
+      id: "primary-2",
+      label: "Primary B",
+      className: "armory-slot-primary-secondary",
+      installedId: secondWeapon?.id || null,
+      item: secondWeapon || null,
+      name: secondWeapon ? getCompactItemName(secondWeapon) : "Open Bay",
+      meta: secondWeapon?.build
+        ? `${getSpreadLabel(secondWeapon.build.spread)} | Swap-ready`
+        : `Focus +${Math.round(SINGLE_PRIMARY_FOCUS_RATE * 100)}% shield`,
+      note: secondWeapon
+        ? "Swap to this weapon in flight. Carrying it applies second-bay defense strain."
+        : "Keep this bay open for the single-primary focus bonus.",
+      icon: secondWeapon ? getArmoryFrameVisual(secondWeapon).icon : defenseVisuals.none.icon,
+    },
+    {
+      id: "mini",
+      label: "Mini",
+      className: "armory-slot-mini",
+      installedId: mini?.id || null,
+      item: mini || null,
+      name: mini ? getCompactItemName(mini) : "No Mini",
+      meta: mini ? getItemBrowserRole(mini) : "Auxiliary autogun",
+      note: mini?.description || "Install a compact auto-gun that fires independently.",
+      icon: mini?.icon || getDefaultItemIcon("certified"),
     },
     {
       id: "defense-0",
@@ -6198,23 +7163,64 @@ function getArmorySlotDefinitions() {
 
 function getArmoryItemsForSlot(slotId) {
   const inventory = getArmoryInventory();
-  if (slotId === "primary") {
+  if (slotId === "primary" || slotId === "primary-2") {
+    const isSecondBay = slotId === "primary-2";
     const ownedIds = new Set(getOwnedStarterLoadoutIds());
+    const emptySecondBay = {
+      id: "none_second_primary",
+      slotType: "primary",
+      name: "Open Second Bay",
+      subtitle: "Single-primary focus",
+      description: "Clear the second bay to restore the focus bonus to shields and shield regen.",
+      notes: "One-primary builds receive a baseline defensive focus bonus.",
+      icon: defenseVisuals.none.icon,
+      tags: ["empty", "focus", "single-primary"],
+      owned: true,
+      installed: isSecondBay && !getSecondPrimaryArmoryItem(),
+    };
     const starterItems = starterWeaponLoadouts.map((item) => ({
       ...item,
       slotType: "primary",
       icon: getArmoryFrameVisual(item).icon,
       owned: ownedIds.has(item.id),
-      installed: !state.armory?.equippedPrimaryItemId && state.armory?.equippedLoadoutId === item.id,
+      installed: isSecondBay
+        ? !state.armory?.equippedSecondPrimaryItemId && state.armory?.equippedSecondLoadoutId === item.id
+        : !state.armory?.equippedPrimaryItemId && state.armory?.equippedLoadoutId === item.id,
     }));
     const lootItems = inventory
       .filter((item) => item.slotType === "primary")
       .map((item) => ({
         ...item,
         owned: true,
-        installed: state.armory?.equippedPrimaryItemId === item.id,
+        installed: isSecondBay
+          ? state.armory?.equippedSecondPrimaryItemId === item.id
+          : state.armory?.equippedPrimaryItemId === item.id,
+      }));
+    return isSecondBay ? [emptySecondBay, ...starterItems, ...lootItems] : [...starterItems, ...lootItems];
+  }
+  if (slotId === "mini") {
+    const ownedMiniIds = new Set(state.armory?.ownedMiniWeaponIds || []);
+    const starterItems = starterMiniWeapons.map((item) => ({
+      ...item,
+      owned: ownedMiniIds.has(item.id),
+      installed: state.armory?.equippedMiniItemId === item.id,
+    }));
+    const lootItems = inventory
+      .filter((item) => normalizeArmorySlotType(item.slotType) === "mini")
+      .map((item) => ({
+        ...item,
+        owned: true,
+        installed: state.armory?.equippedMiniItemId === item.id,
       }));
     return [...starterItems, ...lootItems];
+  }
+  if (slotId === "hull") {
+    const ownedHullIds = new Set(getOwnedHullIds());
+    return hullCatalog.map((item) => ({
+      ...item,
+      owned: ownedHullIds.has(item.id),
+      installed: getEquippedHull()?.id === item.id,
+    }));
   }
   if (slotId === "support") {
     const baseItems = getSupportModuleEntries().map((item) => ({
@@ -6274,9 +7280,24 @@ function getArmorySlotMeta(slotId) {
     };
   }
   const meta = {
+    hull: {
+      title: "Hull Chassis",
+      copy: "Select the ship hull that shapes defense, mini control, aux strength, and second-bay strain.",
+      tip: "Click icon to equip or buy",
+    },
     primary: {
-      title: "Primary Hardpoint",
-      copy: "Weapon frames from Flight School. Hover icons to compare, then click one to install it.",
+      title: "Primary Hardpoint A",
+      copy: "Main weapon frames. Hover icons to compare per-shot, volley, and sustained output.",
+      tip: "Click icon to install",
+    },
+    "primary-2": {
+      title: "Primary Hardpoint B",
+      copy: "Optional swap weapon. Leaving this open keeps the single-primary focus bonus.",
+      tip: "Click icon to install",
+    },
+    mini: {
+      title: "Mini Auto-Gun",
+      copy: "Compact weapons fire independently using their listed arc, range, cadence, and ammo type.",
       tip: "Click icon to install",
     },
     support: {
@@ -6302,11 +7323,31 @@ function getInstalledArmoryItem(slotId) {
   return getArmoryItemsForSlot(slotId).find((item) => item.installed) || null;
 }
 
+function getArmorySlotLabel(slotId) {
+  const labels = {
+    hull: "Hull Chassis",
+    primary: "Primary Hardpoint A",
+    "primary-2": "Primary Hardpoint B",
+    mini: "Mini Auto-Gun",
+    support: "Support Link",
+    "defense-0": "Defense Bay A",
+    "defense-1": "Defense Bay B",
+  };
+  return labels[slotId] || "Module Slot";
+}
+
 function canInstallSupportItem(item) {
   if (!item) return false;
   if (item.owned || state.debugUnlock) return true;
   const rankOk = (state.lifetimeCredits ?? 0) >= (item.unlockAt ?? 0) || state.debugUnlock;
   return rankOk && state.credits >= (item.cost ?? 0);
+}
+
+function canInstallArmoryItem(item, slotId) {
+  if (!item) return false;
+  if (slotId === "support") return canInstallSupportItem(item);
+  if (slotId === "hull") return !!item.owned || state.debugUnlock || state.credits >= (item.cost || 0);
+  return !!item.owned || state.debugUnlock;
 }
 
 function installSupportItem(itemId) {
@@ -6344,12 +7385,25 @@ function installSupportItem(itemId) {
 
 function handleArmorySlotInstall(slotId, itemId) {
   hideItemTooltip();
-  if (slotId === "primary") {
-    if (starterWeaponLoadoutsById[itemId]) {
-      equipStarterLoadout(itemId);
-    } else {
-      equipPrimaryInventoryItem(itemId);
+  if (slotId === "primary" || slotId === "primary-2") {
+    const bayIndex = slotId === "primary-2" ? 1 : 0;
+    if (slotId === "primary-2" && itemId === "none_second_primary") {
+      clearSecondPrimaryBay();
+      return;
     }
+    if (starterWeaponLoadoutsById[itemId]) {
+      equipStarterLoadout(itemId, bayIndex);
+    } else {
+      equipPrimaryInventoryItem(itemId, bayIndex);
+    }
+    return;
+  }
+  if (slotId === "mini") {
+    equipMiniWeapon(itemId);
+    return;
+  }
+  if (slotId === "hull") {
+    equipHull(itemId);
     return;
   }
   if (slotId === "support") {
@@ -6365,14 +7419,7 @@ function handleArmorySlotInstall(slotId, itemId) {
 function renderArmoryInspector(slotId) {
   if (!armoryInspector || !slotId) return;
   const item = getInstalledArmoryItem(slotId);
-  const slotLabel =
-    slotId === "primary"
-      ? "Primary Hardpoint"
-      : slotId === "support"
-        ? "Support Link"
-        : slotId === "defense-0"
-          ? "Defense Bay A"
-          : "Defense Bay B";
+  const slotLabel = getArmorySlotLabel(slotId);
   if (!item) {
     armoryInspector.innerHTML = `
       <div class="armory-inspector-head">
@@ -6400,7 +7447,7 @@ function renderArmoryInspector(slotId) {
 function renderShipUpgradesPanel() {
   const equipped = getEquippedStarterLoadout();
   if (!equipped) return;
-  if (!["primary", "defense-0", "defense-1", "support"].includes(armorySelectedSlotId)) {
+  if (!["hull", "primary", "primary-2", "mini", "defense-0", "defense-1", "support"].includes(armorySelectedSlotId)) {
     armorySelectedSlotId = "primary";
   }
 
@@ -6463,14 +7510,20 @@ function renderShipUpgradesPanel() {
 
   if (!weaponInventory) return;
   weaponInventory.innerHTML = "";
-  const inventoryItems = getArmoryItemsForSlot(armorySelectedSlotId);
+  const inventoryItems = filterAndSortBrowserItems(getArmoryItemsForSlot(armorySelectedSlotId), {
+    query: armoryBrowserSearch?.value || "",
+    sort: armoryBrowserSort?.value || "recent",
+    filter: armoryBrowserFilter?.value || "all",
+  });
+
+  if (!inventoryItems.length) {
+    weaponInventory.innerHTML = `<div class="muted">No matching gear found.</div>`;
+    return;
+  }
 
   inventoryItems.forEach((item) => {
     const button = document.createElement("button");
-    const canInstall =
-      armorySelectedSlotId === "support"
-        ? canInstallSupportItem(item)
-        : !!item.owned;
+    const canInstall = canInstallArmoryItem(item, armorySelectedSlotId);
     button.type = "button";
     button.className = `armory-inventory-item${item.installed ? " is-installed" : ""}${canInstall ? "" : " is-locked"}${item.rarity ? ` rarity-${item.rarity}` : ""}`;
     if (item.rarity) {
@@ -6479,6 +7532,7 @@ function renderShipUpgradesPanel() {
     button.innerHTML = `
       <span class="armory-inventory-icon"><img src="${escapeHtml(item.icon)}" alt="" /></span>
       <span class="armory-inventory-name">${escapeHtml(getCompactItemName(item))}</span>
+      <span class="armory-inventory-meta">${escapeHtml(item.installed ? "Installed" : item.owned ? getItemBrowserRole(item) : `${item.cost || 0} cr`)}</span>
     `;
     attachItemTooltip(button, item, armorySelectedSlotId);
     button.addEventListener("click", () => {
@@ -6486,11 +7540,7 @@ function renderShipUpgradesPanel() {
         renderArmoryInspector(armorySelectedSlotId);
         return;
       }
-      if (armorySelectedSlotId === "support" && !canInstallSupportItem(item)) {
-        renderArmoryInspector(armorySelectedSlotId);
-        return;
-      }
-      if (armorySelectedSlotId !== "support" && !item.owned) {
+      if (!canInstallArmoryItem(item, armorySelectedSlotId)) {
         renderArmoryInspector(armorySelectedSlotId);
         return;
       }
@@ -6569,6 +7619,27 @@ function renderLedgerBulletinPanel(ledger) {
   `;
 }
 
+function renderLedgerLicensePanel(ledger) {
+  if (!ledgerLicensePanel) return;
+  const tier = getLedgerLicenseTier();
+  const current = getLedgerLicenseConfig(tier);
+  const next = getNextLedgerLicenseConfig();
+  const canBuy = !!next && state.credits >= next.cost;
+  ledgerLicensePanel.innerHTML = `
+    <div class="ledger-license-copy">
+      <span class="ledger-bulletin-kicker">Ledger license</span>
+      <strong>Tier ${tier} | ${current.stockLots} visible lots</strong>
+      <span>${next ? `Next: ${next.stockLots} lots for ${formatCredits(next.cost)}` : "Maximum license active"}</span>
+    </div>
+    <button type="button" class="ledger-action-button license" ${canBuy ? "" : "disabled"}>
+      ${next ? "License" : "Max"}
+    </button>
+  `;
+  ledgerLicensePanel
+    .querySelector("button")
+    ?.addEventListener("click", () => purchaseLedgerLicense());
+}
+
 function renderLedgerStock(ledger) {
   if (!ledgerStockList) return;
   ledgerStockList.innerHTML = "";
@@ -6604,7 +7675,12 @@ function renderLedgerStock(ledger) {
 
 function renderLedgerInventory(ledger) {
   if (!ledgerInventoryList) return;
-  const inventory = getArmoryInventory(state);
+  const inventory = filterAndSortBrowserItems(getArmoryInventory(state), {
+    query: ledgerInventorySearch?.value || "",
+    sort: ledgerInventorySort?.value || "recent",
+    filter: ledgerInventoryFilter?.value || "all",
+    valueResolver: (item) => getItemSellQuote(item).payout,
+  });
   ledgerInventoryList.innerHTML = "";
   if (!inventory.length) {
     ledgerInventoryList.innerHTML = `<div class="ledger-empty">${LEDGER_COPY.sellEmpty}</div>`;
@@ -6641,6 +7717,7 @@ async function renderLedgerMarketAsync() {
   if (ledgerStockList) ledgerStockList.innerHTML = `<div class="ledger-empty">Loading market lots...</div>`;
   const ledger = await ensureLedgerMarketReady();
   renderLedgerBulletinPanel(ledger);
+  renderLedgerLicensePanel(ledger);
   renderLedgerStock(ledger);
   renderLedgerInventory(ledger);
   renderLedgerReceiptPanel(ledger);
@@ -6843,6 +7920,16 @@ function scheduleLevelSpawns() {
   }
 }
 
+function scheduleLevelPickups() {
+  const pickups = Array.isArray(mission?.level?.pickups) ? mission.level.pickups : [];
+  while (mission.pickupIndex < pickups.length) {
+    const entry = pickups[mission.pickupIndex];
+    if (mission.elapsed < entry.time) break;
+    spawnLevelPickup(entry);
+    mission.pickupIndex += 1;
+  }
+}
+
 function resolveEnemySpec(type, overrides = {}) {
   const level = mission.level;
   const merged = mergeLevelEnemySpec(level, type, overrides);
@@ -6897,6 +7984,7 @@ function spawnPlayerBullet({ x, y, vx, vy, damage, image }) {
 function spawnSalvagePod(x, y, drop) {
   if (!drop?.item || !mission?.active) return;
   salvagePods.push({
+    kind: "salvage",
     x,
     y,
     radius: 18,
@@ -6906,6 +7994,58 @@ function spawnSalvagePod(x, y, drop) {
     age: 0,
     rejected: false,
   });
+}
+
+function spawnFieldCache(x, y, type) {
+  if (!mission?.active) return;
+  const cacheConfig = {
+    shield_booster: {
+      kind: "shield_booster",
+      radius: 18,
+      vy: ECONOMY.fieldPickupSpeed,
+      label: LEDGER_COPY.shieldCache,
+      color: "#7dd3fc",
+    },
+    armor_patch: {
+      kind: "armor_patch",
+      radius: 18,
+      vy: ECONOMY.fieldPickupSpeed,
+      label: LEDGER_COPY.armorCache,
+      color: "#facc15",
+    },
+  }[type];
+  if (!cacheConfig) return;
+  salvagePods.push({
+    ...cacheConfig,
+    x,
+    y,
+    age: 0,
+    rejected: false,
+  });
+}
+
+function spawnLevelPickup(entry) {
+  if (!entry || !mission?.active) return;
+  const width = canvas.width / window.devicePixelRatio;
+  const xValue = Number(entry.x);
+  const x = Number.isFinite(xValue)
+    ? xValue <= 1
+      ? Math.max(42, Math.min(width - 42, xValue * width))
+      : Math.max(42, Math.min(width - 42, xValue))
+    : 48 + Math.random() * Math.max(1, width - 96);
+  const y = Number.isFinite(entry.y) ? entry.y : -34;
+  const type = entry.type || "salvage";
+  if (type === "salvage") {
+    const rarity = entry.rarity || "certified";
+    const item = rollItemForRarity(rarity, {
+      sourceKey: "scripted",
+      includeActiveMission: true,
+      slotType: entry.slotType ? normalizeArmorySlotType(entry.slotType) : undefined,
+    }) || rollItemForRarity(rarity, { sourceKey: "scripted", includeActiveMission: true });
+    if (item) spawnSalvagePod(x, y, { rarity, item });
+    return;
+  }
+  spawnFieldCache(x, y, type);
 }
 
 function grantBossSalvage(enemy) {
@@ -6935,13 +8075,45 @@ function collectSalvagePod(pod) {
   return true;
 }
 
+function collectFieldCache(pod) {
+  if (pod.kind === "shield_booster") {
+    const restore = player.maxShield * 0.4;
+    const cap = player.maxShield * 1.2;
+    player.shield = Math.min(cap, player.shield + restore);
+    player.shieldCooldown = 0;
+    revealPlayerHealth();
+    spawnFloatingText(pod.x, pod.y, LEDGER_COPY.shieldCache, pod.color || "#7dd3fc");
+    playSfx("boost", 0.34);
+    return true;
+  }
+  if (pod.kind === "armor_patch") {
+    const armorMissing = player.maxArmor > 0 && player.armor < player.maxArmor;
+    if (armorMissing) {
+      player.armor = Math.min(player.maxArmor, player.armor + player.maxArmor * 0.35);
+      spawnFloatingText(pod.x, pod.y, LEDGER_COPY.armorCache, pod.color || "#facc15");
+    } else if (player.hull < player.maxHull) {
+      player.hull = Math.min(player.maxHull, player.hull + player.maxHull * 0.18);
+      spawnFloatingText(pod.x, pod.y, "HULL PATCH", pod.color || "#facc15");
+    } else {
+      spawnFloatingText(pod.x, pod.y, "PATCH READY", pod.color || "#facc15");
+    }
+    revealPlayerHealth();
+    playSfx("boost", 0.32);
+    return true;
+  }
+  return false;
+}
+
 function handleSalvagePodCollisions() {
   if (!mission?.active) return;
   for (let i = salvagePods.length - 1; i >= 0; i -= 1) {
     const pod = salvagePods[i];
     if (pod.rejected) continue;
     if (distance(player.x, player.y, pod.x, pod.y) < player.radius + pod.radius) {
-      if (collectSalvagePod(pod)) {
+      const collected = pod.kind === "salvage" || !pod.kind
+        ? collectSalvagePod(pod)
+        : collectFieldCache(pod);
+      if (collected) {
         salvagePods.splice(i, 1);
       }
     }
@@ -7030,7 +8202,7 @@ function getPrimaryFireConfig(buildOverride = null) {
   const armorSlots =
     (build.defenseSlots?.filter((slot) => slot === "armor").length ?? 0);
   const armorPenalty =
-    1 + armorSlots * 0.1 + Math.max(0, build.armorDragLevel ?? 0) * 0.06;
+    1 + (armorSlots * 0.1 + Math.max(0, build.armorDragLevel ?? 0) * 0.06) * (build.armorDragMult ?? 1);
 
   const spreadRadiusScale = {
     focused: 1,
@@ -7126,7 +8298,7 @@ function getPrimaryFireConfig(buildOverride = null) {
   };
 }
 
-function computePrimaryDamage({ ammo, speed, radius, damageBoostMult = null }) {
+function computePrimaryDamage({ ammo, speed, radius, damageBoostMult = null, buildDamageMult = null }) {
   const sizeFactor = Math.max(0.05, radius / 4);
   const velFactor = Math.max(0.2, speed / ECONOMY.kinetic.baseVelocity);
   const baseKinetic = ECONOMY.kinetic.baseDamage;
@@ -7135,12 +8307,18 @@ function computePrimaryDamage({ ammo, speed, radius, damageBoostMult = null }) {
     ammo === "plasma"
       ? basePlasma * sizeFactor
       : baseKinetic * sizeFactor * Math.pow(velFactor, ECONOMY.kinetic.velocityExponent);
+  const effectiveBuildDamageMult = Number.isFinite(buildDamageMult)
+    ? buildDamageMult
+    : Number.isFinite(getShipBuild()?.primaryDamageMult)
+    ? getShipBuild().primaryDamageMult
+    : 1;
+  damage *= effectiveBuildDamageMult;
   damage *= Number.isFinite(damageBoostMult) ? damageBoostMult : player.damageBoostMult || 1;
   return damage;
 }
 
-function firePlayerBullet() {
-  const cfg = getPrimaryFireConfig();
+function firePlayerBullet({ build = null, damageScale = 1, xOffset = 0 } = {}) {
+  const cfg = getPrimaryFireConfig(build);
   const mount = state.weapon.mount || "front";
   const visualTheme = getLevelVisualTheme();
   playSfx("laserSmall", 0.25);
@@ -7161,7 +8339,12 @@ function firePlayerBullet() {
       vx,
       vy,
       radius,
-      damage: computePrimaryDamage({ ammo: cfg.ammo, speed, radius }),
+      damage: computePrimaryDamage({
+        ammo: cfg.ammo,
+        speed,
+        radius,
+        buildDamageMult: build?.primaryDamageMult,
+      }) * damageScale,
       image: extra.image || image,
       width: extra.width ?? (
         cfg.ammo === "plasma"
@@ -7236,7 +8419,7 @@ function firePlayerBullet() {
           ? (Math.random() - 0.5) * 6
           : 0;
       spawnBullet(vx, vy, {
-        x: player.x + lateralOffset + posJitter,
+        x: player.x + xOffset + lateralOffset + posJitter,
         y: player.y - player.radius,
         radius,
         width: cfg.ammo === "plasma" ? Math.max(16, 28 * sizeScale) : Math.max(6, 10 * sizeScale),
@@ -7260,6 +8443,161 @@ function firePlayerBullet() {
   }
 }
 
+function getPrimaryBuildForItem(item) {
+  return composeShipBuildFromArmory(state, { primaryItem: item || getPrimaryArmoryItem(state) });
+}
+
+function getCurrentPrimaryFireCooldown() {
+  if (canDualFireCurrentLoadout()) {
+    const primaryBuild = getPrimaryBuildForItem(getPrimaryArmoryItem(state, 0));
+    const secondBuild = getPrimaryBuildForItem(getSecondPrimaryArmoryItem());
+    return Math.max(
+      getPrimaryFireConfig(primaryBuild).cooldown,
+      getPrimaryFireConfig(secondBuild).cooldown
+    );
+  }
+  return getPrimaryFireConfig(getPrimaryBuildForItem(getPrimaryArmoryItem(state))).cooldown;
+}
+
+function fireCurrentPrimaryWeapons() {
+  if (canDualFireCurrentLoadout()) {
+    const damageScale = getDualFireDamageMult();
+    const primaryBuild = getPrimaryBuildForItem(getPrimaryArmoryItem(state, 0));
+    const secondBuild = getPrimaryBuildForItem(getSecondPrimaryArmoryItem());
+    firePlayerBullet({ build: primaryBuild, damageScale, xOffset: -10 });
+    firePlayerBullet({ build: secondBuild, damageScale, xOffset: 10 });
+    return Math.max(
+      getPrimaryFireConfig(primaryBuild).cooldown,
+      getPrimaryFireConfig(secondBuild).cooldown
+    );
+  }
+  const activeBuild = getPrimaryBuildForItem(getPrimaryArmoryItem(state));
+  firePlayerBullet({ build: activeBuild });
+  return getPrimaryFireConfig(activeBuild).cooldown;
+}
+
+function swapPrimaryBay() {
+  if (!mission?.active || player.swapCooldown > 0) return;
+  if (!getSecondPrimaryArmoryItem()) return;
+  state.activePrimaryBay = getActivePrimaryBay(state) === 1 ? 0 : 1;
+  player.swapCooldown = SECOND_PRIMARY_SWAP_COOLDOWN;
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
+  saveState();
+  const active = getPrimaryArmoryItem(state);
+  spawnFloatingText(player.x, player.y - 42, `SWAP: ${getCompactItemName(active)}`, "#7dd3fc");
+  updateHud();
+}
+
+function findMiniWeaponTarget(stats) {
+  if (!stats?.config || !enemies.length) return null;
+  const cfg = stats.config;
+  const range = stats.range || cfg.range || 360;
+  const arcDegrees = cfg.arc === "turret" ? 360 : cfg.arcDegrees || (cfg.arc === "wide" ? 140 : 70);
+  let best = null;
+  let bestDistance = Infinity;
+  enemies.forEach((enemy) => {
+    if (!enemy || enemy.hull <= 0) return;
+    const dx = enemy.x - player.x;
+    const dy = enemy.y - player.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > range) return;
+    if (cfg.arc !== "turret") {
+      if (dy > enemy.radius) return;
+      const angleFromForward = Math.abs(Math.atan2(dx, -dy)) * (180 / Math.PI);
+      if (angleFromForward > arcDegrees / 2) return;
+    }
+    if (dist < bestDistance) {
+      best = enemy;
+      bestDistance = dist;
+    }
+  });
+  return best;
+}
+
+function fireMiniWeapon() {
+  const item = getSelectedMiniWeapon();
+  const stats = getMiniWeaponStatsForItem(item);
+  if (!stats.config || stats.damage <= 0) return false;
+  const target = findMiniWeaponTarget(stats);
+  if (!target) return false;
+  const cfg = stats.config;
+  const dx = target.x - player.x;
+  const dy = target.y - player.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  const speed = cfg.speed || 500;
+  const vx = (dx / dist) * speed;
+  const vy = (dy / dist) * speed;
+  const radius = cfg.radius || (cfg.shotSize === "large" ? 4.5 : 2.8);
+  const visualTheme = getLevelVisualTheme();
+  const image = cfg.ammo === "plasma"
+    ? visualTheme?.playerPlasma || assets.spreadBullet
+    : visualTheme?.playerBullet || assets.playerBullet;
+  const bullet = {
+    x: player.x,
+    y: player.y - player.radius * 0.35,
+    vx,
+    vy,
+    radius,
+    damage: stats.damage,
+    image,
+    width: cfg.ammo === "plasma" ? Math.max(10, radius * 5) : Math.max(5, radius * 3),
+    height: cfg.ammo === "plasma" ? Math.max(10, radius * 5) : Math.max(12, radius * 8),
+    rotation: Math.atan2(vy, vx) + Math.PI / 2,
+    baseSpeed: speed,
+    originAngle: Math.atan2(vy, vx),
+    payload: cfg.ammo || "kinetic",
+    plasma: cfg.ammo === "plasma",
+    armorChipFloorRate: cfg.cadence === "rapid" ? 0.035 : ECONOMY.minDamageFloor,
+    minArmorChipDamage: cfg.cadence === "rapid" ? 0.25 : 1,
+    age: 0,
+    animation: cfg.ammo === "plasma" ? "plasma" : "bolt",
+    color: cfg.ammo === "plasma" ? "rgba(45, 212, 191, 0.95)" : "rgba(125, 211, 252, 0.95)",
+    source: "mini",
+  };
+  if (cfg.effect === "homing") {
+    bullet.homing = true;
+    bullet.homingMaxOffset = 0.9;
+    bullet.homingStrength = 0.08;
+  } else if (cfg.effect === "pierce") {
+    bullet.pierce = 1;
+    bullet.hitIds = new Set();
+  } else if (cfg.effect === "explosive") {
+    bullet.explosive = true;
+    bullet.explosiveRadius = 44;
+    bullet.explosiveDamageMult = 0.55;
+    bullet.exploded = false;
+  } else if (cfg.effect === "vampiric") {
+    bullet.vampiric = 0.06;
+  }
+  bullets.push(bullet);
+  player.miniFireCooldown = stats.cooldown;
+  playSfx("laserSmall", 0.12);
+  return true;
+}
+
+function clearEnemyProjectilesNearPlayer(radius = player.empClearRadius || EMP_CLEAR_BASE_RADIUS) {
+  let cleared = 0;
+  for (let i = enemyBullets.length - 1; i >= 0; i -= 1) {
+    const bullet = enemyBullets[i];
+    if (distance(player.x, player.y, bullet.x, bullet.y) <= radius + (bullet.radius || 0)) {
+      enemyBullets.splice(i, 1);
+      cleared += 1;
+    }
+  }
+  if (cleared > 0) {
+    spawnFloatingText(player.x, player.y - 54, `${cleared} shots cleared`, "#7dd3fc");
+  }
+  spawnExplosion(player.x, player.y, radius * 0.45, {
+    intensity: 0.72,
+    blend: "lighter",
+    style: "empPulse",
+    coalesce: false,
+  });
+  addCameraShake(Math.min(0.18, 0.05 + cleared * 0.01), player.x, player.y);
+  return cleared;
+}
+
 function fireAltWeapon() {
   if (state.rmbWeapon === "none") return;
   if (state.rmbWeapon === "cloak") {
@@ -7268,6 +8606,7 @@ function fireAltWeapon() {
   } else if (state.rmbWeapon === "emp") {
     playSfx("emp", 0.4);
     mission.empTimer = player.empDuration;
+    clearEnemyProjectilesNearPlayer(player.empClearRadius);
   } else if (state.rmbWeapon === "bulwark") {
     playSfx("boost", 0.45);
     player.bulwarkTimer = player.bulwarkDuration;
@@ -7310,10 +8649,9 @@ function useConsumable(slotIndex) {
       applyDamageToEnemy(enemy, blastDamage * scale);
     });
   } else if (slotId === "shieldBoost") {
-    const shieldGain = player.maxShield * 0.65;
-    const hullGain = player.maxHull * 0.18;
-    player.shield = Math.min(player.maxShield, player.shield + shieldGain);
-    player.hull = Math.min(player.maxHull, player.hull + hullGain);
+    const shieldGain = player.maxShield * 0.4;
+    player.shield = Math.min(player.maxShield * 1.2, player.shield + shieldGain);
+    player.shieldCooldown = 0;
     playSfx("boost", 0.35);
   } else if (slotId === "overcharge") {
     player.damageBoostMult = Math.max(player.damageBoostMult, 1.4);
@@ -7494,6 +8832,7 @@ function update(delta) {
   if (!endingSequence) {
     if (mission.level) {
       scheduleLevelSpawns();
+      scheduleLevelPickups();
       for (let i = mission.spawnQueue.length - 1; i >= 0; i -= 1) {
         const entry = mission.spawnQueue[i];
         if (mission.elapsed >= entry.spawnTime) {
@@ -7556,16 +8895,18 @@ function update(delta) {
     player.x = Math.max(40, Math.min(width - 40, player.x));
     player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
 
-    const primaryConfig = getPrimaryFireConfig();
     player.fireCooldown -= delta;
+    player.miniFireCooldown = Math.max(0, player.miniFireCooldown - delta);
+    player.swapCooldown = Math.max(0, player.swapCooldown - delta);
     player.altCooldown -= delta;
     if ((pointerButtons.left || devAutoFire) && player.fireCooldown <= 0) {
-      firePlayerBullet();
-      player.fireCooldown = primaryConfig.cooldown;
+      player.fireCooldown = fireCurrentPrimaryWeapons();
     }
     if (inputMode === "touch" && touchState.active && player.fireCooldown <= 0) {
-      firePlayerBullet();
-      player.fireCooldown = primaryConfig.cooldown;
+      player.fireCooldown = fireCurrentPrimaryWeapons();
+    }
+    if (player.miniFireCooldown <= 0) {
+      fireMiniWeapon();
     }
     if (pointerButtons.right && player.altCooldown <= 0) {
       fireAltWeapon();
@@ -7582,7 +8923,7 @@ function update(delta) {
   if (player.maxShield > 0) {
     if (player.shieldCooldown > 0) {
       player.shieldCooldown = Math.max(0, player.shieldCooldown - delta);
-    } else {
+    } else if (player.shield < player.maxShield) {
       player.shield = Math.min(player.maxShield, player.shield + delta * (player.shieldRegen || 12));
     }
   } else {
@@ -8457,7 +9798,7 @@ function drawPlayer() {
 }
 
 function drawRmbIndicator() {
-  if (state.upgrades.auxSlot < 1 || state.rmbWeapon === "none") return;
+  if (state.rmbWeapon === "none") return;
   const radius = player.radius + 14;
   ctx.save();
   ctx.lineWidth = 3;
@@ -8594,6 +9935,34 @@ function drawBullet(bullet, color = "#e0f2fe") {
 }
 
 function drawSalvagePod(pod) {
+  if (pod.kind && pod.kind !== "salvage") {
+    const pulse = 1 + Math.sin((pod.age || 0) * 6) * 0.09;
+    const sprite = pod.kind === "shield_booster" ? assets.shieldBooster : assets.armorPatch;
+    const color = pod.kind === "shield_booster" ? "#7dd3fc" : "#facc15";
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = 0.68;
+    const glow = ctx.createRadialGradient(pod.x, pod.y, 0, pod.x, pod.y, 30 * pulse);
+    glow.addColorStop(0, pod.kind === "shield_booster" ? "rgba(125, 211, 252, 0.42)" : "rgba(250, 204, 21, 0.38)");
+    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(pod.x, pod.y, 30 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 1;
+    if (sprite?.loaded) {
+      drawSpriteCentered(sprite, pod.x, pod.y, 0.62 * pulse);
+    } else {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(pod.x, pod.y, 14 * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
   const rarityConfig = getRarityConfig(pod.rarity);
   const pulse = 1 + Math.sin((pod.age || 0) * 5.5) * 0.08;
   const sprite =
@@ -8794,6 +10163,7 @@ function updateHud() {
     if (hudScore) hudScore.textContent = "0";
     hudTime.textContent = "00:00";
     hudCredits.textContent = state.credits.toString();
+    if (hudMini) hudMini.textContent = getCompactItemName(getSelectedMiniWeapon());
     setBossBarLayer(bossShieldFill, 0, 0);
     setBossBarLayer(bossArmorFill, 0, 0);
     setBossBarLayer(bossProgressFill, 0, 0);
@@ -8814,6 +10184,14 @@ function updateHud() {
     if (hudScore) hudScore.textContent = Math.round(mission.score).toString();
     hudTime.textContent = formatTime(mission.elapsed);
     hudCredits.textContent = `${state.credits} (+${runCredits})`;
+    if (hudMini) {
+      const mini = getSelectedMiniWeapon();
+      hudMini.textContent = mini
+        ? player.miniFireCooldown > 0
+          ? `${getCompactItemName(mini)} ${formatNumber(player.miniFireCooldown, 1)}s`
+          : getCompactItemName(mini)
+        : "-";
+    }
     updateBossProgress();
   }
   updateCargoHud();
@@ -8974,6 +10352,12 @@ function updateMobileControls() {
   }
   if (mobileAltBtn) {
     mobileAltBtn.hidden = !inMission || !hasAlt;
+  }
+  if (mobileSwapBtn) {
+    const hasSecond = inMission && !!getSecondPrimaryArmoryItem();
+    mobileSwapBtn.hidden = !hasSecond;
+    mobileSwapBtn.disabled = !hasSecond || player.swapCooldown > 0;
+    mobileSwapBtn.textContent = player.swapCooldown > 0 ? `${formatNumber(player.swapCooldown, 1)}s` : "Swap";
   }
   if (mobileEjectBtn) {
     mobileEjectBtn.hidden = !inMission;
@@ -9225,6 +10609,22 @@ function drawExplosion(boom) {
     ctx.restore();
     return;
   }
+  if (style === "empPulse") {
+    const ringR = Math.max(16, boom.radius * (0.45 + progress * 1.85));
+    const ringW = Math.max(2, boom.radius * 0.05);
+    ctx.strokeStyle = `rgba(125, 211, 252, ${0.72 * alpha * intensity})`;
+    ctx.lineWidth = ringW;
+    ctx.beginPath();
+    ctx.arc(boom.x, boom.y, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(34, 211, 238, ${0.32 * alpha * intensity})`;
+    ctx.lineWidth = Math.max(1, ringW * 0.45);
+    ctx.beginPath();
+    ctx.arc(boom.x, boom.y, ringR * 0.68, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
   if (style === "impact" || style === "plasmaImpact") {
     // Ring-style impact: reads well, but doesn't stack into a fully opaque blob.
     const ringR = maxRadius * 0.82;
@@ -9290,8 +10690,21 @@ function creditForEnemy(enemy) {
 }
 
 function creditRewardFor(missionState) {
-  const timeMinutes = missionState.elapsed / 60;
-  return Math.round(missionState.killCredits + missionState.score * 0.02 + timeMinutes * 40);
+  return Math.round((missionState.killCredits || 0) + (missionState.objectiveCredits || 0));
+}
+
+function objectiveCreditRewardFor(missionState, completed = false) {
+  if (!completed) return 0;
+  const level = missionState?.level || {};
+  const explicit = level.objectiveCredits ?? level.objectiveCredit ?? level.creditReward;
+  return Number.isFinite(explicit) ? Math.max(0, Math.round(explicit)) : 0;
+}
+
+function missionCompletionCreditFor(missionState, completed = false) {
+  if (!completed) return 0;
+  const levelId = missionBaseIdFor(missionState?.level?.id || selectedLevelId);
+  const levelIndex = Math.max(0, availableLevels.findIndex((level) => level.id === levelId));
+  return Math.round(120 + levelIndex * 55);
 }
 
 function getBossSpawnTime(level) {

@@ -281,6 +281,56 @@ function computePrimaryDamage({ ammo, speed, radius }) {
   );
 }
 
+function projectileCountForSpread(spread) {
+  return {
+    wide: 5,
+    dual: 2,
+    dualRapid: 2,
+    burst: 5,
+    rapid: 1,
+    focused: 1,
+  }[spread] || 1;
+}
+
+function summarizePrimaryBuild(build) {
+  const cfg = getPrimaryFireConfig(build);
+  const perShot = computePrimaryDamage({
+    ammo: cfg.ammo,
+    speed: cfg.bulletSpeed,
+    radius: cfg.projectileRadius,
+  });
+  const projectiles = projectileCountForSpread(cfg.spread);
+  const volley = perShot * projectiles;
+  const aps = cfg.cooldown > 0 ? 1 / cfg.cooldown : 0;
+  const burnDps = cfg.ammo === "plasma" ? perShot * 0.45 : 0;
+  return {
+    perShot,
+    volley,
+    dps: volley * aps + burnDps,
+    aps,
+    projectiles,
+    spread: cfg.spread,
+    ammo: cfg.ammo,
+  };
+}
+
+function summarizeMiniWeapon(id, entry) {
+  const mini = entry.miniWeapon || {};
+  const cooldown = Math.max(0.16, mini.cooldown || 0);
+  const damage = mini.damage || 0;
+  return {
+    id,
+    name: entry.name || id,
+    arc: mini.arc || "forward",
+    ammo: mini.ammo || "kinetic",
+    cadence: mini.cadence || "steady",
+    range: mini.range || 0,
+    damage,
+    cooldown,
+    dps: cooldown > 0 ? damage / cooldown : 0,
+  };
+}
+
 function normalizeEnemy(id, entry) {
   const spec = entry.template || {};
   const hull = spec.hull ?? spec.hp ?? 20;
@@ -454,6 +504,7 @@ Object.entries(pool.relics || {})
 const matrix = rows.map((row) => ({
   ...row,
   ttk: Object.fromEntries(enemies.map((enemy) => [enemy.id, simulateTtk(row.build, enemy)])),
+  offense: summarizePrimaryBuild(row.build),
 }));
 
 const enemyLabels = enemies.map((enemy) => enemy.id);
@@ -471,6 +522,27 @@ matrix.forEach((row) => {
   );
 });
 
+console.log("\nPrimary display stat coverage");
+matrix
+  .filter((row) => row.id.startsWith("base:") || row.id.startsWith("frame:"))
+  .slice(0, 24)
+  .forEach((row) => {
+    console.log(
+      `${row.name}: per-shot ${row.offense.perShot.toFixed(1)} | volley ${row.offense.volley.toFixed(1)} | DPS ${row.offense.dps.toFixed(1)} | ${row.offense.projectiles} ${row.offense.ammo} ${row.offense.spread}`
+    );
+  });
+
+const miniRows = Object.entries(pool.entries || {})
+  .filter(([, entry]) => normalizeSlotType(entry.slotType) === "mini")
+  .map(([id, entry]) => summarizeMiniWeapon(id, entry));
+
+console.log("\nMini weapon coverage");
+miniRows.forEach((row) => {
+  console.log(
+    `${row.name}: ${row.arc} ${row.ammo} ${row.cadence} | ${row.damage.toFixed(1)} dmg / ${row.cooldown.toFixed(2)}s = ${row.dps.toFixed(1)} DPS | ${row.range}px`
+  );
+});
+
 const toughestPlated = enemies
   .filter((enemy) => enemy.maxArmor > 0)
   .sort(
@@ -480,6 +552,27 @@ const toughestPlated = enemies
   )[0];
 
 const failures = [];
+if (miniRows.length < 4) {
+  failures.push(`Expected at least 4 mini weapon samples; found ${miniRows.length}.`);
+}
+miniRows.forEach((row) => {
+  if (!(row.damage > 0 && row.cooldown > 0 && row.dps > 0 && row.range > 0)) {
+    failures.push(`${row.name} has invalid mini weapon output coverage.`);
+  }
+});
+const primaryDpsSamples = matrix
+  .filter((row) => row.id.startsWith("base:"))
+  .map((row) => row.offense.dps)
+  .filter(Number.isFinite)
+  .sort((a, b) => a - b);
+const medianPrimaryDps = primaryDpsSamples[Math.floor(primaryDpsSamples.length / 2)] || 0;
+if (medianPrimaryDps > 0) {
+  miniRows.forEach((row) => {
+    if (row.dps > medianPrimaryDps * 0.45) {
+      failures.push(`${row.name} mini DPS ${row.dps.toFixed(1)} is too close to primary median ${medianPrimaryDps.toFixed(1)}.`);
+    }
+  });
+}
 matrix.forEach((row) => {
   Object.entries(row.ttk).forEach(([enemyId, ttk]) => {
     if (!Number.isFinite(ttk)) {

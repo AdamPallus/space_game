@@ -208,5 +208,24 @@
       "type": "boss",
       "count": 1
     }
+  ],
+  "pickups": [
+    {
+      "time": 8,
+      "type": "salvage",
+      "rarity": "certified",
+      "slotType": "primary",
+      "x": 0.36
+    },
+    {
+      "time": 15,
+      "type": "shield_booster",
+      "x": 0.64
+    },
+    {
+      "time": 22,
+      "type": "armor_patch",
+      "x": 0.5
+    }
   ]
 }

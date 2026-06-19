@@ -2,6 +2,8 @@
 
 Last planned: 2026-06-18
 
+Status: implemented for player testing in the 2026-06-19 overhaul pass. Keep this document as the acceptance reference for tuning regressions; use `STATE.md` and `CURRENT_SYSTEMS.md` for the current live behavior.
+
 This is the active implementation spec for the next broad gameplay/loadout overhaul. Read `STATE.md`, `CURRENT_SYSTEMS.md`, and `ROADMAP.md` first for current behavior. This document turns the roadmap and follow-up design decisions into a phased, implementation-ready plan.
 
 This spec is intentionally broader than the next single commit. Each phase should leave the game playable and should update `CURRENT_SYSTEMS.md` when behavior changes.

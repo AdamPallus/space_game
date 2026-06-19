@@ -42,10 +42,13 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
 ]);
 
 const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8")).entries || {};
-const allowedItemSlotTypes = new Set(["primary", "defense", "aux", "support"]);
+const allowedItemSlotTypes = new Set(["primary", "mini", "defense", "aux", "support"]);
 const allowedDefenseTypes = new Set(["shield", "armor"]);
 const allowedItemSpreads = new Set(["focused", "dual", "dualRapid", "rapid", "burst", "wide"]);
 const allowedItemEffects = new Set(["none", "homing", "explosive", "pierce", "vampiric"]);
+const allowedMiniArcs = new Set(["forward", "wide", "turret"]);
+const allowedMiniCadences = new Set(["rapid", "steady", "slow"]);
+const allowedPickupTypes = new Set(["salvage", "shield_booster", "armor_patch"]);
 const allowedItemBuildKeys = new Set([
   "gunDiameter",
   "spread",
@@ -130,6 +133,34 @@ function validateLevel(level) {
       errors.push(`Event ${index + 1} in '${levelId}' references unknown enemy '${event.type}'.`);
     }
   });
+  if (level.pickups !== undefined) {
+    if (!Array.isArray(level.pickups)) {
+      errors.push(`Mission '${levelId}' pickups must be an array.`);
+    } else {
+      level.pickups.forEach((pickup, index) => {
+        const label = `Pickup ${index + 1} in '${levelId}'`;
+        if (!pickup || typeof pickup !== "object" || Array.isArray(pickup)) {
+          errors.push(`${label} must be an object.`);
+          return;
+        }
+        if (!Number.isFinite(pickup.time) || pickup.time < 0) {
+          errors.push(`${label} must declare a non-negative time.`);
+        }
+        if (!allowedPickupTypes.has(pickup.type)) {
+          errors.push(`${label} has invalid type '${pickup.type}'.`);
+        }
+        if (pickup.x !== undefined && !Number.isFinite(pickup.x)) {
+          errors.push(`${label} has invalid x.`);
+        }
+        if (pickup.y !== undefined && !Number.isFinite(pickup.y)) {
+          errors.push(`${label} has invalid y.`);
+        }
+        if (pickup.type === "salvage" && pickup.slotType !== undefined && !allowedItemSlotTypes.has(pickup.slotType)) {
+          errors.push(`${label} has invalid salvage slotType '${pickup.slotType}'.`);
+        }
+      });
+    }
+  }
   return errors;
 }
 
@@ -194,6 +225,33 @@ function validateItemPoolEntry(id, entry, label, affixIds, errors) {
   }
   validateTags(entry.tags, `${label} '${id}'`, errors);
   validateItemBuild(entry.build || {}, `${label} '${id}'`, errors);
+  if (entry.slotType === "mini") {
+    const mini = entry.miniWeapon;
+    if (!mini || typeof mini !== "object" || Array.isArray(mini)) {
+      errors.push(`${label} '${id}' must declare miniWeapon.`);
+    } else {
+      if (!["kinetic", "plasma"].includes(mini.ammo)) {
+        errors.push(`${label} '${id}' miniWeapon has invalid ammo '${mini.ammo}'.`);
+      }
+      if (!allowedMiniCadences.has(mini.cadence)) {
+        errors.push(`${label} '${id}' miniWeapon has invalid cadence '${mini.cadence}'.`);
+      }
+      if (!allowedMiniArcs.has(mini.arc)) {
+        errors.push(`${label} '${id}' miniWeapon has invalid arc '${mini.arc}'.`);
+      }
+      ["range", "cooldown", "damage", "speed", "radius"].forEach((field) => {
+        if (!Number.isFinite(mini[field]) || mini[field] <= 0) {
+          errors.push(`${label} '${id}' miniWeapon has invalid ${field}.`);
+        }
+      });
+      if (mini.arc !== "turret" && (!Number.isFinite(mini.arcDegrees) || mini.arcDegrees <= 0 || mini.arcDegrees > 180)) {
+        errors.push(`${label} '${id}' miniWeapon has invalid arcDegrees.`);
+      }
+      if (mini.effect !== undefined && !allowedItemEffects.has(mini.effect)) {
+        errors.push(`${label} '${id}' miniWeapon has invalid effect '${mini.effect}'.`);
+      }
+    }
+  }
   if (Array.isArray(entry.affixes)) {
     entry.affixes.forEach((affixId) => {
       if (!affixIds.has(affixId)) {

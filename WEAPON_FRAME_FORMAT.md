@@ -1,13 +1,10 @@
 # Weapon System And Frame Catalog
 
-Status: active weapon authoring reference. Flight School is still present in the
-current code, but the roadmap calls for removing it as a required onboarding
-gate. Treat these frames as guaranteed starter frames, not as a reason to keep
-Flight School copy alive.
+Status: active weapon authoring reference. Starter frames are guaranteed fresh-save gear. Older Flight School-related fields may still exist for migration compatibility, but they no longer gate player-facing progression.
 
 The current weapon system has two authoring surfaces:
 
-- `/Users/pallusa/space_shooter/items/weapon_frames.json` defines the guaranteed starter frames used by the current onboarding and fresh-save flow.
+- `/Users/pallusa/space_shooter/items/weapon_frames.json` defines the guaranteed starter frames used by the fresh-save flow.
 - `/Users/pallusa/space_shooter/items/item_pool.json` defines loot/shop item bases, affixes, and relics.
 
 Both surfaces ultimately feed the same `build` object. The player sees items and tooltips, while combat reads the normalized build fields from `main.js`.
@@ -37,6 +34,39 @@ Current affix-ready primary coverage:
 | `wide` | Flak Fan | Prism Scatter |
 
 Named base weapons with innate effects still exist, such as Seeker Array or Demolition Bore. Those are allowed, but effect affixes from the `weapon-effect` exclusive group do not roll onto a base that already has an innate effect.
+
+## Mini Weapon Composition
+
+Mini weapons live in `items/item_pool.json` with `slotType: "mini"`. They are itemized gear with their own stats, browser filters, archive entries, and tooltips. They do not use primary `build` fields; instead they define a `miniWeapon` object:
+
+```json
+{
+  "slotType": "mini",
+  "miniWeapon": {
+    "ammo": "kinetic",
+    "cadence": "rapid",
+    "arc": "forward",
+    "arcDegrees": 70,
+    "damage": 5.5,
+    "cooldown": 0.58,
+    "range": 430,
+    "speed": 460,
+    "radius": 4,
+    "effect": "none"
+  }
+}
+```
+
+Mini weapon fields:
+
+- `ammo`: `kinetic` or `plasma`.
+- `cadence`: `rapid`, `steady`, or `slow`.
+- `arc`: `forward`, `wide`, or `turret`.
+- `arcDegrees`: required for non-turret arcs; expected values are about 70 degrees for forward and 140 degrees for wide.
+- `damage`, `cooldown`, `range`, `speed`, `radius`: positive numeric tuning values.
+- `effect`: `none`, `homing`, `explosive`, `pierce`, or `vampiric`.
+
+Mini weapons should contribute roughly 20-35% of a comparable primary weapon's sustained output. Turret-style 360-degree targeting should sit near the lower end of that range because it requires less player aiming.
 
 ## Spread behavior
 
@@ -128,10 +158,9 @@ When adding a new weapon family, add it to `item_pool.json`, make sure `scripts/
 ## Rules
 
 - Keys under `entries` are the stable item ids used by save data and onboarding.
-- `starterUnlockStage` is optional. If present, the frame is granted during flight school:
+- `starterUnlockStage` is optional legacy metadata. Fresh saves now receive starter frames by default:
   - `0` = owned at fresh start
-  - `1` = granted after mission 1
-  - `2` = granted after mission 2
+  - `1` and `2` = older staged starter unlocks, normalized into the fresh starter kit
 - `sortOrder` controls armory card order.
 - `tags` are armory labels only.
 - `build` is the hidden tuning package applied to the player ship when the frame is equipped.
@@ -142,5 +171,6 @@ When adding a new weapon family, add it to `item_pool.json`, make sure `scripts/
 - Keep the detailed tuning inside `build`.
 - Add guaranteed starter loadouts in `weapon_frames.json`.
 - Add random loot/shop weapons in `item_pool.json`.
+- Add mini weapons in `item_pool.json` with `slotType: "mini"` and a valid `miniWeapon` object.
 - Prefer neutral-effect bases for new spread/ammo coverage so homing, explosive, pierce, and vampiric can roll on them.
 - Keep dense UI surfaces showing compact base names; rarity and rolled affixes are visible through color and full hover tooltips.

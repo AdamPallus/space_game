@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mini Fighter: Endless Mission</title>
+    <link rel="icon" href="assets/SpaceShooterRedux/PNG/playerShip1_blue.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -40,6 +41,7 @@
         </div>
         <div class="hud-right">
           <div class="hud-row"><span>Credits</span><span id="hud-credits">0</span></div>
+          <div class="hud-row"><span>Mini</span><span id="hud-mini">-</span></div>
           <div class="hud-row"><span>Timer</span><span id="hud-time">00:00</span></div>
         </div>
       </div>
@@ -150,6 +152,25 @@
                       <span class="armory-rack-tip muted" id="armory-rack-tip">Click icon to install</span>
                     </div>
                   </div>
+                  <div class="browser-controls" id="armory-browser-controls" aria-label="Armory browser controls">
+                    <input id="armory-browser-search" class="browser-search" type="search" placeholder="Search gear" />
+                    <select id="armory-browser-sort" class="browser-select" aria-label="Sort armory gear">
+                      <option value="recent">Recent</option>
+                      <option value="rarity">Rarity</option>
+                      <option value="slot">Type</option>
+                      <option value="value">Value</option>
+                      <option value="role">Role</option>
+                    </select>
+                    <select id="armory-browser-filter" class="browser-select" aria-label="Filter armory gear">
+                      <option value="all">All</option>
+                      <option value="equipped">Installed</option>
+                      <option value="primary">Primary</option>
+                      <option value="mini">Mini</option>
+                      <option value="defense">Defense</option>
+                      <option value="aux">Aux</option>
+                      <option value="relic">Relics</option>
+                    </select>
+                  </div>
                   <div class="armory-inventory-grid" id="weapon-inventory"></div>
                   <div class="ship-stats" id="ship-stats" aria-label="Ship stats" hidden></div>
                 </div>
@@ -180,12 +201,33 @@
                         <h3>Available Lots</h3>
                         <span class="ledger-pane-note">Rerolls after every mission</span>
                       </div>
+                      <div class="ledger-license-panel" id="ledger-license-panel"></div>
                       <div class="ledger-market-list" id="ledger-stock-list"></div>
                     </section>
                     <section class="ledger-market-pane">
                       <div class="ledger-pane-head">
                         <h3>Sell Inventory</h3>
                         <span class="ledger-pane-note">Standard rate: 40% of list</span>
+                      </div>
+                      <div class="browser-controls ledger-browser-controls" aria-label="Ledger sell browser controls">
+                        <input id="ledger-inventory-search" class="browser-search" type="search" placeholder="Search manifest" />
+                        <select id="ledger-inventory-sort" class="browser-select" aria-label="Sort sell inventory">
+                          <option value="recent">Recent</option>
+                          <option value="rarity">Rarity</option>
+                          <option value="slot">Type</option>
+                          <option value="value">Value</option>
+                          <option value="role">Role</option>
+                        </select>
+                        <select id="ledger-inventory-filter" class="browser-select" aria-label="Filter sell inventory">
+                          <option value="all">All</option>
+                          <option value="equipped">Installed</option>
+                          <option value="primary">Primary</option>
+                          <option value="mini">Mini</option>
+                          <option value="defense">Defense</option>
+                          <option value="aux">Aux</option>
+                          <option value="relic">Relics</option>
+                          <option value="sellable">Sellable</option>
+                        </select>
                       </div>
                       <div class="ledger-market-list" id="ledger-inventory-list"></div>
                     </section>
@@ -227,6 +269,21 @@
                   <button class="compendium-mode-button" type="button" data-compendium-mode="items">Items</button>
                 </div>
                 <input id="compendium-search" class="compendium-search" type="search" placeholder="Search..." />
+                <select id="archive-sort" class="browser-select archive-browser-control" aria-label="Sort item records">
+                  <option value="recent">Recent</option>
+                  <option value="rarity">Rarity</option>
+                  <option value="slot">Type</option>
+                  <option value="value">Value</option>
+                  <option value="role">Role</option>
+                </select>
+                <select id="archive-filter" class="browser-select archive-browser-control" aria-label="Filter item records">
+                  <option value="all">All</option>
+                  <option value="primary">Primary</option>
+                  <option value="mini">Mini</option>
+                  <option value="defense">Defense</option>
+                  <option value="aux">Aux</option>
+                  <option value="relic">Relics</option>
+                </select>
                 <label class="toggle compact">
                   <input type="checkbox" id="compendium-show-bosses" checked />
                   <span>Bosses</span>
@@ -277,6 +334,7 @@
         <span>Move: Mouse</span>
         <span>Fire: LMB</span>
         <span>Alt: RMB</span>
+        <span>Swap: Q</span>
         <span>Recall: E</span>
         <span>Pause: P</span>
       </div>
@@ -286,6 +344,7 @@
           <img class="mobile-icon" id="mobile-alt-icon" alt="" />
           <span class="mobile-label" id="mobile-alt-label"></span>
         </button>
+        <button class="mobile-btn swap" id="mobile-swap">Swap</button>
         <button class="mobile-btn eject" id="mobile-eject">RTB</button>
         <button class="mobile-btn launch" id="mobile-launch">Launch</button>
       </div>
@@ -309,7 +368,7 @@
         >
           <div class="modal-body mission-intro-body">
             <span class="kicker">Emergency Briefing</span>
-            <h2 id="mission-intro-title">Flight School</h2>
+            <h2 id="mission-intro-title">Mission Briefing</h2>
             <p id="mission-intro-text"></p>
             <div class="actions">
               <button id="mission-intro-confirm" class="btn primary" type="button">Let's go!</button>

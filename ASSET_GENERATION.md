@@ -5,6 +5,21 @@ baseline for campaign backgrounds, combat effects, salvage pods, item icons, and
 many enemy sprites. Kenney assets remain credited fallback/reference art. The
 generated button skin is still URL-flagged for comparison.
 
+## Overhaul Asset Notes
+
+The first `NEXT_OVERHAUL_SPEC.md` implementation reuses the existing generated
+item-icon pack and Kenney power-up art where that keeps the build playable:
+
+- Shield booster pickups use `assets/SpaceShooterRedux/PNG/Power-ups/powerupBlue_shield.png`.
+- Armor patch caches use `assets/SpaceShooterRedux/PNG/Power-ups/powerupYellow_star.png`.
+- Mini weapon and hull cards use existing generated item icons until a dedicated chassis/mini pack is produced.
+- The EMP projectile-clear pulse is rendered directly in canvas, so it does not require a separate bitmap asset.
+
+Future visual polish can replace these with a dedicated generated pack for cache
+pickups, mini weapon silhouettes, hull/chassis icons, and small UI badges for
+Ledger licenses, second-bay strain, dual-fire compatibility, and one-primary
+focus.
+
 This project currently draws individual transparent PNG files. The packed
 `assets/SpaceShooterRedux/Spritesheet/sheet.png` atlas exists, but runtime code
 loads paths like `assets/SpaceShooterRedux/PNG/Enemies/enemyBlue2.png` and can

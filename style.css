@@ -281,6 +281,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   gap: 2px;
 }
 .mobile-btn:disabled { opacity: 0.4; }
+.mobile-btn.swap { border-color: var(--accent); color: var(--accent); }
 .mobile-btn.eject { border-color: var(--amber); color: var(--amber); }
 .mobile-btn.launch { background: var(--accent); border-color: var(--accent); color: #06222e; }
 .mobile-icon { width: 22px; height: 22px; }
@@ -551,7 +552,10 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   border-color: var(--rarity-color, var(--accent));
   box-shadow: 0 0 0 1px var(--rarity-color, var(--accent)), 0 0 14px var(--rarity-glow, rgba(63, 208, 255, 0.25));
 }
+.armory-slot-hull { left: 4%; top: 6%; }
 .armory-slot-primary { left: 50%; top: 6%; transform: translateX(-50%); }
+.armory-slot-primary-secondary { right: 4%; top: 6%; }
+.armory-slot-mini { left: 50%; bottom: 6%; transform: translateX(-50%); }
 .armory-slot-defense-left { left: 4%; bottom: 8%; }
 .armory-slot-defense-right { right: 4%; bottom: 8%; }
 .armory-slot-support { left: 50%; bottom: 29%; transform: translateX(-50%); }
@@ -669,6 +673,28 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .armory-rack-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .armory-rack-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .armory-rack-tip { font-size: 10px; }
+.browser-controls {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) auto auto;
+  gap: 6px;
+  align-items: center;
+}
+.browser-search,
+.browser-select {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  padding: 6px 8px;
+}
+.browser-search:focus,
+.browser-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
 
 .armory-inventory-grid {
   flex: 1;
@@ -718,6 +744,15 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   max-height: 2.6em;
   overflow: hidden;
 }
+.armory-inventory-meta {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.1;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .ship-stats {
   flex: 0 0 auto;
@@ -736,6 +771,29 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   text-transform: uppercase;
   color: var(--accent);
 }
+.engineering-upgrades {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.engineering-upgrade {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  align-items: center;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+  padding: 7px 8px;
+  cursor: pointer;
+}
+.engineering-upgrade:disabled { opacity: 0.48; cursor: default; }
+.engineering-upgrade .name { font-weight: 700; font-size: 11px; }
+.engineering-upgrade .desc { grid-column: 1 / -1; color: var(--muted); font-size: 10px; }
+.engineering-upgrade .cost { color: var(--accent); font-weight: 700; font-size: 10px; }
 .stat-row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .stat-k { color: var(--muted); }
 .stat-v { font-weight: 600; }
@@ -942,6 +1000,34 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 }
 .ledger-pane-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .ledger-pane-note { font-size: 10px; color: var(--muted); }
+.ledger-license-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(102, 224, 255, 0.05);
+  padding: 8px;
+  min-height: 54px;
+}
+.ledger-license-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.ledger-license-copy strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+.ledger-action-button.license {
+  min-width: 70px;
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .ledger-market-list {
   flex: 1;
   min-height: 0;
@@ -1598,6 +1684,11 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .armory-stage-panel { min-height: 300px; flex: 0 0 auto; }
   .armory-ship-base { width: min(190px, 48vw); }
   .armory-slot { width: 138px; }
+  .armory-slot-hull { left: 3%; top: 4%; }
+  .armory-slot-primary-secondary { right: 3%; top: 4%; }
+  .armory-slot-mini { bottom: 4%; }
+  .browser-controls { grid-template-columns: 1fr 1fr; }
+  .browser-search { grid-column: 1 / -1; }
   .ledger-market-grid { grid-template-columns: 1fr; }
   .invest-tracks { grid-template-columns: 1fr; }
   .debrief-scroll { grid-template-columns: 1fr; overflow-y: auto; }
@@ -1619,4 +1710,49 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .hud-right { grid-row: 2; }
   .hud-left, .hud-right { min-width: 0; }
   .boss-bar { width: 100px; }
+  .armory-stage-panel {
+    min-height: auto;
+    overflow: visible;
+  }
+  .armory-bench,
+  .armory-drone {
+    height: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
+  }
+  .armory-ship-base {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: min(160px, 46vw);
+    margin: 0 auto 2px;
+  }
+  .armory-slot,
+  .armory-slot-hull,
+  .armory-slot-primary,
+  .armory-slot-primary-secondary,
+  .armory-slot-mini,
+  .armory-slot-defense-left,
+  .armory-slot-defense-right,
+  .armory-slot-support {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    min-height: 82px;
+  }
+  .armory-slot-head {
+    align-items: flex-start;
+  }
+  .armory-slot-pill {
+    align-self: flex-start;
+  }
 }

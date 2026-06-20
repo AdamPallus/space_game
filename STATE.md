@@ -85,7 +85,7 @@ alpha processing described in `ASSET_GENERATION.md`.
 - `items/item_pool.json`: generated item archetypes, affixes, relics, and support items.
 - `items/weapon_frames.json`: guaranteed and generated weapon-frame definitions.
 - `scripts/validate_levels.js`: level and item-pool structural validation.
-- `scripts/generate_projectile_threat_levels.js`: generator for checked-in Threat Mix mission variants.
+- `scripts/generate_projectile_threat_levels.js`: generator for the profiled 11-mission, 3-variant campaign set.
 - `scripts/validate_weapon_frames.js`: weapon-frame schema validation.
 - `scripts/balance_report.js`: economy, item, and mission-balance checks.
 
@@ -102,7 +102,7 @@ Recent history shows these major pieces have already landed:
 - Weapon variety passes: additional projectile patterns, plasma visuals, and combat UI tuning.
 - Generated asset passes: UI chrome, item icon pack, combat fleet art, and mission backgrounds.
 - Next Overhaul playable pass: hangar-first onboarding, explicit reward settlement, scripted caches, EMP projectile clear, browsing controls, Ledger license investment tiers, mini weapons with rarity scaling/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, aux engineering, explicit dual-fire mode selection, and independent dual-fire weapon timing.
-- Enemy projectile variety pass: root level `projectileProfiles`, weighted `attackPatterns`, per-shot overrides, Threat Mix variants for player-facing missions, compendium/stat summaries, and validator coverage for profile references and threat classes.
+- Enemy projectile variety pass: root level `projectileProfiles`, weighted `attackPatterns`, per-shot overrides, warm/cool generated projectile art, profiled three-variant campaign missions, compendium/stat summaries, and validator coverage for profile references, threat classes, and rotating-sprite proportions.
 
 ## Documentation Map
 

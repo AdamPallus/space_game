@@ -81,6 +81,7 @@ const PROJECTILE_SHOT_KEYS = new Set([
 ]);
 const PROJECTILE_ATTACK_MODES = new Set(["aim", "spread", "radial"]);
 const PROJECTILE_THREAT_CLASSES = new Set(["chip", "standard", "heavy", "bossHazard"]);
+const ROTATING_PROJECTILE_MAX_ASPECT = 1.5;
 
 const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8")).entries || {};
 const allowedItemSlotTypes = new Set(["primary", "mini", "defense", "aux", "support"]);
@@ -146,6 +147,35 @@ function validateProjectileProfile(id, profile, errors, context = `Projectile pr
       errors.push(`${context} field '${key}' must be numeric.`);
     }
   });
+  validateProjectileRotation(profile, errors, context);
+}
+
+function validateProjectileRotation(profile, errors, context) {
+  if (!Number.isFinite(profile.spinRate)) return;
+  const animation = typeof profile.animation === "string" ? profile.animation : "";
+  if (animation === "lance" || animation === "bolt") {
+    errors.push(`${context} uses spinRate on directional animation '${animation}'.`);
+  }
+  const width = Number.isFinite(profile.width)
+    ? profile.width
+    : Number.isFinite(profile.radius)
+      ? profile.radius * 2
+      : null;
+  const height = Number.isFinite(profile.height)
+    ? profile.height
+    : Number.isFinite(profile.radius)
+      ? profile.radius * 2
+      : null;
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    if (profile.shape !== "orb") {
+      errors.push(`${context} with spinRate must define compact width/height or a circular radius.`);
+    }
+    return;
+  }
+  const aspect = Math.max(width, height) / Math.min(width, height);
+  if (aspect > ROTATING_PROJECTILE_MAX_ASPECT) {
+    errors.push(`${context} with spinRate must be compact; aspect ${aspect.toFixed(2)} exceeds ${ROTATING_PROJECTILE_MAX_ASPECT}.`);
+  }
 }
 
 function validateProjectileProfileRef(ref, profiles, errors, context) {

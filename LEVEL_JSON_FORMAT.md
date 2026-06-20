@@ -89,9 +89,11 @@ New authored projectile variety uses a root `projectileProfiles` object plus ene
       "damage": 30,
       "speed": 168,
       "radius": 8,
-      "shape": "orb",
-      "color": "#fb923c",
-      "animation": "orb"
+      "image": "enemy_warm_heavy_core",
+      "width": 54,
+      "height": 54,
+      "animation": "orb",
+      "spinRate": 2.5
     }
   },
   "enemyTypes": {
@@ -105,7 +107,7 @@ New authored projectile variety uses a root `projectileProfiles` object plus ene
 }
 ```
 
-Supported profile fields are `damage`, `speed`, `radius`, `width`, `height`, `threatClass`, `visual`, `image`, `color`, `shape`, `animation`, and `spinRate`. `threatClass` must be one of `chip`, `standard`, `heavy`, or `bossHazard`.
+Supported profile fields are `damage`, `speed`, `radius`, `width`, `height`, `threatClass`, `visual`, `image`, `color`, `shape`, `animation`, and `spinRate`. `threatClass` must be one of `chip`, `standard`, `heavy`, or `bossHazard`. Heavy and boss-hazard campaign profiles should use textured image sprites rather than flat color-only orbs. `spinRate` is only valid for compact/circular silhouettes; directional bolts, lances, needles, slugs, spears, and other long/narrow sprites should not spin.
 
 Supported attack-pattern fields are `id`, `mode`, `fireMode`, `profile`, `count`, `spread`, `spreadDeg`, `fireRate`, `weight`, `speedJitter`, and `shots`. `mode` must be `aim`, `spread`, or `radial`. `profile` may name a root profile or provide an inline profile object. `shots` may contain profile ids or inline per-shot overrides; shot objects may also set `angleDeg`, `angleOffsetDeg`, and `speedJitter`.
 

@@ -6,6 +6,8 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const LEVELS_DIR = path.join(ROOT, "levels");
 const MANIFEST_PATH = path.join(LEVELS_DIR, "manifest.json");
+const CAMPAIGN_MISSION_COUNT = 11;
+const CAMPAIGN_VARIANTS = ["standard", "swarm", "armored"];
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -32,10 +34,19 @@ function missionNumberFromId(levelId) {
   return match ? Number(match[1]) : 1;
 }
 
-function baseIdForLevel(level) {
-  if (typeof level.baseLevel === "string" && level.baseLevel) return level.baseLevel;
-  const match = String(level.id || "").match(/^(level\d+)/);
-  return match ? match[1] : level.id;
+function levelIdFor(baseId, variant) {
+  return variant === "standard" ? baseId : `${baseId}_${variant}`;
+}
+
+function capitalize(value) {
+  return String(value || "").charAt(0).toUpperCase() + String(value || "").slice(1);
+}
+
+function stripThreatCopy(value) {
+  return String(value || "")
+    .replace(/:\s*Threat Mix$/i, "")
+    .replace(/\s*Variant with per-shot projectile damage, speed, and threat visuals for armor-class testing\./gi, "")
+    .trim();
 }
 
 function damageBands(levelId) {
@@ -50,16 +61,28 @@ function damageBands(levelId) {
 }
 
 const projectileImageFamilies = {
-  chip: ["enemy_chip_needle", "enemy_chip_crescent", "enemy_chip_shard", "enemy_chip_wisp"],
-  standard: ["enemy_standard_bolt", "enemy_standard_lance", "enemy_standard_comet", "enemy_standard_split"],
-  heavy: ["enemy_heavy_orb", "enemy_heavy_slug", "enemy_heavy_prism"],
-  bossHazard: ["enemy_boss_core", "enemy_boss_halo", "enemy_boss_spear"],
+  chip: {
+    cool: ["enemy_chip_needle", "enemy_chip_crescent", "enemy_chip_shard", "enemy_chip_wisp"],
+    warm: ["enemy_warm_chip_needle", "enemy_warm_chip_crescent", "enemy_warm_chip_shard", "enemy_warm_chip_wisp"],
+  },
+  standard: {
+    cool: ["enemy_standard_bolt", "enemy_standard_lance", "enemy_standard_comet", "enemy_standard_split"],
+    warm: ["enemy_warm_standard_bolt", "enemy_warm_standard_lance", "enemy_warm_standard_comet", "enemy_warm_standard_split"],
+  },
+  heavy: {
+    cool: ["enemy_heavy_orb", "enemy_heavy_slug", "enemy_heavy_prism"],
+    warm: ["enemy_warm_heavy_core", "enemy_warm_heavy_slug", "enemy_warm_heavy_prism"],
+  },
+  bossHazard: {
+    cool: ["enemy_boss_core", "enemy_boss_halo", "enemy_boss_spear"],
+    warm: ["enemy_warm_boss_core", "enemy_warm_boss_halo", "enemy_warm_boss_spear"],
+  },
 };
 
 const projectileImageSpecs = {
   enemy_chip_needle: { width: 13, height: 34, animation: "lance" },
   enemy_chip_crescent: { width: 18, height: 18, animation: "shard", spinRate: 5.6 },
-  enemy_chip_shard: { width: 16, height: 30, animation: "shard", spinRate: 4.8 },
+  enemy_chip_shard: { width: 16, height: 30, animation: "shard" },
   enemy_chip_wisp: { width: 18, height: 22, animation: "ember", spinRate: 3.4 },
   enemy_standard_bolt: { width: 12, height: 36, animation: "bolt" },
   enemy_standard_lance: { width: 20, height: 42, animation: "lance" },
@@ -69,22 +92,54 @@ const projectileImageSpecs = {
   enemy_radial_pellet: { width: 22, height: 22, animation: "orb", spinRate: 3.8 },
   enemy_heavy_orb: { width: 52, height: 52, animation: "orb", spinRate: 2.8 },
   enemy_heavy_slug: { width: 28, height: 58, animation: "lance" },
-  enemy_heavy_prism: { width: 34, height: 64, animation: "lance", spinRate: 1.2 },
+  enemy_heavy_prism: { width: 34, height: 64, animation: "lance" },
   enemy_boss_core: { width: 72, height: 72, animation: "orb", spinRate: 2.2 },
   enemy_boss_halo: { width: 76, height: 76, animation: "orb", spinRate: 2.8 },
   enemy_boss_spear: { width: 34, height: 78, animation: "lance" },
+  enemy_warm_chip_needle: { width: 18, height: 42, animation: "lance" },
+  enemy_warm_chip_crescent: { width: 24, height: 24, animation: "shard", spinRate: 5.2 },
+  enemy_warm_chip_shard: { width: 20, height: 34, animation: "shard" },
+  enemy_warm_chip_wisp: { width: 24, height: 26, animation: "ember", spinRate: 3.1 },
+  enemy_warm_standard_bolt: { width: 14, height: 42, animation: "bolt" },
+  enemy_warm_standard_lance: { width: 20, height: 50, animation: "lance" },
+  enemy_warm_standard_comet: { width: 40, height: 48, animation: "ember", spinRate: 1.2 },
+  enemy_warm_standard_split: { width: 38, height: 44, animation: "shard", spinRate: 2.2 },
+  enemy_warm_spread_shard: { width: 34, height: 34, animation: "shard", spinRate: 2.4 },
+  enemy_warm_radial_pellet: { width: 24, height: 24, animation: "orb", spinRate: 3.4 },
+  enemy_warm_heavy_core: { width: 54, height: 54, animation: "orb", spinRate: 2.5 },
+  enemy_warm_heavy_slug: { width: 30, height: 58, animation: "lance" },
+  enemy_warm_heavy_prism: { width: 36, height: 66, animation: "lance" },
+  enemy_warm_boss_core: { width: 76, height: 76, animation: "orb", spinRate: 2.1 },
+  enemy_warm_boss_halo: { width: 78, height: 78, animation: "orb", spinRate: 2.6 },
+  enemy_warm_boss_spear: { width: 34, height: 78, animation: "lance" },
 };
 
-function projectileVisualFor(levelId, family, offset = 0) {
-  const options = projectileImageFamilies[family] || projectileImageFamilies.standard;
-  const image = options[(missionNumberFromId(levelId) + offset) % options.length];
+const variantOffsets = {
+  standard: 0,
+  swarm: 1,
+  armored: 2,
+};
+
+function paletteFor(levelId, family, variant) {
+  const seed = missionNumberFromId(levelId) + (variantOffsets[variant] || 0);
+  const warmPrimary = seed % 2 === 0;
+  if (family === "standard" || family === "bossHazard") {
+    return warmPrimary ? "cool" : "warm";
+  }
+  return warmPrimary ? "warm" : "cool";
+}
+
+function projectileVisualFor(levelId, family, offset = 0, variant = "standard") {
+  const palette = paletteFor(levelId, family, variant);
+  const options = projectileImageFamilies[family]?.[palette] || projectileImageFamilies.standard.cool;
+  const image = options[(missionNumberFromId(levelId) + (variantOffsets[variant] || 0) + offset) % options.length];
   return {
     image,
     ...(projectileImageSpecs[image] || {}),
   };
 }
 
-function projectileProfilesFor(levelId) {
+function projectileProfilesFor(levelId, variant) {
   const bands = damageBands(levelId);
   return {
     chipNeedle: {
@@ -92,28 +147,28 @@ function projectileProfilesFor(levelId) {
       damage: bands.chip,
       speed: 244 + bands.speedBoost,
       radius: 3,
-      ...projectileVisualFor(levelId, "chip"),
+      ...projectileVisualFor(levelId, "chip", 0, variant),
     },
     standardBolt: {
       threatClass: "standard",
       damage: bands.standard,
       speed: 205 + bands.speedBoost,
       radius: 4,
-      ...projectileVisualFor(levelId, "standard", 1),
+      ...projectileVisualFor(levelId, "standard", 1, variant),
     },
     heavyOrb: {
       threatClass: "heavy",
       damage: bands.heavy,
       speed: clamp(178 - missionNumberFromId(levelId) * 2, 142, 176),
       radius: 8,
-      ...projectileVisualFor(levelId, "heavy", 2),
+      ...projectileVisualFor(levelId, "heavy", 2, variant),
     },
     bossHazard: {
       threatClass: "bossHazard",
       damage: bands.bossHazard,
       speed: clamp(158 - missionNumberFromId(levelId) * 2, 118, 156),
       radius: 12,
-      ...projectileVisualFor(levelId, "bossHazard", 3),
+      ...projectileVisualFor(levelId, "bossHazard", 3, variant),
     },
   };
 }
@@ -273,50 +328,141 @@ function attackPatternsFor(typeId, config, levelId) {
   ];
 }
 
-function threatVariantFor(level) {
-  const originalId = level.id;
-  const threatId = `${originalId}_threats`;
+function mergeEnemyScale(baseScale, variantScale) {
+  return {
+    ...(baseScale || {}),
+    ...variantScale,
+  };
+}
+
+function ensureEnemyType(level, typeId, defaults = {}) {
+  level.enemyTypes[typeId] = {
+    ...defaults,
+    ...(level.enemyTypes[typeId] || {}),
+  };
+}
+
+function transformEvents(events, variant) {
+  const cycle = variant === "swarm"
+    ? ["gnat", "dart", "spark"]
+    : ["plated", "escort", "bulwark"];
+  let combatIndex = 0;
+  return (Array.isArray(events) ? events : []).map((event) => {
+    if (!event || typeof event !== "object" || event.type === "boss") return clone(event);
+    const next = clone(event);
+    next.type = cycle[combatIndex % cycle.length];
+    combatIndex += 1;
+    const count = Number.isFinite(next.count) ? next.count : 1;
+    if (variant === "swarm") {
+      next.count = Math.max(2, Math.ceil(count * 1.35));
+      if (Number.isFinite(next.interval)) next.interval = round2(Math.max(0.12, next.interval * 0.72));
+    } else {
+      const isBulwark = next.type === "bulwark";
+      next.count = Math.max(1, Math.ceil(count * (isBulwark ? 0.16 : 0.52)));
+      if (Number.isFinite(next.interval)) next.interval = round2(Math.max(0.55, next.interval * 1.18));
+    }
+    return next;
+  });
+}
+
+function synthesizeVariant(baseLevel, variant) {
+  const baseId = baseLevel.id;
+  const next = clone(baseLevel);
+  next.id = levelIdFor(baseId, variant);
+  next.baseLevel = baseId;
+  next.variant = variant;
+  next.name = `${stripThreatCopy(baseLevel.name) || baseId}: ${capitalize(variant)}`;
+  next.enemyTypes = clone(baseLevel.enemyTypes || {});
+  if (variant === "swarm") {
+    next.description = "Fast attack variant with denser light craft pressure and tighter projectile lanes.";
+    next.difficulty = `${baseLevel.difficulty || "Mission"}+`;
+    next.enemyScale = mergeEnemyScale(baseLevel.enemyScale, { hp: 0.86, damage: 1.04 });
+    ensureEnemyType(next, "gnat", {});
+    ensureEnemyType(next, "dart", {});
+    ensureEnemyType(next, "spark", {});
+  } else {
+    next.description = "Armored variant with fewer targets, thicker plating, and heavier warning shots.";
+    next.difficulty = `${baseLevel.difficulty || "Mission"}+`;
+    next.enemyScale = mergeEnemyScale(baseLevel.enemyScale, { hp: 1.24, damage: 1.12 });
+    ensureEnemyType(next, "plated", { armor: 150, armorClass: 12, speed: 48, fireRate: 2.55 });
+    ensureEnemyType(next, "escort", {});
+    ensureEnemyType(next, "bulwark", {});
+  }
+  if (next.enemyTypes.boss) next.enemyTypes.boss.template = `${baseId}:boss`;
+  next.events = transformEvents(baseLevel.events, variant);
+  return next;
+}
+
+function prepareLevel(level, baseId, variant) {
   const next = clone(level);
-  next.id = threatId;
-  next.baseLevel = baseIdForLevel(level);
-  next.variant = level.variant ? `${level.variant}-threats` : "threats";
-  next.name = `${level.name || originalId}: Threat Mix`;
-  next.description = `${level.description || ""} Variant with per-shot projectile damage, speed, and threat visuals for armor-class testing.`.trim();
-  next.projectileProfiles = projectileProfilesFor(originalId);
+  next.id = levelIdFor(baseId, variant);
+  next.name = stripThreatCopy(next.name) || next.name;
+  next.description = stripThreatCopy(next.description);
+  if (variant === "standard") {
+    delete next.baseLevel;
+    delete next.variant;
+  } else {
+    next.baseLevel = baseId;
+    next.variant = variant;
+  }
+  next.projectileProfiles = projectileProfilesFor(next.id, variant);
   Object.entries(next.enemyTypes || {}).forEach(([typeId, config]) => {
     if (!config || typeof config !== "object" || Array.isArray(config)) return;
-    config.attackPatterns = attackPatternsFor(typeId, config, originalId);
+    config.attackPatterns = attackPatternsFor(typeId, config, next.id);
   });
   return next;
 }
 
-function updateManifest(threatLevels) {
-  const manifest = fs.existsSync(MANIFEST_PATH)
-    ? readJson(MANIFEST_PATH)
-    : { variants: {} };
-  const variants = manifest.variants && typeof manifest.variants === "object" ? manifest.variants : {};
-  threatLevels.forEach((level) => {
-    const baseId = baseIdForLevel(level);
-    const list = Array.isArray(variants[baseId]) ? variants[baseId].slice() : [];
-    if (!list.includes(level.id)) list.push(level.id);
-    variants[baseId] = list;
-  });
-  manifest.variants = variants;
-  writeJson(MANIFEST_PATH, manifest);
+function sourceLevelFor(baseLevel, variant) {
+  const targetId = levelIdFor(baseLevel.id, variant);
+  const targetPath = path.join(LEVELS_DIR, `${targetId}.json`);
+  if (fs.existsSync(targetPath)) return readJson(targetPath);
+  if (variant === "standard") return baseLevel;
+  return synthesizeVariant(baseLevel, variant);
 }
 
-const sourceFiles = fs
-  .readdirSync(LEVELS_DIR)
-  .filter((file) => /^level.*\.json$/.test(file) && !file.includes("_threats"))
-  .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+function desiredManifest() {
+  const variants = {};
+  for (let missionNumber = 1; missionNumber <= CAMPAIGN_MISSION_COUNT; missionNumber += 1) {
+    const baseId = `level${missionNumber}`;
+    variants[baseId] = ["swarm", "armored"].map((variant) => levelIdFor(baseId, variant));
+  }
+  return { variants };
+}
 
-const threatLevels = sourceFiles.map((file) => {
-  const level = readJson(path.join(LEVELS_DIR, file));
-  const threat = threatVariantFor(level);
-  writeJson(path.join(LEVELS_DIR, `${threat.id}.json`), threat);
-  console.log(`wrote levels/${threat.id}.json`);
-  return threat;
-});
+function desiredCampaignIds() {
+  const ids = new Set();
+  for (let missionNumber = 1; missionNumber <= CAMPAIGN_MISSION_COUNT; missionNumber += 1) {
+    const baseId = `level${missionNumber}`;
+    CAMPAIGN_VARIANTS.forEach((variant) => ids.add(levelIdFor(baseId, variant)));
+  }
+  return ids;
+}
 
-updateManifest(threatLevels);
+function removeStaleCampaignFiles(desiredIds) {
+  fs.readdirSync(LEVELS_DIR)
+    .filter((file) => /^level(?:[1-9]|1[01])(?:_.+)?\.json$/.test(file))
+    .forEach((file) => {
+      const id = path.basename(file, ".json");
+      if (desiredIds.has(id)) return;
+      fs.unlinkSync(path.join(LEVELS_DIR, file));
+      console.log(`removed levels/${file}`);
+    });
+}
+
+const desiredIds = desiredCampaignIds();
+for (let missionNumber = 1; missionNumber <= CAMPAIGN_MISSION_COUNT; missionNumber += 1) {
+  const baseId = `level${missionNumber}`;
+  const basePath = path.join(LEVELS_DIR, `${baseId}.json`);
+  const baseLevel = readJson(basePath);
+  CAMPAIGN_VARIANTS.forEach((variant) => {
+    const source = sourceLevelFor(baseLevel, variant);
+    const level = prepareLevel(source, baseId, variant);
+    writeJson(path.join(LEVELS_DIR, `${level.id}.json`), level);
+    console.log(`wrote levels/${level.id}.json`);
+  });
+}
+
+removeStaleCampaignFiles(desiredIds);
+writeJson(MANIFEST_PATH, desiredManifest());
 console.log(`updated ${path.relative(ROOT, MANIFEST_PATH)}`);

@@ -118,6 +118,7 @@ const GENERATED_ROOT = "assets/generated";
 const GENERATED_BACKGROUND_ROOT = `${GENERATED_ROOT}/backgrounds_v1`;
 const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
 const GENERATED_ENEMY_PROJECTILE_ROOT = `${GENERATED_ROOT}/enemy_projectiles_v2`;
+const GENERATED_WARM_PROJECTILE_ROOT = `${GENERATED_ROOT}/enemy_projectiles_warm_v1`;
 const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
@@ -3351,6 +3352,22 @@ const assets = {
         enemy_boss_core: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_boss_core.png`),
         enemy_boss_halo: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_boss_halo.png`),
         enemy_boss_spear: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_boss_spear.png`),
+        enemy_warm_chip_needle: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_chip_needle.png`),
+        enemy_warm_chip_crescent: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_chip_crescent.png`),
+        enemy_warm_chip_shard: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_chip_shard.png`),
+        enemy_warm_chip_wisp: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_chip_wisp.png`),
+        enemy_warm_standard_bolt: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_standard_bolt.png`),
+        enemy_warm_standard_lance: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_standard_lance.png`),
+        enemy_warm_standard_comet: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_standard_comet.png`),
+        enemy_warm_standard_split: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_standard_split.png`),
+        enemy_warm_spread_shard: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_spread_shard.png`),
+        enemy_warm_radial_pellet: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_radial_pellet.png`),
+        enemy_warm_heavy_core: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_heavy_core.png`),
+        enemy_warm_heavy_slug: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_heavy_slug.png`),
+        enemy_warm_heavy_prism: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_heavy_prism.png`),
+        enemy_warm_boss_core: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_boss_core.png`),
+        enemy_warm_boss_halo: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_boss_halo.png`),
+        enemy_warm_boss_spear: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_boss_spear.png`),
       },
       impactSpark: loadImage(`${GENERATED_EFFECT_ROOT}/impact_spark.png`),
       shieldHitRing: loadImage(`${GENERATED_EFFECT_ROOT}/shield_hit_ring.png`),
@@ -3430,24 +3447,21 @@ const availableLevels = [
   { id: "ai_demo", label: "AI Lab", test: true },
   { id: "generated_sprite_lab", label: "Generated Sprite Lab", test: true },
   { id: "biological_hive_lab", label: "Biological Hive Lab", test: true },
-  // Variant missions (Operations Center unlocks - not yet integrated)
-  // { id: "level1_patrol", label: "Mission 1: Patrol Alpha" },
-  // { id: "level2_skirmish", label: "Mission 2: Skirmish" },
 ];
 
 const LEVEL_MANIFEST_PATH = "levels/manifest.json";
 const DEFAULT_LEVEL_VARIANT_MANIFEST = {
-  level1: ["level1_swarm", "level1_armored", "level1_patrol", "level1_armored_threats", "level1_patrol_threats", "level1_swarm_threats", "level1_threats"],
-  level2: ["level2_swarm", "level2_armored", "level2_skirmish", "level2_armored_threats", "level2_skirmish_threats", "level2_swarm_threats", "level2_threats"],
-  level3: ["level3_swarm", "level3_armored", "level3_armored_threats", "level3_swarm_threats", "level3_threats"],
-  level4: ["level4_swarm", "level4_armored", "level4_armored_threats", "level4_swarm_threats", "level4_threats"],
-  level5: ["level5_swarm", "level5_armored", "level5_armored_threats", "level5_swarm_threats", "level5_threats"],
-  level6: ["level6_swarm", "level6_armored", "level6_armored_threats", "level6_swarm_threats", "level6_threats"],
-  level7: ["level7_swarm", "level7_armored", "level7_armored_threats", "level7_swarm_threats", "level7_threats"],
-  level8: ["level8_swarm", "level8_armored", "level8_armored_threats", "level8_swarm_threats", "level8_threats"],
-  level9: ["level9_threats"],
-  level10: ["level10_threats"],
-  level11: ["level11_threats"],
+  level1: ["level1_swarm", "level1_armored"],
+  level2: ["level2_swarm", "level2_armored"],
+  level3: ["level3_swarm", "level3_armored"],
+  level4: ["level4_swarm", "level4_armored"],
+  level5: ["level5_swarm", "level5_armored"],
+  level6: ["level6_swarm", "level6_armored"],
+  level7: ["level7_swarm", "level7_armored"],
+  level8: ["level8_swarm", "level8_armored"],
+  level9: ["level9_swarm", "level9_armored"],
+  level10: ["level10_swarm", "level10_armored"],
+  level11: ["level11_swarm", "level11_armored"],
 };
 let levelVariantManifest = { ...DEFAULT_LEVEL_VARIANT_MANIFEST };
 let levelVariantToBase = buildLevelVariantToBase(levelVariantManifest);
@@ -9906,8 +9920,9 @@ function resolveLevelProjectileProfile(ref, level = mission?.level) {
 
 function resolveEnemyProjectileProfile(enemy, pattern = null, shot = null) {
   const parts = [];
+  const shotHasProfile = typeof shot === "string" || (isPlainObject(shot) && !!shot.profile);
   if (enemy?.projectileProfile) parts.push(resolveLevelProjectileProfile(enemy.projectileProfile));
-  if (pattern?.profile) parts.push(resolveLevelProjectileProfile(pattern.profile));
+  if (pattern?.profile && !shotHasProfile) parts.push(resolveLevelProjectileProfile(pattern.profile));
   if (typeof shot === "string") {
     parts.push(resolveLevelProjectileProfile(shot));
   } else if (isPlainObject(shot)) {
@@ -9989,6 +10004,8 @@ function getProjectileThreatStyle(projectile, enemy) {
   }
 
   const image = resolveProjectileImage(projectile.image, visualTheme);
+  const hasAuthoredImage = !!projectile.image;
+  const hasAuthoredSpin = Number.isFinite(projectile.spinRate);
   return {
     ...style,
     ...(projectile.shape ? { shape: projectile.shape } : {}),
@@ -9998,7 +10015,8 @@ function getProjectileThreatStyle(projectile, enemy) {
     ...(Number.isFinite(projectile.width) ? { width: projectile.width } : {}),
     ...(Number.isFinite(projectile.height) ? { height: projectile.height } : {}),
     ...(projectile.animation ? { animation: projectile.animation } : {}),
-    ...(Number.isFinite(projectile.spinRate) ? { spinRate: projectile.spinRate } : {}),
+    ...(hasAuthoredImage && !hasAuthoredSpin ? { spinRate: 0 } : {}),
+    ...(hasAuthoredSpin ? { spinRate: projectile.spinRate } : {}),
   };
 }
 

@@ -15,7 +15,17 @@
       "patternParams": {
         "amplitude": 190,
         "frequency": 5.8
-      }
+      },
+      "attackPatterns": [
+        {
+          "id": "chip_snap",
+          "mode": "aim",
+          "profile": "chipNeedle",
+          "fireRate": 1.98,
+          "weight": 1,
+          "speedJitter": 0.08
+        }
+      ]
     },
     "spark": {
       "hull": 18,
@@ -25,7 +35,25 @@
       "baseCredit": 20,
       "fireCount": 6,
       "fireSpread": 1,
-      "fireRate": 1.55
+      "fireRate": 1.55,
+      "attackPatterns": [
+        {
+          "id": "standard_snap",
+          "mode": "aim",
+          "profile": "standardBolt",
+          "count": 1,
+          "fireRate": 1.55,
+          "weight": 3,
+          "speedJitter": 0.1
+        },
+        {
+          "id": "pressure_bolt",
+          "mode": "aim",
+          "profile": "standardBolt",
+          "fireRate": 2.09,
+          "weight": 1
+        }
+      ]
     },
     "plated": {
       "hull": 28,
@@ -34,11 +62,120 @@
       "speed": 52,
       "score": 240,
       "baseCredit": 28,
-      "fireRate": 2.5
+      "fireRate": 2.5,
+      "attackPatterns": [
+        {
+          "id": "heavy_shot",
+          "mode": "aim",
+          "profile": "heavyOrb",
+          "fireRate": 2.95,
+          "weight": 3
+        },
+        {
+          "id": "escort_fan",
+          "mode": "spread",
+          "profile": "standardBolt",
+          "count": 5,
+          "spreadDeg": 42,
+          "fireRate": 3.63,
+          "weight": 1,
+          "shots": [
+            {
+              "profile": "chipNeedle"
+            },
+            {
+              "profile": "standardBolt"
+            },
+            {
+              "profile": "heavyOrb"
+            },
+            {
+              "profile": "standardBolt"
+            },
+            {
+              "profile": "chipNeedle"
+            }
+          ]
+        }
+      ]
     },
-    "stalker": {},
+    "stalker": {
+      "attackPatterns": [
+        {
+          "id": "standard_snap",
+          "mode": "aim",
+          "profile": "standardBolt",
+          "count": 1,
+          "fireRate": 2.2,
+          "weight": 3,
+          "speedJitter": 0.1
+        },
+        {
+          "id": "pressure_bolt",
+          "mode": "aim",
+          "profile": "standardBolt",
+          "fireRate": 2.97,
+          "weight": 1
+        }
+      ]
+    },
     "boss": {
-      "template": "level11:boss"
+      "template": "level11:boss",
+      "attackPatterns": [
+        {
+          "id": "chip_ring",
+          "mode": "radial",
+          "profile": "chipNeedle",
+          "count": 30,
+          "fireRate": 1.26,
+          "weight": 4,
+          "speedJitter": 0.16
+        },
+        {
+          "id": "mixed_fan",
+          "mode": "spread",
+          "profile": "standardBolt",
+          "count": 5,
+          "spreadDeg": 58,
+          "fireRate": 1.1,
+          "weight": 3,
+          "shots": [
+            {
+              "profile": "chipNeedle"
+            },
+            {
+              "profile": "standardBolt"
+            },
+            {
+              "profile": "bossHazard",
+              "speedJitter": 0.05
+            },
+            {
+              "profile": "standardBolt"
+            },
+            {
+              "profile": "chipNeedle"
+            }
+          ]
+        },
+        {
+          "id": "hazard_pair",
+          "mode": "aim",
+          "profile": "heavyOrb",
+          "fireRate": 1.71,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "heavyOrb",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "bossHazard",
+              "angleOffsetDeg": 8
+            }
+          ]
+        }
+      ]
     }
   },
   "events": [
@@ -126,5 +263,48 @@
       "type": "armor_patch",
       "x": 0.5
     }
-  ]
+  ],
+  "projectileProfiles": {
+    "chipNeedle": {
+      "threatClass": "chip",
+      "damage": 8,
+      "speed": 277,
+      "radius": 3,
+      "image": "enemy_chip_wisp",
+      "width": 18,
+      "height": 22,
+      "animation": "ember",
+      "spinRate": 3.4
+    },
+    "standardBolt": {
+      "threatClass": "standard",
+      "damage": 18,
+      "speed": 238,
+      "radius": 4,
+      "image": "enemy_warm_standard_bolt",
+      "width": 14,
+      "height": 42,
+      "animation": "bolt"
+    },
+    "heavyOrb": {
+      "threatClass": "heavy",
+      "damage": 36,
+      "speed": 156,
+      "radius": 8,
+      "image": "enemy_heavy_slug",
+      "width": 28,
+      "height": 58,
+      "animation": "lance"
+    },
+    "bossHazard": {
+      "threatClass": "bossHazard",
+      "damage": 55,
+      "speed": 136,
+      "radius": 12,
+      "image": "enemy_warm_boss_spear",
+      "width": 34,
+      "height": 78,
+      "animation": "lance"
+    }
+  }
 }

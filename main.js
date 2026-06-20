@@ -117,8 +117,7 @@ const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
 const GENERATED_ROOT = "assets/generated";
 const GENERATED_BACKGROUND_ROOT = `${GENERATED_ROOT}/backgrounds_v1`;
 const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
-const GENERATED_ENEMY_PROJECTILE_ROOT = `${GENERATED_ROOT}/enemy_projectiles_v2`;
-const GENERATED_WARM_PROJECTILE_ROOT = `${GENERATED_ROOT}/enemy_projectiles_warm_v1`;
+const GENERATED_SPACE_PROJECTILE_ROOT = `${GENERATED_ROOT}/enemy_projectiles_space_v1`;
 const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
 const GENERATED_UI_CHROME_ROOT = `${GENERATED_ROOT}/ui_chrome_v2`;
 const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
@@ -3331,43 +3330,27 @@ const assets = {
       playerPlasma: loadImage(`${GENERATED_EFFECT_ROOT}/player_plasma_orb.png`),
       playerPierce: loadImage(`${GENERATED_EFFECT_ROOT}/player_pierce_lance.png`),
       playerRocket: loadImage(`${GENERATED_EFFECT_ROOT}/player_rocket.png`),
-      enemyBullet: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_bolt.png`),
-      enemyPurpleOrb: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_heavy_orb.png`),
-      enemySpreadShard: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_spread_shard.png`),
-      enemyRadialEmber: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_radial_pellet.png`),
+      enemyBullet: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_standard_bolt.png`),
+      enemyPurpleOrb: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_plasma_ball.png`),
+      enemySpreadShard: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_chip_dart.png`),
+      enemyRadialEmber: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_plasma_ball.png`),
       enemyProjectiles: {
-        enemy_chip_needle: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_chip_needle.png`),
-        enemy_chip_crescent: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_chip_crescent.png`),
-        enemy_chip_shard: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_chip_shard.png`),
-        enemy_chip_wisp: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_chip_wisp.png`),
-        enemy_standard_bolt: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_bolt.png`),
-        enemy_standard_lance: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_lance.png`),
-        enemy_standard_comet: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_comet.png`),
-        enemy_standard_split: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_standard_split.png`),
-        enemy_spread_shard: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_spread_shard.png`),
-        enemy_radial_pellet: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_radial_pellet.png`),
-        enemy_heavy_orb: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_heavy_orb.png`),
-        enemy_heavy_slug: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_heavy_slug.png`),
-        enemy_heavy_prism: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_heavy_prism.png`),
-        enemy_boss_core: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_boss_core.png`),
-        enemy_boss_halo: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_boss_halo.png`),
-        enemy_boss_spear: loadImage(`${GENERATED_ENEMY_PROJECTILE_ROOT}/enemy_boss_spear.png`),
-        enemy_warm_chip_needle: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_chip_needle.png`),
-        enemy_warm_chip_crescent: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_chip_crescent.png`),
-        enemy_warm_chip_shard: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_chip_shard.png`),
-        enemy_warm_chip_wisp: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_chip_wisp.png`),
-        enemy_warm_standard_bolt: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_standard_bolt.png`),
-        enemy_warm_standard_lance: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_standard_lance.png`),
-        enemy_warm_standard_comet: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_standard_comet.png`),
-        enemy_warm_standard_split: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_standard_split.png`),
-        enemy_warm_spread_shard: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_spread_shard.png`),
-        enemy_warm_radial_pellet: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_radial_pellet.png`),
-        enemy_warm_heavy_core: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_heavy_core.png`),
-        enemy_warm_heavy_slug: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_heavy_slug.png`),
-        enemy_warm_heavy_prism: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_heavy_prism.png`),
-        enemy_warm_boss_core: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_boss_core.png`),
-        enemy_warm_boss_halo: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_boss_halo.png`),
-        enemy_warm_boss_spear: loadImage(`${GENERATED_WARM_PROJECTILE_ROOT}/enemy_warm_boss_spear.png`),
+        enemy_space_warm_chip_dart: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_chip_dart.png`),
+        enemy_space_warm_chip_needle: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_chip_needle.png`),
+        enemy_space_warm_standard_bolt: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_standard_bolt.png`),
+        enemy_space_warm_standard_slug: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_standard_slug.png`),
+        enemy_space_cool_chip_dart: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_chip_dart.png`),
+        enemy_space_cool_chip_needle: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_chip_needle.png`),
+        enemy_space_cool_standard_bolt: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_standard_bolt.png`),
+        enemy_space_cool_standard_slug: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_standard_slug.png`),
+        enemy_space_warm_plasma_ball: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_plasma_ball.png`),
+        enemy_space_warm_heavy_core: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_heavy_core.png`),
+        enemy_space_warm_boss_core: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_boss_core.png`),
+        enemy_space_warm_boss_ring: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_boss_ring.png`),
+        enemy_space_cool_plasma_ball: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_plasma_ball.png`),
+        enemy_space_cool_heavy_core: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_heavy_core.png`),
+        enemy_space_cool_boss_core: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_boss_core.png`),
+        enemy_space_cool_boss_ring: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_boss_ring.png`),
       },
       impactSpark: loadImage(`${GENERATED_EFFECT_ROOT}/impact_spark.png`),
       shieldHitRing: loadImage(`${GENERATED_EFFECT_ROOT}/shield_hit_ring.png`),
@@ -9954,14 +9937,13 @@ function getProjectileThreatStyle(projectile, enemy) {
   if (threat === "chip") {
     const size = projectile.width || projectile.height || 14;
     style = {
-      image: enemyProjectiles.enemy_chip_shard || visualTheme?.enemySpreadShard || assets.altArc,
+      image: enemyProjectiles.enemy_space_cool_chip_dart || visualTheme?.enemySpreadShard || assets.altArc,
       width: size,
       height: size,
-      animation: "shard",
-      spinRate: 4.8,
+      animation: "bolt",
     };
   } else if (threat === "heavy") {
-    const image = enemyProjectiles.enemy_heavy_orb || visualTheme?.enemyPurpleOrb;
+    const image = enemyProjectiles.enemy_space_cool_plasma_ball || visualTheme?.enemyPurpleOrb;
     style = image
       ? {
         image,
@@ -9977,7 +9959,7 @@ function getProjectileThreatStyle(projectile, enemy) {
         animation: "orb",
       };
   } else if (threat === "bossHazard") {
-    const image = enemyProjectiles.enemy_boss_core || visualTheme?.enemyPurpleOrb;
+    const image = enemyProjectiles.enemy_space_warm_boss_core || visualTheme?.enemyPurpleOrb;
     style = image
       ? {
         image,
@@ -9994,7 +9976,7 @@ function getProjectileThreatStyle(projectile, enemy) {
       };
   } else if (threat === "standard") {
     style = {
-      image: enemyProjectiles.enemy_standard_bolt || visualTheme?.enemyBullet || assets.enemyBullet,
+      image: enemyProjectiles.enemy_space_warm_standard_bolt || visualTheme?.enemyBullet || assets.enemyBullet,
       width: visualTheme?.enemyBulletWidth || 10,
       height: visualTheme?.enemyBulletHeight || 32,
       animation: "bolt",

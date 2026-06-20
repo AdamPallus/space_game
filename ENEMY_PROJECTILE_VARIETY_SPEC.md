@@ -59,9 +59,9 @@ The generated variants should use common-sense authorship rules:
 
 Runtime firing should choose weighted `attackPatterns` when present; otherwise it should follow the old flat fields. Enemy bullets already carry `damage` into `applyDamage`, so the implementation adds profile selection rather than a new player damage system.
 
-Projectile visuals should mix warm and cool generated sprite keys. Heavy and boss-hazard campaign profiles should avoid flat color-only circles and use textured image sprites with visible internal structure. `spinRate` is restricted to compact or circular silhouettes, including orbs, halos, radial pellets, and compact crescents; directional or long/narrow sprites such as needles, bolts, lances, slugs, spears, and prisms should face travel direction without spinning.
+Projectile visuals should mix warm and cool generated sprite keys from `assets/generated/enemy_projectiles_space_v1/`. Campaign projectiles should read as space weapons: laser bolts, kinetic slugs, plasma balls, ion cores, and clean energy rings. Avoid static fireballs, flames, smoke, embers, magic/comet tails, and moon/crescent common shots. Heavy and boss-hazard campaign profiles should use compact plasma/core/ring sprites with visible internal structure. `spinRate` is restricted to compact or circular silhouettes; directional darts, needles, bolts, lances, and slugs should face travel direction without spinning.
 
-`scripts/validate_levels.js` validates projectile profiles, attack patterns, shot overrides, profile references, numeric fields, rotating-sprite proportions, and manifest entries. The Armory stats popup and compendium descriptions read the new projectile profile ranges.
+`scripts/validate_levels.js` validates projectile profiles, attack patterns, shot overrides, profile references, numeric fields, rotating-sprite proportions, and manifest entries. `scripts/validate_generated_assets.py` audits campaign projectile image keys and broadside boss alpha bounds. The Armory stats popup and compendium descriptions read the new projectile profile ranges.
 
 ## Implementation State
 
@@ -82,13 +82,14 @@ node scripts/generate_projectile_threat_levels.js
 
 ## Verification
 
-Final implementation checks run on 2026-06-19:
+Final implementation checks:
 
 - `node --check main.js`
 - `node --check scripts/balance_report.js`
 - `node --check scripts/validate_levels.js`
 - `node --check scripts/generate_projectile_threat_levels.js`
 - `node scripts/validate_levels.js`
+- `python3 scripts/validate_generated_assets.py`
 - `node scripts/validate_weapon_frames.js`
 - `node scripts/balance_report.js`
 - `git diff --check`
@@ -102,17 +103,18 @@ Browser smoke coverage on `http://127.0.0.1:8765/?devSkip=1&devAutoFire=1&devInv
 
 ## Follow-Up Notes
 
-The follow-up pass adds `assets/generated/enemy_projectiles_v2/` and
-`assets/generated/enemy_projectiles_warm_v1/`, both processed through the
-existing chroma-key workflow. Campaign profile generation assigns a warm/cool
-mix while preserving the same `projectileProfiles` schema.
+The follow-up reset adds `assets/generated/enemy_projectiles_space_v1/`,
+processed through the existing chroma-key workflow. Campaign profile generation
+assigns a warm/cool mix while preserving the same `projectileProfiles` schema
+and keeping early common shots as simple bolts/slugs.
 
 Completing any variant of `levelX` now unlocks `levelX+1` through the
 base-level progression lookup.
 
-Boss progression art lives in `assets/generated/bosses_v2/` as 11 generated
-256x256 sprites. All variants of a mission share that mission's boss sprite,
-and later mission bosses should read as more dangerous.
+Boss progression art lives in `assets/generated/bosses_broadside_v1/` as 11
+generated 256x256 sprites. All variants of a mission share that mission's boss
+sprite, later mission bosses should read as more dangerous, and campaign boss
+alpha bounds must stay broadside with width divided by height of at least 1.55.
 
 The starter Cadet Kinetic Frame now carries extra kinetic impulse so its focused
 shots are faster and its reported DPS is close to the other starter frames.

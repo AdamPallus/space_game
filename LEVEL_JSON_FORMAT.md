@@ -78,22 +78,21 @@ New authored projectile variety uses a root `projectileProfiles` object plus ene
       "damage": 6,
       "speed": 250,
       "radius": 3,
-      "image": "enemySpreadShard",
+      "image": "enemy_space_cool_chip_dart",
       "width": 13,
-      "height": 13,
-      "animation": "shard",
-      "spinRate": 5.2
+      "height": 34,
+      "animation": "bolt"
     },
     "heavyOrb": {
       "threatClass": "heavy",
       "damage": 30,
       "speed": 168,
       "radius": 8,
-      "image": "enemy_warm_heavy_core",
-      "width": 54,
-      "height": 54,
+      "image": "enemy_space_warm_heavy_core",
+      "width": 50,
+      "height": 50,
       "animation": "orb",
-      "spinRate": 2.5
+      "spinRate": 2.0
     }
   },
   "enemyTypes": {
@@ -107,7 +106,7 @@ New authored projectile variety uses a root `projectileProfiles` object plus ene
 }
 ```
 
-Supported profile fields are `damage`, `speed`, `radius`, `width`, `height`, `threatClass`, `visual`, `image`, `color`, `shape`, `animation`, and `spinRate`. `threatClass` must be one of `chip`, `standard`, `heavy`, or `bossHazard`. Heavy and boss-hazard campaign profiles should use textured image sprites rather than flat color-only orbs. `spinRate` is only valid for compact/circular silhouettes; directional bolts, lances, needles, slugs, spears, and other long/narrow sprites should not spin.
+Supported profile fields are `damage`, `speed`, `radius`, `width`, `height`, `threatClass`, `visual`, `image`, `color`, `shape`, `animation`, and `spinRate`. `threatClass` must be one of `chip`, `standard`, `heavy`, or `bossHazard`. Campaign profiles should use the `enemy_space_*` projectile keys: chip and standard shots should read as laser bolts or kinetic slugs, while heavy and boss-hazard shots should use compact plasma/core/ring sprites. `spinRate` is only valid for compact/circular silhouettes; directional bolts, lances, needles, slugs, and other long/narrow sprites should not spin.
 
 Supported attack-pattern fields are `id`, `mode`, `fireMode`, `profile`, `count`, `spread`, `spreadDeg`, `fireRate`, `weight`, `speedJitter`, and `shots`. `mode` must be `aim`, `spread`, or `radial`. `profile` may name a root profile or provide an inline profile object. `shots` may contain profile ids or inline per-shot overrides; shot objects may also set `angleDeg`, `angleOffsetDeg`, and `speedJitter`.
 

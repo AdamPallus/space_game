@@ -255,7 +255,7 @@ const archetypes = {
 
 const bossByLevel = {
   level1: {
-    sprite: "assets/generated/bosses_v2/boss_level01.png",
+    sprite: "assets/generated/bosses_broadside_v1/boss_level01.png",
     hull: 310,
     shield: 110,
     armor: 0,
@@ -274,7 +274,7 @@ const bossByLevel = {
     spriteScale: 0.71,
   },
   level2: {
-    sprite: "assets/generated/bosses_v2/boss_level02.png",
+    sprite: "assets/generated/bosses_broadside_v1/boss_level02.png",
     hull: 400,
     shield: 0,
     armor: 190,
@@ -292,7 +292,7 @@ const bossByLevel = {
     spriteScale: 0.95,
   },
   level3: {
-    sprite: "assets/generated/bosses_v2/boss_level03.png",
+    sprite: "assets/generated/bosses_broadside_v1/boss_level03.png",
     hull: 450,
     shield: 240,
     armor: 100,
@@ -311,7 +311,7 @@ const bossByLevel = {
     spriteScale: 0.86,
   },
   level4: {
-    sprite: "assets/generated/bosses_v2/boss_level04.png",
+    sprite: "assets/generated/bosses_broadside_v1/boss_level04.png",
     hull: 560,
     shield: 320,
     armor: 280,
@@ -338,7 +338,7 @@ const bossByLevel = {
     spriteScale: 0.75,
   },
   level5: {
-    sprite: "assets/generated/bosses_v2/boss_level05.png",
+    sprite: "assets/generated/bosses_broadside_v1/boss_level05.png",
     hull: 700,
     shield: 420,
     armor: 460,
@@ -365,7 +365,7 @@ const bossByLevel = {
     spriteScale: 1.03,
   },
   level6: {
-    sprite: "assets/generated/bosses_v2/boss_level06.png",
+    sprite: "assets/generated/bosses_broadside_v1/boss_level06.png",
     hull: 920,
     shield: 560,
     armor: 640,
@@ -393,7 +393,7 @@ const bossByLevel = {
     spriteScale: 0.72,
   },
   level7: {
-    sprite: "assets/generated/bosses_v2/boss_level07.png",
+    sprite: "assets/generated/bosses_broadside_v1/boss_level07.png",
     hull: 1280,
     shield: 760,
     armor: 900,
@@ -420,7 +420,7 @@ const bossByLevel = {
     spriteScale: 0.96,
   },
   level8: {
-    sprite: "assets/generated/bosses_v2/boss_level08.png",
+    sprite: "assets/generated/bosses_broadside_v1/boss_level08.png",
     hull: 1680,
     shield: 1040,
     armor: 1240,

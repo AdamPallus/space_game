@@ -1,0 +1,172 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "defaultPadding": 6,
+  "contactSheet": "contact_sheet.png",
+  "sprites": [
+    {
+      "name": "enemy_space_warm_chip_dart",
+      "cell": 0,
+      "size": [
+        18,
+        52
+      ],
+      "rotateDegrees": 90,
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_warm_chip_needle",
+      "cell": 1,
+      "size": [
+        16,
+        58
+      ],
+      "rotateDegrees": 90,
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_warm_standard_bolt",
+      "cell": 2,
+      "size": [
+        24,
+        62
+      ],
+      "rotateDegrees": 90,
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_warm_standard_slug",
+      "cell": 3,
+      "size": [
+        32,
+        58
+      ],
+      "rotateDegrees": 90,
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_cool_chip_dart",
+      "cell": 4,
+      "size": [
+        18,
+        52
+      ],
+      "rotateDegrees": 90,
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_cool_chip_needle",
+      "cell": 5,
+      "size": [
+        16,
+        58
+      ],
+      "rotateDegrees": 90,
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_cool_standard_bolt",
+      "cell": 6,
+      "size": [
+        24,
+        62
+      ],
+      "rotateDegrees": 90,
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_cool_standard_slug",
+      "cell": 7,
+      "size": [
+        32,
+        58
+      ],
+      "rotateDegrees": 90,
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_warm_plasma_ball",
+      "cell": 8,
+      "size": [
+        54,
+        54
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_warm_heavy_core",
+      "cell": 9,
+      "size": [
+        58,
+        58
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_warm_boss_core",
+      "cell": 10,
+      "size": [
+        74,
+        74
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_warm_boss_ring",
+      "cell": 11,
+      "size": [
+        78,
+        78
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_cool_plasma_ball",
+      "cell": 12,
+      "size": [
+        54,
+        54
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_cool_heavy_core",
+      "cell": 13,
+      "size": [
+        58,
+        58
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_cool_boss_core",
+      "cell": 14,
+      "size": [
+        74,
+        74
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_cool_boss_ring",
+      "cell": 15,
+      "size": [
+        78,
+        78
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    }
+  ]
+}

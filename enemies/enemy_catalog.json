@@ -285,7 +285,7 @@
       "name": "Iron Graveyard Juggernaut",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level10.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level10.png",
         "hull": 520,
         "shield": 0,
         "armor": 900,
@@ -308,7 +308,7 @@
       "name": "Corridor Gatekeeper",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level11.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level11.png",
         "hull": 540,
         "shield": 360,
         "armor": 520,
@@ -332,7 +332,7 @@
       "name": "Warden of First Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level01.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level01.png",
         "hull": 310,
         "shield": 110,
         "armor": 0,
@@ -355,7 +355,7 @@
       "name": "Warden of Second Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level02.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level02.png",
         "hull": 400,
         "shield": 0,
         "armor": 190,
@@ -377,7 +377,7 @@
       "name": "Warden of Third Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level03.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level03.png",
         "hull": 450,
         "shield": 240,
         "armor": 100,
@@ -400,7 +400,7 @@
       "name": "Warden of Fourth Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level04.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level04.png",
         "hull": 560,
         "shield": 320,
         "armor": 280,
@@ -431,7 +431,7 @@
       "name": "Warden of Fifth Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level05.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level05.png",
         "hull": 700,
         "shield": 420,
         "armor": 460,
@@ -463,7 +463,7 @@
       "name": "Warden of Sixth Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level06.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level06.png",
         "hull": 920,
         "shield": 560,
         "armor": 640,
@@ -495,7 +495,7 @@
       "name": "Warden of Seventh Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level07.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level07.png",
         "hull": 1280,
         "shield": 760,
         "armor": 900,
@@ -526,7 +526,7 @@
       "name": "Warden of Eighth Contact",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level08.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level08.png",
         "hull": 1680,
         "shield": 1040,
         "armor": 1240,
@@ -557,7 +557,7 @@
       "name": "Neon Swarm Sovereign",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level09.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level09.png",
         "hull": 420,
         "shield": 360,
         "armor": 0,
@@ -882,7 +882,7 @@
       "name": "First Contact: Armored Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level01.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level01.png",
         "hull": 330,
         "shield": 80,
         "armor": 60,
@@ -905,7 +905,7 @@
       "name": "First Contact: Swarm Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level01.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level01.png",
         "hull": 310,
         "shield": 110,
         "armor": 0,
@@ -928,7 +928,7 @@
       "name": "Orion Drift: Armored Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level02.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level02.png",
         "hull": 400,
         "shield": 0,
         "armor": 190,
@@ -950,7 +950,7 @@
       "name": "Orion Drift: Swarm Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level02.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level02.png",
         "hull": 400,
         "shield": 0,
         "armor": 190,
@@ -972,7 +972,7 @@
       "name": "Nebula Run: Armored Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level03.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level03.png",
         "hull": 450,
         "shield": 240,
         "armor": 100,
@@ -995,7 +995,7 @@
       "name": "Nebula Run: Swarm Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level03.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level03.png",
         "hull": 450,
         "shield": 240,
         "armor": 100,
@@ -1018,7 +1018,7 @@
       "name": "Void Cascade: Armored Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level04.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level04.png",
         "hull": 560,
         "shield": 320,
         "armor": 280,
@@ -1049,7 +1049,7 @@
       "name": "Void Cascade: Swarm Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level04.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level04.png",
         "hull": 560,
         "shield": 320,
         "armor": 280,
@@ -1080,7 +1080,7 @@
       "name": "Annihilation Protocol: Armored Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level05.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level05.png",
         "hull": 700,
         "shield": 420,
         "armor": 460,
@@ -1112,7 +1112,7 @@
       "name": "Annihilation Protocol: Swarm Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level05.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level05.png",
         "hull": 700,
         "shield": 420,
         "armor": 460,
@@ -1144,7 +1144,7 @@
       "name": "Crimson Fleet: Armored Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level06.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level06.png",
         "hull": 920,
         "shield": 560,
         "armor": 640,
@@ -1176,7 +1176,7 @@
       "name": "Crimson Fleet: Swarm Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level06.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level06.png",
         "hull": 920,
         "shield": 560,
         "armor": 640,
@@ -1208,7 +1208,7 @@
       "name": "The Gauntlet: Armored Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level07.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level07.png",
         "hull": 1280,
         "shield": 760,
         "armor": 900,
@@ -1239,7 +1239,7 @@
       "name": "The Gauntlet: Swarm Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level07.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level07.png",
         "hull": 1280,
         "shield": 760,
         "armor": 900,
@@ -1270,7 +1270,7 @@
       "name": "Last Light: Armored Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level08.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level08.png",
         "hull": 1680,
         "shield": 1040,
         "armor": 1240,
@@ -1301,7 +1301,7 @@
       "name": "Last Light: Swarm Boss",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_v2/boss_level08.png",
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level08.png",
         "hull": 1680,
         "shield": 1040,
         "armor": 1240,

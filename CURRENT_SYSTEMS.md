@@ -22,7 +22,7 @@ EMP support affects enemies and firing behavior, and now clears nearby hostile p
 
 ## Missions And Level Data
 
-Mission scripts live in `levels/*.json`. They define metadata, backgrounds, wave timing, enemy references, salvage drops, scripted pickups, objectives, boss events, projectile profiles, attack patterns, and variants. `scripts/validate_levels.js` verifies that level scripts reference known enemies, legal item data, valid pickup data, valid projectile profile references, valid attack-pattern structures, and valid wave structures.
+Mission scripts live in `levels/*.json`. They define metadata, backgrounds, wave timing, enemy references, salvage drops, scripted pickups, objectives, boss events, projectile profiles, attack patterns, and variants. `scripts/validate_levels.js` verifies that level scripts reference known enemies, legal item data, valid pickup data, valid projectile profile references, valid attack-pattern structures, and valid wave structures. `scripts/validate_generated_assets.py` verifies campaign projectile keys and broadside boss sprite bounds.
 
 The campaign has 11 core missions, each with three player-facing carousel entries: Standard, Swarm, and Armored. All campaign entries use profiled projectile damage and weighted attack patterns. Completing any variant of `levelX` unlocks `levelX+1` through the base-level progression lookup, while lab-style encounters remain separate test entries.
 
@@ -77,7 +77,7 @@ node scripts/balance_report.js
 git diff --check
 ```
 
-`balance_report.js` is the main guardrail for economy and item-pool drift. It mirrors primary damage math, mini rarity tuning, defense rarity tuning, and reports focused single-shot DPS against multi-shot/burst output. `validate_levels.js` and `validate_weapon_frames.js` protect data contracts. UI work should also receive a real browser smoke test.
+`balance_report.js` is the main guardrail for economy and item-pool drift. It mirrors primary damage math, mini rarity tuning, defense rarity tuning, and reports focused single-shot DPS against multi-shot/burst output. `validate_levels.js`, `validate_generated_assets.py`, and `validate_weapon_frames.js` protect data and asset contracts. UI work should also receive a real browser smoke test.
 
 ## Current Divergences From Desired Next State
 

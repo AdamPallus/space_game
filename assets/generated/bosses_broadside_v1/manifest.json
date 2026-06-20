@@ -1,0 +1,122 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 3
+  },
+  "defaultPadding": 8,
+  "contactSheet": "contact_sheet.png",
+  "sprites": [
+    {
+      "name": "boss_level01",
+      "cell": 0,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level02",
+      "cell": 1,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level03",
+      "cell": 2,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level04",
+      "cell": 3,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level05",
+      "cell": 4,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level06",
+      "cell": 5,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level07",
+      "cell": 6,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level08",
+      "cell": 7,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level09",
+      "cell": 8,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level10",
+      "cell": 9,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    },
+    {
+      "name": "boss_level11",
+      "cell": 10,
+      "size": [
+        256,
+        256
+      ],
+      "componentMode": "largest",
+      "componentMinArea": 32
+    }
+  ]
+}

@@ -57,23 +57,29 @@ It uses the same chroma-key sheet workflow as the pilot sprites and still
 supplies generated player shots, impacts, explosion frames, and the
 player-death core for the default `generated_v1` visual theme in `main.js`.
 
-Enemy projectile art now lives in two generated packs:
-`assets/generated/enemy_projectiles_v2/` for cool blue/cyan shots and
-`assets/generated/enemy_projectiles_warm_v1/` for warm red/orange/amber shots.
-The default visual theme maps authored `projectileProfiles.image` keys from
-both packs, so campaign missions can mix warm and cool hostile fire while
-avoiding flat uniform-color circles for heavy and boss-hazard shots.
+Enemy projectile art now lives in `assets/generated/enemy_projectiles_space_v1/`.
+The pack mixes warm red/orange/amber and cool blue/cyan/teal shots while staying
+inside a space-weapon vocabulary: laser bolts, kinetic slugs, plasma balls, ion
+cores, and clean energy rings. Campaign `projectileProfiles.image` keys should
+point at this pack rather than the older crescent/comet/fireball-style sheets.
+Static projectile sprites should not imply animation the runtime does not
+provide: avoid flames, smoke, embers, magic fireballs, comet tails, and
+moon/crescent common shots.
 
 Projectile rotation is restricted by silhouette. Only compact or circular
-sprites should set `spinRate`: orbs, cores, halos, radial pellets, and compact
-crescents are valid. Directional or long/narrow projectiles such as needles,
-bolts, lances, slugs, spears, and prisms should face their travel direction
-without spinning; they may still use the runtime's subtle bolt/lance sway.
+sprites should set `spinRate`: plasma balls, cores, and clean rings are valid.
+Directional or long/narrow projectiles such as darts, needles, bolts, lances,
+and slugs should face their travel direction without spinning; they may still
+use the runtime's subtle bolt/lance sway.
 
-Boss art now lives in `assets/generated/bosses_v2/`, an 11-sprite generated
+Boss art now lives in `assets/generated/bosses_broadside_v1/`, an 11-sprite generated
 campaign progression pack. Each source sprite is processed to a 256x256
 transparent PNG, and later mission bosses should read as darker, sharper, and
 more heavily armed while staying in the same generated arcade sci-fi faction.
+Campaign boss silhouettes must remain broadside: the visible alpha bounds should
+have width divided by height of at least 1.55, with major bosses ideally closer
+to 1.8-2.2. Do not use tall, narrow, forward-flight boss sprites for campaign
+bosses.
 
 Levels can opt into specialized themes such as `bio_v1` or force
 Kenney/starter art with the legacy theme keys, but regular campaign play now

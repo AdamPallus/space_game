@@ -262,43 +262,42 @@
       "damage": 8,
       "speed": 274,
       "radius": 3,
-      "image": "enemy_warm_chip_shard",
-      "width": 20,
+      "image": "enemy_space_warm_chip_dart",
+      "width": 13,
       "height": 34,
-      "animation": "shard"
+      "animation": "bolt"
     },
     "standardBolt": {
       "threatClass": "standard",
       "damage": 18,
       "speed": 235,
       "radius": 4,
-      "image": "enemy_standard_split",
-      "width": 32,
-      "height": 38,
-      "animation": "shard",
-      "spinRate": 2.6
+      "image": "enemy_space_cool_standard_slug",
+      "width": 24,
+      "height": 42,
+      "animation": "lance"
     },
     "heavyOrb": {
       "threatClass": "heavy",
       "damage": 36,
       "speed": 158,
       "radius": 8,
-      "image": "enemy_warm_heavy_core",
-      "width": 54,
-      "height": 54,
+      "image": "enemy_space_warm_plasma_ball",
+      "width": 44,
+      "height": 44,
       "animation": "orb",
-      "spinRate": 2.5
+      "spinRate": 2.2
     },
     "bossHazard": {
       "threatClass": "bossHazard",
       "damage": 55,
       "speed": 138,
       "radius": 12,
-      "image": "enemy_boss_halo",
+      "image": "enemy_space_cool_boss_ring",
       "width": 76,
       "height": 76,
       "animation": "orb",
-      "spinRate": 2.8
+      "spinRate": 1.6
     }
   }
 }

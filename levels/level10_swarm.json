@@ -312,19 +312,18 @@
       "damage": 8,
       "speed": 274,
       "radius": 3,
-      "image": "enemy_chip_wisp",
-      "width": 18,
-      "height": 22,
-      "animation": "ember",
-      "spinRate": 3.4
+      "image": "enemy_space_cool_chip_needle",
+      "width": 11,
+      "height": 38,
+      "animation": "lance"
     },
     "standardBolt": {
       "threatClass": "standard",
       "damage": 18,
       "speed": 235,
       "radius": 4,
-      "image": "enemy_warm_standard_bolt",
-      "width": 14,
+      "image": "enemy_space_warm_standard_bolt",
+      "width": 16,
       "height": 42,
       "animation": "bolt"
     },
@@ -333,20 +332,22 @@
       "damage": 36,
       "speed": 158,
       "radius": 8,
-      "image": "enemy_heavy_slug",
-      "width": 28,
-      "height": 58,
-      "animation": "lance"
+      "image": "enemy_space_cool_heavy_core",
+      "width": 50,
+      "height": 50,
+      "animation": "orb",
+      "spinRate": 2
     },
     "bossHazard": {
       "threatClass": "bossHazard",
       "damage": 55,
       "speed": 138,
       "radius": 12,
-      "image": "enemy_warm_boss_spear",
-      "width": 34,
-      "height": 78,
-      "animation": "lance"
+      "image": "enemy_space_warm_boss_core",
+      "width": 70,
+      "height": 70,
+      "animation": "orb",
+      "spinRate": 1.8
     }
   }
 }

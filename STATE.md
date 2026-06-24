@@ -1,6 +1,6 @@
 # Space Shooter Current State
 
-Last audited: 2026-06-19
+Last audited: 2026-06-23
 
 This is the first file to read before changing the game. It summarizes what is implemented now, which docs are still authoritative, which older specs are archived, and which validation commands should pass before committing.
 
@@ -119,6 +119,8 @@ Active docs in the repo root:
 - `ASSET_GENERATION.md`: current generated-asset workflow and manifest.
 - `LEVEL_JSON_FORMAT.md`: active level schema reference.
 - `WEAPON_FRAME_FORMAT.md`: active weapon-frame schema reference.
+- `ITEM_UX_SPEC.md`: active item-communication reference (tooltip/inspector stat block, rarity treatment, roll-quality surfacing).
+- `LOOT_DEPTH_SPEC.md`: Phase 6 loot depth spec (affix magnitude rolls, aux potency) — implemented.
 - `STORY-PREMISE.md`: active tone and lore source.
 - `CREDITS.md`: asset and tool credits.
 

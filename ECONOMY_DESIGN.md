@@ -232,9 +232,17 @@ Keep the existing three tracks and costs (200–6000¢). Reframe effects to fit:
   Ledger's leash: the moment passive income exceeds mission income, why fly?
   Late-story beat, not a mechanic, for now.
 
-Current implementation: Investments also houses permanent hull unlocks, ship
-capabilities such as Aux tuning and Dual Fire, and Ledger license tiers. The UI
-is a connected terminal upgrade tree rather than a card grid.
+Current implementation: Investments also houses permanent hull unlocks, the
+Dual Fire ship capability, and Ledger license tiers. The UI is a connected
+terminal upgrade tree rather than a card grid. (The former Aux tuning
+investment was retired in the Phase 6 loot pass — aux ability strength now
+rolls on the item, not on an upgrade track; see `LOOT_DEPTH_SPEC.md`.)
+
+Because the loot pass chose a pure hunt with no reroll bench, buying is the
+only money sink, so item value scales with roll quality
+(`value = baseValueForRarity * (0.85 + 0.45 * rollQuality)`): god rolls cost
+more to buy and sell for more, keeping credits scarce while players refresh
+stock chasing better rolls.
 
 ## 6. Hull ownership (design locked; build after Phase 4)
 

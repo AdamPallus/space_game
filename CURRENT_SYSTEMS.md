@@ -1,6 +1,6 @@
 # Current Systems
 
-Last audited: 2026-06-19
+Last audited: 2026-06-23
 
 This file explains how the game works today. It is intentionally descriptive rather than aspirational; new plans should start in `ROADMAP.md` and only graduate into this file after implementation.
 
@@ -42,7 +42,9 @@ Ledger market state includes rotating stock, lot purchases, dividends, price mov
 
 The item system is data-driven through `items/item_pool.json` and `items/weapon_frames.json`. Implemented item categories include primary weapon frames, mini weapons, defense items, support items, named hulls, relics, and economy-facing salvage. Generated items can carry rarity, families, affixes, traits, and descriptive card copy. Mini weapons apply rarity-scaled damage/cooldown/range/speed tuning and can roll supported effects at higher rarities. Defense loot applies rarity-scaled armor-class and useful shield-strength tuning, with Pre-Founding defense doubling the current scaling above starter baselines. Existing saved mini and defense loot self-heals through one-time balance-version markers.
 
-The armory composes the ship build from inventory instead of replacing the gear model. It is an equip/configure bench with spatial hardpoints around the selected hull, a compact equipped-hull button that opens a small selector popover, and a visible Swap/Dual Fire mode selector. The selected-item inspector caps long stat/affix/lore detail in an internal scroll region so the inventory rack remains usable. Item cards and tooltips expose stats, flavor, rarity, tags, combat implications, DPS first, damage per shot second, shots per second third, mini targeting behavior, dual-fire compatibility, hull bonuses, and second-bay strain. The item archive tracks collected and discovered items, including relic-style long-term finds.
+Loot also has a vertical roll axis (Phase 6, see `LOOT_DEPTH_SPEC.md`). Each magnitude affix declares a `roll` range in `item_pool.json`; `createRolledItem` draws a per-instance float multiplier on its `buildAdd`, so two items of the same base and rarity with the same affixes differ in strength. Effect traces (pierce/homing/explosive/vampiric) roll a potency tier by rarity. Every item stores a `rollQuality` in [0,1] (mean normalized roll position) that scales its value and drives a roll-quality bar in the item display. Pre-Founding items roll three affixes where the pool allows. Aux items roll a per-instance ability potency (`auxPotency`/`auxRoll`) for cloak/EMP/bulwark plus offense and defense passives; the rolled magnitudes and ability knobs reconstruct from save without re-rolling. The retired `auxPower` investment was replaced by these rolls — old saves remap the Ledger capabilities ladder to dual-fire-only and refund the credits spent on aux tiers, and hull `auxPowerBonus` remains as a small identity perk that lifts the equipped aux item's roll.
+
+The armory composes the ship build from inventory instead of replacing the gear model. It is an equip/configure bench with spatial hardpoints around the selected hull, a compact equipped-hull button that opens a small selector popover, and a visible Swap/Dual Fire mode selector. The selected-item inspector caps long stat/affix/lore detail in an internal scroll region so the inventory rack remains usable. Item cards and tooltips expose stats, flavor, rarity, tags, combat implications, DPS first, damage per shot second, shots per second third, mini targeting behavior, dual-fire compatibility, hull bonuses, and second-bay strain. Affix lines show the real rolled magnitude (not the affix's nominal value), and rolled items render a rarity-tinted roll-quality bar; aux tooltips show the item's actual rolled ability numbers. The shared tooltip/inspector contract is documented in `ITEM_UX_SPEC.md`. The item archive tracks collected and discovered items, including relic-style long-term finds.
 
 Armory inventory, item archive, and Ledger sell views now include text search plus sort and filter controls for recent acquisition, rarity, slot/type, value, and weapon role where relevant.
 
@@ -77,7 +79,7 @@ node scripts/balance_report.js
 git diff --check
 ```
 
-`balance_report.js` is the main guardrail for economy and item-pool drift. It mirrors primary damage math, mini rarity tuning, defense rarity tuning, and reports focused single-shot DPS against multi-shot/burst output. `validate_levels.js`, `validate_generated_assets.py`, and `validate_weapon_frames.js` protect data and asset contracts. UI work should also receive a real browser smoke test.
+`balance_report.js` is the main guardrail for economy and item-pool drift. It mirrors primary damage math, mini rarity tuning, defense rarity tuning, per-instance affix magnitude rolls, and reports focused single-shot DPS against multi-shot/burst output plus the magnitude-roll DPS spread across same base + rarity items. `validate_levels.js`, `validate_generated_assets.py`, and `validate_weapon_frames.js` protect data and asset contracts. UI work should also receive a real browser smoke test.
 
 ## Current Divergences From Desired Next State
 

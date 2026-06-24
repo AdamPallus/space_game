@@ -1,6 +1,6 @@
 # Roadmap
 
-Last audited: 2026-06-19
+Last audited: 2026-06-23
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
@@ -27,6 +27,16 @@ The `ENEMY_PROJECTILE_VARIETY_SPEC.md` pass has been implemented for player test
 - The Armory stats popup and compendium descriptions read the new authored projectile damage ranges.
 - `scripts/validate_levels.js` validates projectile profile references, attack-pattern structure, shot overrides, numeric fields, and threat classes.
 
+## Loot Depth Implemented
+
+The `LOOT_DEPTH_SPEC.md` Phase 6 pass has been implemented for player testing:
+
+- Per-instance affix magnitude rolls (`roll` ranges in `item_pool.json`) plus effect-trace potency tiers give same-base, same-rarity items a real strength spread.
+- Items store a `rollQuality` that scales value (`0.85 + 0.45 * rollQuality`) and drives a rarity-tinted roll-quality bar in tooltips/inspector; affix lines show the real rolled magnitude.
+- Pre-Founding items roll three affixes where the pool allows.
+- Aux abilities roll a per-item potency (cloak/EMP/bulwark knobs) plus offense and defense passives; the `auxPower` investment is retired and old saves migrate (capabilities ladder remapped to dual-fire-only, spent aux credits refunded).
+- `balance_report.js` gained a magnitude-roll DPS-spread section (~17–21% across same base + rarity, was ~0).
+
 ## Next Player-Testing Priorities
 
 These should be tuned with deployed player feedback before adding another broad system:
@@ -39,6 +49,9 @@ These should be tuned with deployed player feedback before adding another broad 
 - Cache readability at combat scale.
 - Armor-class readability across profiled campaign missions, especially chip-fire erasure versus heavy and boss-hazard threat.
 - Armory hardpoint layout and browser density on phone-sized viewports.
+- Loot roll ranges and the aux potency envelope are first-pass; tune against `balance_report.js` and playtest (god-roll uptime, whether high rolls over-raise the ceiling, whether the value curve keeps credits scarce).
+- Cloak still only hides even at a god roll. Phase 6b candidate: add an offense payoff (e.g. damage on the cloak-breaking shot, or a brief post-cloak fire-rate spike) if duration/cooldown rolls alone feel flat. No combat code yet.
+- Harder campaign content via authored high-damage projectile profiles, only after god rolls measurably raise the player ceiling (kept out of the loot pass deliberately).
 
 ## Deferred
 

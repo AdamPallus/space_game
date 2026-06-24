@@ -100,28 +100,78 @@ Verify the affix pool per slot can supply 3 non-conflicting affixes
 (respect `exclusiveGroup`); if a slot can't, fall back to its max available
 and do not error.
 
-## 3. Aux abilities: rolled strength, delete the investment
+## 3. Aux abilities: per-ability rolled strength, delete the investment
 
 Currently cloak/EMP/bulwark strength comes only from `getAuxStrengthMult()`
 → the `auxPower` engineering investment (main.js ~5109, ~5217). A scrap cloak
-and a prototype cloak are identical. This violates the design (power from
-drops, not upgrades).
+and a prototype cloak are identical, and the abilities are weak at baseline
+(cloak especially: 2.5s hide / 10s cooldown / no utility). This violates the
+design (power from drops, not upgrades) AND undersells the abilities.
 
-1. **Add a rolled `auxPotency` to aux item instances**, scaled by rarity
-   (suggest base multipliers scrap 1.0 / certified 1.15 / prototype 1.35 /
-   pre-Founding 1.6) times a per-instance roll in [0.85, 1.15]. This
-   multiplier scales the ability's core numbers — `cloakDuration`,
-   `empDuration`, `empClearRadius`, `bulwarkDuration`, `bulwarkShieldBonus`,
-   and the cooldowns (potency lowers cooldown).
+A single uniform potency scalar is the wrong tool — it can't fix cloak,
+whose problem is its cooldown and lack of payoff, not a flat percentage.
+Instead each ability's **signature knob** rolls hard.
+
+### Potency envelope
+
+Per aux item instance compute a bonus fraction:
+
+```
+B = (rarityTier + roll) / 3        // rarityTier: scrap 0, cert 1, proto 2, relic 3
+                                   // roll: uniform[0,1], also feeds rollQuality
+```
+
+B ranges 0 (scrap, floor roll) → ~1.33 (pre-Founding, god roll). This is a
+deliberately wide envelope so aux loot has a real chase. Apply per ability:
+
+| Ability | Knob (rolled) | Formula | Scrap floor | Relic god roll |
+|---|---|---|---|---|
+| **Cloak** | duration ↑ | `2.5 * (1 + 0.7*B)` | 2.5s | ~4.8s |
+| | cooldown ↓ | `10 * (1 - 0.5*B)`, floor 4 | 10s | ~4.0s |
+| **Bulwark** | shield bonus ↑ | `200 * (1 + 1.2*B)` | 200 | ~520 |
+| | duration ↑ | `1.2 * (1 + 0.6*B)` | 1.2s | ~2.2s |
+| **EMP** | duration ↑ | `1.6 * (1 + 0.6*B)` | 1.6s | ~2.9s |
+| | clear radius ↑ | `190 * (1 + 0.5*B)` | 190 | ~316 |
+| | cooldown ↓ | `8 * (1 - 0.4*B)`, floor 3.5 | 8s | ~3.8s |
+
+So a god-roll Cloak is near-permanent-uptime (4.8s hide / 4s cooldown), a
+god-roll Bulwark is +520 shield, and EMP's already-good knobs scale up. These
+are first-pass; tune against `balance_report.js` and playtest. Coefficients
+live in a config block, not scattered literals, so tuning is one edit.
+
+1. Store the rolled knob values on the aux item instance (reconstructable
+   from save, like §1).
 2. **Remove the `auxPower` investment** from Engineering Bay and
    `getAuxStrengthMult`/`getAuxPowerTier`. Migrate existing saves: refund
    spent credits OR silently drop the tier (pick one, document it). The hull
-   `auxPowerBonus` may stay as a hull identity perk but should be small and
-   read as a hull trait, not a purchasable power track.
-3. **Lean into aux secondary affixes** (already supported — flow_rate,
-   shield_regen, etc. list `aux` in slotTypes). With §1 they now roll
-   magnitudes, so an aux item is "an ability at rolled strength + a rolled
-   passive package." This is the intended aux build decision.
+   `auxPowerBonus` may stay as a small hull identity perk, not a power track.
+
+### Cloak still lacks a payoff (deferred — do NOT build in this phase)
+
+Even at a god roll, cloak only hides. Per Adam: first ship the duration/
+cooldown rolls and playtest; if cloak still feels flat, a follow-up adds an
+**offense payoff** (e.g. damage bonus on the shot that breaks cloak, or brief
+post-cloak fire-rate spike). Note as a Phase 6b candidate; leave a TODO, no
+combat code now.
+
+## 3b. Aux affix selection: real offense AND defense options
+
+Aux items are "an ability + a rolled passive package", so the passive pool
+must give a genuine both-sides choice. Today aux can roll: flow_rate,
+flow_velocity, impulse_budget (offense) + shield_max, shield_regen,
+shield_recovery, bulwark_capacitor (defense) — usable but offense-thin and
+no armor support. **Expand `slotTypes` to add `aux`** on:
+
+- `flow_size_plus` (offense — round out the flow set)
+- `armor_class_plus`, `armor_plate_plus` (defense — let aux support armor
+  builds, not only shield builds)
+
+Result: aux offense = flow_rate / flow_velocity / flow_size / impulse;
+aux defense = shield_max / shield_regen / shield_recovery / armor_class /
+armor_plate / bulwark_capacitor. With §1 magnitude rolls, these now vary in
+strength, so a Prototype Cloak with a high-rolled +impulse and +shield_regen
+is a real, distinct build piece. (Effect traces pierce/homing/explosive/
+vampiric stay primary-only — aux items don't fire the primary.)
 
 ## 4. Surfacing (extends ITEM_UX_SPEC.md tooltip)
 
@@ -170,8 +220,11 @@ bundle it into the loot pass.
 2. A max-roll item is clearly stronger AND worth more credits than a
    floor-roll of the same base+rarity.
 3. Pre-Founding items roll 3 affixes where the pool allows.
-4. A Prototype Cloak cloaks longer than a Scrap Cloak; the `auxPower`
-   investment is gone from the UI and code; existing saves migrate cleanly.
+4. A god-roll Cloak measurably approaches its target (~4.8s / ~4s cooldown)
+   and a Scrap Cloak sits at baseline; god-roll Bulwark grants ~520 shield.
+   The `auxPower` investment is gone from UI and code; saves migrate cleanly.
+   Aux items can roll both offense (flow/impulse) and defense (shield/armor)
+   passives; a Cloak with high-rolled offense passives is a distinct piece.
 5. Tooltip/inspector show real rolled magnitudes and a roll-quality bar;
    comparison deltas remain correct.
 6. Saved items reconstruct with identical rolled stats after reload

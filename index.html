@@ -64,6 +64,21 @@
                 <strong id="available-credits">0</strong>
               </div>
             </div>
+            <details class="audio-station">
+              <summary aria-label="Audio settings">🔊 Audio</summary>
+              <div class="audio-popover">
+                <label class="audio-row">
+                  <span>Music</span>
+                  <input type="range" id="music-volume" min="0" max="100" step="1" value="100" />
+                  <output id="music-volume-out">100%</output>
+                </label>
+                <label class="audio-row">
+                  <span>Sound FX</span>
+                  <input type="range" id="sfx-volume" min="0" max="100" step="1" value="100" />
+                  <output id="sfx-volume-out">100%</output>
+                </label>
+              </div>
+            </details>
             <details class="dev-station">
               <summary>DEV</summary>
               <div class="dev-popover">

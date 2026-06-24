@@ -63,6 +63,10 @@ const debugShowCompendium = document.getElementById("debug-show-compendium");
 const debugShowItems = document.getElementById("debug-show-items");
 const debugShowMath = document.getElementById("debug-show-math");
 const debugSkipOnboarding = document.getElementById("debug-skip-onboarding");
+const musicVolumeSlider = document.getElementById("music-volume");
+const sfxVolumeSlider = document.getElementById("sfx-volume");
+const musicVolumeOut = document.getElementById("music-volume-out");
+const sfxVolumeOut = document.getElementById("sfx-volume-out");
 const onboardingBanner = document.getElementById("onboarding-banner");
 const missionBriefingText = document.getElementById("mission-briefing-text");
 const hangarTabButtons = document.querySelectorAll(".tab-btn");
@@ -1624,6 +1628,7 @@ let activeMusicSrc = null;
 let activeMusic = null;
 const musicLibrary = new Map();
 const HANGAR_MUSIC = "assets/music/02_stillness_of_space.ogg";
+const MUSIC_BASE_VOLUME = 0.22; // per-track baseline; the player slider is a 0-1 multiplier on top
 let openUpgradeId = null;
 let enemyIdCounter = 1;
 let armorySelectedSlotId = "primary";
@@ -3722,13 +3727,31 @@ Object.values(sfx).forEach((audio) => {
   audio.volume = 0.4;
 });
 
+function getMusicVolume() {
+  const value = state?.audio?.musicVolume;
+  return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1;
+}
+
+function getSfxVolume() {
+  const value = state?.audio?.sfxVolume;
+  return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1;
+}
+
+function applyMusicVolume() {
+  if (activeMusic) activeMusic.volume = MUSIC_BASE_VOLUME * getMusicVolume();
+}
+
 function getMusicTrack(src) {
   if (!src) return null;
-  if (musicLibrary.has(src)) return musicLibrary.get(src);
+  if (musicLibrary.has(src)) {
+    const cached = musicLibrary.get(src);
+    cached.volume = MUSIC_BASE_VOLUME * getMusicVolume();
+    return cached;
+  }
   const audio = new Audio(src);
   audio.preload = "auto";
   audio.loop = true;
-  audio.volume = 0.22;
+  audio.volume = MUSIC_BASE_VOLUME * getMusicVolume();
   musicLibrary.set(src, audio);
   return audio;
 }
@@ -4796,6 +4819,32 @@ if (debugShowMath) {
   });
 }
 
+function setAudioVolume(kind, sliderValue) {
+  const fraction = Math.max(0, Math.min(1, (Number(sliderValue) || 0) / 100));
+  state.audio = state.audio || { musicVolume: 1, sfxVolume: 1 };
+  state.audio[kind] = fraction;
+  if (kind === "musicVolume") applyMusicVolume();
+  syncAudioControls();
+  saveState();
+}
+
+function syncAudioControls() {
+  const music = Math.round(getMusicVolume() * 100);
+  const sfx = Math.round(getSfxVolume() * 100);
+  if (musicVolumeSlider && document.activeElement !== musicVolumeSlider) musicVolumeSlider.value = String(music);
+  if (sfxVolumeSlider && document.activeElement !== sfxVolumeSlider) sfxVolumeSlider.value = String(sfx);
+  if (musicVolumeOut) musicVolumeOut.textContent = `${music}%`;
+  if (sfxVolumeOut) sfxVolumeOut.textContent = `${sfx}%`;
+}
+
+if (musicVolumeSlider) {
+  musicVolumeSlider.addEventListener("input", () => setAudioVolume("musicVolume", musicVolumeSlider.value));
+}
+
+if (sfxVolumeSlider) {
+  sfxVolumeSlider.addEventListener("input", () => setAudioVolume("sfxVolume", sfxVolumeSlider.value));
+}
+
 if (debugSkipOnboarding) {
   debugSkipOnboarding.addEventListener("change", () => {
     state.debugSkipOnboarding = debugSkipOnboarding.checked;
@@ -4897,6 +4946,7 @@ function loadState() {
         capabilities: 0,
       },
       rmbWeapon: "cloak",
+      audio: { musicVolume: 1, sfxVolume: 1 },
       missionCarouselIndex: {},
       ledgerMarket: createDefaultLedgerMarketState(),
     };
@@ -4933,6 +4983,10 @@ function loadState() {
     parsed.debugShowFullCompendium = parsed.debugShowFullCompendium ?? false;
     parsed.debugShowAllItems = parsed.debugShowAllItems ?? false;
     parsed.devShowMath = parsed.devShowMath ?? false;
+    parsed.audio = {
+      musicVolume: Number.isFinite(parsed.audio?.musicVolume) ? Math.max(0, Math.min(1, parsed.audio.musicVolume)) : 1,
+      sfxVolume: Number.isFinite(parsed.audio?.sfxVolume) ? Math.max(0, Math.min(1, parsed.audio.sfxVolume)) : 1,
+    };
     parsed.encounteredEnemies = parsed.encounteredEnemies || {};
     parsed.killsByEnemyKey = parsed.killsByEnemyKey || {};
     parsed.relicCollection = normalizeRelicCollection(parsed.relicCollection);
@@ -5125,6 +5179,7 @@ function loadState() {
         capabilities: 0,
       },
       rmbWeapon: "cloak",
+      audio: { musicVolume: 1, sfxVolume: 1 },
       missionCarouselIndex: {},
       ledgerMarket: createDefaultLedgerMarketState(),
     };
@@ -5872,6 +5927,7 @@ function updateHangar() {
   if (debugSkipOnboarding) {
     debugSkipOnboarding.checked = !!state.debugSkipOnboarding;
   }
+  syncAudioControls();
   if (hangarStatus) {
     hangarStatus.hidden = !hangarStatusMessage;
     hangarStatus.textContent = hangarStatusMessage || "";
@@ -7130,6 +7186,18 @@ function ensureComponentSelection(key, options) {
 }
 
 function ensureAuxSelection() {
+  // A linked support ITEM is authoritative: its rolled ability drives the alternate action,
+  // independent of the legacy credit-gated unlock track. Without this, equipping a looted
+  // bulwark/EMP that the player never unlocked the old way would get silently reset to cloak.
+  const supportItem = findInventoryItem(state.armory?.equippedSupportItemId);
+  if (supportItem && isSupportSlotType(supportItem.slotType)) {
+    const ability = supportItem.ability || supportItem.sourceId || "cloak";
+    if (state.rmbWeapon !== ability) {
+      state.rmbWeapon = ability;
+      saveState();
+    }
+    return;
+  }
   const credits = state.lifetimeCredits;
   const unlockedAux = state.unlocked?.aux || {};
   const current = rmbWeapons.find((weapon) => weapon.id === state.rmbWeapon);
@@ -12007,10 +12075,12 @@ function updateConsumableHud() {
 
 function playSfx(name, volume = 0.4) {
   if (!audioEnabled) return;
+  const scaled = volume * getSfxVolume();
+  if (scaled <= 0) return;
   const base = sfx[name];
   if (!base) return;
   const instance = base.cloneNode();
-  instance.volume = volume;
+  instance.volume = Math.max(0, Math.min(1, scaled));
   instance.play().catch(() => {});
 }
 

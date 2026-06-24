@@ -105,6 +105,7 @@ Recent history shows these major pieces have already landed:
 - Generated asset passes: UI chrome, item icon pack, combat fleet art, and mission backgrounds.
 - Next Overhaul playable pass: hangar-first onboarding, explicit reward settlement, scripted caches, EMP projectile clear, browsing controls, Ledger license investment tiers, mini weapons with rarity scaling/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, aux engineering, explicit dual-fire mode selection, and independent dual-fire weapon timing.
 - Enemy projectile variety pass: root level `projectileProfiles`, weighted `attackPatterns`, per-shot overrides, warm/cool space-weapon projectile art, profiled three-variant campaign missions, compendium/stat summaries, and validator coverage for profile references, threat classes, rotating-sprite proportions, and broadside boss assets.
+- Loot depth pass (Phase 6): per-instance affix magnitude rolls (`roll` ranges in `item_pool.json`), effect-trace potency tiers, a stored `rollQuality` that scales item value and drives a tooltip roll-quality bar, pre-Founding 3-affix rolls, aux abilities with per-item rolled potency knobs (`auxPotency`/`auxRoll`) replacing the retired `auxPower` investment (old saves remap the capabilities ladder to dual-fire-only and refund spent aux credits), and a `balance_report.js` magnitude-roll DPS spread section.
 
 ## Documentation Map
 

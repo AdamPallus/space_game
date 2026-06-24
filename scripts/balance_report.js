@@ -196,8 +196,31 @@ function rollSampleItem(pool, id, entry, rarity, seed) {
   const slotType = normalizeSlotType(entry.slotType);
   const affixes = pickAffixes(pool, entry.slotType, build, rarityConfig.affixCount || 0, rng, entry);
   affixes.forEach((affix) => {
-    applyBuildPatch(build, affix.build || {});
-    applyBuildAdd(build, affix.buildAdd || {});
+    const patch = { ...(affix.build || {}) };
+    delete patch.effectUpgrades;
+    applyBuildPatch(build, patch);
+    // Phase 6: roll a per-instance magnitude multiplier on buildAdd affixes.
+    if (affix.buildAdd) {
+      let factor = 1;
+      if (Array.isArray(affix.roll) && affix.roll.length === 2 && rarity !== "scrap") {
+        const [min, max] = affix.roll;
+        factor = min + rng() * (max - min);
+      }
+      const scaled = {};
+      Object.entries(affix.buildAdd).forEach(([key, value]) => {
+        scaled[key] = Number.isFinite(value) ? value * factor : value;
+      });
+      applyBuildAdd(build, scaled);
+    }
+    // Phase 6: roll an effect potency tier (certified 1, prototype 1-2, pre-Founding 2-3).
+    const effect = affix.build && affix.build.effect;
+    if (effect && effect !== "none" && affix.build.effectUpgrades && Number.isFinite(affix.build.effectUpgrades[effect])) {
+      const range = rarity === "prototype" ? [1, 2] : rarity === "preFounding" ? [2, 3] : [1, 1];
+      const tier = range[0] + Math.floor(rng() * (range[1] - range[0] + 1));
+      applyBuildPatch(build, { effectUpgrades: { [effect]: tier } });
+    } else if (affix.build && affix.build.effectUpgrades) {
+      applyBuildPatch(build, { effectUpgrades: affix.build.effectUpgrades });
+    }
   });
   build.kineticImpulseBudget += rarityConfig.kineticImpulseBonus || 0;
   const unique = normalizeUniqueProperty(entry);
@@ -668,6 +691,31 @@ matrix.forEach((row) => {
     `${row.name.slice(0, nameWidth).padEnd(nameWidth)} ${enemyLabels
       .map((id) => formatTtk(row.ttk[id]).padStart(colWidth))
       .join(" ")}`
+  );
+});
+
+// Phase 6 acceptance #1: vertical variety. Roll the same base+rarity many times and report the
+// DPS spread that magnitude rolls now produce (it was ~0 before per-instance rolls existed).
+console.log("\nMagnitude-roll DPS spread (same base + rarity, 200 rolls)");
+[
+  ["slug_cannon", "prototype"],
+  ["needle_storm", "prototype"],
+  ["longbow_rail", "preFounding"],
+].forEach(([baseId, rarity]) => {
+  const entry = (pool.entries && pool.entries[baseId]) || (pool.relics && pool.relics[baseId]);
+  if (!entry) return;
+  const samples = [];
+  for (let i = 0; i < 200; i += 1) {
+    const sample = rollSampleItem(pool, baseId, entry, rarity, 500000 + i);
+    samples.push(summarizePrimaryBuild(sample.build).dps);
+  }
+  const min = Math.min(...samples);
+  const max = Math.max(...samples);
+  const mean = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+  const spread = mean > 0 ? ((max - min) / mean) * 100 : 0;
+  const label = (ECONOMY.rarities[rarity] || {}).label || rarity;
+  console.log(
+    `${label} ${entry.name}: DPS ${min.toFixed(1)}-${max.toFixed(1)} (mean ${mean.toFixed(1)}, spread ${spread.toFixed(0)}%)`
   );
 });
 

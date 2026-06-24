@@ -60,7 +60,8 @@
       "slotTypes": ["primary", "aux"],
       "buildAdd": {
         "flowRateLevel": 1
-      }
+      },
+      "roll": [0.6, 1.5]
     },
     "flow_velocity_plus": {
       "name": "Flow-velocity tune",
@@ -69,16 +70,18 @@
       "slotTypes": ["primary", "aux"],
       "buildAdd": {
         "flowVelocityLevel": 1
-      }
+      },
+      "roll": [0.6, 1.5]
     },
     "flow_size_plus": {
       "name": "Flow-size tune",
       "description": "Increases projectile envelope or linked emitter volume.",
       "tags": ["flow-size"],
-      "slotTypes": ["primary"],
+      "slotTypes": ["primary", "aux"],
       "buildAdd": {
         "flowSizeLevel": 1
-      }
+      },
+      "roll": [0.6, 1.5]
     },
     "impulse_budget_plus": {
       "name": "Impulse reserve",
@@ -87,7 +90,8 @@
       "slotTypes": ["primary", "aux"],
       "buildAdd": {
         "kineticImpulseBudget": 0.12
-      }
+      },
+      "roll": [0.5, 1.6]
     },
     "shield_max_plus": {
       "name": "Shield capacity tune",
@@ -97,7 +101,8 @@
       "defenseTypes": ["shield"],
       "buildAdd": {
         "shieldMaxLevel": 1
-      }
+      },
+      "roll": [0.6, 1.6]
     },
     "shield_regen_plus": {
       "name": "Shield-regen tune",
@@ -107,7 +112,8 @@
       "defenseTypes": ["shield"],
       "buildAdd": {
         "shieldRegenLevel": 1
-      }
+      },
+      "roll": [0.6, 1.6]
     },
     "shield_recovery_tune": {
       "name": "Shield recovery tune",
@@ -117,27 +123,30 @@
       "defenseTypes": ["shield"],
       "buildAdd": {
         "shieldCooldownLevel": -1
-      }
+      },
+      "roll": [0.5, 1.5]
     },
     "armor_plate_plus": {
       "name": "Armor mass tune",
       "description": "Adds recoverable armor volume to plating modules.",
       "tags": ["armor", "plating"],
-      "slotTypes": ["defense"],
+      "slotTypes": ["defense", "aux"],
       "defenseTypes": ["armor"],
       "buildAdd": {
         "armorAmountLevel": 1
-      }
+      },
+      "roll": [0.6, 1.6]
     },
     "armor_class_plus": {
       "name": "Armor class tune",
       "description": "Improves per-hit armor mitigation.",
       "tags": ["armor", "mitigation"],
-      "slotTypes": ["defense"],
+      "slotTypes": ["defense", "aux"],
       "defenseTypes": ["armor"],
       "buildAdd": {
         "armorClassLevel": 1
-      }
+      },
+      "roll": [0.5, 1.4]
     },
     "armor_drag_tune": {
       "name": "Armor drag tune",
@@ -147,7 +156,8 @@
       "defenseTypes": ["armor"],
       "buildAdd": {
         "armorDragLevel": -1
-      }
+      },
+      "roll": [0.5, 1.5]
     },
     "bulwark_capacitor": {
       "name": "Bulwark capacitor",
@@ -158,7 +168,8 @@
         "shieldMaxLevel": 1,
         "shieldRegenLevel": 1,
         "shieldCooldownLevel": -1
-      }
+      },
+      "roll": [0.7, 1.4]
     }
   },
   "entries": {

@@ -362,7 +362,7 @@ const ECONOMY = {
       shortLabel: "RELIC",
       color: "#f0b429",
       glow: "rgba(240, 180, 41, 0.9)",
-      affixCount: 2,
+      affixCount: 3,
       valueRange: [1500, 3000],
       kineticImpulseBonus: 0.28,
     },
@@ -521,13 +521,6 @@ const upgrades = [
     name: "Ability Duration",
     desc: "+12% ability duration per level.",
     baseCost: 200,
-  },
-  {
-    id: "auxPower",
-    name: "Aux Port Tuning",
-    desc: "+10% aux strength/radius/duration and -5% cooldown per tier, max 3.",
-    baseCost: 420,
-    maxLevel: 3,
   },
   {
     id: "dualFire",
@@ -742,11 +735,8 @@ const investments = {
   capabilities: {
     name: "Ship Capabilities",
     tiers: [
-      { cost: 420, benefit: "Aux Port Tuning tier 1", upgradeId: "auxPower", upgradeLevel: 1 },
       { cost: 900, benefit: "Dual-Fire Coupler tier 1", upgradeId: "dualFire", upgradeLevel: 1 },
-      { cost: 1300, benefit: "Aux Port Tuning tier 2", upgradeId: "auxPower", upgradeLevel: 2 },
       { cost: 1800, benefit: "Dual-Fire Coupler tier 2", upgradeId: "dualFire", upgradeLevel: 2 },
-      { cost: 2600, benefit: "Aux Port Tuning tier 3", upgradeId: "auxPower", upgradeLevel: 3 },
       { cost: 3400, benefit: "Dual-Fire Coupler tier 3", upgradeId: "dualFire", upgradeLevel: 3 },
       { cost: 4600, benefit: "Dual-Fire Coupler tier 4", upgradeId: "dualFire", upgradeLevel: 4 },
     ],
@@ -854,6 +844,27 @@ function applyInvestmentTierReward(targetState, tierConfig) {
     const current = Math.max(0, Math.floor(targetState.upgrades[tierConfig.upgradeId] || 0));
     targetState.upgrades[tierConfig.upgradeId] = Math.max(current, tierConfig.upgradeLevel);
   }
+}
+
+// Phase 6: the auxPower investment is retired (aux strength now rolls on the item). Old saves used
+// an interleaved capabilities ladder [aux1, dual1, aux2, dual2, aux3, dual3, dual4] tracked as a
+// single purchased count. Remap that count to the new dual-fire-only ladder so dual-fire progress
+// is preserved, and refund the credits that were spent on the dropped aux tiers.
+function migrateRetiredAuxPower(targetState) {
+  if (!targetState || targetState.auxPowerRetired) return;
+  const oldCount = Math.max(0, Math.floor(targetState.investments?.capabilities || 0));
+  const dualFireByOldCount = [0, 0, 1, 1, 2, 2, 3, 4];
+  const auxRefundByOldCount = [0, 420, 420, 1720, 1720, 4320, 4320, 4320];
+  const idx = Math.min(oldCount, dualFireByOldCount.length - 1);
+  if (targetState.investments) {
+    targetState.investments.capabilities = dualFireByOldCount[idx];
+  }
+  const refund = auxRefundByOldCount[idx];
+  if (refund > 0) {
+    targetState.credits = Math.max(0, Math.round((targetState.credits || 0) + refund));
+  }
+  if (targetState.upgrades) delete targetState.upgrades.auxPower;
+  targetState.auxPowerRetired = true;
 }
 
 function applyPurchasedInvestmentRewards(targetState = state) {
@@ -2260,6 +2271,121 @@ function normalizeUniqueProperty(entry) {
   };
 }
 
+// Phase 6 loot depth: per-instance magnitude rolls.
+// rarityTier mirrors ECONOMY.rarityOrder (scrap 0, certified 1, prototype 2, preFounding 3).
+function getRarityTier(rarity) {
+  const index = ECONOMY.rarityOrder.indexOf(rarity);
+  return index >= 0 ? index : 0;
+}
+
+// Effect-affix potency tier range by rarity (pierce count / homing / explosive / vampiric scale
+// off effectUpgrades in combat). certified always tier 1; prototype 1-2; pre-Founding 2-3.
+function getEffectTierRange(rarity) {
+  if (rarity === "prototype") return [1, 2];
+  if (rarity === "preFounding") return [2, 3];
+  return [1, 1];
+}
+
+// Aux ability signature-knob coefficients. Coefficients live here, not scattered in combat math,
+// so tuning is a single edit. value = base * (1 + scale*B); cooldown uses (1 - scale*B), floored.
+const AUX_POTENCY_CONFIG = {
+  cloak: {
+    duration: { base: 2.5, scale: 0.7 },
+    cooldown: { base: 10, scale: 0.5, floor: 4, reduce: true },
+  },
+  bulwark: {
+    shieldBonus: { base: 200, scale: 1.2 },
+    duration: { base: 1.2, scale: 0.6 },
+  },
+  emp: {
+    duration: { base: 1.6, scale: 0.6 },
+    clearRadius: { base: 190, scale: 0.5 },
+    cooldown: { base: 8, scale: 0.4, floor: 3.5, reduce: true },
+  },
+};
+
+// Bonus envelope B = (rarityTier + roll) / 3, optionally lifted by a small hull identity perk.
+function computeAuxBonusFraction(rarity, roll, targetState = null) {
+  const tier = getRarityTier(rarity);
+  let bonus = (tier + Math.max(0, Math.min(1, roll))) / 3;
+  if (targetState) {
+    const hullAux = Math.max(0, Math.floor(getHullBonuses(targetState).auxPowerBonus || 0));
+    bonus += hullAux * 0.08; // hull aux perk is a small identity lift, not a power track
+  }
+  return bonus;
+}
+
+function computeAuxKnob(knob, bonus) {
+  if (!knob) return 0;
+  if (knob.reduce) {
+    const value = knob.base * (1 - knob.scale * bonus);
+    return Math.max(knob.floor ?? 0, value);
+  }
+  return knob.base * (1 + knob.scale * bonus);
+}
+
+// Pure knob snapshot for an ability at a given bonus fraction.
+function buildAuxPotency(ability, bonus) {
+  const config = AUX_POTENCY_CONFIG[ability];
+  if (!config) return null;
+  const knobs = {};
+  Object.entries(config).forEach(([key, knob]) => {
+    knobs[key] = computeAuxKnob(knob, bonus);
+  });
+  return knobs;
+}
+
+// Resolve the live aux knob values for an ability, applying the equipped item's stored roll plus
+// any hull identity perk. Falls back to a floor (scrap, roll 0) when no rolled item is present.
+function getAuxPotencyForState(ability, targetState = state) {
+  if (!AUX_POTENCY_CONFIG[ability]) return null;
+  const supportItem = findInventoryItem(targetState.armory?.equippedSupportItemId, targetState);
+  const rarity = supportItem?.rarity || "scrap";
+  const roll = Number.isFinite(supportItem?.auxRoll) ? supportItem.auxRoll : 0;
+  const bonus = computeAuxBonusFraction(rarity, roll, targetState);
+  return buildAuxPotency(ability, bonus);
+}
+
+// Roll a single affix instance: magnitude factor for buildAdd affixes, tier for effect affixes.
+// Returns the scaled buildAdd/effectUpgrades plus a normalized [0,1] roll position for quality.
+function rollAffixInstance(affix, rarity) {
+  const result = {
+    buildAdd: null,
+    effectUpgrades: null,
+    magnitude: null,
+    effectTier: null,
+    position: null,
+  };
+  if (affix.buildAdd && typeof affix.buildAdd === "object") {
+    if (Array.isArray(affix.roll) && affix.roll.length === 2 && rarity !== "scrap") {
+      const [min, max] = affix.roll;
+      const factor = min + Math.random() * (max - min);
+      result.magnitude = factor;
+      result.buildAdd = {};
+      Object.entries(affix.buildAdd).forEach(([key, value]) => {
+        result.buildAdd[key] = Number.isFinite(value) ? value * factor : value;
+      });
+      if (max > min) result.position = (factor - min) / (max - min);
+    } else {
+      result.buildAdd = { ...affix.buildAdd };
+    }
+  }
+  const effect = affix.build?.effect;
+  if (
+    effect &&
+    effect !== "none" &&
+    affix.build?.effectUpgrades &&
+    Number.isFinite(affix.build.effectUpgrades[effect])
+  ) {
+    const [tierMin, tierMax] = getEffectTierRange(rarity);
+    const tier = randomIntInclusive(tierMin, tierMax);
+    result.effectTier = tier;
+    result.effectUpgrades = { [effect]: tier };
+    if (tierMax > tierMin) result.position = (tier - tierMin) / (tierMax - tierMin);
+  }
+  return result;
+}
+
 function createRolledItem(baseId, baseEntry, rarity) {
   const instanceId = generateItemInstanceId();
   const rarityConfig = getRarityConfig(rarity);
@@ -2287,9 +2413,21 @@ function createRolledItem(baseId, baseEntry, rarity) {
     baseEntry,
   });
   const affixes = [...fixedAffixes, ...rolledAffixes];
+  const rollPositions = [];
+  const rolledByAffix = new Map();
   affixes.forEach((affix) => {
-    applyBuildPatch(build, affix.build || {});
-    applyBuildAdd(build, affix.buildAdd || {});
+    const rolled = rollAffixInstance(affix, rarity);
+    const buildPatch = { ...(affix.build || {}) };
+    delete buildPatch.effectUpgrades;
+    applyBuildPatch(build, buildPatch);
+    if (rolled.effectUpgrades) {
+      applyBuildPatch(build, { effectUpgrades: rolled.effectUpgrades });
+    } else if (affix.build?.effectUpgrades) {
+      applyBuildPatch(build, { effectUpgrades: affix.build.effectUpgrades });
+    }
+    if (rolled.buildAdd) applyBuildAdd(build, rolled.buildAdd);
+    if (Number.isFinite(rolled.position)) rollPositions.push(rolled.position);
+    rolledByAffix.set(affix.id, rolled);
   });
   if (Number.isFinite(rarityConfig.kineticImpulseBonus) && rarityConfig.kineticImpulseBonus > 0) {
     build.kineticImpulseBudget =
@@ -2302,6 +2440,21 @@ function createRolledItem(baseId, baseEntry, rarity) {
     applyBuildPatch(build, uniqueProperty.build || {});
     applyBuildAdd(build, uniqueProperty.buildAdd || {});
   }
+
+  // Aux abilities roll a per-instance potency that also feeds rollQuality.
+  let auxRoll = null;
+  let auxPotency = null;
+  const auxAbility = slotType === "aux" ? baseEntry.ability || null : null;
+  if (auxAbility && AUX_POTENCY_CONFIG[auxAbility]) {
+    auxRoll = rarity === "scrap" ? 0 : Math.random();
+    auxPotency = buildAuxPotency(auxAbility, computeAuxBonusFraction(rarity, auxRoll));
+    rollPositions.push(auxRoll);
+  }
+
+  const rollQuality = rollPositions.length
+    ? roundTunedStat(rollPositions.reduce((sum, pos) => sum + pos, 0) / rollPositions.length, 3)
+    : null;
+
   const tunedDefenseBuild =
     slotType === "defense" ? tuneDefenseBuildForRarity(build, baseEntry.defenseType, rarity) : null;
   if (tunedDefenseBuild) {
@@ -2314,7 +2467,11 @@ function createRolledItem(baseId, baseEntry, rarity) {
   ].filter(Boolean);
   const rarityLabel = rarityConfig.label;
   const name = `${rarityLabel} ${baseEntry.name}${affixNames.length ? ` — ${affixNames.join(", ")}` : ""}`;
-  const value = randomIntInclusive(rarityConfig.valueRange[0], rarityConfig.valueRange[1]);
+  const baseValue = randomIntInclusive(rarityConfig.valueRange[0], rarityConfig.valueRange[1]);
+  // God rolls cost more to buy and fetch more on sale, feeding the pure-hunt money sink.
+  const value = Number.isFinite(rollQuality)
+    ? Math.round(baseValue * (0.85 + 0.45 * rollQuality))
+    : baseValue;
   const tags = Array.from(
     new Set([
       ...(Array.isArray(baseEntry.tags) ? baseEntry.tags : []),
@@ -2368,11 +2525,19 @@ function createRolledItem(baseId, baseEntry, rarity) {
           tags: uniqueProperty.tags,
         }
       : null,
-    affixes: affixes.map((affix) => ({
-      id: affix.id,
-      name: affix.name,
-      tags: Array.isArray(affix.tags) ? affix.tags : [],
-    })),
+    rollQuality,
+    ...(auxAbility ? { auxRoll, auxPotency } : {}),
+    affixes: affixes.map((affix) => {
+      const rolled = rolledByAffix.get(affix.id) || {};
+      return {
+        id: affix.id,
+        name: affix.name,
+        tags: Array.isArray(affix.tags) ? affix.tags : [],
+        ...(rolled.buildAdd ? { rolledBuildAdd: rolled.buildAdd } : {}),
+        ...(Number.isFinite(rolled.magnitude) ? { magnitude: roundTunedStat(rolled.magnitude, 3) } : {}),
+        ...(Number.isFinite(rolled.effectTier) ? { effectTier: rolled.effectTier } : {}),
+      };
+    }),
   };
   if (miniWeapon) {
     addMiniEffectMetadata(item, miniWeapon.effect);
@@ -4722,7 +4887,6 @@ function loadState() {
         auxDamage: 0,
         auxCooldown: 0,
         cloakDuration: 0,
-        auxPower: 0,
         dualFire: 0,
       },
       investments: {
@@ -4749,7 +4913,6 @@ function loadState() {
       auxDamage: parsed.upgrades?.auxDamage ?? 0,
       auxCooldown: parsed.upgrades?.auxCooldown ?? 0,
       cloakDuration: parsed.upgrades?.cloakDuration ?? 0,
-      auxPower: parsed.upgrades?.auxPower ?? 0,
       dualFire: parsed.upgrades?.dualFire ?? 0,
     };
     parsed.investments = {
@@ -4759,6 +4922,7 @@ function loadState() {
       hulls: parsed.investments?.hulls ?? 0,
       capabilities: parsed.investments?.capabilities ?? 0,
     };
+    migrateRetiredAuxPower(parsed);
     if (!parsed.rmbWeapon || parsed.rmbWeapon === "none") {
       parsed.rmbWeapon = "cloak";
     }
@@ -4951,7 +5115,6 @@ function loadState() {
         auxDamage: 0,
         auxCooldown: 0,
         cloakDuration: 0,
-        auxPower: 0,
         dualFire: 0,
       },
       investments: {
@@ -5100,22 +5263,39 @@ function getUpgradeDefinition(upgradeId) {
   return upgrades.find((item) => item.id === upgradeId) || null;
 }
 
-function getAuxPowerTier(targetState = state) {
-  const base = Math.max(0, Math.min(3, Math.floor(targetState.upgrades?.auxPower || 0)));
-  const hullBonus = Math.max(0, Math.floor(getHullBonuses(targetState).auxPowerBonus || 0));
-  return Math.max(0, Math.min(3, base + hullBonus));
-}
-
-function getAuxStrengthMult(targetState = state) {
-  return 1 + getAuxPowerTier(targetState) * 0.1;
-}
-
-function getAuxCooldownMult(targetState = state) {
-  return Math.max(0.7, 1 - getAuxPowerTier(targetState) * 0.05);
+// Aux ability strength now comes from the equipped item's rolled potency (see AUX_POTENCY_CONFIG),
+// not the retired auxPower investment. The generic Ability Duration/Cooldown upgrades still apply
+// as a small modifier on top of the rolled base.
+function getAuxRuntimeStats(ability, targetState = state) {
+  const auxCooldownLevel = targetState.upgrades?.auxCooldown ?? 0;
+  const durationLevel = targetState.upgrades?.cloakDuration ?? 0;
+  const durationMult = 1 + durationLevel * 0.12;
+  const cooldownMult = Math.pow(0.95, auxCooldownLevel);
+  const potency = getAuxPotencyForState(ability, targetState);
+  if (ability === "cloak") {
+    return {
+      duration: (potency?.duration ?? 2.5) * durationMult,
+      cooldown: Math.max(4, (potency?.cooldown ?? 10) * cooldownMult),
+    };
+  }
+  if (ability === "emp") {
+    return {
+      duration: (potency?.duration ?? 1.6) * durationMult,
+      cooldown: Math.max(3.5, (potency?.cooldown ?? 8) * cooldownMult),
+      clearRadius: Math.round(potency?.clearRadius ?? EMP_CLEAR_BASE_RADIUS),
+    };
+  }
+  if (ability === "bulwark") {
+    return {
+      duration: (potency?.duration ?? 1.2) * durationMult,
+      shieldBonus: Math.round(potency?.shieldBonus ?? 200),
+    };
+  }
+  return { duration: 0, cooldown: 0 };
 }
 
 function getEmpClearRadiusForState(targetState = state) {
-  return Math.round(EMP_CLEAR_BASE_RADIUS * getAuxStrengthMult(targetState));
+  return getAuxRuntimeStats("emp", targetState).clearRadius;
 }
 
 function getDualFireTier(targetState = state) {
@@ -5212,15 +5392,16 @@ function applyUpgrades() {
 
   player.spreadLevel = 0;
   player.altCooldownTime = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel));
-  const auxStrength = getAuxStrengthMult(state);
-  const auxCooldownMult = getAuxCooldownMult(state);
-  player.cloakDuration = 2.5 * (1 + cloakDurationLevel * 0.12) * auxStrength;
-  player.empDuration = 1.6 * (1 + cloakDurationLevel * 0.12) * auxStrength;
-  player.empClearRadius = getEmpClearRadiusForState(state);
-  player.bulwarkDuration = 1.2 * (1 + cloakDurationLevel * 0.12) * auxStrength;
-  player.bulwarkShieldBonus = 200 * (1 + cloakDurationLevel * 0.1) * auxStrength;
-  player.cloakCooldownTime = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel) * auxCooldownMult);
-  player.empCooldownTime = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel) * auxCooldownMult);
+  const cloakStats = getAuxRuntimeStats("cloak", state);
+  const empStats = getAuxRuntimeStats("emp", state);
+  const bulwarkStats = getAuxRuntimeStats("bulwark", state);
+  player.cloakDuration = cloakStats.duration;
+  player.empDuration = empStats.duration;
+  player.empClearRadius = empStats.clearRadius;
+  player.bulwarkDuration = bulwarkStats.duration;
+  player.bulwarkShieldBonus = bulwarkStats.shieldBonus;
+  player.cloakCooldownTime = cloakStats.cooldown;
+  player.empCooldownTime = empStats.cooldown;
 }
 
 function initConsumablesForMission() {
@@ -7222,38 +7403,36 @@ function getSupportAbilityId(targetState = state) {
 
 function getSupportStatsForState(targetState = state) {
   const auxCooldownLevel = targetState.upgrades?.auxCooldown ?? 0;
-  const durationLevel = targetState.upgrades?.cloakDuration ?? 0;
-  const auxStrength = getAuxStrengthMult(targetState);
-  const auxCooldownMult = getAuxCooldownMult(targetState);
   const ability = getSupportAbilityId(targetState);
-  const genericCooldown = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel) * auxCooldownMult);
-  const cloakDuration = 2.5 * (1 + durationLevel * 0.12) * auxStrength;
-  const empDuration = 1.6 * (1 + durationLevel * 0.12) * auxStrength;
-  const empClearRadius = getEmpClearRadiusForState(targetState);
-  const bulwarkDuration = 1.2 * (1 + durationLevel * 0.12) * auxStrength;
-  const cloakCooldown = Math.max(6, 10 * Math.pow(0.95, auxCooldownLevel) * auxCooldownMult);
-  const empCooldown = Math.max(5, 8 * Math.pow(0.95, auxCooldownLevel) * auxCooldownMult);
+  const supportItem = findInventoryItem(targetState.armory?.equippedSupportItemId, targetState);
+  const rollLabel = Number.isFinite(supportItem?.rollQuality)
+    ? ` (roll ${Math.round(supportItem.rollQuality * 100)}%)`
+    : "";
+  const genericCooldown = Math.max(0.35, 0.9 * Math.pow(0.92, auxCooldownLevel));
+  const cloakStats = getAuxRuntimeStats("cloak", targetState);
+  const empStats = getAuxRuntimeStats("emp", targetState);
+  const bulwarkStats = getAuxRuntimeStats("bulwark", targetState);
   const abilityConfig = {
     cloak: {
       name: "Cloaking Device",
-      cooldown: cloakCooldown,
-      duration: cloakDuration,
-      effect: `Breaks enemy lock-on for ${formatNumber(cloakDuration, 1)}s.`,
-      math: `Cooldown = max(6, 10 * 0.95^${auxCooldownLevel}); duration = 2.5 * (1 + 0.12*${durationLevel}).`,
+      cooldown: cloakStats.cooldown,
+      duration: cloakStats.duration,
+      effect: `Breaks enemy lock-on for ${formatNumber(cloakStats.duration, 1)}s.`,
+      math: `Rolled cloak${rollLabel}: ${formatNumber(cloakStats.duration, 1)}s hide / ${formatNumber(cloakStats.cooldown, 1)}s cooldown.`,
     },
     emp: {
       name: "EMP Burst",
-      cooldown: empCooldown,
-      duration: empDuration,
-      effect: `Disables enemy fire for ${formatNumber(empDuration, 1)}s and clears hostile shots within ${empClearRadius}px.`,
-      math: `Radius = ${EMP_CLEAR_BASE_RADIUS} * aux strength ${formatNumber(auxStrength, 2)}; cooldown includes aux tier ${getAuxPowerTier(targetState)}.`,
+      cooldown: empStats.cooldown,
+      duration: empStats.duration,
+      effect: `Disables enemy fire for ${formatNumber(empStats.duration, 1)}s and clears hostile shots within ${empStats.clearRadius}px.`,
+      math: `Rolled EMP${rollLabel}: ${formatNumber(empStats.duration, 1)}s / ${empStats.clearRadius}px / ${formatNumber(empStats.cooldown, 1)}s cooldown.`,
     },
     bulwark: {
       name: "Bulwark Field",
       cooldown: genericCooldown,
-      duration: bulwarkDuration,
-      effect: `Adds a temporary ${Math.round(200 * (1 + durationLevel * 0.1) * auxStrength)} shield buffer.`,
-      math: `Aux tier ${getAuxPowerTier(targetState)} scales strength/duration and reduces cooldown.`,
+      duration: bulwarkStats.duration,
+      effect: `Adds a temporary ${bulwarkStats.shieldBonus} shield buffer.`,
+      math: `Rolled bulwark${rollLabel}: +${bulwarkStats.shieldBonus} shield for ${formatNumber(bulwarkStats.duration, 1)}s.`,
     },
   };
   return abilityConfig[ability] || {
@@ -7492,10 +7671,14 @@ function getBuildLanguageLines(patch = {}) {
   if (Number.isFinite(buildAdd.armorDragLevel) && buildAdd.armorDragLevel !== 0) {
     addLine(`${buildAdd.armorDragLevel > 0 ? "More" : "Less"} armor drag on weapon cycling`);
   }
-  if (buildPatch.effect === "pierce") addLine("Shots pierce 1 additional enemy");
-  if (buildPatch.effect === "homing") addLine("Shots seek nearby targets");
-  if (buildPatch.effect === "explosive") addLine("Shots burst on impact (area damage)");
-  if (buildPatch.effect === "vampiric") addLine("Damage dealt restores hull");
+  const tier = Number.isFinite(patch.effectTier) ? patch.effectTier : null;
+  const tierNote = tier && tier > 1 ? ` (tier ${tier})` : "";
+  if (buildPatch.effect === "pierce") {
+    addLine(tier ? `Shots pierce ${1 + tier} additional enemies` : "Shots pierce 1 additional enemy");
+  }
+  if (buildPatch.effect === "homing") addLine(`Shots seek nearby targets${tierNote}`);
+  if (buildPatch.effect === "explosive") addLine(`Shots burst on impact (area damage)${tierNote}`);
+  if (buildPatch.effect === "vampiric") addLine(`Damage dealt restores hull${tierNote}`);
   return lines;
 }
 
@@ -7522,8 +7705,14 @@ function getItemLanguageLines(item) {
   const affixLines = [];
   (item?.affixes || []).forEach((affix) => {
     const catalogAffix = getCatalogAffix(affix.id);
+    // Show the real rolled magnitude when present, falling back to nominal for legacy items.
+    const buildAdd = affix.rolledBuildAdd || catalogAffix?.buildAdd || {};
     const lines = catalogAffix
-      ? getBuildLanguageLines({ build: catalogAffix.build || {}, buildAdd: catalogAffix.buildAdd || {} })
+      ? getBuildLanguageLines({
+          build: catalogAffix.build || {},
+          buildAdd,
+          effectTier: affix.effectTier,
+        })
       : [];
     if (lines.length) {
       lines.forEach((text) => affixLines.push(text));
@@ -7681,7 +7870,7 @@ function getItemDisplayStats(item, slotId = null) {
       { label: "Shield", value: `${defense.shield} | ${formatNumber(defense.shieldRegen, 1)}/s`, math: "Hull bonuses and second-bay focus/strain are included." },
       { label: "Armor", value: `${defense.armor}`, math: `Armor capacity x${formatNumber(bonuses.armorCapacityMult ?? 1, 2)}.` },
       { label: "Mini Control", value: `${Math.round((bonuses.miniDamageMult ?? 1) * 100)}% dmg | ${Math.round((bonuses.miniCooldownMult ?? 1) * 100)}% cd`, math: "Lower mini cooldown percentages are better." },
-      { label: "Aux Power", value: `+${bonuses.auxPowerBonus || 0} tier`, math: "Hull aux tier stacks with Armory aux upgrades." },
+      { label: "Aux Potency", value: bonuses.auxPowerBonus ? `+${Math.round(bonuses.auxPowerBonus * 8)}% ability roll` : "—", math: "Hull identity perk lifts the equipped aux item's rolled potency." },
       { label: "Second Bay", value: `${Math.round((bonuses.secondBayStrainReduction || 0) * 100)}% strain mitigation`, math: "Baseline second-bay strain is 15% shield and regen." },
       { label: "Dual-Fire", value: `+${bonuses.dualFireTierBonus || 0} tier`, math: "Hull bonus stacks with Armory dual-fire upgrades." },
     ];
@@ -7706,6 +7895,7 @@ function getItemDisplayStats(item, slotId = null) {
     name: item?.name || "Unknown Item",
     typeLine,
     rarity: item?.rarity || null,
+    rollQuality: Number.isFinite(item?.rollQuality) ? item.rollQuality : null,
     headline,
     lines,
     innateLines,
@@ -7724,6 +7914,21 @@ function renderHeadlineDelta(headline) {
   const value = Math.abs(delta);
   const suffix = headline.label === "Cooldown" ? "s" : "";
   return `<span class="item-delta ${good ? "good" : "bad"}">${symbol} ${delta > 0 ? "+" : "-"}${formatNumber(value, headline.label === "Cooldown" ? 1 : 1)}${suffix}</span>`;
+}
+
+// The Diablo "is this a keeper?" read: a thin meter filled to rollQuality, tinted toward rarity.
+function renderRollQualityBar(rollQuality, rarity) {
+  if (!Number.isFinite(rollQuality)) return "";
+  const pct = Math.max(0, Math.min(100, Math.round(rollQuality * 100)));
+  const color = getRarityConfig(rarity)?.color || "#9aa3b2";
+  return `
+    <div class="item-roll-quality" title="Affix roll quality">
+      <span class="item-roll-quality-label">Roll ${pct}%</span>
+      <span class="item-roll-quality-track">
+        <span class="item-roll-quality-fill" style="width:${pct}%;background:${color};"></span>
+      </span>
+    </div>
+  `;
 }
 
 function renderItemDisplayBlock(display, { inline = false } = {}) {
@@ -7752,8 +7957,10 @@ function renderItemDisplayBlock(display, { inline = false } = {}) {
       return `<div class="item-affix-line">${prefix}${escapeHtml(text)}</div>`;
     })
     .join("");
+  const rollHtml = renderRollQualityBar(display.rollQuality, display.rarity);
   const detailHtml = `
     <div class="${inline ? "item-display-scroll" : "item-display-details"}">
+      ${rollHtml}
       <div class="item-stat-lines">${lineHtml}${innateHtml}${affixHtml}</div>
       ${display.lore ? `<div class="item-lore">${escapeHtml(display.lore)}</div>` : ""}
       ${display.footer ? `<div class="item-footer">${escapeHtml(display.footer)}</div>` : ""}
@@ -8084,11 +8291,6 @@ function renderShipStatsPanel() {
     },
   ];
   const capabilityRows = [
-    {
-      label: "Aux Tier",
-      value: `${state.upgrades?.auxPower || 0}/3`,
-      math: "Permanent aux tuning is purchased in Ledger Investments.",
-    },
     {
       label: "Dual-Fire Tier",
       value: `${state.upgrades?.dualFire || 0}/4`,

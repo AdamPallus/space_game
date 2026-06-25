@@ -90,20 +90,28 @@ One absolutely-positioned tooltip element, rendered from `getItemDisplayStats`,
 shown on hover/focus, clamped to the viewport near the hovered cell. Layout top
 to bottom:
 
+Headline stats are **intrinsic** (the item's own stat, identical regardless
+of the rest of the loadout); the delta is the **effective** install change.
+See [ITEM_CLARITY_SPEC.md](ITEM_CLARITY_SPEC.md) Part A. Stat order leads with
+weapon identity (DPS → Pattern → Damage/shot → Ammo → Special); the
+roll-quality bar moves to the BOTTOM (Part B).
+
 ```
 ┌─────────────────────────────────┐
 │ Prototype Slug Cannon — …       │ ← name, rarity color, bold
 │ Prototype Kinetic Cannon        │ ← rarity + type line, muted
 ├─────────────────────────────────┤
-│ 48.6 DPS            ▲ +12.3     │ ← headline stat + delta vs equipped
-│ Roll 84% ▰▰▰▰▰▰▰▱▱             │ ← roll-quality meter (Phase 6)
+│ 48.6 DPS          ▲ +12.3 inst. │ ← intrinsic headline + effective delta
+│ Wide — 5 projectiles            │ ← Pattern
 │ 32.4 Damage per Shot            │
-│ 1.5  Shots per Second           │
+│ Kinetic                         │ ← Ammo
+│ Shots pierce 2 additional …     │ ← Special (omit if none)
+│ 1.5  Shots per Second           │ ← secondary stats
 │ + 13% Attack Speed              │ ← affix lines, accent, real magnitudes
-│ + Shots pierce 2 additional …   │
 ├─────────────────────────────────┤
 │ "Recovered from a pre-Founding  │ ← relics only, italic, gold, mono
 │  wreck. Serial illegible."      │
+│ Roll 84% ▰▰▰▰▰▰▰▱▱             │ ← roll-quality meter, now at bottom
 │ Sell 259 cr        kinetic·aoe  │ ← footer: sell value + tags, muted
 └─────────────────────────────────┘
 ```

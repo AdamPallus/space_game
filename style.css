@@ -676,8 +676,9 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .armory-hull-picker {
   position: absolute;
   z-index: 7;
-  top: 8px;
-  left: 8px;
+  left: 50%;
+  top: 31%;
+  transform: translateX(-50%);
 }
 .armory-hull-trigger {
   width: 60px;
@@ -764,10 +765,11 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 }
 .armory-fire-mode {
   position: absolute;
-  right: 4%;
-  top: 44%;
+  left: 50%;
+  top: 6%;
   z-index: 4;
   width: 172px;
+  transform: translateX(-50%);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
@@ -841,12 +843,17 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   border-color: var(--rarity-color, var(--accent));
   box-shadow: 0 0 0 1px var(--rarity-color, var(--accent)), 0 0 14px var(--rarity-glow, rgba(63, 208, 255, 0.25));
 }
-.armory-slot-primary { left: 50%; top: 6%; transform: translateX(-50%); }
+.armory-slot-primary { left: 4%; top: 6%; transform: none; }
 .armory-slot-primary-secondary { right: 4%; top: 6%; }
 .armory-slot-mini { left: 50%; bottom: 6%; transform: translateX(-50%); }
 .armory-slot-defense-left { left: 4%; bottom: 8%; }
 .armory-slot-defense-right { right: 4%; bottom: 8%; }
 .armory-slot-support { left: 50%; bottom: 29%; transform: translateX(-50%); }
+.armory-slot-primary,
+.armory-slot-primary-secondary {
+  width: 168px;
+  min-height: 124px;
+}
 
 .armory-slot-label {
   font-size: 9px;
@@ -895,6 +902,35 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   text-transform: uppercase;
   color: var(--type-color, var(--accent));
   writing-mode: vertical-rl;
+}
+.armory-slot-stats {
+  display: grid;
+  gap: 2px;
+  margin-top: 3px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(125, 210, 255, 0.14);
+}
+.armory-slot-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  font-size: 9px;
+  line-height: 1.18;
+}
+.armory-slot-stat-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.armory-slot-stat-value {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .type-primary {
@@ -2208,6 +2244,11 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .armory-rack { min-height: 320px; }
   .item-display-scroll { max-height: 86px; }
   .armory-slot { width: 142px; min-height: 80px; }
+  .armory-slot-primary,
+  .armory-slot-primary-secondary {
+    width: 164px;
+    min-height: 122px;
+  }
   .armory-ship-base { width: min(190px, 44vw); }
   .browser-controls { grid-template-columns: 1fr 1fr; }
   .browser-search { grid-column: 1 / -1; }
@@ -2254,11 +2295,12 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
     left: 8px;
     right: auto;
     top: 8px;
+    transform: none;
   }
   .armory-fire-mode {
     left: 50%;
     right: auto;
-    top: 57%;
+    top: 7%;
     width: min(172px, 50vw);
     transform: translateX(-50%);
   }
@@ -2267,10 +2309,15 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
     min-height: 76px;
     padding: 7px;
   }
-  .armory-slot-primary { left: 4%; top: 13%; transform: none; }
-  .armory-slot-primary-secondary { right: 4%; top: 13%; }
-  .armory-slot-support { left: 4%; top: 38%; bottom: auto; transform: none; }
-  .armory-slot-mini { right: 4%; left: auto; top: 38%; bottom: auto; transform: none; }
+  .armory-slot-primary,
+  .armory-slot-primary-secondary {
+    width: min(154px, 42vw);
+    min-height: 118px;
+  }
+  .armory-slot-primary { left: 4%; top: 24%; transform: none; }
+  .armory-slot-primary-secondary { right: 4%; top: 24%; }
+  .armory-slot-support { left: 4%; top: 52%; bottom: auto; transform: none; }
+  .armory-slot-mini { right: 4%; left: auto; top: 52%; bottom: auto; transform: none; }
   .armory-slot-defense-left { left: 4%; bottom: 6%; }
   .armory-slot-defense-right { right: 4%; bottom: 6%; }
   .armory-slot-head {

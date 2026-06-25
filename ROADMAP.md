@@ -46,6 +46,7 @@ The `ITEM_CLARITY_SPEC.md` Phase 7 pass has been implemented for player testing:
 - Kinetic and plasma weapons show player-language damage breakdowns, plus installed modifier lines for aux flow, armor drag, hull tuning, single-primary focus, and second-bay strain.
 - Single-primary focus is now a primary-damage bonus; second-bay strain is now a per-weapon primary-damage penalty. `balance_report.js` prints and checks that tradeoff.
 - The Armory Show Stats popup is player-facing: Offense, Defense, Aux, and Loadout only, with no internal item ids or mission count.
+- The Armory main stage now aligns Primary A/B with Defense A/B, centers the fire-mode selector between the primary bays, and shows each equipped primary's Effective DPS, Damage per Shot, and Shots per Second.
 
 ## Next Player-Testing Priorities
 
@@ -58,7 +59,7 @@ These should be tuned with deployed player feedback before adding another broad 
 - Early hard-mission pickup placement and whether it encourages extraction decisions without making failure farming optimal.
 - Cache readability at combat scale.
 - Armor-class readability across profiled campaign missions, especially chip-fire erasure versus heavy and boss-hazard threat.
-- Armory hardpoint layout and browser density on phone-sized viewports.
+- Armory browser density on phone-sized viewports.
 - Loot roll ranges and the aux potency envelope are first-pass; tune against `balance_report.js` and playtest (god-roll uptime, whether high rolls over-raise the ceiling, whether the value curve keeps credits scarce).
 - Cloak still only hides even at a god roll. Phase 6b candidate: add an offense payoff (e.g. damage on the cloak-breaking shot, or a brief post-cloak Shots per Second spike) if duration/recharge rolls alone feel flat. No combat code yet.
 - Harder campaign content via authored high-damage projectile profiles, only after god rolls measurably raise the player ceiling (kept out of the loot pass deliberately).

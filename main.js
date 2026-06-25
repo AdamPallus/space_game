@@ -7661,6 +7661,38 @@ function getShipDisplayStatsForState(targetState = state) {
   };
 }
 
+function getPrimaryBayEffectiveStats(bayIndex, targetState = state) {
+  const item = bayIndex === 1
+    ? getSecondPrimaryArmoryItem(targetState)
+    : getPrimaryArmoryItem(targetState, 0);
+  if (!item) return null;
+  const build = composeShipBuildFromArmory(targetState, { primaryItem: item });
+  const offense = getOffenseStatsForBuild(build, targetState);
+  const dualDamageScale = canDualFireCurrentLoadout(targetState)
+    ? getDualFireDamageMult(targetState)
+    : 1;
+  return {
+    item,
+    build,
+    damageScale: dualDamageScale,
+    ...offense,
+    dps: offense.dps * dualDamageScale,
+    hitDamage: offense.hitDamage * dualDamageScale,
+    volleyDamage: offense.volleyDamage * dualDamageScale,
+    burnDps: offense.burnDps * dualDamageScale,
+  };
+}
+
+function getPrimaryBaySlotStats(bayIndex, targetState = state) {
+  const stats = getPrimaryBayEffectiveStats(bayIndex, targetState);
+  if (!stats) return [];
+  return [
+    { label: "Effective DPS", value: formatNumber(stats.dps, 1) },
+    { label: "Damage per Shot", value: formatNumber(stats.hitDamage, 1) },
+    { label: "Shots per Second", value: formatNumber(stats.attacksPerSecond, 2) },
+  ];
+}
+
 function createNeutralItemStatState(item = null) {
   const inventoryItem = item && !["none", "none_second_primary"].includes(item.id)
     ? cloneItem(item)
@@ -8784,6 +8816,7 @@ function getArmorySlotDefinitions() {
       meta: equippedWeapon?.build
         ? `${getSpreadLabel(equippedWeapon.build.spread)} | ${capitalize(equippedWeapon.build.ammo || "kinetic")}`
         : "No weapon linked",
+      stats: getPrimaryBaySlotStats(0),
       note: "Weapon modules change the projectile profile and hidden fire tuning.",
       icon: equippedWeapon ? getArmoryFrameVisual(equippedWeapon).icon : getDefaultItemIcon("certified"),
     },
@@ -8797,6 +8830,7 @@ function getArmorySlotDefinitions() {
       meta: secondWeapon?.build
         ? `${getSpreadLabel(secondWeapon.build.spread)} | Swap-ready`
         : `Focus ${formatSignedPercent(SINGLE_PRIMARY_FOCUS_RATE)} damage`,
+      stats: secondWeapon ? getPrimaryBaySlotStats(1) : [],
       note: secondWeapon
         ? "Swap to this weapon in flight. Carrying it applies second-bay primary damage strain."
         : "Keep this bay open for the single-primary damage focus.",
@@ -9222,6 +9256,16 @@ function renderShipUpgradesPanel() {
                 </span>
                 <span class="armory-slot-type">${escapeHtml(typeBadge)}</span>
               </span>
+              ${slot.stats?.length ? `
+                <span class="armory-slot-stats">
+                  ${slot.stats.map((line) => `
+                    <span class="armory-slot-stat">
+                      <span class="armory-slot-stat-label">${escapeHtml(line.label)}</span>
+                      <span class="armory-slot-stat-value">${escapeHtml(line.value)}</span>
+                    </span>
+                  `).join("")}
+                </span>
+              ` : ""}
             </button>
           `;
             })

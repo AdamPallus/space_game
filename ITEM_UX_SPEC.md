@@ -175,6 +175,24 @@ Shots per Second cost), **Aux** (ability, recharge, duration, effect), and
 No internal item ids, mission count, or raw build internals appear. Raw math
 only appears when "Show math" is on.
 
+## 7. Armory main-stage primary bay readout
+
+The spatial Armory hardpoints surface the most important equipped weapon
+numbers without opening Show Stats. Primary A and Primary B align with the
+left/right Defense A and Defense B bays. The fire-mode selector sits centered
+between the two primary bays. Each equipped primary bay shows:
+
+- Effective DPS
+- Damage per Shot
+- Shots per Second
+
+These are **effective installed** values, not intrinsic item-card values. They
+come from the same compose path as the ship stats panel, using the equipped
+hull, aux passives, defense drag, single-primary focus or second-bay strain,
+and current fire mode. When Dual Fire is active, each primary bay's Effective
+DPS and Damage per Shot include the Dual Fire per-weapon damage multiplier;
+Shots per Second remains each weapon's own cadence.
+
 ## Acceptance
 
 1. Hovering any item in armory / market / debrief shows the tooltip; content
@@ -190,4 +208,6 @@ only appears when "Show math" is on.
 6. Aux tooltips show the inspected item's rolled ability numbers.
 7. Mobile: tap-select fills the inspector; no floating tooltip; nothing scrolls
    the page.
-8. Zero console errors; validators pass.
+8. Armory primary bays update Effective DPS immediately when gear or fire mode
+   changes.
+9. Zero console errors; validators pass.

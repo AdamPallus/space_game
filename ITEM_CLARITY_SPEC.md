@@ -1,5 +1,8 @@
 # Item Clarity Spec (Phase 7): Intrinsic vs Effective Stats + Card/Stats Cleanup
 
+Status: implemented 2026-06-25. This file is retained as the implementation
+spec; the living behavior reference is [ITEM_UX_SPEC.md](ITEM_UX_SPEC.md).
+
 *Author: Claude (Opus 4.8), 2026-06-25. Read first: [STATE.md](STATE.md),
 [CURRENT_SYSTEMS.md](CURRENT_SYSTEMS.md), [ITEM_UX_SPEC.md](ITEM_UX_SPEC.md)
 (the living item-UI reference this updates), [LOOT_DEPTH_SPEC.md](LOOT_DEPTH_SPEC.md),

@@ -1,6 +1,6 @@
 # Item Communication Spec (Item UX)
 
-Last audited: 2026-06-23
+Last audited: 2026-06-25
 
 *Active reference for the item-communication layer. The model is Diablo 3's
 item tooltip — a single shared stat block that renders identically across
@@ -17,40 +17,43 @@ communication works today plus the rules any future item-UI change must keep.
 
 ## Rule zero: players see derived numbers, never formulas
 
-All formula strings (impulse budget breakdowns, cooldown multiplier chains,
+Raw formula strings (impulse budget internals, cycle-time multiplier chains,
 velocity exponents) live behind the **"Show math"** toggle in the DEV popover
-(`state.devShowMath`, default off). When off, no surface shows an equation.
-The math view stays intact — it is the tuning tool — just gated.
+(`state.devShowMath`, default off). When off, surfaces use player-language
+breakdowns rather than internal formulas. The math view stays intact — it is
+the tuning tool — just gated.
 
 ---
 
 ## 1. The canonical stat block — `getItemDisplayStats(item, slotId)`
 
-One function produces the player-facing stats for an item *as if installed in
-the given slot with the rest of the current build unchanged* (it reuses the
-preview/compose path via `createPreviewStateWithItem`). Tooltip, inspector,
-and ship-stats panel all render from its output. It returns an ordered set of
-sections plus a headline, affix lines, footer, and (Phase 6) `rollQuality`.
+One function produces the player-facing stat block. Headline stats and stat
+lines come from `getItemIntrinsicStats(item)`: the item's own build on a
+neutral ship, with no other defense slot, no second primary, no aux passives,
+no armor drag, no focus/strain, and no hull modifiers. The comparison delta is
+separate and remains effective: `shipTotal(with item installed) -
+shipTotal(now)` through the preview/compose path. Tooltip, inspector, market,
+debrief, and ship-stats surfaces all share this data.
 
 **Weapons (primary):**
 | Label | Derivation | Format |
 |---|---|---|
 | DPS *(headline)* | hitDamage × projectiles/trigger × triggers/sec (+ plasma burn dps, shown as a "+X burn/s" suffix) | `48.6` big |
+| Pattern | "Focused — 1 projectile" / "Wide — 5 projectiles" | text |
 | Damage per Shot | per-projectile impact damage | `32.4` |
+| Ammo | "Kinetic" / "Plasma" (burn note when relevant) | text |
+| Special | pierce / homing / explosive / vampiric plain-language text, omitted when none | text |
 | Shots per Second | triggers/sec | `1.5` |
 | Volley Output | per-shot × projectile count | text |
-| Pattern | "Focused — 1 projectile" / "Wide — 5 projectiles" | text |
-| Ammo | "Kinetic" / "Plasma" (burn note when relevant) | text |
 | Dual-Fire | "Dual-capable" / "Swap-only" | text |
 
 **Defense modules:** headline = Shield or Armor (by `defenseType`); lines
-cover regen + recovery delay (shield) or armor class + drag (armor), each with
-a plain-language effect line.
+cover regen + recovery delay (shield) or armor class + signed Shots per Second
+cost (armor), each with a plain-language effect line.
 
-**Aux modules:** headline = Cooldown (s, lower is better); lines = Duration and
-a one-sentence effect. The numbers are the **rolled** ability knobs for the
-inspected item (e.g. "Breaks enemy lock-on for 4.2s" / "Cloak 4.2s · CD 5.0s"),
-derived from the item's stored `auxPotency`/`auxRoll` — see §5.
+**Aux modules:** headline = Recharge (s, lower is better); lines = Duration
+and a one-sentence effect. The numbers are the **rolled** ability knobs for
+the inspected item, derived from its stored `auxPotency`/`auxRoll` — see §5.
 
 **Affix lines** (all slots): each rolled affix renders as its own `+`-prefixed
 line in accent color, in player language. Innate properties from the frame
@@ -66,7 +69,7 @@ never hardcoded in two places.
 
 | Internal | Player text |
 |---|---|
-| flowRateLevel (rolled) | `+X% Attack Speed` |
+| flowRateLevel (rolled) | `+X% Shots per Second` |
 | flowVelocityLevel (rolled) | `+X% Projectile Speed` |
 | flowSizeLevel (rolled) | `+X% Projectile Size` |
 | kineticImpulseBudget (rolled) | `+X% Impulse (heavier shots keep their speed)` |
@@ -79,8 +82,8 @@ never hardcoded in two places.
 
 Rolled items store `rollQuality` in [0,1] (mean normalized roll position across
 their rolled affixes, including the aux ability roll). The shared display block
-renders a thin **roll-quality meter** above the stat lines — filled to
-`rollQuality`, tinted toward the rarity color, labelled `Roll NN%`. This is the
+renders a thin **roll-quality meter** at the bottom of the detail stack — filled
+to `rollQuality`, tinted toward the rarity color, labelled `Roll NN%`. This is the
 "is this a keeper?" read. Items with no rolled axes (scrap, no affixes) show no
 bar. `rollQuality` also scales item `value` (§5).
 
@@ -107,7 +110,9 @@ roll-quality bar moves to the BOTTOM (Part B).
 │ Kinetic                         │ ← Ammo
 │ Shots pierce 2 additional …     │ ← Special (omit if none)
 │ 1.5  Shots per Second           │ ← secondary stats
-│ + 13% Attack Speed              │ ← affix lines, accent, real magnitudes
+│ Damage Breakdown                │ ← kinetic/plasma player-language breakdown
+│ Installed Modifiers             │ ← signed aux/armor/focus/strain lines
+│ + 13% Shots per Second          │ ← affix lines, accent, real magnitudes
 ├─────────────────────────────────┤
 │ "Recovered from a pre-Founding  │ ← relics only, italic, gold, mono
 │  wreck. Serial illegible."      │
@@ -119,9 +124,10 @@ roll-quality bar moves to the BOTTOM (Part B).
 ### Comparison deltas
 
 When the hovered item is NOT the installed item in the active slot, the
-headline stat (and only the headline) shows the difference vs the currently
-installed item: `▲ +12.3` in `--good` green, `▼ -4.1` in `--danger` red. For
-defense the delta is shield/armor; for aux, cooldown (lower = green).
+headline area shows the effective install delta, labelled as the install
+effect: `▲ +12.3 installed` in `--good` green or `▼ -18 ship shield` in
+`--danger` red. The headline number itself remains intrinsic. For defense the
+delta is ship shield/armor; for aux, recharge time (lower = green).
 
 **Correctness requirement:** installing the item changes the ship-stats panel
 by exactly the delta shown. Deltas read from rolled magnitudes, so an upgrade
@@ -160,11 +166,14 @@ information too.
 
 ## 6. Ship Stats panel
 
-Same data source, same language table. Sections: **Offense** (DPS, Damage per
-Shot, Shots per Second, Pattern, Ammo), **Defense** (Hull, Shield + regen,
-Armor + class), **Support** (ability, cooldown, duration — rolled). No formulas
-unless "Show math" is on, in which case the math strings append beneath each
-line (muted, mono).
+Same data source, same language table. Sections: **Offense** (effective DPS,
+Damage per Shot, Shots per Second, Pattern, Ammo, plus the same damage
+breakdown and Installed Modifiers used by item cards), **Defense** (Hull,
+Shield + regen/recovery, Armor + the actual armor class combat uses, armor
+Shots per Second cost), **Aux** (ability, recharge, duration, effect), and
+**Loadout** (single-primary focus or second-bay strain in plain language).
+No internal item ids, mission count, or raw build internals appear. Raw math
+only appears when "Show math" is on.
 
 ## Acceptance
 

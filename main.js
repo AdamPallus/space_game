@@ -289,6 +289,8 @@ const ECONOMY = {
   },
   plasma: {
     baseDamage: 12,
+    impulseSizeScale: 0.85,
+    impulseSpeedDrag: 0.45,
   },
   loadout: {
     singlePrimaryDamageBonus: 0.1,
@@ -427,6 +429,7 @@ const SINGLE_PRIMARY_FOCUS_RATE = ECONOMY.loadout.singlePrimaryDamageBonus;
 const SECOND_PRIMARY_STRAIN_RATE = ECONOMY.loadout.secondPrimaryDamagePenalty;
 const MINI_WEAPON_BALANCE_VERSION = 2;
 const DEFENSE_BALANCE_VERSION = 1;
+const ITEM_BUILD_REFRESH_VERSION = 1;
 const MINI_EFFECTS = ["homing", "pierce", "explosive", "vampiric"];
 const MINI_RARITY_TUNING = {
   scrap: {
@@ -2216,9 +2219,134 @@ function normalizeSavedDefenseItem(item) {
   return item;
 }
 
+function applyBuildMinimum(build, minimum = {}) {
+  if (!build || typeof build !== "object" || Array.isArray(build)) return false;
+  let changed = false;
+  const applyScalarMinimum = (key, expected) => {
+    if (!Number.isFinite(expected)) return;
+    const current = Number.isFinite(build[key]) ? build[key] : null;
+    if (current === null) {
+      build[key] = expected;
+      changed = true;
+      return;
+    }
+    if (expected > 0 && current < expected - 0.0005) {
+      build[key] = expected;
+      changed = true;
+    } else if (expected < 0 && current > expected + 0.0005) {
+      build[key] = expected;
+      changed = true;
+    }
+  };
+
+  Object.entries(minimum).forEach(([key, expected]) => {
+    if (key === "effectUpgrades") return;
+    if (Number.isFinite(expected)) {
+      applyScalarMinimum(key, expected);
+      return;
+    }
+    if (Array.isArray(expected) && !Array.isArray(build[key])) {
+      build[key] = expected.slice();
+      changed = true;
+      return;
+    }
+    if (
+      typeof expected === "string" &&
+      expected &&
+      expected !== "none" &&
+      (!build[key] || build[key] === "none")
+    ) {
+      build[key] = expected;
+      changed = true;
+    }
+  });
+
+  if (minimum.effectUpgrades && typeof minimum.effectUpgrades === "object") {
+    build.effectUpgrades = build.effectUpgrades || {};
+    Object.entries(minimum.effectUpgrades).forEach(([effect, expected]) => {
+      if (!Number.isFinite(expected) || expected <= 0) return;
+      const current = Number.isFinite(build.effectUpgrades[effect])
+        ? build.effectUpgrades[effect]
+        : 0;
+      if (current < expected) {
+        build.effectUpgrades[effect] = expected;
+        changed = true;
+      }
+    });
+  }
+
+  return changed;
+}
+
+function createCatalogMinimumBuildForSavedItem(item, baseEntry) {
+  if (!item || !baseEntry) return null;
+  const build = cloneShipBuild(baseEntry.build || {});
+  build.effectUpgrades = {
+    ...cloneShipBuild(createDefaultShipBuild().effectUpgrades),
+    ...cloneShipBuild(build.effectUpgrades || {}),
+  };
+  build.kineticImpulseBudget = Number.isFinite(build.kineticImpulseBudget)
+    ? build.kineticImpulseBudget
+    : 0;
+
+  (item.affixes || []).forEach((savedAffix) => {
+    const catalogAffix = getCatalogAffix(savedAffix?.id);
+    if (!catalogAffix) return;
+    const buildPatch = { ...(catalogAffix.build || {}) };
+    delete buildPatch.effectUpgrades;
+    applyBuildPatch(build, buildPatch);
+    const effect = catalogAffix.build?.effect;
+    if (
+      effect &&
+      effect !== "none" &&
+      Number.isFinite(savedAffix.effectTier)
+    ) {
+      applyBuildPatch(build, { effectUpgrades: { [effect]: savedAffix.effectTier } });
+    } else if (catalogAffix.build?.effectUpgrades) {
+      applyBuildPatch(build, { effectUpgrades: catalogAffix.build.effectUpgrades });
+    }
+    if (savedAffix.rolledBuildAdd) {
+      applyBuildAdd(build, savedAffix.rolledBuildAdd);
+    }
+  });
+
+  const rarityConfig = getRarityConfig(item.rarity || "scrap");
+  if (Number.isFinite(rarityConfig.kineticImpulseBonus) && rarityConfig.kineticImpulseBonus > 0) {
+    build.kineticImpulseBudget =
+      (Number.isFinite(build.kineticImpulseBudget) ? build.kineticImpulseBudget : 0) +
+      rarityConfig.kineticImpulseBonus;
+  }
+
+  const uniqueProperty = normalizeUniqueProperty(baseEntry);
+  if (uniqueProperty) {
+    applyBuildPatch(build, uniqueProperty.build || {});
+    applyBuildAdd(build, uniqueProperty.buildAdd || {});
+  }
+
+  return build;
+}
+
+function refreshSavedCatalogItemBuild(item) {
+  const slotType = normalizeArmorySlotType(item?.slotType);
+  if (!item || !itemPoolCatalog || !["primary", "aux"].includes(slotType)) return false;
+  const baseEntry = getBaseEntryForItem(item);
+  if (!baseEntry?.build) return false;
+  const minimumBuild = createCatalogMinimumBuildForSavedItem(item, baseEntry);
+  if (!minimumBuild) return false;
+  item.build = cloneShipBuild(item.build || {});
+  item.build.effectUpgrades = {
+    ...cloneShipBuild(createDefaultShipBuild().effectUpgrades),
+    ...cloneShipBuild(item.build.effectUpgrades || {}),
+  };
+  const changed = applyBuildMinimum(item.build, minimumBuild);
+  if (changed) item.itemBuildRefreshVersion = ITEM_BUILD_REFRESH_VERSION;
+  return changed;
+}
+
 function normalizeSavedArmoryItem(item) {
   normalizeSavedMiniItem(item);
   normalizeSavedDefenseItem(item);
+  refreshSavedCatalogItemBuild(item);
   return item;
 }
 
@@ -2717,6 +2845,19 @@ function findInventoryItem(itemId, targetState = state) {
   return getArmoryInventory(targetState).find((item) => item.id === itemId) || null;
 }
 
+function refreshSavedInventoryCatalogBuilds(targetState = state) {
+  if (!itemPoolCatalog || !targetState?.armory) return false;
+  let changed = false;
+  getArmoryInventory(targetState).forEach((item) => {
+    if (refreshSavedCatalogItemBuild(item)) changed = true;
+  });
+  if (changed) {
+    targetState.shipBuild = composeShipBuildFromArmory(targetState);
+    if (targetState === state) syncShipBuildToLegacy();
+  }
+  return changed;
+}
+
 function normalizeRelicCollection(collection) {
   if (!collection || typeof collection !== "object" || Array.isArray(collection)) return {};
   const normalized = {};
@@ -3115,6 +3256,7 @@ function rollLedgerStock({ force = false } = {}) {
 
 async function ensureLedgerMarketReady() {
   await ensureItemPoolLoaded();
+  const refreshedSavedItems = refreshSavedInventoryCatalogBuilds(state);
   refreshDemandBulletin();
   const ledger = getLedgerMarketState();
   const missionCount = state.missionCount || 0;
@@ -3124,6 +3266,8 @@ async function ensureLedgerMarketReady() {
     (!ledger.stock.length && ledger.stockMissionCount !== missionCount);
   if (needsStock) {
     rollLedgerStock({ force: true });
+    saveState();
+  } else if (refreshedSavedItems) {
     saveState();
   }
   return ledger;
@@ -5495,6 +5639,7 @@ async function startMission({ showIntro = false } = {}) {
   await ensureWeaponFrameCatalogLoaded();
   await ensureEnemyCatalogLoaded();
   await ensureItemPoolLoaded();
+  const refreshedSavedItems = refreshSavedInventoryCatalogBuilds(state);
   const directive = getCurrentOnboardingMission();
   if (directive && selectedLevelId !== directive.missionId) {
     selectedLevelId = directive.missionId;
@@ -5519,6 +5664,7 @@ async function startMission({ showIntro = false } = {}) {
     state.shipBuild = composeShipBuildFromArmory(state);
     syncShipBuildToLegacy();
   }
+  if (refreshedSavedItems) saveState();
   applyUpgrades();
   const consumablesState = initConsumablesForMission();
   state.cargo = [];
@@ -7920,7 +8066,7 @@ function getBuildLanguageLines(patch = {}) {
     addLine(`+${Math.round(Math.abs(buildAdd.flowSizeLevel) * 12)}% Projectile Size`);
   }
   if (Number.isFinite(buildAdd.kineticImpulseBudget) && buildAdd.kineticImpulseBudget !== 0) {
-    addLine(`+${Math.round(Math.abs(buildAdd.kineticImpulseBudget) * 100)}% Impulse (heavier shots keep their speed)`);
+    addLine(`+${Math.round(Math.abs(buildAdd.kineticImpulseBudget) * 100)}% Impulse (kinetic speed, plasma size)`);
   }
   if (Number.isFinite(buildAdd.shieldMaxLevel) && buildAdd.shieldMaxLevel !== 0) {
     addLine(`+${Math.round(40 * 0.18 * Math.abs(buildAdd.shieldMaxLevel))} Shield`);
@@ -8027,6 +8173,55 @@ function formatShotsPerSecondPenaltyFromCooldownPercent(cooldownPercent) {
   return `${formatSignedPercent(-penalty)} Shots per Second`;
 }
 
+function getBuildImpulseBudget(build = {}) {
+  return Number.isFinite(build?.kineticImpulseBudget) ? build.kineticImpulseBudget : 0;
+}
+
+function getSupportPassiveStatLines(item) {
+  const impulseBudget = getBuildImpulseBudget(item?.build);
+  if (Math.abs(impulseBudget) <= 0.001) return [];
+  return [
+    {
+      label: "Impulse",
+      value: formatSignedPercent(impulseBudget),
+      math: "Installed support impulse feeds kinetic speed damage and plasma projectile size.",
+    },
+  ];
+}
+
+function getActivePrimaryImpulseRows(stats, primaryItem) {
+  const cfg = stats?.offense?.cfg;
+  const effectiveBuild = stats?.build;
+  if (!cfg || !effectiveBuild) return [];
+  const totalImpulseAdders = getBuildImpulseBudget(effectiveBuild);
+  if (Math.abs(totalImpulseAdders) <= 0.001) return [];
+
+  const intrinsicBuild = primaryItem ? createIntrinsicPrimaryBuild(primaryItem) : createDefaultShipBuild();
+  const installedImpulse = totalImpulseAdders - getBuildImpulseBudget(intrinsicBuild);
+  const displayedImpulse = Math.abs(installedImpulse) > 0.001
+    ? installedImpulse
+    : totalImpulseAdders;
+  const label = Math.abs(installedImpulse) > 0.001 ? "Installed Impulse" : "Impulse Adders";
+
+  if (cfg.ammo === "plasma") {
+    return [
+      {
+        label,
+        value: `${formatSignedPercent(displayedImpulse)} | Size x${formatNumber(cfg.plasmaImpulseSizeScale, 2)}`,
+        math: `Total impulse adders ${formatSignedPercent(totalImpulseAdders)} make plasma shots size x${formatNumber(cfg.plasmaImpulseSizeScale, 2)} and speed x${formatNumber(cfg.plasmaImpulseSpeedScale, 2)}; hit and burn damage use final projectile size.`,
+      },
+    ];
+  }
+
+  return [
+    {
+      label,
+      value: `${formatSignedPercent(displayedImpulse)} | Speed x${formatNumber(cfg.velocityFactor, 2)}`,
+      math: `Total kinetic impulse budget ${formatNumber(cfg.kineticImpulseBudget, 2)} feeds speed-based damage.`,
+    },
+  ];
+}
+
 function getPrimaryDamageBreakdownRows(offense) {
   const cfg = offense?.cfg;
   if (!cfg) return [];
@@ -8037,9 +8232,12 @@ function getPrimaryDamageBreakdownRows(offense) {
     ? ` · Focus x${formatNumber(cfg.shotDamageMult, 2)}`
     : "";
   if (cfg.ammo === "plasma") {
+    const impulseText = cfg.plasmaImpulseBudget > 0.001
+      ? ` · Impulse x${formatNumber(cfg.plasmaImpulseSizeScale, 2)}`
+      : "";
     rows.push({
-      text: `Base ${ECONOMY.plasma.baseDamage} · Size x${formatNumber(cfg.sizeFactor, 2)}${focusText} -> ${formatNumber(offense.hitDamage, 1)}`,
-      math: `Plasma hit damage = base * size${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}.`,
+      text: `Base ${ECONOMY.plasma.baseDamage} · Size x${formatNumber(cfg.baseSizeFactor, 2)}${impulseText}${focusText} -> ${formatNumber(offense.hitDamage, 1)}`,
+      math: `Plasma hit damage = base * size * impulse size${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}.`,
     });
     if (offense.burnDps) {
       rows.push({ text: `Burn ${formatNumber(offense.burnDps, 1)}/s after impact` });
@@ -8077,8 +8275,16 @@ function getPrimaryInstalledModifierRows(previewState, intrinsicBuild, effective
     addRow("Aux projectile size", `+${Math.round(Math.abs(flowSizeDelta) * 12)}% size-fed damage`);
   }
   const impulseDelta = (effectiveBuild.kineticImpulseBudget ?? 0) - (intrinsicBuild.kineticImpulseBudget ?? 0);
-  if (Math.abs(impulseDelta) > 0.001 && effectiveCfg.ammo === "kinetic") {
-    addRow("Aux impulse budget", `+${Math.round(Math.abs(impulseDelta) * 100)}% kinetic impulse`);
+  if (Math.abs(impulseDelta) > 0.001) {
+    addRow(
+      "Aux impulse budget",
+      effectiveCfg.ammo === "plasma"
+        ? `+${Math.round(Math.abs(impulseDelta) * 100)}% plasma impulse`
+        : `+${Math.round(Math.abs(impulseDelta) * 100)}% kinetic impulse`,
+      effectiveCfg.ammo === "plasma"
+        ? "Impulse makes plasma shots larger and slower, raising size-fed hit and burn damage."
+        : "Impulse makes kinetic shots faster, raising speed-fed hit damage."
+    );
   }
   const armorPenaltyRatio = effectiveCfg.armorPenalty / Math.max(0.01, intrinsicCfg.armorPenalty || 1);
   if (armorPenaltyRatio > 1.005) {
@@ -8113,6 +8319,18 @@ function getPrimaryBreakdownSections(intrinsicOffense, previewState, intrinsicBu
     sections.push({ title: "Installed Modifiers", rows: modifierRows });
   }
   return sections;
+}
+
+function getActivePrimaryBreakdownSections(stats, primaryItem, targetState = state) {
+  if (!stats?.offense || !stats?.build || !primaryItem) return [];
+  const intrinsicBuild = createIntrinsicPrimaryBuild(primaryItem);
+  return getPrimaryBreakdownSections(
+    stats.offense,
+    targetState,
+    intrinsicBuild,
+    stats.build,
+    stats.offense
+  );
 }
 
 function getItemDisplayStats(item, slotId = null) {
@@ -8172,7 +8390,7 @@ function getItemDisplayStats(item, slotId = null) {
         label: "Damage per Shot",
         value: formatNumber(offense.hitDamage, 1),
         math: offense.cfg.ammo === "plasma"
-          ? `Plasma hit damage = ${ECONOMY.plasma.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`
+          ? `Plasma hit damage = ${ECONOMY.plasma.baseDamage} * size ${formatNumber(offense.cfg.baseSizeFactor, 2)} * impulse ${formatNumber(offense.cfg.plasmaImpulseSizeScale, 2)}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`
           : `Kinetic hit damage = ${ECONOMY.kinetic.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)} * ${formatNumber(offense.cfg.velocityFactor, 2)}^${ECONOMY.kinetic.velocityExponent}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`,
       },
       { label: "Ammo", value: offense.ammo, math: offense.burnDps ? `Burn DPS = hit damage * 0.45 = ${formatNumber(offense.burnDps, 1)}.` : "" },
@@ -8269,6 +8487,7 @@ function getItemDisplayStats(item, slotId = null) {
   } else {
     const support = intrinsic.support || previewStats.support;
     const currentSupport = currentStats.support;
+    const passiveLines = getSupportPassiveStatLines(item);
     headline = {
       label: "Recharge",
       value: support.cooldown,
@@ -8279,6 +8498,7 @@ function getItemDisplayStats(item, slotId = null) {
       lowerIsGood: true,
     };
     lines = [
+      ...passiveLines,
       { label: "Duration", value: `${formatNumber(support.duration, 1)}s`, math: support.math },
       { label: "Effect", value: support.effect, math: support.math },
     ];
@@ -8583,7 +8803,7 @@ async function openArmoryStatsModal() {
   const mini = stats.mini;
   const activePrimarySlot = getActivePrimaryBay(state) === 1 ? "primary-2" : "primary";
   const activePrimary = getInstalledArmoryItem(activePrimarySlot);
-  const primaryDisplay = activePrimary ? getItemDisplayStats(activePrimary, activePrimarySlot) : null;
+  const activePrimaryBreakdownSections = getActivePrimaryBreakdownSections(stats, activePrimary, state);
   const loadout = getPrimaryLoadoutModifiers(state);
   const defenseRows = [
     { label: "Hull", value: `${stats.defense.hull}`, math: "Hull takes raw projectile damage once armor is gone." },
@@ -8600,10 +8820,12 @@ async function openArmoryStatsModal() {
     { label: "Shots per Second", value: formatNumber(stats.offense.attacksPerSecond, 2), math: "Current active primary firing speed." },
     { label: "Pattern", value: stats.offense.pattern, math: "" },
     { label: "Ammo", value: stats.offense.ammo, math: "" },
+    ...getActivePrimaryImpulseRows(stats, activePrimary),
     { label: "Mini DPS", value: formatNumber(mini.dps, 1), math: `${getCompactItemName(getSelectedMiniWeapon())}: ${formatNumber(mini.damage, 1)} damage at ${formatNumber(mini.attacksPerSecond, 2)} shots/s.` },
   ];
   const supportRows = [
     { label: "Ability", value: support.name, math: "" },
+    ...getSupportPassiveStatLines(getSelectedSupportModule()),
     { label: "Recharge", value: support.cooldown ? `${formatNumber(support.cooldown, 1)}s` : "-", math: support.math },
     { label: "Duration", value: support.duration ? `${formatNumber(support.duration, 1)}s` : "-", math: support.math },
     { label: "Effect", value: support.effect, math: support.math },
@@ -8631,7 +8853,7 @@ async function openArmoryStatsModal() {
       <div class="stat-section">
         <div class="stat-section-title">Offense</div>
         ${offenseRows.map(renderShipStatRow).join("")}
-        ${renderItemBreakdownSections(primaryDisplay?.breakdownSections || [])}
+        ${renderItemBreakdownSections(activePrimaryBreakdownSections)}
       </div>
       <div class="stat-section">
         <div class="stat-section-title">Defense</div>
@@ -8660,10 +8882,8 @@ function renderShipStatsPanel() {
   if (!shipStats) return;
   const activePrimarySlot = getActivePrimaryBay(state) === 1 ? "primary-2" : "primary";
   const currentPrimary = getInstalledArmoryItem(activePrimarySlot);
-  const display = currentPrimary
-    ? getItemDisplayStats(currentPrimary, activePrimarySlot)
-    : null;
   const stats = getShipDisplayStatsForState(state);
+  const activePrimaryBreakdownSections = getActivePrimaryBreakdownSections(stats, currentPrimary, state);
   const support = stats.support;
   const mini = stats.mini;
   const loadout = getPrimaryLoadoutModifiers(state);
@@ -8673,6 +8893,7 @@ function renderShipStatsPanel() {
     { label: "Shots per Second", value: formatNumber(stats.offense.attacksPerSecond, 2), math: "Current active primary firing speed." },
     { label: "Pattern", value: stats.offense.pattern, math: "" },
     { label: "Ammo", value: stats.offense.ammo, math: "" },
+    ...getActivePrimaryImpulseRows(stats, currentPrimary),
   ];
   const defenseRows = [
     { label: "Hull", value: `${stats.defense.hull}`, math: `Hull = 100 * (1 + 0.08*${state.upgrades?.hull ?? 0}).` },
@@ -8685,6 +8906,7 @@ function renderShipStatsPanel() {
   ];
   const supportRows = [
     { label: "Ability", value: support.name, math: "" },
+    ...getSupportPassiveStatLines(getSelectedSupportModule()),
     { label: "Recharge", value: support.cooldown ? `${formatNumber(support.cooldown, 1)}s` : "-", math: support.math },
     { label: "Duration", value: support.duration ? `${formatNumber(support.duration, 1)}s` : "-", math: support.math },
     { label: "Effect", value: support.effect, math: support.math },
@@ -8723,7 +8945,7 @@ function renderShipStatsPanel() {
       <div class="stat-section">
         <div class="stat-section-title">Offense</div>
         ${offenseRows.map(renderShipStatRow).join("")}
-        ${renderItemBreakdownSections(display?.breakdownSections || [])}
+        ${renderItemBreakdownSections(activePrimaryBreakdownSections)}
       </div>
       <div class="stat-section">
         <div class="stat-section-title">Defense</div>
@@ -9968,6 +10190,18 @@ function getKineticImpulseBudget(build, gunDiameter = "medium") {
   return Math.max(0.2, baseBudget + velocityBonus + itemBonus);
 }
 
+function getPlasmaImpulseTuning(build) {
+  const impulseBudget = Math.max(
+    0,
+    Number.isFinite(build?.kineticImpulseBudget) ? build.kineticImpulseBudget : 0
+  );
+  return {
+    impulseBudget,
+    sizeScale: 1 + impulseBudget * (ECONOMY.plasma.impulseSizeScale ?? 0),
+    speedScale: 1 / (1 + impulseBudget * (ECONOMY.plasma.impulseSpeedDrag ?? 0)),
+  };
+}
+
 function getFocusedSingleShotDamageMult({ spread, gunDiameter, cooldown }) {
   if (spread !== "focused") return 1;
   const base = FOCUSED_SINGLE_SHOT_DAMAGE_MULT[gunDiameter] || FOCUSED_SINGLE_SHOT_DAMAGE_MULT.medium;
@@ -10020,7 +10254,12 @@ function getPrimaryFireConfig(buildOverride = null) {
   const cooldownMult = Number.isFinite(build.cooldownMult)
     ? Math.max(0.35, build.cooldownMult)
     : 1;
-  const projectileRadius = 4 * diameterScale * flowSizeScale * spreadRadiusScale;
+  const plasmaImpulseTuning = ammo === "plasma"
+    ? getPlasmaImpulseTuning(build)
+    : { impulseBudget: 0, sizeScale: 1, speedScale: 1 };
+  const baseProjectileRadius = 4 * diameterScale * flowSizeScale * spreadRadiusScale;
+  const projectileRadius = baseProjectileRadius * plasmaImpulseTuning.sizeScale;
+  const baseSizeFactor = Math.max(0.05, baseProjectileRadius / 4);
   const sizeFactor = Math.max(0.05, projectileRadius / 4);
   const kineticImpulseBudget =
     ammo === "kinetic" ? getKineticImpulseBudget(build, gunDiameter) : null;
@@ -10028,10 +10267,10 @@ function getPrimaryFireConfig(buildOverride = null) {
     ammo === "kinetic"
       ? Math.max(
           0.2,
-          kineticImpulseBudget /
+              kineticImpulseBudget /
             Math.pow(sizeFactor, ECONOMY.kinetic.sizeVelocityTradeoff)
         )
-      : diameterSpeedScale * flowVelocityScale;
+      : diameterSpeedScale * flowVelocityScale * plasmaImpulseTuning.speedScale;
   const bulletSpeed = baseSpeed * velocityFactor;
 
   let cooldown = baseCooldown * armorPenalty * flowRateScale * cooldownMult;
@@ -10096,9 +10335,13 @@ function getPrimaryFireConfig(buildOverride = null) {
     flowSizeScale,
     diameterScale,
     diameterSpeedScale,
+    baseSizeFactor,
     sizeFactor,
     velocityFactor,
     kineticImpulseBudget,
+    plasmaImpulseBudget: plasmaImpulseTuning.impulseBudget,
+    plasmaImpulseSizeScale: plasmaImpulseTuning.sizeScale,
+    plasmaImpulseSpeedScale: plasmaImpulseTuning.speedScale,
     shotDamageMult,
     armorChipFloorRate,
     minArmorChipDamage,
@@ -12979,9 +13222,10 @@ function gameLoop(now) {
 }
 
 safeUpdateHangar();
-ensureWeaponFrameCatalogLoaded()
+Promise.all([ensureWeaponFrameCatalogLoaded(), ensureItemPoolLoaded()])
   .then(() => {
     if (mission?.active) return;
+    refreshSavedInventoryCatalogBuilds(state);
     syncStarterArmoryState();
     saveState();
     safeUpdateHangar();

@@ -1037,6 +1037,443 @@
       },
       "relicLore": "TODO(adam): Final Greenline Bloom identification fragment."
     },
+    "relic_gravebolt_rail": {
+      "slotType": "primary",
+      "sourceId": "relic_gravebolt_rail",
+      "name": "Gravebolt Rail",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A narrow kinetic rail that holds target memory after the first hull breach.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/gravebolt_rail.png",
+      "tags": ["relic", "kinetic", "focused", "pierce", "rail", "anti-armor"],
+      "build": {
+        "gunDiameter": "large",
+        "spread": "focused",
+        "ammo": "kinetic",
+        "effect": "pierce",
+        "flowRateLevel": 0,
+        "flowVelocityLevel": 3,
+        "flowSizeLevel": 1,
+        "cooldownMult": 1.45,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.18
+      },
+      "uniqueProperty": {
+        "id": "gravebolt_line_memory",
+        "name": "Gravebolt line memory",
+        "description": "Adds sealed line-drive reserve and deeper target carry-through.",
+        "tags": ["impulse", "pierce", "anti-armor"],
+        "build": {
+          "effectUpgrades": {
+            "pierce": 2
+          }
+        },
+        "buildAdd": {
+          "kineticImpulseBudget": 0.22,
+          "flowVelocityLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Gravebolt Rail identification fragment."
+    },
+    "relic_starwound_lance": {
+      "slotType": "primary",
+      "sourceId": "relic_starwound_lance",
+      "name": "Starwound Lance",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A focused plasma lance with a containment scar that blooms after impact.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/starwound_lance.png",
+      "tags": ["relic", "plasma", "focused", "explosive", "payload"],
+      "build": {
+        "gunDiameter": "large",
+        "spread": "focused",
+        "ammo": "plasma",
+        "effect": "explosive",
+        "flowRateLevel": 0,
+        "flowVelocityLevel": 1,
+        "flowSizeLevel": 2,
+        "cooldownMult": 1.55,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.2
+      },
+      "uniqueProperty": {
+        "id": "starwound_containment_scar",
+        "name": "Starwound containment scar",
+        "description": "Adds relic impulse to overfill the plasma envelope after impact.",
+        "tags": ["plasma", "impulse", "area"],
+        "build": {
+          "effectUpgrades": {
+            "explosive": 2
+          }
+        },
+        "buildAdd": {
+          "kineticImpulseBudget": 0.26,
+          "flowSizeLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Starwound Lance identification fragment."
+    },
+    "relic_oathpair_driver": {
+      "slotType": "primary",
+      "sourceId": "relic_oathpair_driver",
+      "name": "Oathpair Driver",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A paired kinetic driver whose barrels correct each other's recoil before the shot leaves.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/oathpair_driver.png",
+      "tags": ["relic", "kinetic", "dual", "driver", "balanced"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "dual",
+        "ammo": "kinetic",
+        "effect": "none",
+        "flowRateLevel": 1,
+        "flowVelocityLevel": 2,
+        "flowSizeLevel": 0,
+        "cooldownMult": 0.98,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.16
+      },
+      "uniqueProperty": {
+        "id": "oathpair_recoil_oath",
+        "name": "Oathpair recoil oath",
+        "description": "Adds paired recoil recovery and shared impulse reserve.",
+        "tags": ["impulse", "flow-rate", "driver"],
+        "buildAdd": {
+          "flowRateLevel": 1,
+          "flowVelocityLevel": 1,
+          "kineticImpulseBudget": 0.16
+        }
+      },
+      "relicLore": "TODO(adam): Final Oathpair Driver identification fragment."
+    },
+    "relic_censer_twin": {
+      "slotType": "primary",
+      "sourceId": "relic_censer_twin",
+      "name": "Censer Twin",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "Twin plasma censers that swell their shots through linked pressure chambers.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/censer_twin.png",
+      "tags": ["relic", "plasma", "dual", "driver", "payload"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "dual",
+        "ammo": "plasma",
+        "effect": "none",
+        "flowRateLevel": 1,
+        "flowVelocityLevel": 0,
+        "flowSizeLevel": 1,
+        "cooldownMult": 1.0,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": -1,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.18
+      },
+      "uniqueProperty": {
+        "id": "censer_pressure_link",
+        "name": "Censer pressure link",
+        "description": "Adds twin-chamber impulse and a larger plasma envelope.",
+        "tags": ["plasma", "impulse", "flow-size"],
+        "buildAdd": {
+          "kineticImpulseBudget": 0.22,
+          "flowSizeLevel": 1,
+          "shieldCooldownLevel": -1
+        }
+      },
+      "relicLore": "TODO(adam): Final Censer Twin identification fragment."
+    },
+    "relic_needleloom_driver": {
+      "slotType": "primary",
+      "sourceId": "relic_needleloom_driver",
+      "name": "Needleloom Driver",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A paired kinetic stitcher that threads small rounds toward evasive targets.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/needleloom_driver.png",
+      "tags": ["relic", "kinetic", "dual", "rapid", "homing", "tracking", "hose"],
+      "build": {
+        "gunDiameter": "small",
+        "spread": "dualRapid",
+        "ammo": "kinetic",
+        "effect": "homing",
+        "flowRateLevel": 2,
+        "flowVelocityLevel": 2,
+        "flowSizeLevel": 0,
+        "cooldownMult": 0.78,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 1,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.12
+      },
+      "uniqueProperty": {
+        "id": "needleloom_path_memory",
+        "name": "Needleloom path memory",
+        "description": "Adds old guidance bias and recoil-fed stitch pressure.",
+        "tags": ["homing", "impulse", "flow-rate"],
+        "build": {
+          "effectUpgrades": {
+            "homing": 2
+          }
+        },
+        "buildAdd": {
+          "flowRateLevel": 1,
+          "kineticImpulseBudget": 0.14
+        }
+      },
+      "relicLore": "TODO(adam): Final Needleloom Driver identification fragment."
+    },
+    "relic_auric_stitcher": {
+      "slotType": "primary",
+      "sourceId": "relic_auric_stitcher",
+      "name": "Auric Stitcher",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A rapid plasma stitcher that returns a faint hull echo with each burn thread.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/auric_stitcher.png",
+      "tags": ["relic", "plasma", "dual", "rapid", "vampiric", "sustain", "burn"],
+      "build": {
+        "gunDiameter": "small",
+        "spread": "dualRapid",
+        "ammo": "plasma",
+        "effect": "vampiric",
+        "flowRateLevel": 2,
+        "flowVelocityLevel": 1,
+        "flowSizeLevel": 0,
+        "cooldownMult": 0.85,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 1,
+        "shieldCooldownLevel": -1,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.18
+      },
+      "uniqueProperty": {
+        "id": "auric_return_thread",
+        "name": "Auric return thread",
+        "description": "Adds stronger return traces and a fuller plasma stitch.",
+        "tags": ["vampiric", "plasma", "impulse"],
+        "build": {
+          "effectUpgrades": {
+            "vampiric": 2
+          }
+        },
+        "buildAdd": {
+          "kineticImpulseBudget": 0.22,
+          "flowSizeLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Auric Stitcher identification fragment."
+    },
+    "relic_rattlewake_array": {
+      "slotType": "primary",
+      "sourceId": "relic_rattlewake_array",
+      "name": "Rattlewake Array",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A kinetic rotary cluster that keeps pressure on light hulls through raw repetition.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/rattlewake_array.png",
+      "tags": ["relic", "kinetic", "rapid", "hose", "swarm"],
+      "build": {
+        "gunDiameter": "small",
+        "spread": "rapid",
+        "ammo": "kinetic",
+        "effect": "none",
+        "flowRateLevel": 3,
+        "flowVelocityLevel": 1,
+        "flowSizeLevel": 0,
+        "cooldownMult": 0.74,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.16
+      },
+      "uniqueProperty": {
+        "id": "rattlewake_repeater_heart",
+        "name": "Rattlewake repeater heart",
+        "description": "Adds old rotary cadence and enough reserve to keep the wake sharp.",
+        "tags": ["flow-rate", "impulse", "swarm"],
+        "buildAdd": {
+          "flowRateLevel": 1,
+          "kineticImpulseBudget": 0.18
+        }
+      },
+      "relicLore": "TODO(adam): Final Rattlewake Array identification fragment."
+    },
+    "relic_cinderloom_spray": {
+      "slotType": "primary",
+      "sourceId": "relic_cinderloom_spray",
+      "name": "Cinderloom Spray",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A plasma spray engine that seeds burning cinders across a narrow lane.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/cinderloom_spray.png",
+      "tags": ["relic", "plasma", "rapid", "explosive", "burn", "area", "hose"],
+      "build": {
+        "gunDiameter": "small",
+        "spread": "rapid",
+        "ammo": "plasma",
+        "effect": "explosive",
+        "flowRateLevel": 2,
+        "flowVelocityLevel": 0,
+        "flowSizeLevel": 1,
+        "cooldownMult": 0.78,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 1,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.2
+      },
+      "uniqueProperty": {
+        "id": "cinderloom_hot_pressure",
+        "name": "Cinderloom hot pressure",
+        "description": "Adds heated impulse and broader cinder bloom on contact.",
+        "tags": ["plasma", "explosive", "impulse"],
+        "build": {
+          "effectUpgrades": {
+            "explosive": 2
+          }
+        },
+        "buildAdd": {
+          "kineticImpulseBudget": 0.24,
+          "flowSizeLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Cinderloom Spray identification fragment."
+    },
+    "relic_vesper_barrage": {
+      "slotType": "primary",
+      "sourceId": "relic_vesper_barrage",
+      "name": "Vesper Barrage",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A five-cell plasma barrage that opens quiet and detonates loud.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/vesper_barrage.png",
+      "tags": ["relic", "plasma", "burst", "explosive", "payload", "area"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "burst",
+        "ammo": "plasma",
+        "effect": "explosive",
+        "flowRateLevel": 1,
+        "flowVelocityLevel": 0,
+        "flowSizeLevel": 2,
+        "cooldownMult": 1.0,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.22
+      },
+      "uniqueProperty": {
+        "id": "vesper_afterbell",
+        "name": "Vesper afterbell",
+        "description": "Adds delayed bloom pressure and unusually deep plasma resonance.",
+        "tags": ["plasma", "explosive", "impulse"],
+        "build": {
+          "effectUpgrades": {
+            "explosive": 3
+          }
+        },
+        "buildAdd": {
+          "kineticImpulseBudget": 0.24,
+          "flowSizeLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Vesper Barrage identification fragment."
+    },
+    "relic_founder_flak": {
+      "slotType": "primary",
+      "sourceId": "relic_founder_flak",
+      "name": "Founder Flak",
+      "subtitle": "Pre-Founding hardpoint",
+      "description": "A wide kinetic flak crown that threads old scattershot through close formations.",
+      "notes": "Recovered before-fleet hardware. Identification creates a permanent archive record.",
+      "icon": "assets/generated/item_icons_v3/founder_flak.png",
+      "tags": ["relic", "kinetic", "wide", "pierce", "scatter", "swarm"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "wide",
+        "ammo": "kinetic",
+        "effect": "pierce",
+        "flowRateLevel": 1,
+        "flowVelocityLevel": 1,
+        "flowSizeLevel": 0,
+        "cooldownMult": 1.0,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.14
+      },
+      "uniqueProperty": {
+        "id": "founder_flak_pattern",
+        "name": "Founder flak pattern",
+        "description": "Adds scatter-carry memory and old crown impulse.",
+        "tags": ["pierce", "impulse", "scatter"],
+        "build": {
+          "effectUpgrades": {
+            "pierce": 1
+          }
+        },
+        "buildAdd": {
+          "kineticImpulseBudget": 0.18,
+          "flowSizeLevel": 1
+        }
+      },
+      "relicLore": "TODO(adam): Final Founder Flak identification fragment."
+    },
     "relic_cradle_aegis": {
       "slotType": "defense",
       "defenseType": "shield",

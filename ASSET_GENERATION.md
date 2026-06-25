@@ -24,6 +24,12 @@ generated packs:
   match the starter hull footprint.
 - Mini weapons use generated mini-weapon sprites from
   `assets/generated/overhaul_player_kit_v1/`.
+- Pre-Founding weapon relic icons use generated item sprites from
+  `assets/generated/item_icons_v3/`. The pack was generated with built-in
+  imagegen as a 4x4 magenta-key sheet, processed into transparent PNGs, and
+  currently supplies Gravebolt Rail, Starwound Lance, Oathpair Driver, Censer
+  Twin, Needleloom Driver, Auric Stitcher, Rattlewake Array, Cinderloom Spray,
+  Vesper Barrage, and Founder Flak.
 - Shield booster and armor patch caches use generated pickup sprites.
 - Ledger license, hull unlock, dual-fire, and second-bay affordances use
   generated terminal/shop sprites from the same pack. The fixed Basic Gear shop

@@ -35,6 +35,23 @@ Current affix-ready primary coverage:
 
 Named base weapons with innate effects still exist, such as Seeker Array or Demolition Bore. Those are allowed, but effect affixes from the `weapon-effect` exclusive group do not roll onto a base that already has an innate effect.
 
+Full primary base and Pre-Founding coverage:
+
+| Pattern | Ammo | Normal bases (Scrap / Certified / Prototype) | Pre-Founding relic |
+|---|---|---|---|
+| `focused` | `kinetic` | Cadet Kinetic Frame, Armor Break Frame (pierce), Slug Cannon, Demolition Bore (explosive), Longbow Rail (pierce) | Gravebolt Rail (pierce) |
+| `focused` | `plasma` | Plasma Lance | Starwound Lance (explosive) |
+| `dual` | `kinetic` | Twin Driver | Oathpair Driver |
+| `dual` | `plasma` | Ion Twin | Censer Twin |
+| `dualRapid` | `kinetic` | Stitch Driver | Needleloom Driver (homing) |
+| `dualRapid` | `plasma` | Arc Stitcher | Auric Stitcher (vampiric) |
+| `rapid` | `kinetic` | Needle Storm, Lash Driver (vampiric) | Rattlewake Array |
+| `rapid` | `plasma` | Ember Spray | Cinderloom Spray (explosive) |
+| `burst` | `kinetic` | Volley Driver | Blackbox Driver (pierce) |
+| `burst` | `plasma` | Pulse Barrage | Vesper Barrage (explosive) |
+| `wide` | `kinetic` | Flak Fan | Founder Flak (pierce) |
+| `wide` | `plasma` | Area Control Frame (explosive), Prism Scatter, Seeker Array (homing) | Greenline Bloom (explosive) |
+
 ## Mini Weapon Composition
 
 Mini weapons live in `items/item_pool.json` with `slotType: "mini"`. They are itemized gear with their own stats, browser filters, archive entries, and tooltips. They do not use primary `build` fields; instead they define a `miniWeapon` object:
@@ -91,10 +108,10 @@ Mini weapons should contribute roughly 20-35% of a comparable primary weapon's s
 ## Ammo behavior
 
 `kinetic`
-: Damage scales from projectile size and velocity. Larger kinetic shots hit harder but speed is constrained by the kinetic impulse budget. Armor class reduces per-hit kinetic damage, so high-volume kinetic weapons rely on chip-floor behavior or pierce/explosive traces against armor.
+: Damage scales from projectile size and velocity. Larger kinetic shots hit harder, and impulse budget helps those heavier shots keep speed. Armor class reduces per-hit kinetic damage, so high-volume kinetic weapons rely on chip-floor behavior or pierce/explosive traces against armor.
 
 `plasma`
-: Uses orb sprites, has slower velocity by bore size, and applies burn damage over time after direct hits. Plasma explosive splash also applies burn to enemies hit by the explosion.
+: Uses orb sprites, has slower velocity by bore size, and applies burn damage over time after direct hits. Plasma impulse expands the plasma envelope and slows the shot, which raises size-fed direct damage and burn. Plasma explosive splash also applies burn to enemies hit by the explosion.
 
 ## Effects and affixes
 

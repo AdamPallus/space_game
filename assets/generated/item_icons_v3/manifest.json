@@ -1,0 +1,157 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 10,
+  "sprites": [
+    {
+      "name": "gravebolt_rail",
+      "cell": 0,
+      "size": [
+        128,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "starwound_lance",
+      "cell": 1,
+      "size": [
+        120,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "oathpair_driver",
+      "cell": 2,
+      "size": [
+        120,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "censer_twin",
+      "cell": 3,
+      "size": [
+        120,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "needleloom_driver",
+      "cell": 4,
+      "size": [
+        120,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "auric_stitcher",
+      "cell": 5,
+      "size": [
+        120,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "rattlewake_array",
+      "cell": 6,
+      "size": [
+        112,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "cinderloom_spray",
+      "cell": 7,
+      "size": [
+        112,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "vesper_barrage",
+      "cell": 8,
+      "size": [
+        120,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "founder_flak",
+      "cell": 9,
+      "size": [
+        120,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "generic_relic_cell",
+      "cell": 10,
+      "size": [
+        112,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "sealed_relic_case",
+      "cell": 11,
+      "size": [
+        112,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "relic_round_core",
+      "cell": 12,
+      "size": [
+        112,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "relic_flat_crate",
+      "cell": 13,
+      "size": [
+        112,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "relic_cylinder",
+      "cell": 14,
+      "size": [
+        112,
+        112
+      ],
+      "componentMode": "largest"
+    },
+    {
+      "name": "relic_cross_case",
+      "cell": 15,
+      "size": [
+        112,
+        112
+      ],
+      "componentMode": "largest"
+    }
+  ],
+  "prompt": "Built-in imagegen, 2026-06-25: 4x4 Pre-Founding relic weapon icon sheet on flat #ff00ff chroma key, first ten cells for Gravebolt Rail, Starwound Lance, Oathpair Driver, Censer Twin, Needleloom Driver, Auric Stitcher, Rattlewake Array, Cinderloom Spray, Vesper Barrage, Founder Flak."
+}

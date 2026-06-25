@@ -24,6 +24,8 @@ const ECONOMY = {
   },
   plasma: {
     baseDamage: 12,
+    impulseSizeScale: 0.85,
+    impulseSpeedDrag: 0.45,
   },
   loadout: {
     singlePrimaryDamageBonus: 0.1,
@@ -263,6 +265,18 @@ function getKineticImpulseBudget(build, gunDiameter = "medium") {
   return Math.max(0.2, baseBudget + velocityBonus + itemBonus);
 }
 
+function getPlasmaImpulseTuning(build) {
+  const impulseBudget = Math.max(
+    0,
+    Number.isFinite(build.kineticImpulseBudget) ? build.kineticImpulseBudget : 0
+  );
+  return {
+    impulseBudget,
+    sizeScale: 1 + impulseBudget * (ECONOMY.plasma.impulseSizeScale || 0),
+    speedScale: 1 / (1 + impulseBudget * (ECONOMY.plasma.impulseSpeedDrag || 0)),
+  };
+}
+
 function roundTunedStat(value, decimals = 1) {
   const scale = Math.pow(10, decimals);
   return Math.round(value * scale) / scale;
@@ -359,7 +373,10 @@ function getPrimaryFireConfig(build) {
   const cooldownMult = Number.isFinite(build.cooldownMult)
     ? Math.max(0.35, build.cooldownMult)
     : 1;
-  const projectileRadius = 4 * diameterScale * flowSizeScale * spreadRadiusScale;
+  const plasmaImpulseTuning = ammo === "plasma"
+    ? getPlasmaImpulseTuning(build)
+    : { impulseBudget: 0, sizeScale: 1, speedScale: 1 };
+  const projectileRadius = 4 * diameterScale * flowSizeScale * spreadRadiusScale * plasmaImpulseTuning.sizeScale;
   const sizeFactor = Math.max(0.05, projectileRadius / 4);
   const kineticImpulseBudget = ammo === "kinetic" ? getKineticImpulseBudget(build, gunDiameter) : null;
   const velocityFactor =
@@ -368,7 +385,7 @@ function getPrimaryFireConfig(build) {
           0.2,
           kineticImpulseBudget / Math.pow(sizeFactor, ECONOMY.kinetic.sizeVelocityTradeoff)
         )
-      : diameterSpeedScale * flowVelocityScale;
+      : diameterSpeedScale * flowVelocityScale * plasmaImpulseTuning.speedScale;
   let cooldown = 0.28 * armorPenalty * flowRateScale * cooldownMult;
   if (spread === "dual") cooldown *= 1.28;
   if (spread === "dualRapid") cooldown *= 0.68;
@@ -629,6 +646,10 @@ function formatTtk(value) {
 function isAntiArmorBuild(row) {
   const tags = new Set(row.tags || []);
   return tags.has("anti-armor") || tags.has("pierce") || row.build.effect === "pierce";
+}
+
+function isPreFoundingRelicBuild(row) {
+  return row.id?.startsWith("preFounding:relic_") || (row.tags || []).includes("relic");
 }
 
 const pool = readJson(ITEM_POOL_PATH);
@@ -909,14 +930,15 @@ matrix.forEach((row) => {
 });
 
 if (toughestPlated) {
-  const antiArmorRows = matrix.filter(isAntiArmorBuild);
+  const nonRelicMatrix = matrix.filter((row) => !isPreFoundingRelicBuild(row));
+  const antiArmorRows = nonRelicMatrix.filter(isAntiArmorBuild);
   const antiArmorBest = antiArmorRows
     .map((row) => ({ row, ttk: row.ttk[toughestPlated.id] }))
     .sort((a, b) => a.ttk - b.ttk)[0];
   if (!antiArmorBest || !Number.isFinite(antiArmorBest.ttk)) {
     failures.push(`No finite anti-armor reference for ${toughestPlated.id}.`);
   } else {
-    matrix
+    nonRelicMatrix
       .filter((row) => !isAntiArmorBuild(row))
       .forEach((row) => {
         const ttk = row.ttk[toughestPlated.id];
@@ -929,6 +951,16 @@ if (toughestPlated) {
     console.log(
       `Anti-armor reference: ${antiArmorBest.row.name} vs ${toughestPlated.id} = ${formatTtk(antiArmorBest.ttk)}s`
     );
+    const relicBest = matrix
+      .filter(isPreFoundingRelicBuild)
+      .map((row) => ({ row, ttk: row.ttk[toughestPlated.id] }))
+      .filter((entry) => Number.isFinite(entry.ttk))
+      .sort((a, b) => a.ttk - b.ttk)[0];
+    if (relicBest) {
+      console.log(
+        `Best Pre-Founding relic ceiling: ${relicBest.row.name} vs ${toughestPlated.id} = ${formatTtk(relicBest.ttk)}s`
+      );
+    }
   }
 }
 

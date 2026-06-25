@@ -61,6 +61,7 @@ These should be tuned with deployed player feedback before adding another broad 
 - Armor-class readability across profiled campaign missions, especially chip-fire erasure versus heavy and boss-hazard threat.
 - Armory browser density on phone-sized viewports.
 - Loot roll ranges and the aux potency envelope are first-pass; tune against `balance_report.js` and playtest (god-roll uptime, whether high rolls over-raise the ceiling, whether the value curve keeps credits scarce).
+- Pre-Founding primary relics now cover every spread/ammo pair, and plasma impulse scaling raises the late-game plasma ceiling. Tune the next longer mission set against stronger relic plasma and impulse-heavy kinetic builds rather than immediately nerfing the new top end.
 - Cloak still only hides even at a god roll. Phase 6b candidate: add an offense payoff (e.g. damage on the cloak-breaking shot, or a brief post-cloak Shots per Second spike) if duration/recharge rolls alone feel flat. No combat code yet.
 - Harder campaign content via authored high-damage projectile profiles, only after god rolls measurably raise the player ceiling (kept out of the loot pass deliberately).
 

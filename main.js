@@ -135,8 +135,6 @@ const VALID_ITEM_SLOT_TYPES = ["primary", "mini", "defense", "aux", "support", "
 const VALID_MINI_ARCS = ["forward", "wide", "turret"];
 const EMP_CLEAR_BASE_RADIUS = 190;
 const SECOND_PRIMARY_SWAP_COOLDOWN = 1.0;
-const SECOND_PRIMARY_STRAIN_RATE = 0.15;
-const SINGLE_PRIMARY_FOCUS_RATE = 0.1;
 const DUAL_FIRE_DAMAGE_MULTS = [0, 0.6, 0.7, 0.85, 1.0];
 const WEAPON_SPREAD_LABELS = {
   focused: "Single",
@@ -292,6 +290,10 @@ const ECONOMY = {
   plasma: {
     baseDamage: 12,
   },
+  loadout: {
+    singlePrimaryDamageBonus: 0.1,
+    secondPrimaryDamagePenalty: 0.15,
+  },
   deathBountyWritedownRate: 0.25,
   recoveryBonusRate: {
     min: 0.1,
@@ -421,6 +423,8 @@ const ECONOMY = {
   },
 };
 
+const SINGLE_PRIMARY_FOCUS_RATE = ECONOMY.loadout.singlePrimaryDamageBonus;
+const SECOND_PRIMARY_STRAIN_RATE = ECONOMY.loadout.secondPrimaryDamagePenalty;
 const MINI_WEAPON_BALANCE_VERSION = 2;
 const DEFENSE_BALANCE_VERSION = 1;
 const MINI_EFFECTS = ["homing", "pierce", "explosive", "vampiric"];
@@ -511,13 +515,13 @@ const upgrades = [
   {
     id: "fireRate",
     name: "Fire Control",
-    desc: "-7% primary cooldown per level.",
+    desc: "+7% primary Shots per Second per level.",
     baseCost: 150,
   },
   {
     id: "auxCooldown",
-    name: "Ability Cooldown",
-    desc: "-8% ability cooldown per level.",
+    name: "Ability Recharge",
+    desc: "-8% ability recharge time per level.",
     baseCost: 180,
   },
   {
@@ -1135,7 +1139,7 @@ function getDefenseArmoryItemById(moduleId, targetState = state) {
   return defenseModulesById[moduleId] || findInventoryItem(moduleId, targetState);
 }
 
-function getPrimaryLoadoutDefenseModifiers(targetState = state) {
+function getPrimaryLoadoutModifiers(targetState = state) {
   const hasSecondPrimary = !!getSecondPrimaryArmoryItem(targetState);
   const hullBonuses = getHullBonuses(targetState);
   const mitigation = Math.max(0, hullBonuses.secondBayStrainReduction || 0);
@@ -1143,26 +1147,33 @@ function getPrimaryLoadoutDefenseModifiers(targetState = state) {
     const strain = Math.max(0, SECOND_PRIMARY_STRAIN_RATE - mitigation);
     return {
       label: "Second-bay strain",
-      shieldMaxMult: 1 - strain,
-      shieldRegenMult: 1 - strain,
+      primaryDamageMult: 1 - strain,
+      primaryDamageDelta: -strain,
+      rate: strain,
+      description: `${Math.round(strain * 100)}% less primary damage per weapon while Primary B is installed.`,
     };
   }
+  const focus = SINGLE_PRIMARY_FOCUS_RATE;
   return {
     label: "Single-primary focus",
-    shieldMaxMult: 1 + SINGLE_PRIMARY_FOCUS_RATE,
-    shieldRegenMult: 1 + SINGLE_PRIMARY_FOCUS_RATE,
+    primaryDamageMult: 1 + focus,
+    primaryDamageDelta: focus,
+    rate: focus,
+    description: `${Math.round(focus * 100)}% more primary damage while Primary B is empty.`,
   };
 }
 
 function applyHullAndLoadoutModifiers(build, targetState = state) {
   const hullBonuses = getHullBonuses(targetState);
-  const loadout = getPrimaryLoadoutDefenseModifiers(targetState);
+  const loadout = getPrimaryLoadoutModifiers(targetState);
   build.hullMult = hullBonuses.hullMult ?? 1;
-  build.shieldMaxMult = (hullBonuses.shieldMaxMult ?? 1) * loadout.shieldMaxMult;
-  build.shieldRegenMult = (hullBonuses.shieldRegenMult ?? 1) * loadout.shieldRegenMult;
+  build.shieldMaxMult = hullBonuses.shieldMaxMult ?? 1;
+  build.shieldRegenMult = hullBonuses.shieldRegenMult ?? 1;
   build.armorCapacityMult = hullBonuses.armorCapacityMult ?? 1;
   build.armorDragMult = hullBonuses.armorDragMult ?? 1;
-  build.primaryDamageMult = hullBonuses.primaryDamageMult ?? 1;
+  build.primaryDamageMult = (hullBonuses.primaryDamageMult ?? 1) * loadout.primaryDamageMult;
+  build.loadoutPrimaryDamageMult = loadout.primaryDamageMult;
+  build.loadoutPrimaryDamageDelta = loadout.primaryDamageDelta;
   build.loadoutModifierLabel = loadout.label;
   return build;
 }
@@ -6980,7 +6991,7 @@ function getPrimaryCatalogDetails(entry) {
     lines.push("Rolls: homing, explosive, pierce, vampiric");
   }
   const diameter = build.gunDiameter ? `${capitalize(build.gunDiameter)} bore` : "";
-  const rate = Number.isFinite(build.flowRateLevel) ? `Rate +${build.flowRateLevel}` : "";
+  const rate = Number.isFinite(build.flowRateLevel) ? `Shots per Second +${build.flowRateLevel}` : "";
   const size = Number.isFinite(build.flowSizeLevel) ? `Size +${build.flowSizeLevel}` : "";
   const tuning = [diameter, rate, size].filter(Boolean).join(" | ");
   if (tuning) lines.push(tuning);
@@ -7000,7 +7011,7 @@ function getDefenseCatalogDetails(entry) {
     return [
       `Armor volume tune: ${build.armorAmountLevel ?? 0}`,
       `Armor class: ${build.armorClass ?? 10}`,
-      `Weapon drag tune: ${build.armorDragLevel ?? 0}`,
+      `Shots per Second drag: ${build.armorDragLevel ?? 0}`,
     ].join("\n");
   }
   return "Defense module.";
@@ -7010,7 +7021,7 @@ function getMiniCatalogDetails(entry) {
   const mini = entry.miniWeapon || {};
   return [
     `Damage: ${formatNumber(mini.damage || 0, 1)} per shot`,
-    `Cadence: ${formatNumber(mini.cooldown || 0, 2)}s cooldown`,
+    `Shots per Second: ${mini.cooldown ? formatNumber(1 / mini.cooldown, 2) : "0"}`,
     `Targeting: ${getMiniArcLabel(mini)} | ${mini.range || 0}px`,
     `Ammo: ${capitalize(mini.ammo || "kinetic")}`,
   ].join("\n");
@@ -7370,10 +7381,28 @@ function filterAndSortBrowserItems(
     .map(({ item }) => item);
 }
 
-function getComparableSlotIdForItem(item, slotId = null) {
+function getComparableDefenseSlotIdForItem(item, targetState = state) {
+  const equippedIds = Array.isArray(targetState.armory?.equippedDefenseSlotIds)
+    ? targetState.armory.equippedDefenseSlotIds.slice(0, 2)
+    : ["shield_module", "none"];
+  while (equippedIds.length < 2) equippedIds.push("none");
+  const exactIndex = equippedIds.findIndex((id) => id && id !== "none" && id === item?.id);
+  if (exactIndex >= 0) return `defense-${exactIndex}`;
+  const emptyIndex = equippedIds.findIndex((id) => !id || id === "none");
+  if (emptyIndex >= 0) return `defense-${emptyIndex}`;
+  const itemDefenseType = item?.defenseType || null;
+  const matchingTypeIndex = equippedIds.findIndex((id) => {
+    const equipped = getDefenseArmoryItemById(id, targetState);
+    return equipped?.defenseType && equipped.defenseType === itemDefenseType;
+  });
+  if (matchingTypeIndex >= 0) return `defense-${matchingTypeIndex}`;
+  return "defense-0";
+}
+
+function getComparableSlotIdForItem(item, slotId = null, targetState = state) {
   if (slotId) return slotId;
   const slotType = normalizeArmorySlotType(item?.slotType);
-  if (slotType === "defense") return "defense-0";
+  if (slotType === "defense") return getComparableDefenseSlotIdForItem(item, targetState);
   if (slotType === "mini") return "mini";
   if (slotType === "hull") return "hull";
   if (isSupportSlotType(slotType)) return "support";
@@ -7632,6 +7661,146 @@ function getShipDisplayStatsForState(targetState = state) {
   };
 }
 
+function createNeutralItemStatState(item = null) {
+  const inventoryItem = item && !["none", "none_second_primary"].includes(item.id)
+    ? cloneItem(item)
+    : null;
+  return {
+    upgrades: {
+      hull: 0,
+      shield: 0,
+      damage: 0,
+      fireRate: 0,
+      auxCooldown: 0,
+      cloakDuration: 0,
+      dualFire: 0,
+    },
+    hulls: { ownedIds: ["starter"], equippedId: "starter" },
+    weapon: { mount: "front" },
+    primaryFireMode: "swap",
+    activePrimaryBay: 0,
+    rmbWeapon: item?.ability || item?.sourceId || item?.id || "cloak",
+    armory: {
+      inventory: inventoryItem ? [inventoryItem] : [],
+      equippedLoadoutId: starterWeaponLoadouts[0]?.id || "fundamentals",
+      equippedPrimaryItemId: null,
+      equippedSecondLoadoutId: null,
+      equippedSecondPrimaryItemId: null,
+      equippedDefenseSlotIds: ["none", "none"],
+      equippedMiniItemId: normalizeArmorySlotType(item?.slotType) === "mini" ? item?.id || null : null,
+      equippedSupportItemId: isSupportSlotType(normalizeArmorySlotType(item?.slotType)) && item?.rarity
+        ? item.id
+        : null,
+    },
+  };
+}
+
+function createItemOwnBuild(item) {
+  const base = cloneShipBuild(createDefaultShipBuild());
+  const itemBuild = cloneShipBuild(item?.build || {});
+  return {
+    ...base,
+    ...itemBuild,
+    effectUpgrades: {
+      ...cloneShipBuild(base.effectUpgrades || {}),
+      ...cloneShipBuild(itemBuild.effectUpgrades || {}),
+    },
+    hullMult: 1,
+    shieldMaxMult: 1,
+    shieldRegenMult: 1,
+    armorCapacityMult: 1,
+    armorDragMult: 1,
+    primaryDamageMult: 1,
+    loadoutPrimaryDamageMult: 1,
+    loadoutPrimaryDamageDelta: 0,
+    loadoutModifierLabel: "Intrinsic",
+  };
+}
+
+function createIntrinsicPrimaryBuild(item) {
+  const build = createItemOwnBuild(item);
+  build.defenseSlots = ["none", "none"];
+  build.shieldMaxLevel = 0;
+  build.shieldRegenLevel = 0;
+  build.shieldCooldownLevel = 0;
+  build.armorAmountLevel = 0;
+  build.armorClass = BASE_ARMOR_CLASS;
+  build.armorClassLevel = 0;
+  build.armorDragLevel = 0;
+  build.armorDragMult = 1;
+  return build;
+}
+
+function createIntrinsicDefenseBuild(item) {
+  const build = createItemOwnBuild(item);
+  const defenseType = item?.defenseType === "armor" ? "armor" : "shield";
+  build.defenseSlots = [defenseType, "none"];
+  build.hullMult = 1;
+  build.shieldMaxMult = 1;
+  build.shieldRegenMult = 1;
+  build.armorCapacityMult = 1;
+  build.armorDragMult = 1;
+  build.primaryDamageMult = 1;
+  if (defenseType === "shield") {
+    build.armorAmountLevel = 0;
+    build.armorClass = BASE_ARMOR_CLASS;
+    build.armorClassLevel = 0;
+    build.armorDragLevel = 0;
+  } else {
+    build.shieldMaxLevel = 0;
+    build.shieldRegenLevel = 0;
+    build.shieldCooldownLevel = 0;
+  }
+  return build;
+}
+
+function getItemIntrinsicStats(item) {
+  const slotType = normalizeArmorySlotType(item?.slotType);
+  const neutralState = createNeutralItemStatState(item);
+  if (slotType === "primary") {
+    const build = createIntrinsicPrimaryBuild(item);
+    return {
+      slotType,
+      build,
+      offense: getOffenseStatsForBuild(build, neutralState),
+    };
+  }
+  if (slotType === "defense") {
+    const build = item?.id === "none" ? createItemOwnBuild(item) : createIntrinsicDefenseBuild(item);
+    if (item?.id === "none") {
+      build.defenseSlots = ["none", "none"];
+      build.shieldMaxLevel = 0;
+      build.shieldRegenLevel = 0;
+      build.shieldCooldownLevel = 0;
+      build.armorAmountLevel = 0;
+      build.armorClass = BASE_ARMOR_CLASS;
+      build.armorClassLevel = 0;
+      build.armorDragLevel = 0;
+    }
+    return {
+      slotType,
+      build,
+      defense: getDefenseStatsForBuild(build, neutralState),
+    };
+  }
+  if (slotType === "mini") {
+    return {
+      slotType,
+      mini: getMiniWeaponStatsForItem(item, neutralState),
+    };
+  }
+  if (isSupportSlotType(slotType)) {
+    return {
+      slotType: "aux",
+      support: getSupportStatsForState(neutralState),
+    };
+  }
+  return {
+    slotType,
+    build: null,
+  };
+}
+
 function ensurePreviewInventoryItem(previewState, item) {
   if (!item || !previewState.armory) return;
   previewState.armory.inventory = Array.isArray(previewState.armory.inventory)
@@ -7710,7 +7879,7 @@ function getBuildLanguageLines(patch = {}) {
   const buildAdd = patch.buildAdd || patch;
   const buildPatch = patch.build || patch;
   if (Number.isFinite(buildAdd.flowRateLevel) && buildAdd.flowRateLevel !== 0) {
-    addLine(`+${Math.round((1 - Math.pow(0.9, Math.abs(buildAdd.flowRateLevel))) * 100)}% Attack Speed`);
+    addLine(`+${Math.round((1 / Math.pow(0.9, Math.abs(buildAdd.flowRateLevel)) - 1) * 100)}% Shots per Second`);
   }
   if (Number.isFinite(buildAdd.flowVelocityLevel) && buildAdd.flowVelocityLevel !== 0) {
     addLine(`+${Math.round(Math.abs(buildAdd.flowVelocityLevel) * 8)}% Projectile Speed`);
@@ -7737,7 +7906,8 @@ function getBuildLanguageLines(patch = {}) {
     addLine(`+${Math.round(2 * Math.abs(buildAdd.armorClassLevel))} Armor Class`);
   }
   if (Number.isFinite(buildAdd.armorDragLevel) && buildAdd.armorDragLevel !== 0) {
-    addLine(`${buildAdd.armorDragLevel > 0 ? "More" : "Less"} armor drag on weapon cycling`);
+    const pct = Math.round((1 - 1 / (1 + Math.abs(buildAdd.armorDragLevel) * 0.06)) * 100);
+    addLine(`${buildAdd.armorDragLevel > 0 ? "-" : "+"}${pct}% Shots per Second from armor coupling`);
   }
   const tier = Number.isFinite(patch.effectTier) ? patch.effectTier : null;
   const tierNote = tier && tier > 1 ? ` (tier ${tier})` : "";
@@ -7763,12 +7933,26 @@ function getBaseEntryForItem(item) {
     null;
 }
 
+function isSpecialLanguageLine(text) {
+  const normalized = String(text || "").trim();
+  return (
+    normalized.startsWith("Shots pierce") ||
+    normalized.startsWith("Shots seek") ||
+    normalized.startsWith("Shots burst") ||
+    normalized.startsWith("Damage dealt restores")
+  );
+}
+
 function getItemLanguageLines(item) {
   const baseEntry = getBaseEntryForItem(item);
   const innateLines = [];
+  const specialLines = [];
   const baseEffect = baseEntry?.build?.effect;
   if (baseEffect && baseEffect !== "none") {
-    getBuildLanguageLines({ effect: baseEffect }).forEach((text) => innateLines.push(text));
+    getBuildLanguageLines({ effect: baseEffect }).forEach((text) => {
+      if (isSpecialLanguageLine(text)) specialLines.push(text);
+      else innateLines.push(text);
+    });
   }
   const affixLines = [];
   (item?.affixes || []).forEach((affix) => {
@@ -7783,7 +7967,10 @@ function getItemLanguageLines(item) {
         })
       : [];
     if (lines.length) {
-      lines.forEach((text) => affixLines.push(text));
+      lines.forEach((text) => {
+        if (isSpecialLanguageLine(text)) specialLines.push(text);
+        else affixLines.push(text);
+      });
     } else if (affix.name) {
       affixLines.push(affix.name);
     }
@@ -7793,7 +7980,107 @@ function getItemLanguageLines(item) {
   } else if (item?.uniqueProperty?.name) {
     affixLines.push(item.uniqueProperty.name);
   }
-  return { innateLines, affixLines };
+  return { innateLines, affixLines, specialLines };
+}
+
+function formatSignedPercent(fraction) {
+  if (!Number.isFinite(fraction) || Math.abs(fraction) < 0.001) return "0%";
+  const pct = Math.round(Math.abs(fraction) * 100);
+  return `${fraction >= 0 ? "+" : "-"}${pct}%`;
+}
+
+function formatShotsPerSecondPenaltyFromCooldownPercent(cooldownPercent) {
+  if (!Number.isFinite(cooldownPercent) || cooldownPercent <= 0) return "-";
+  const penalty = 1 - 1 / (1 + cooldownPercent / 100);
+  return `${formatSignedPercent(-penalty)} Shots per Second`;
+}
+
+function getPrimaryDamageBreakdownRows(offense) {
+  const cfg = offense?.cfg;
+  if (!cfg) return [];
+  const rows = [
+    { text: `Damage per shot ${formatNumber(offense.hitDamage, 1)}` },
+  ];
+  const focusText = cfg.shotDamageMult > 1
+    ? ` · Focus x${formatNumber(cfg.shotDamageMult, 2)}`
+    : "";
+  if (cfg.ammo === "plasma") {
+    rows.push({
+      text: `Base ${ECONOMY.plasma.baseDamage} · Size x${formatNumber(cfg.sizeFactor, 2)}${focusText} -> ${formatNumber(offense.hitDamage, 1)}`,
+      math: `Plasma hit damage = base * size${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}.`,
+    });
+    if (offense.burnDps) {
+      rows.push({ text: `Burn ${formatNumber(offense.burnDps, 1)}/s after impact` });
+    }
+  } else {
+    rows.push({
+      text: `Base ${ECONOMY.kinetic.baseDamage} · Size x${formatNumber(cfg.sizeFactor, 2)} · Speed x${formatNumber(cfg.velocityFactor, 2)}${focusText} -> ${formatNumber(offense.hitDamage, 1)}`,
+      math: `Kinetic hit damage = base * size * speed^${ECONOMY.kinetic.velocityExponent}${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}.`,
+    });
+  }
+  rows.push({ text: `Shots per second ${formatNumber(offense.attacksPerSecond, 2)}` });
+  rows.push({
+    text: `DPS ${formatNumber(offense.dps, 1)} (${formatNumber(offense.hitDamage, 1)} x ${offense.totalProjectiles} projectile${offense.totalProjectiles === 1 ? "" : "s"} x ${formatNumber(offense.attacksPerSecond, 2)}/s${offense.burnDps ? ` + ${formatNumber(offense.burnDps, 1)} burn/s` : ""})`,
+  });
+  return rows;
+}
+
+function getPrimaryInstalledModifierRows(previewState, intrinsicBuild, effectiveBuild, effectiveOffense) {
+  if (!previewState || !intrinsicBuild || !effectiveBuild || !effectiveOffense) return [];
+  const rows = [];
+  const intrinsicCfg = getPrimaryFireConfig(intrinsicBuild);
+  const effectiveCfg = effectiveOffense.cfg || getPrimaryFireConfig(effectiveBuild);
+  const addRow = (label, detail, math = "") => rows.push({ label, detail, math });
+  const flowRateDelta = (effectiveBuild.flowRateLevel ?? 0) - (intrinsicBuild.flowRateLevel ?? 0);
+  if (Math.abs(flowRateDelta) > 0.001) {
+    const ratio = Math.pow(0.9, -(flowRateDelta));
+    addRow("Aux flow-rate", `${formatSignedPercent(ratio - 1)} Shots per Second`);
+  }
+  const flowVelocityDelta = (effectiveBuild.flowVelocityLevel ?? 0) - (intrinsicBuild.flowVelocityLevel ?? 0);
+  if (Math.abs(flowVelocityDelta) > 0.001 && effectiveCfg.ammo === "kinetic") {
+    addRow("Aux projectile speed", `+${Math.round(Math.abs(flowVelocityDelta) * 8)}% speed-fed damage`);
+  }
+  const flowSizeDelta = (effectiveBuild.flowSizeLevel ?? 0) - (intrinsicBuild.flowSizeLevel ?? 0);
+  if (Math.abs(flowSizeDelta) > 0.001) {
+    addRow("Aux projectile size", `+${Math.round(Math.abs(flowSizeDelta) * 12)}% size-fed damage`);
+  }
+  const impulseDelta = (effectiveBuild.kineticImpulseBudget ?? 0) - (intrinsicBuild.kineticImpulseBudget ?? 0);
+  if (Math.abs(impulseDelta) > 0.001 && effectiveCfg.ammo === "kinetic") {
+    addRow("Aux impulse budget", `+${Math.round(Math.abs(impulseDelta) * 100)}% kinetic impulse`);
+  }
+  const armorPenaltyRatio = effectiveCfg.armorPenalty / Math.max(0.01, intrinsicCfg.armorPenalty || 1);
+  if (armorPenaltyRatio > 1.005) {
+    addRow(
+      "Heavy armor drag",
+      `${formatSignedPercent(1 / armorPenaltyRatio - 1)} Shots per Second`,
+      "Armor drag is converted to a firing-speed change for display."
+    );
+  }
+  const hullDamageMult = getHullBonuses(previewState).primaryDamageMult ?? 1;
+  if (Math.abs(hullDamageMult - 1) > 0.001) {
+    addRow("Hull weapon tuning", `${formatSignedPercent(hullDamageMult - 1)} primary damage`);
+  }
+  const loadout = getPrimaryLoadoutModifiers(previewState);
+  if (Math.abs((loadout.primaryDamageMult ?? 1) - 1) > 0.001) {
+    addRow(loadout.label, `${formatSignedPercent(loadout.primaryDamageDelta)} primary damage`, loadout.description);
+  }
+  if (rows.length) {
+    rows.push({ label: "Effective DPS", detail: formatNumber(effectiveOffense.dps, 1) });
+  }
+  return rows;
+}
+
+function getPrimaryBreakdownSections(intrinsicOffense, previewState, intrinsicBuild, effectiveBuild, effectiveOffense) {
+  const sections = [];
+  const damageRows = getPrimaryDamageBreakdownRows(intrinsicOffense);
+  if (damageRows.length) {
+    sections.push({ title: "Damage Breakdown", rows: damageRows });
+  }
+  const modifierRows = getPrimaryInstalledModifierRows(previewState, intrinsicBuild, effectiveBuild, effectiveOffense);
+  if (modifierRows.length) {
+    sections.push({ title: "Installed Modifiers", rows: modifierRows });
+  }
+  return sections;
 }
 
 function getItemDisplayStats(item, slotId = null) {
@@ -7803,9 +8090,10 @@ function getItemDisplayStats(item, slotId = null) {
   const previewStats = getShipDisplayStatsForState(previewState);
   const installedItem = getInstalledArmoryItem(resolvedSlotId);
   const isInstalled = !!item?.installed || (!!installedItem && installedItem.id === item?.id);
-  const build = previewStats.build;
+  const intrinsic = getItemIntrinsicStats(item);
+  const build = intrinsic.build || previewStats.build;
   const typeLine = getItemTypeLine(item, build, resolvedSlotId);
-  const { innateLines, affixLines } = getItemLanguageLines(item);
+  const { innateLines, affixLines, specialLines } = getItemLanguageLines(item);
   const tags = Array.isArray(item?.tags) ? item.tags.slice(0, 5) : [];
   const footer = [
     Number.isFinite(item?.value) ? `Sell ${formatCredits(Math.round(item.value * ECONOMY.market.sellRate))}` : "",
@@ -7813,33 +8101,41 @@ function getItemDisplayStats(item, slotId = null) {
   ].filter(Boolean).join("   ");
   let headline;
   let lines = [];
+  let breakdownSections = [];
   if (resolvedSlotId === "primary-2" && item?.id === "none_second_primary") {
-    const defense = previewStats.defense;
-    const currentDefense = currentStats.defense;
+    const offense = previewStats.offense;
     headline = {
       label: "Focus",
       value: SINGLE_PRIMARY_FOCUS_RATE,
-      display: `+${Math.round(SINGLE_PRIMARY_FOCUS_RATE * 100)}%`,
-      delta: isInstalled ? 0 : defense.shield - currentDefense.shield,
+      display: `${formatSignedPercent(SINGLE_PRIMARY_FOCUS_RATE)} damage`,
+      delta: isInstalled ? 0 : offense.dps - currentStats.offense.dps,
+      deltaLabel: "installed",
       lowerIsGood: false,
     };
     lines = [
-      { label: "Shield", value: `${defense.shield}`, math: "Empty second bay restores the single-primary focus bonus." },
-      { label: "Shield Regen", value: `${formatNumber(defense.shieldRegen, 1)}/s`, math: "Single-primary focus increases max shield and shield regen." },
+      { label: "Primary Damage", value: formatSignedPercent(SINGLE_PRIMARY_FOCUS_RATE), math: "Empty Primary B applies the single-primary damage focus." },
+      { label: "Effective DPS", value: formatNumber(offense.dps, 1), math: "Current primary DPS with the focus bonus applied." },
       { label: "Effect", value: "Clear second bay", math: "" },
     ];
   } else if (resolvedSlotId === "primary" || resolvedSlotId === "primary-2") {
-    const offense = resolvedSlotId === "primary-2"
-      ? getOffenseStatsForBuild(composeShipBuildFromArmory(previewState, { primaryItem: item }), previewState)
-      : previewStats.offense;
+    const offense = intrinsic.offense;
+    const effectiveBuild = composeShipBuildFromArmory(previewState, { primaryItem: item });
+    const effectiveOffense = getOffenseStatsForBuild(effectiveBuild, previewState);
+    const specialValue = specialLines.length ? specialLines.join(" · ") : "";
     headline = {
       label: "DPS",
       value: offense.dps,
       display: formatNumber(offense.dps, 1),
-      delta: isInstalled ? 0 : offense.dps - currentStats.offense.dps,
+      delta: isInstalled ? 0 : previewStats.offense.dps - currentStats.offense.dps,
+      deltaLabel: "installed",
       lowerIsGood: false,
     };
     lines = [
+      {
+        label: "Pattern",
+        value: offense.pattern,
+        math: `${offense.totalProjectiles} projectile${offense.totalProjectiles === 1 ? "" : "s"} per trigger.`,
+      },
       {
         label: "Damage per Shot",
         value: formatNumber(offense.hitDamage, 1),
@@ -7847,10 +8143,12 @@ function getItemDisplayStats(item, slotId = null) {
           ? `Plasma hit damage = ${ECONOMY.plasma.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`
           : `Kinetic hit damage = ${ECONOMY.kinetic.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)} * ${formatNumber(offense.cfg.velocityFactor, 2)}^${ECONOMY.kinetic.velocityExponent}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`,
       },
+      { label: "Ammo", value: offense.ammo, math: offense.burnDps ? `Burn DPS = hit damage * 0.45 = ${formatNumber(offense.burnDps, 1)}.` : "" },
+      specialValue ? { label: "Special", value: specialValue, math: "" } : null,
       {
         label: "Shots per Second",
         value: formatNumber(offense.attacksPerSecond, 2),
-        math: `1 / ${formatNumber(offense.cfg.cooldown, 2)}s cooldown.`,
+        math: `1 / ${formatNumber(offense.cfg.cooldown, 2)}s internal cycle time.`,
       },
       {
         label: "Volley Output",
@@ -7858,42 +8156,33 @@ function getItemDisplayStats(item, slotId = null) {
         math: `${formatNumber(offense.hitDamage, 1)} per shot * ${offense.totalProjectiles} projectile${offense.totalProjectiles === 1 ? "" : "s"}.`,
       },
       {
-        label: "Sustained DPS",
-        value: formatNumber(offense.dps, 1),
-        math: `Volley ${formatNumber(offense.volleyDamage, 1)} * ${formatNumber(offense.attacksPerSecond, 2)} triggers/s${offense.burnDps ? ` + ${formatNumber(offense.burnDps, 1)} burn DPS` : ""}.`,
-      },
-      {
-        label: "Pattern",
-        value: offense.pattern,
-        math: `${offense.totalProjectiles} projectile${offense.totalProjectiles === 1 ? "" : "s"} per trigger.`,
-      },
-      { label: "Ammo", value: offense.ammo, math: offense.burnDps ? `Burn DPS = hit damage * 0.45 = ${formatNumber(offense.burnDps, 1)}.` : "" },
-      {
         label: "Dual-Fire",
         value: isDualFireCompatibleItem(item) ? "Dual-capable" : "Swap-only",
         math: isDualFireCompatibleItem(item)
           ? "Can fire simultaneously when Dual Fire is selected and the coupler is unlocked."
           : "This frame explicitly opts out of simultaneous fire.",
       },
-    ];
+    ].filter(Boolean);
+    breakdownSections = getPrimaryBreakdownSections(offense, previewState, intrinsic.build, effectiveBuild, effectiveOffense);
   } else if (resolvedSlotId === "mini") {
-    const mini = getMiniWeaponStatsForItem(item, previewState);
+    const mini = intrinsic.mini;
     const currentMini = currentStats.mini;
     const miniTuning = getMiniRarityTuning(item?.rarity || "scrap");
     headline = {
       label: "Mini DPS",
       value: mini.dps,
       display: formatNumber(mini.dps, 1),
-      delta: isInstalled ? 0 : mini.dps - currentMini.dps,
+      delta: isInstalled ? 0 : previewStats.mini.dps - currentMini.dps,
+      deltaLabel: "installed",
       lowerIsGood: false,
     };
     lines = [
       { label: "Shot Damage", value: formatNumber(mini.damage, 1), math: "Mini damage includes hull mini modifiers." },
-      { label: "Shots per Second", value: formatNumber(mini.attacksPerSecond, 2), math: `1 / ${formatNumber(mini.cooldown, 2)}s cooldown.` },
+      { label: "Shots per Second", value: formatNumber(mini.attacksPerSecond, 2), math: `1 / ${formatNumber(mini.cooldown, 2)}s internal cycle time.` },
       item?.rarity
         ? {
             label: "Rarity Tune",
-            value: `${Math.round(miniTuning.damageMult * 100)}% dmg | ${Math.round(miniTuning.cooldownMult * 100)}% cd`,
+            value: `${Math.round(miniTuning.damageMult * 100)}% dmg | ${Math.round((1 / miniTuning.cooldownMult) * 100)}% Shots/sec`,
             math: "Rarity-scaled mini output is saved on the item.",
           }
         : null,
@@ -7905,22 +8194,24 @@ function getItemDisplayStats(item, slotId = null) {
     const defense = previewStats.defense;
     const currentDefense = currentStats.defense;
     const headlineKey = item?.defenseType === "armor" ? "armor" : "shield";
+    const intrinsicDefense = intrinsic.defense || defense;
     headline = {
       label: headlineKey === "armor" ? "Armor" : "Shield",
-      value: defense[headlineKey],
-      display: `${Math.round(defense[headlineKey])}`,
+      value: intrinsicDefense[headlineKey],
+      display: `${Math.round(intrinsicDefense[headlineKey])}`,
       delta: isInstalled ? 0 : defense[headlineKey] - currentDefense[headlineKey],
+      deltaLabel: headlineKey === "armor" ? "ship armor" : "ship shield",
       lowerIsGood: false,
     };
     lines = headlineKey === "armor"
       ? [
-          { label: "Armor Class", value: defense.armorClass ? `${defense.armorClass}` : "-", math: `Armor Class = base + 2 per armor-class level.` },
-          { label: "Armor Drag", value: defense.armorDrag ? `+${defense.armorDrag}% cooldown` : "-", math: "Armor drag increases primary weapon cooldown." },
+          { label: "Armor Class", value: intrinsicDefense.armorClass ? `${intrinsicDefense.armorClass}` : "-", math: `Armor Class = base + 2 per armor-class level.` },
+          { label: "Shots per Second", value: formatShotsPerSecondPenaltyFromCooldownPercent(intrinsicDefense.armorDrag), math: "Armor drag lowers primary firing speed." },
           { label: "Effect", value: "Reduces incoming hit damage", math: "Shields absorb first; armor class reduces projectile hits that reach armor." },
         ]
       : [
-          { label: "Shield Regen", value: `${formatNumber(defense.shieldRegen, 1)}/s`, math: `12/s per shield slot * shield regen tuning.` },
-          { label: "Recovery Delay", value: `${formatNumber(defense.shieldRechargeDelay, 1)}s`, math: `Base 2.5s, shifted by shield recovery tuning.` },
+          { label: "Shield Regen", value: `${formatNumber(intrinsicDefense.shieldRegen, 1)}/s`, math: `12/s per shield slot * shield regen tuning.` },
+          { label: "Recovery Delay", value: `${formatNumber(intrinsicDefense.shieldRechargeDelay, 1)}s`, math: `Base 2.5s, shifted by shield recovery tuning.` },
           { label: "Effect", value: "Regenerates after damage pause", math: "Collision damage bypasses shields." },
         ];
   } else if (resolvedSlotId === "hull") {
@@ -7932,24 +8223,27 @@ function getItemDisplayStats(item, slotId = null) {
       value: defense.hull,
       display: `${defense.hull}`,
       delta: isInstalled ? 0 : defense.hull - currentDefense.hull,
+      deltaLabel: "installed",
       lowerIsGood: false,
     };
     lines = [
-      { label: "Shield", value: `${defense.shield} | ${formatNumber(defense.shieldRegen, 1)}/s`, math: "Hull bonuses and second-bay focus/strain are included." },
+      { label: "Shield", value: `${defense.shield} | ${formatNumber(defense.shieldRegen, 1)}/s`, math: "Hull shield bonuses are included." },
       { label: "Armor", value: `${defense.armor}`, math: `Armor capacity x${formatNumber(bonuses.armorCapacityMult ?? 1, 2)}.` },
-      { label: "Mini Control", value: `${Math.round((bonuses.miniDamageMult ?? 1) * 100)}% dmg | ${Math.round((bonuses.miniCooldownMult ?? 1) * 100)}% cd`, math: "Lower mini cooldown percentages are better." },
+      { label: "Mini Control", value: `${Math.round((bonuses.miniDamageMult ?? 1) * 100)}% dmg | ${Math.round((1 / (bonuses.miniCooldownMult ?? 1)) * 100)}% Shots/sec`, math: "Hull mini control modifies mini firing speed." },
       { label: "Aux Potency", value: bonuses.auxPowerBonus ? `+${Math.round(bonuses.auxPowerBonus * 8)}% ability roll` : "—", math: "Hull identity perk lifts the equipped aux item's rolled potency." },
-      { label: "Second Bay", value: `${Math.round((bonuses.secondBayStrainReduction || 0) * 100)}% strain mitigation`, math: "Baseline second-bay strain is 15% shield and regen." },
+      { label: "Second Bay", value: `${Math.round((bonuses.secondBayStrainReduction || 0) * 100)}% strain mitigation`, math: `Baseline second-bay strain is ${Math.round(SECOND_PRIMARY_STRAIN_RATE * 100)}% primary damage per weapon.` },
       { label: "Dual-Fire", value: `+${bonuses.dualFireTierBonus || 0} tier`, math: "Hull bonus stacks with Armory dual-fire upgrades." },
     ];
   } else {
-    const support = previewStats.support;
+    const support = intrinsic.support || previewStats.support;
     const currentSupport = currentStats.support;
     headline = {
-      label: "Cooldown",
+      label: "Recharge",
       value: support.cooldown,
       display: `${formatNumber(support.cooldown, 1)}s`,
-      delta: isInstalled ? 0 : support.cooldown - currentSupport.cooldown,
+      delta: isInstalled ? 0 : previewStats.support.cooldown - currentSupport.cooldown,
+      deltaSuffix: "s",
+      deltaLabel: "installed",
       lowerIsGood: true,
     };
     lines = [
@@ -7966,6 +8260,7 @@ function getItemDisplayStats(item, slotId = null) {
     rollQuality: Number.isFinite(item?.rollQuality) ? item.rollQuality : null,
     headline,
     lines,
+    breakdownSections,
     innateLines,
     affixLines,
     lore: item?.relicLore || "",
@@ -7980,8 +8275,9 @@ function renderHeadlineDelta(headline) {
   const good = headline.lowerIsGood ? delta < 0 : delta > 0;
   const symbol = delta > 0 ? "▲" : "▼";
   const value = Math.abs(delta);
-  const suffix = headline.label === "Cooldown" ? "s" : "";
-  return `<span class="item-delta ${good ? "good" : "bad"}">${symbol} ${delta > 0 ? "+" : "-"}${formatNumber(value, headline.label === "Cooldown" ? 1 : 1)}${suffix}</span>`;
+  const suffix = headline.deltaSuffix || "";
+  const label = headline.deltaLabel || "installed";
+  return `<span class="item-delta ${good ? "good" : "bad"}">${symbol} ${delta > 0 ? "+" : "-"}${formatNumber(value, 1)}${suffix} ${escapeHtml(label)}</span>`;
 }
 
 // The Diablo "is this a keeper?" read: a thin meter filled to rollQuality, tinted toward rarity.
@@ -7997,6 +8293,33 @@ function renderRollQualityBar(rollQuality, rarity) {
       </span>
     </div>
   `;
+}
+
+function renderItemBreakdownSections(sections = []) {
+  const showMath = !!state.devShowMath;
+  return (sections || [])
+    .map((section) => {
+      const rows = (section.rows || [])
+        .map((row) => {
+          const rowText = row.text
+            ? escapeHtml(row.text)
+            : `<span>${escapeHtml(row.label || "")}</span><span>${escapeHtml(row.detail || "")}</span>`;
+          return `
+            <div class="item-breakdown-row${row.text ? " text" : ""}">
+              ${rowText}
+              ${showMath && row.math ? `<span class="item-stat-math">${escapeHtml(row.math)}</span>` : ""}
+            </div>
+          `;
+        })
+        .join("");
+      return `
+        <div class="item-breakdown-section">
+          <div class="item-breakdown-title">${escapeHtml(section.title || "Breakdown")}</div>
+          ${rows}
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function renderItemDisplayBlock(display, { inline = false } = {}) {
@@ -8015,6 +8338,7 @@ function renderItemDisplayBlock(display, { inline = false } = {}) {
       `
     )
     .join("");
+  const breakdownHtml = renderItemBreakdownSections(display.breakdownSections || []);
   const innateHtml = display.innateLines
     .map((line) => `<div class="item-affix-line innate">${escapeHtml(line)}</div>`)
     .join("");
@@ -8028,9 +8352,11 @@ function renderItemDisplayBlock(display, { inline = false } = {}) {
   const rollHtml = renderRollQualityBar(display.rollQuality, display.rarity);
   const detailHtml = `
     <div class="${inline ? "item-display-scroll" : "item-display-details"}">
-      ${rollHtml}
-      <div class="item-stat-lines">${lineHtml}${innateHtml}${affixHtml}</div>
+      <div class="item-stat-lines">${lineHtml}</div>
+      ${breakdownHtml}
+      ${(innateHtml || affixHtml) ? `<div class="item-affix-lines">${innateHtml}${affixHtml}</div>` : ""}
       ${display.lore ? `<div class="item-lore">${escapeHtml(display.lore)}</div>` : ""}
+      ${rollHtml}
       ${display.footer ? `<div class="item-footer">${escapeHtml(display.footer)}</div>` : ""}
     </div>
   `;
@@ -8134,7 +8460,7 @@ function getArmorClassForModule(item) {
   return Math.round((item.build.armorClass ?? BASE_ARMOR_CLASS) + (item.build.armorClassLevel ?? 0) * 2);
 }
 
-function getEquippedDefenseDebugRows() {
+function getEquippedDefenseRows() {
   const slotIds = getEquippedDefenseSlotIds();
   return slotIds.map((slotId, index) => {
     const item = getDefenseArmoryItemById(slotId);
@@ -8142,27 +8468,27 @@ function getEquippedDefenseDebugRows() {
       return {
         label: `Defense ${index + 1}`,
         value: "Empty",
-        math: `Slot id: ${slotId || "none"}`,
+        math: "No defense module is installed in this bay.",
       };
     }
     if (item.defenseType === "armor") {
       return {
         label: `Defense ${index + 1}`,
         value: `${getCompactItemName(item)} | AC ${getArmorClassForModule(item)}`,
-        math: `Saved item id: ${item.id}. Armor class uses this module's ${item.build?.armorClass ?? BASE_ARMOR_CLASS} base + 2*${item.build?.armorClassLevel ?? 0} class levels.`,
+        math: "The highest installed armor class is the one combat uses.",
       };
     }
     if (item.defenseType === "shield") {
       return {
         label: `Defense ${index + 1}`,
         value: `${getCompactItemName(item)} | Shield`,
-        math: `Saved item id: ${item.id}. Shield max level ${item.build?.shieldMaxLevel ?? 0}, regen level ${item.build?.shieldRegenLevel ?? 0}.`,
+        math: "Shield modules add capacity, regen, and recovery tuning.",
       };
     }
     return {
       label: `Defense ${index + 1}`,
       value: getCompactItemName(item),
-      math: `Saved item id: ${item.id}. Defense type: ${item.defenseType || "unknown"}.`,
+      math: item.description || "Installed defense module.",
     };
   });
 }
@@ -8220,81 +8546,76 @@ function getMissionProjectileDamageSummary(level, elapsed = 0) {
 
 async function openArmoryStatsModal() {
   if (!shipModal || !shipModalTitle || !shipModalBody) return;
-  await ensureEnemyCatalogLoaded();
-  const selectedLevel = await loadLevel(selectedLevelId);
   const stats = getShipDisplayStatsForState(state);
-  const build = stats.build;
   const support = stats.support;
   const mini = stats.mini;
-  const launchDamage = getMissionProjectileDamageSummary(selectedLevel, 0);
-  const lateDamage = getMissionProjectileDamageSummary(selectedLevel, 60);
-  const layerRows = [
+  const activePrimarySlot = getActivePrimaryBay(state) === 1 ? "primary-2" : "primary";
+  const activePrimary = getInstalledArmoryItem(activePrimarySlot);
+  const primaryDisplay = activePrimary ? getItemDisplayStats(activePrimary, activePrimarySlot) : null;
+  const loadout = getPrimaryLoadoutModifiers(state);
+  const defenseRows = [
     { label: "Hull", value: `${stats.defense.hull}`, math: "Hull takes raw projectile damage once armor is gone." },
     { label: "Shield", value: `${stats.defense.shield}`, math: "Shields take raw non-collision projectile damage before armor." },
     { label: "Shield Regen", value: `${formatNumber(stats.defense.shieldRegen, 1)}/s`, math: "Regen resumes after the recovery delay." },
+    { label: "Shield Recovery", value: stats.defense.shieldRechargeDelay ? `${formatNumber(stats.defense.shieldRechargeDelay, 1)}s` : "-", math: "Recovery delay starts after shield damage." },
     { label: "Armor", value: `${stats.defense.armor}`, math: "Armor capacity stacks across installed armor modules." },
-    { label: "Armor Class", value: stats.defense.armorClass ? `${stats.defense.armorClass}` : "-", math: "Best installed armor class only; multiple plates do not add armor class together." },
-    { label: "Armor Drag", value: stats.defense.armorDrag ? `+${stats.defense.armorDrag}% cooldown` : "-", math: "Armor drag stacks from installed armor modules." },
-  ];
-  const buildRows = [
-    { label: "Build AC Base", value: `${build.armorClass ?? BASE_ARMOR_CLASS}`, math: "Composed build armorClass before class-level conversion." },
-    { label: "Build AC Levels", value: `${build.armorClassLevel ?? 0}`, math: "Final armor class adds 2 per armor-class level." },
-    { label: "Defense Slots", value: `${stats.defense.shieldSlots} shield / ${stats.defense.armorSlots} armor`, math: `Equipped slot ids: ${getEquippedDefenseSlotIds().join(", ")}.` },
-    { label: "Mission Count", value: `${state.missionCount || 0}`, math: "Mission count tracks sorties, markets, and records; it does not scale combat difficulty." },
-  ];
-  const missionRows = [
-    {
-      label: "Selected Mission",
-      value: selectedLevel?.name || selectedLevelId,
-      math: selectedLevel?.validationErrors?.length
-        ? selectedLevel.validationErrors.join(" | ")
-        : `Level id: ${selectedLevel?.id || selectedLevelId}.`,
-    },
-    launchDamage
-      ? {
-          label: "Launch Bullets",
-          value: `${formatNumber(launchDamage.minDamage, 1)}-${formatNumber(launchDamage.maxDamage, 1)}`,
-          math: `Difficulty ${formatNumber(launchDamage.difficulty, 2)}. Hardest: ${launchDamage.hardest.join(", ")}.`,
-        }
-      : { label: "Launch Bullets", value: "-", math: "No projectile enemies found in selected mission." },
-    lateDamage
-      ? {
-          label: "After 60s",
-          value: `${formatNumber(lateDamage.minDamage, 1)}-${formatNumber(lateDamage.maxDamage, 1)}`,
-          math: `Difficulty ${formatNumber(lateDamage.difficulty, 2)}. Hardest: ${lateDamage.hardest.join(", ")}.`,
-        }
-      : { label: "After 60s", value: "-", math: "No projectile enemies found in selected mission." },
+    { label: "Armor Class", value: stats.defense.armorClass ? `${stats.defense.armorClass}` : "-", math: "This is the best installed armor class and is the value combat uses." },
+    { label: "Armor Fire Speed", value: formatShotsPerSecondPenaltyFromCooldownPercent(stats.defense.armorDrag), math: "Armor drag lowers primary Shots per Second." },
   ];
   const offenseRows = [
-    { label: "Primary DPS", value: formatNumber(stats.offense.dps, 1), math: "Current active primary bay offense." },
-    { label: "Damage/Shot", value: formatNumber(stats.offense.hitDamage, 1), math: "Per projectile damage before multi-shot count." },
-    { label: "Shots/Sec", value: formatNumber(stats.offense.attacksPerSecond, 2), math: "Current active primary cadence." },
-    { label: "Mini DPS", value: formatNumber(mini.dps, 1), math: `${getCompactItemName(getSelectedMiniWeapon())}: ${formatNumber(mini.damage, 1)} damage every ${formatNumber(mini.cooldown, 2)}s.` },
-    { label: "Support", value: support.name, math: support.effect },
+    { label: "Effective DPS", value: formatNumber(stats.offense.dps, 1), math: "Current active primary after installed modifiers." },
+    { label: "Damage per Shot", value: formatNumber(stats.offense.hitDamage, 1), math: "Per-projectile damage after installed modifiers." },
+    { label: "Shots per Second", value: formatNumber(stats.offense.attacksPerSecond, 2), math: "Current active primary firing speed." },
+    { label: "Pattern", value: stats.offense.pattern, math: "" },
+    { label: "Ammo", value: stats.offense.ammo, math: "" },
+    { label: "Mini DPS", value: formatNumber(mini.dps, 1), math: `${getCompactItemName(getSelectedMiniWeapon())}: ${formatNumber(mini.damage, 1)} damage at ${formatNumber(mini.attacksPerSecond, 2)} shots/s.` },
+  ];
+  const supportRows = [
+    { label: "Ability", value: support.name, math: "" },
+    { label: "Recharge", value: support.cooldown ? `${formatNumber(support.cooldown, 1)}s` : "-", math: support.math },
+    { label: "Duration", value: support.duration ? `${formatNumber(support.duration, 1)}s` : "-", math: support.math },
+    { label: "Effect", value: support.effect, math: support.math },
+  ];
+  const dualReady = canUseDualFireCurrentLoadout();
+  const dualSelected = canDualFireCurrentLoadout();
+  const loadoutRows = [
+    { label: "Hull", value: getEquippedHull().name, math: getEquippedHull().description },
+    { label: "Bay State", value: loadout.label, math: loadout.description },
+    { label: "Primary Damage", value: formatSignedPercent(loadout.primaryDamageDelta), math: "Applied to each primary weapon before Dual Fire scaling." },
+    {
+      label: "Dual Fire",
+      value: dualSelected
+        ? `${Math.round(getDualFireDamageMult() * 100)}% per weapon`
+        : dualReady
+          ? "Ready, not selected"
+          : "Locked or incomplete",
+      math: "Dual Fire is selected from the Armory fire-mode switch.",
+    },
   ];
   shipModalTitle.textContent = "Ship Stats";
   shipModalBody.innerHTML = `
     <div class="ship-stats-modal">
       <p class="muted">Mission-ready values from the current Armory build. Armor class only applies after shields are depleted.</p>
       <div class="stat-section">
-        <div class="stat-section-title">Defense Layers</div>
-        ${renderDiagnosticStatRows(layerRows)}
+        <div class="stat-section-title">Offense</div>
+        ${offenseRows.map(renderShipStatRow).join("")}
+        ${renderItemBreakdownSections(primaryDisplay?.breakdownSections || [])}
+      </div>
+      <div class="stat-section">
+        <div class="stat-section-title">Defense</div>
+        ${defenseRows.map(renderShipStatRow).join("")}
       </div>
       <div class="stat-section">
         <div class="stat-section-title">Installed Defense Items</div>
-        ${renderDiagnosticStatRows(getEquippedDefenseDebugRows())}
+        ${getEquippedDefenseRows().map(renderShipStatRow).join("")}
       </div>
       <div class="stat-section">
-        <div class="stat-section-title">Mission Projectile Check</div>
-        ${renderDiagnosticStatRows(missionRows)}
+        <div class="stat-section-title">Aux</div>
+        ${supportRows.map(renderShipStatRow).join("")}
       </div>
       <div class="stat-section">
-        <div class="stat-section-title">Build Internals</div>
-        ${renderDiagnosticStatRows(buildRows)}
-      </div>
-      <div class="stat-section">
-        <div class="stat-section-title">Offense And Support</div>
-        ${renderDiagnosticStatRows(offenseRows)}
+        <div class="stat-section-title">Loadout</div>
+        ${loadoutRows.map(renderShipStatRow).join("")}
       </div>
     </div>
   `;
@@ -8305,36 +8626,34 @@ async function openArmoryStatsModal() {
 
 function renderShipStatsPanel() {
   if (!shipStats) return;
-  const currentPrimary = getInstalledArmoryItem("primary");
+  const activePrimarySlot = getActivePrimaryBay(state) === 1 ? "primary-2" : "primary";
+  const currentPrimary = getInstalledArmoryItem(activePrimarySlot);
   const display = currentPrimary
-    ? getItemDisplayStats(currentPrimary, "primary")
+    ? getItemDisplayStats(currentPrimary, activePrimarySlot)
     : null;
   const stats = getShipDisplayStatsForState(state);
   const support = stats.support;
   const mini = stats.mini;
-  const loadout = getPrimaryLoadoutDefenseModifiers(state);
-  const offenseRows = display
-    ? [
-        {
-          label: display.headline.label,
-          value: display.headline.display,
-          math: display.lines.find((line) => line.label === "Damage per Shot")?.math || "",
-        },
-        ...display.lines,
-      ]
-    : [];
+  const loadout = getPrimaryLoadoutModifiers(state);
+  const offenseRows = [
+    { label: "Effective DPS", value: formatNumber(stats.offense.dps, 1), math: "Current active primary after installed modifiers." },
+    { label: "Damage per Shot", value: formatNumber(stats.offense.hitDamage, 1), math: "Per-projectile damage after installed modifiers." },
+    { label: "Shots per Second", value: formatNumber(stats.offense.attacksPerSecond, 2), math: "Current active primary firing speed." },
+    { label: "Pattern", value: stats.offense.pattern, math: "" },
+    { label: "Ammo", value: stats.offense.ammo, math: "" },
+  ];
   const defenseRows = [
     { label: "Hull", value: `${stats.defense.hull}`, math: `Hull = 100 * (1 + 0.08*${state.upgrades?.hull ?? 0}).` },
     { label: "Shield", value: `${stats.defense.shield}`, math: `40 per shield slot, scaled by shield tuning.` },
     { label: "Shield Regen", value: `${formatNumber(stats.defense.shieldRegen, 1)}/s`, math: `12/s per shield slot, scaled by regen tuning.` },
     { label: "Recovery Delay", value: stats.defense.shieldRechargeDelay ? `${formatNumber(stats.defense.shieldRechargeDelay, 1)}s` : "-", math: `Base 2.5s, shifted by shield recovery tuning.` },
     { label: "Armor", value: `${stats.defense.armor}`, math: `80 per armor slot, scaled by armor mass tuning.` },
-    { label: "Armor Class", value: stats.defense.armorClass ? `${stats.defense.armorClass}` : "-", math: `Best installed armor class + 2 per armor-class level.` },
-    { label: "Armor Drag", value: stats.defense.armorDrag ? `+${stats.defense.armorDrag}% cooldown` : "-", math: `Armor modules increase primary weapon cooldown by their drag rating.` },
+    { label: "Armor Class", value: stats.defense.armorClass ? `${stats.defense.armorClass}` : "-", math: `This is the best installed armor class and is the value combat uses.` },
+    { label: "Armor Fire Speed", value: formatShotsPerSecondPenaltyFromCooldownPercent(stats.defense.armorDrag), math: `Armor modules lower primary Shots per Second by their drag rating.` },
   ];
   const supportRows = [
     { label: "Ability", value: support.name, math: "" },
-    { label: "Cooldown", value: support.cooldown ? `${formatNumber(support.cooldown, 1)}s` : "-", math: support.math },
+    { label: "Recharge", value: support.cooldown ? `${formatNumber(support.cooldown, 1)}s` : "-", math: support.math },
     { label: "Duration", value: support.duration ? `${formatNumber(support.duration, 1)}s` : "-", math: support.math },
     { label: "Effect", value: support.effect, math: support.math },
   ];
@@ -8347,9 +8666,10 @@ function renderShipStatsPanel() {
   const dualSelected = canDualFireCurrentLoadout();
   const loadoutRows = [
     { label: "Hull", value: getEquippedHull().name, math: getEquippedHull().description },
-    { label: "Bay State", value: loadout.label, math: loadout.label === "Second-bay strain" ? "Second primary reduces shield capacity and regen before hull mitigation." : "Open second bay grants shield capacity and regen focus." },
+    { label: "Bay State", value: loadout.label, math: loadout.description },
+    { label: "Primary Damage", value: formatSignedPercent(loadout.primaryDamageDelta), math: "Applied to each primary weapon before Dual Fire scaling." },
     {
-      label: "Dual-Fire",
+      label: "Dual Fire",
       value: dualSelected
         ? `${Math.round(getDualFireDamageMult() * 100)}% per weapon`
         : dualReady
@@ -8371,6 +8691,7 @@ function renderShipStatsPanel() {
       <div class="stat-section">
         <div class="stat-section-title">Offense</div>
         ${offenseRows.map(renderShipStatRow).join("")}
+        ${renderItemBreakdownSections(display?.breakdownSections || [])}
       </div>
       <div class="stat-section">
         <div class="stat-section-title">Defense</div>
@@ -8475,10 +8796,10 @@ function getArmorySlotDefinitions() {
       name: secondWeapon ? getCompactItemName(secondWeapon) : "Open Bay",
       meta: secondWeapon?.build
         ? `${getSpreadLabel(secondWeapon.build.spread)} | Swap-ready`
-        : `Focus +${Math.round(SINGLE_PRIMARY_FOCUS_RATE * 100)}% shield`,
+        : `Focus ${formatSignedPercent(SINGLE_PRIMARY_FOCUS_RATE)} damage`,
       note: secondWeapon
-        ? "Swap to this weapon in flight. Carrying it applies second-bay defense strain."
-        : "Keep this bay open for the single-primary focus bonus.",
+        ? "Swap to this weapon in flight. Carrying it applies second-bay primary damage strain."
+        : "Keep this bay open for the single-primary damage focus.",
       icon: secondWeapon ? getArmoryFrameVisual(secondWeapon).icon : defenseVisuals.none.icon,
     },
     {
@@ -8538,8 +8859,8 @@ function getArmoryItemsForSlot(slotId) {
       slotType: "primary",
       name: "Open Second Bay",
       subtitle: "Single-primary focus",
-      description: "Clear the second bay to restore the focus bonus to shields and shield regen.",
-      notes: "One-primary builds receive a baseline defensive focus bonus.",
+      description: "Clear the second bay to restore the single-primary damage bonus.",
+      notes: "One-primary builds receive a baseline primary damage focus bonus.",
       icon: defenseVisuals.none.icon,
       tags: ["empty", "focus", "single-primary"],
       owned: true,
@@ -8612,7 +8933,7 @@ function getArmoryItemsForSlot(slotId) {
       slotType: "defense",
       name: "Empty Bay",
       subtitle: "Clear slot",
-      description: "Leave this bay open if you want a lighter frame and faster cooldowns.",
+      description: "Leave this bay open if you want a lighter frame and higher Shots per Second.",
       notes: "No defense module installed.",
       icon: defenseVisuals.none.icon,
       tags: ["empty"],
@@ -8649,7 +8970,7 @@ function getArmorySlotMeta(slotId) {
   const meta = {
     hull: {
       title: "Hull Chassis",
-      copy: "Select the ship hull that shapes defense, mini control, aux strength, and second-bay strain.",
+      copy: "Select the ship hull that shapes defense, mini control, aux strength, and second-bay damage strain.",
       tip: "Unlock hulls in Ledger",
     },
     primary: {
@@ -8659,7 +8980,7 @@ function getArmorySlotMeta(slotId) {
     },
     "primary-2": {
       title: "Primary Hardpoint B",
-      copy: "Optional swap weapon. Leaving this open keeps the single-primary focus bonus.",
+      copy: "Optional swap weapon. Leaving this open keeps the single-primary damage focus.",
       tip: "Click icon to install",
     },
     mini: {
@@ -8820,13 +9141,22 @@ function renderShipUpgradesPanel() {
     const ownedHullIds = new Set(getOwnedHullIds());
     const fireMode = getPrimaryFireMode();
     const dualReady = canUseDualFireCurrentLoadout();
+    const dualTier = getDualFireTier();
+    const hasSecondPrimary = !!getSecondPrimaryArmoryItem();
     const dualStatus = getDualFireTier() <= 0
-      ? "Unlock in Ledger"
-      : !getSecondPrimaryArmoryItem()
+      ? ""
+      : !hasSecondPrimary
         ? "Install Primary B"
         : dualReady
           ? `${Math.round(getDualFireDamageMult() * 100)}% per weapon`
           : "Swap-only frame";
+    const dualTitle = dualTier <= 0
+      ? "Unlock Dual Fire in Ledger Investments."
+      : !hasSecondPrimary
+        ? "Install a Primary B weapon to enable Dual Fire."
+        : dualReady
+          ? "Fire compatible Primary A and Primary B together."
+          : "One equipped primary is swap-only and cannot use Dual Fire.";
     const hullButtons = hullCatalog
       .map((hull) => {
         const owned = ownedHullIds.has(hull.id) || state.debugUnlock;
@@ -8867,8 +9197,8 @@ function renderShipUpgradesPanel() {
         <div class="armory-fire-mode" aria-label="Primary fire mode">
           <span class="armory-fire-mode-label">Fire Mode</span>
           <button type="button" class="${fireMode === "swap" ? "is-active" : ""}" data-fire-mode="swap">Swap</button>
-          <button type="button" class="${fireMode === "dual" ? "is-active" : ""}" data-fire-mode="dual" ${dualReady ? "" : "disabled"}>Dual</button>
-          <span>${escapeHtml(dualStatus)}</span>
+          <button type="button" class="${fireMode === "dual" ? "is-active" : ""}" data-fire-mode="dual" title="${escapeHtml(dualTitle)}" ${dualReady ? "" : "disabled"}>Dual Fire</button>
+          ${dualStatus ? `<span>${escapeHtml(dualStatus)}</span>` : ""}
         </div>
         <div class="armory-hardpoints">
           ${slotDefs

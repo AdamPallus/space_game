@@ -25,11 +25,15 @@ const ECONOMY = {
   plasma: {
     baseDamage: 12,
   },
+  loadout: {
+    singlePrimaryDamageBonus: 0.1,
+    secondPrimaryDamagePenalty: 0.15,
+  },
   rarities: {
     scrap: { label: "Scrap-grade", affixCount: 0, kineticImpulseBonus: 0 },
     certified: { label: "Certified", affixCount: 1, kineticImpulseBonus: 0.07 },
     prototype: { label: "Prototype", affixCount: 2, kineticImpulseBonus: 0.16 },
-    preFounding: { label: "Pre-Founding", affixCount: 2, kineticImpulseBonus: 0.28 },
+    preFounding: { label: "Pre-Founding", affixCount: 3, kineticImpulseBonus: 0.28 },
   },
 };
 
@@ -388,7 +392,7 @@ function getPrimaryFireConfig(build) {
   };
 }
 
-function computePrimaryDamage({ ammo, speed, radius, shotDamageMult = 1 }) {
+function computePrimaryDamage({ ammo, speed, radius, shotDamageMult = 1, buildDamageMult = 1 }) {
   const sizeFactor = Math.max(0.05, radius / 4);
   const velocityFactor = Math.max(0.2, speed / ECONOMY.kinetic.baseVelocity);
   const baseDamage = ammo === "plasma"
@@ -396,7 +400,9 @@ function computePrimaryDamage({ ammo, speed, radius, shotDamageMult = 1 }) {
     : ECONOMY.kinetic.baseDamage *
       sizeFactor *
       Math.pow(velocityFactor, ECONOMY.kinetic.velocityExponent);
-  return baseDamage * (Number.isFinite(shotDamageMult) ? shotDamageMult : 1);
+  return baseDamage *
+    (Number.isFinite(shotDamageMult) ? shotDamageMult : 1) *
+    (Number.isFinite(buildDamageMult) ? buildDamageMult : 1);
 }
 
 function projectileCountForSpread(spread) {
@@ -417,6 +423,7 @@ function summarizePrimaryBuild(build) {
     speed: cfg.bulletSpeed,
     radius: cfg.projectileRadius,
     shotDamageMult: cfg.shotDamageMult,
+    buildDamageMult: build.primaryDamageMult ?? 1,
   });
   const projectiles = projectileCountForSpread(cfg.spread);
   const volley = perShot * projectiles;
@@ -743,6 +750,19 @@ const multiDps = basePrimaryRows
 console.log(
   `\nFocused vs multi-shot DPS: focused avg ${average(focusedDps).toFixed(1)} / max ${Math.max(...focusedDps).toFixed(1)} | multi avg ${average(multiDps).toFixed(1)} / max ${Math.max(...multiDps).toFixed(1)}`
 );
+const basePrimaryDpsValues = basePrimaryRows.map((row) => row.offense.dps).filter(Number.isFinite);
+const singlePrimaryFocusMult = 1 + ECONOMY.loadout.singlePrimaryDamageBonus;
+const secondBayStrainMult = 1 - ECONOMY.loadout.secondPrimaryDamagePenalty;
+const loadoutTradeoff = {
+  baselineAvg: average(basePrimaryDpsValues),
+  singleAvg: average(basePrimaryDpsValues.map((dps) => dps * singlePrimaryFocusMult)),
+  strainedPerWeaponAvg: average(basePrimaryDpsValues.map((dps) => dps * secondBayStrainMult)),
+  twoWeaponCoverageAvg: average(basePrimaryDpsValues.map((dps) => dps * secondBayStrainMult * 2)),
+};
+console.log(
+  `Loadout focus/strain: one primary ${Math.round(singlePrimaryFocusMult * 100)}% damage avg ${loadoutTradeoff.singleAvg.toFixed(1)} DPS | ` +
+    `two primaries ${Math.round(secondBayStrainMult * 100)}% per weapon avg ${loadoutTradeoff.strainedPerWeaponAvg.toFixed(1)} DPS each, ${loadoutTradeoff.twoWeaponCoverageAvg.toFixed(1)} combined coverage`
+);
 
 const miniRows = Object.entries(pool.entries || {})
   .filter(([, entry]) => normalizeSlotType(entry.slotType) === "mini")
@@ -823,6 +843,15 @@ const toughestPlated = enemies
   )[0];
 
 const failures = [];
+if (!(singlePrimaryFocusMult > 1 && secondBayStrainMult > 0 && secondBayStrainMult < 1)) {
+  failures.push("Loadout focus/strain multipliers are outside expected ranges.");
+}
+if (!(loadoutTradeoff.singleAvg > loadoutTradeoff.strainedPerWeaponAvg)) {
+  failures.push("Single-primary focus should out-punch each strained second-bay weapon.");
+}
+if (!(loadoutTradeoff.twoWeaponCoverageAvg > loadoutTradeoff.singleAvg)) {
+  failures.push("Two strained primaries should still offer more total coverage than one focused primary.");
+}
 if (miniRows.length < 4) {
   failures.push(`Expected at least 4 mini weapon samples; found ${miniRows.length}.`);
 }

@@ -13,6 +13,9 @@ const bossLabel = document.getElementById("boss-label");
 const bossShieldFill = document.getElementById("boss-shield-fill");
 const bossArmorFill = document.getElementById("boss-armor-fill");
 const bossProgressFill = document.getElementById("boss-progress-fill");
+const bossBurnHullFill = document.getElementById("boss-burn-hull-fill");
+const bossBurnArmorFill = document.getElementById("boss-burn-armor-fill");
+const bossBurnShieldFill = document.getElementById("boss-burn-shield-fill");
 const hudCargoPips = document.getElementById("hud-cargo-pips");
 const hudCargoStatus = document.getElementById("hud-cargo-status");
 const hudWeapons = document.getElementById("hud-weapons");
@@ -12459,9 +12462,80 @@ function drawEnemy(enemy) {
       ctx.stroke();
     }
   }
+  drawPlasmaBurnAura(enemy);
   if (enemy.healthBarTimer > 0) {
     drawEnemyHealth(enemy);
   }
+  ctx.restore();
+}
+
+function drawPlasmaBurnAura(enemy) {
+  if (!enemy || !(enemy.dotDps > 0)) return;
+  const pulse = 0.5 + Math.sin((mission?.elapsed || 0) * 9) * 0.5;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.strokeStyle = `rgba(74, 222, 128, ${0.24 + pulse * 0.14})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(enemy.x, enemy.y, enemy.radius + 5 + pulse * 3, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawLayeredHealthBar({ x, y, width, height, alpha, layers, maxLayers, burnPreview = null }) {
+  const maxHull = maxLayers.hull || 0;
+  const maxArmor = maxLayers.armor || 0;
+  const maxShield = maxLayers.shield || 0;
+  const totalMax = maxHull + maxArmor + maxShield;
+  if (totalMax <= 0) return;
+
+  ctx.save();
+  ctx.globalAlpha = 0.9 * alpha;
+  ctx.fillStyle = "rgba(2, 6, 16, 0.7)";
+  ctx.strokeStyle = "rgba(125, 190, 255, 0.25)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(x - 2, y - 2, width + 4, height + 4, 6);
+  } else {
+    ctx.rect(x - 2, y - 2, width + 4, height + 4);
+  }
+  ctx.fill();
+  ctx.stroke();
+
+  const drawSegment = (key, color, offset) => {
+    const value = Math.max(0, layers[key] || 0);
+    const maxValue = Math.max(0, maxLayers[key] || 0);
+    if (maxValue <= 0) return 0;
+    const segW = (width * maxValue) / totalMax;
+    const fillW = segW * Math.max(0, Math.min(1, value / maxValue));
+    if (fillW > 0) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x + offset, y, fillW, height);
+    }
+    const projected = Math.max(0, burnPreview?.[key] ?? value);
+    const projectedFillW = segW * Math.max(0, Math.min(1, projected / maxValue));
+    const lossW = Math.max(0, fillW - projectedFillW);
+    if (lossW > 0.5) {
+      const stripe = ctx.createLinearGradient(x + offset + projectedFillW, y, x + offset + fillW, y);
+      stripe.addColorStop(0, "rgba(74, 222, 128, 0.32)");
+      stripe.addColorStop(1, "rgba(132, 204, 22, 0.82)");
+      ctx.fillStyle = stripe;
+      ctx.fillRect(x + offset + projectedFillW, y, lossW, height);
+      ctx.strokeStyle = "rgba(190, 242, 100, 0.72)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + offset + projectedFillW + 0.5, y);
+      ctx.lineTo(x + offset + projectedFillW + 0.5, y + height);
+      ctx.stroke();
+    }
+    return segW;
+  };
+
+  let offset = 0;
+  offset += drawSegment("hull", "#fb7185", offset);
+  offset += drawSegment("armor", "#cbd5e1", offset);
+  drawSegment("shield", "#7dd3fc", offset);
   ctx.restore();
 }
 
@@ -12481,38 +12555,16 @@ function drawEnemyHealth(enemy) {
   const shield = Math.max(0, enemy.shield || 0);
   const armor = Math.max(0, enemy.armor || 0);
   const hull = Math.max(0, enemy.hull || 0);
-
-  ctx.save();
-  ctx.globalAlpha = 0.9 * alpha;
-  ctx.fillStyle = "rgba(2, 6, 16, 0.7)";
-  ctx.strokeStyle = "rgba(125, 190, 255, 0.25)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(x - 2, y - 2, width + 4, height + 4, 6);
-  } else {
-    ctx.rect(x - 2, y - 2, width + 4, height + 4);
-  }
-  ctx.fill();
-  ctx.stroke();
-
-  const segment = (value, maxValue, color, offset) => {
-    if (maxValue <= 0) return 0;
-    const fraction = Math.max(0, Math.min(1, value / maxValue));
-    const segW = (width * maxValue) / totalMax;
-    const fillW = segW * fraction;
-    if (fillW > 0) {
-      ctx.fillStyle = color;
-      ctx.fillRect(x + offset, y, fillW, height);
-    }
-    return segW;
-  };
-
-  let offset = 0;
-  offset += segment(shield, maxShield, "#7dd3fc", offset); // shields: light blue
-  offset += segment(armor, maxArmor, "#cbd5e1", offset); // armor: light gray (higher contrast)
-  segment(hull, maxHull, "#fb7185", offset); // hull: red
-  ctx.restore();
+  drawLayeredHealthBar({
+    x,
+    y,
+    width,
+    height,
+    alpha,
+    layers: { hull, armor, shield },
+    maxLayers: { hull: maxHull, armor: maxArmor, shield: maxShield },
+    burnPreview: getPlasmaBurnPreview(enemy),
+  });
 }
 
 function drawPlayerHealthBar() {
@@ -12531,38 +12583,15 @@ function drawPlayerHealthBar() {
   const shield = Math.max(0, player.shield || 0);
   const armor = Math.max(0, player.armor || 0);
   const hull = Math.max(0, player.hull || 0);
-
-  ctx.save();
-  ctx.globalAlpha = 0.92 * alpha;
-  ctx.fillStyle = "rgba(2, 6, 16, 0.7)";
-  ctx.strokeStyle = "rgba(125, 190, 255, 0.25)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(x - 2, y - 2, width + 4, height + 4, 6);
-  } else {
-    ctx.rect(x - 2, y - 2, width + 4, height + 4);
-  }
-  ctx.fill();
-  ctx.stroke();
-
-  const segment = (value, maxValue, color, offset) => {
-    if (maxValue <= 0) return 0;
-    const fraction = Math.max(0, Math.min(1, value / maxValue));
-    const segW = (width * maxValue) / totalMax;
-    const fillW = segW * fraction;
-    if (fillW > 0) {
-      ctx.fillStyle = color;
-      ctx.fillRect(x + offset, y, fillW, height);
-    }
-    return segW;
-  };
-
-  let offset = 0;
-  offset += segment(shield, maxShield, "#7dd3fc", offset);
-  offset += segment(armor, maxArmor, "#cbd5e1", offset);
-  segment(hull, maxHull, "#fb7185", offset);
-  ctx.restore();
+  drawLayeredHealthBar({
+    x,
+    y,
+    width,
+    height,
+    alpha: alpha * 1.02,
+    layers: { hull, armor, shield },
+    maxLayers: { hull: maxHull, armor: maxArmor, shield: maxShield },
+  });
 }
 
 function drawHangarScene(width, height) {
@@ -12642,6 +12671,7 @@ function updateHud() {
     setBossBarLayer(bossShieldFill, 0, 0);
     setBossBarLayer(bossArmorFill, 0, 0);
     setBossBarLayer(bossProgressFill, 0, 0);
+    clearBossBurnLayers();
     if (bossLabel) bossLabel.textContent = "Boss ETA";
   } else {
     const runCredits = creditRewardFor(mission);
@@ -12970,12 +13000,10 @@ function applyDamageToEnemy(
   return applied;
 }
 
-function syncPlasmaBurnState(enemy) {
-  if (!enemy) return;
-  const stacks = Array.isArray(enemy.dotStacks)
-    ? enemy.dotStacks.filter((stack) => stack && stack.timer > 0 && stack.dps > 0)
+function getPlasmaBurnStackState(dotStacks) {
+  const stacks = Array.isArray(dotStacks)
+    ? dotStacks.filter((stack) => stack && stack.timer > 0 && stack.dps > 0)
     : [];
-  enemy.dotStacks = stacks;
   const stackedDps = stacks.reduce((sum, stack) => sum + stack.dps, 0);
   const capBySource = new Map();
   stacks.forEach((stack, index) => {
@@ -12984,9 +13012,75 @@ function syncPlasmaBurnState(enemy) {
     capBySource.set(sourceKey, Math.max(capBySource.get(sourceKey) || 0, stack.cap));
   });
   const cap = [...capBySource.values()].reduce((sum, value) => sum + value, 0);
+  return {
+    stacks,
+    cap,
+    dps: cap > 0 ? Math.min(stackedDps, cap) : stackedDps,
+  };
+}
+
+function syncPlasmaBurnState(enemy) {
+  if (!enemy) return;
+  const state = getPlasmaBurnStackState(enemy.dotStacks);
+  const stacks = state.stacks;
+  enemy.dotStacks = stacks;
+  const cap = state.cap;
   enemy.dotDpsCap = cap;
-  enemy.dotDps = cap > 0 ? Math.min(stackedDps, cap) : stackedDps;
+  enemy.dotDps = state.dps;
   enemy.dotTimer = stacks.reduce((max, stack) => Math.max(max, stack.timer), 0);
+}
+
+function applyPlasmaBurnPreviewDamage(layers, damage) {
+  let remaining = Math.max(0, damage);
+  if (layers.shield > 0 && remaining > 0) {
+    const absorbed = Math.min(layers.shield, remaining);
+    layers.shield -= absorbed;
+    remaining -= absorbed;
+  }
+  if (remaining <= 0) return;
+  if (layers.armor > 0) {
+    const effective = remaining * getPlasmaBurnArmorDamageScale();
+    const toArmor = Math.min(layers.armor, effective);
+    layers.armor -= toArmor;
+    const overflow = effective - toArmor;
+    if (overflow > 0) {
+      layers.hull = Math.max(0, layers.hull - overflow);
+    }
+    return;
+  }
+  layers.hull = Math.max(0, layers.hull - remaining);
+}
+
+function getPlasmaBurnPreview(enemy) {
+  if (!enemy || !(enemy.dotDps > 0) || !Array.isArray(enemy.dotStacks)) return null;
+  let stacks = enemy.dotStacks
+    .filter((stack) => stack && stack.timer > 0 && stack.dps > 0)
+    .map((stack) => ({ ...stack }));
+  if (!stacks.length) return null;
+  const layers = {
+    shield: Math.max(0, enemy.shield || 0),
+    armor: Math.max(0, enemy.armor || 0),
+    hull: Math.max(0, enemy.hull || 0),
+  };
+  const start = { ...layers };
+  while (stacks.length) {
+    const burnState = getPlasmaBurnStackState(stacks);
+    stacks = burnState.stacks;
+    if (!stacks.length || burnState.dps <= 0) break;
+    const step = Math.min(...stacks.map((stack) => stack.timer));
+    if (!(step > 0)) break;
+    applyPlasmaBurnPreviewDamage(layers, burnState.dps * step);
+    stacks.forEach((stack) => {
+      stack.timer = Math.max(0, stack.timer - step);
+    });
+    stacks = stacks.filter((stack) => stack.timer > 0 && stack.dps > 0);
+    if (layers.hull <= 0) break;
+  }
+  const totalLoss =
+    Math.max(0, start.shield - layers.shield) +
+    Math.max(0, start.armor - layers.armor) +
+    Math.max(0, start.hull - layers.hull);
+  return totalLoss > 0 ? layers : null;
 }
 
 function tickPlasmaBurn(enemy, delta) {
@@ -13256,8 +13350,22 @@ function setBossBarLayer(element, leftPercent, widthPercent) {
   element.style.width = `${Math.max(0, Math.min(100, widthPercent))}%`;
 }
 
+function clearBossBurnLayers() {
+  [bossBurnHullFill, bossBurnArmorFill, bossBurnShieldFill].forEach((element) => {
+    setBossBarLayer(element, 0, 0);
+  });
+}
+
+function setBossBurnLayer(element, layerLeftPercent, currentValue, previewValue, totalMax) {
+  if (!element || totalMax <= 0) return;
+  const loss = Math.max(0, currentValue - Math.max(0, previewValue));
+  const previewWidth = (Math.max(0, previewValue) / totalMax) * 100;
+  setBossBarLayer(element, layerLeftPercent + previewWidth, (loss / totalMax) * 100);
+}
+
 function updateBossProgress() {
   if (!bossProgressFill || !bossLabel || !mission) return;
+  clearBossBurnLayers();
   const bossTime = mission.bossSpawnTime;
   if (!bossTime) {
     bossLabel.textContent = "No Boss";
@@ -13290,12 +13398,19 @@ function updateBossProgress() {
     const shield = Math.max(0, boss.shield || 0);
     const armor = Math.max(0, boss.armor || 0);
     const hull = Math.max(0, boss.hull || 0);
-    const shieldMaxWidth = (maxShield / totalMax) * 100;
+    const hullMaxWidth = (maxHull / totalMax) * 100;
     const armorMaxWidth = (maxArmor / totalMax) * 100;
-    const hullLeft = shieldMaxWidth + armorMaxWidth;
-    setBossBarLayer(bossShieldFill, 0, (shield / totalMax) * 100);
-    setBossBarLayer(bossArmorFill, shieldMaxWidth, (armor / totalMax) * 100);
-    setBossBarLayer(bossProgressFill, hullLeft, (hull / totalMax) * 100);
+    const armorLeft = hullMaxWidth;
+    const shieldLeft = hullMaxWidth + armorMaxWidth;
+    setBossBarLayer(bossProgressFill, 0, (hull / totalMax) * 100);
+    setBossBarLayer(bossArmorFill, armorLeft, (armor / totalMax) * 100);
+    setBossBarLayer(bossShieldFill, shieldLeft, (shield / totalMax) * 100);
+    const burnPreview = getPlasmaBurnPreview(boss);
+    if (burnPreview) {
+      setBossBurnLayer(bossBurnHullFill, 0, hull, burnPreview.hull, totalMax);
+      setBossBurnLayer(bossBurnArmorFill, armorLeft, armor, burnPreview.armor, totalMax);
+      setBossBurnLayer(bossBurnShieldFill, shieldLeft, shield, burnPreview.shield, totalMax);
+    }
     const totalRemaining = shield + armor + hull;
     bossLabel.textContent = `Boss ${Math.max(0, Math.round((totalRemaining / totalMax) * 100))}%`;
     return;

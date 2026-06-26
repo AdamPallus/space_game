@@ -110,6 +110,7 @@ Recent history shows these major pieces have already landed:
 - Item clarity pass (Phase 7): `getItemIntrinsicStats`, intrinsic item headlines/stat lines, effective install deltas, weapon damage breakdowns, signed installed modifier lines, damage-based single-primary focus/second-bay strain, player-facing Show Stats cleanup, per-bay effective primary DPS on the Armory stage, and unified Shots per Second display language.
 - Pre-Founding weapon coverage pass: ten additional primary relic bases fill the missing spread/ammo combinations, with generated item-icon art in `assets/generated/item_icons_v3/` and plasma impulse scaling added to combat math and the balance report.
 - Plasma armor pressure pass: plasma burn now stacks from repeated hits, ramps to sustained burn DPS over three seconds, ignores armor-class subtraction while damaging armor, applies reduced burn to the armor layer, and is mirrored in the Armory stat math and `scripts/balance_report.js`.
+- Combat HUD clarity pass: enemy, boss, and player layered health bars now read hull, armor, shields left to right, and active plasma burn shows green future-loss previews on affected enemy and boss bars.
 
 ## Documentation Map
 

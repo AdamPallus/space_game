@@ -214,6 +214,11 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .boss-bar-shield { background: #7dd3fc; }
 .boss-bar-armor { background: #cbd5e1; }
 #boss-progress-fill { background: var(--danger); }
+.boss-bar-burn {
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.5), rgba(132, 204, 22, 0.9));
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.45);
+  mix-blend-mode: screen;
+}
 
 .cargo-hud { display: flex; align-items: center; gap: 8px; }
 .cargo-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }

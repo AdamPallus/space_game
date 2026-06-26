@@ -294,7 +294,7 @@ const ECONOMY = {
     burnDuration: 3,
     burnDpsRate: 0.45,
     burnMaxDpsMultiplier: 1.35,
-    burnArmorDamageScale: 0.12,
+    burnArmorDamageScale: 0.55,
   },
   loadout: {
     singlePrimaryDamageBonus: 0.1,

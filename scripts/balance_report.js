@@ -29,7 +29,7 @@ const ECONOMY = {
     burnDuration: 3,
     burnDpsRate: 0.45,
     burnMaxDpsMultiplier: 1.35,
-    burnArmorDamageScale: 0.12,
+    burnArmorDamageScale: 0.55,
   },
   loadout: {
     singlePrimaryDamageBonus: 0.1,
@@ -1047,6 +1047,7 @@ function requireRow(id) {
 const phase4bRows = {
   needle: requireRow("base:needle_storm"),
   ember: requireRow("base:ember_spray"),
+  plasmaLance: requireRow("base:plasma_lance"),
   slug: requireRow("base:slug_cannon"),
   longbow: requireRow("base:longbow_rail"),
 };
@@ -1060,21 +1061,21 @@ const phase4bSwarmTarget =
   enemies.find((enemy) => enemy.id === "gnat");
 
 if (phase4bPlatedTarget && Object.values(phase4bRows).every(Boolean)) {
-  const armorRows = [phase4bRows.slug, phase4bRows.longbow];
-  const hoseRows = [phase4bRows.needle, phase4bRows.ember];
-  armorRows.forEach((armorRow) => {
-    hoseRows.forEach((hoseRow) => {
-      const armorTtk = armorRow.ttk[phase4bPlatedTarget.id];
-      const hoseTtk = hoseRow.ttk[phase4bPlatedTarget.id];
-      if (!(Number.isFinite(armorTtk) && Number.isFinite(hoseTtk) && hoseTtk + 0.05 >= armorTtk)) {
-        failures.push(
-          `${armorRow.name} should stay at least as fast as ${hoseRow.name} against ${phase4bPlatedTarget.id}; got ${formatTtk(armorTtk)}s vs ${formatTtk(hoseTtk)}s.`
-        );
-      }
-    });
-  });
+  const needleTtk = phase4bRows.needle.ttk[phase4bPlatedTarget.id];
+  const emberTtk = phase4bRows.ember.ttk[phase4bPlatedTarget.id];
+  const plasmaLanceTtk = phase4bRows.plasmaLance.ttk[phase4bPlatedTarget.id];
+  if (!(Number.isFinite(needleTtk) && Number.isFinite(emberTtk) && emberTtk <= needleTtk * 0.75)) {
+    failures.push(
+      `${phase4bRows.ember.name} should beat ${phase4bRows.needle.name} by at least 25% against ${phase4bPlatedTarget.id}; got ${formatTtk(emberTtk)}s vs ${formatTtk(needleTtk)}s.`
+    );
+  }
+  if (!(Number.isFinite(plasmaLanceTtk) && Number.isFinite(emberTtk) && plasmaLanceTtk <= emberTtk + 0.05)) {
+    failures.push(
+      `${phase4bRows.plasmaLance.name} should stay at least as fast as ${phase4bRows.ember.name} against ${phase4bPlatedTarget.id}; got ${formatTtk(plasmaLanceTtk)}s vs ${formatTtk(emberTtk)}s.`
+    );
+  }
   console.log(
-    `Phase 4b plated check target: ${phase4bPlatedTarget.id} | Slug ${formatTtk(phase4bRows.slug.ttk[phase4bPlatedTarget.id])}s, Longbow ${formatTtk(phase4bRows.longbow.ttk[phase4bPlatedTarget.id])}s, Needle ${formatTtk(phase4bRows.needle.ttk[phase4bPlatedTarget.id])}s, Ember ${formatTtk(phase4bRows.ember.ttk[phase4bPlatedTarget.id])}s`
+    `Phase 4b plated check target: ${phase4bPlatedTarget.id} | Slug ${formatTtk(phase4bRows.slug.ttk[phase4bPlatedTarget.id])}s, Longbow ${formatTtk(phase4bRows.longbow.ttk[phase4bPlatedTarget.id])}s, Plasma Lance ${formatTtk(plasmaLanceTtk)}s, Needle ${formatTtk(needleTtk)}s, Ember ${formatTtk(emberTtk)}s`
   );
 }
 

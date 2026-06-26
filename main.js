@@ -291,6 +291,10 @@ const ECONOMY = {
     baseDamage: 12,
     impulseSizeScale: 0.85,
     impulseSpeedDrag: 0.45,
+    burnDuration: 3,
+    burnDpsRate: 0.45,
+    burnMaxDpsMultiplier: 1.35,
+    burnArmorDamageScale: 0.12,
   },
   loadout: {
     singlePrimaryDamageBonus: 0.1,
@@ -7742,17 +7746,22 @@ function getOffenseStatsForBuild(build, targetState = state) {
   });
   const attacksPerSecond = cfg.cooldown > 0 ? 1 / cfg.cooldown : 0;
   const volleyDamage = hitDamage * totalProjectiles;
-  const burnDps = cfg.ammo === "plasma" ? hitDamage * 0.45 : 0;
-  const dps = hitDamage * totalProjectiles * attacksPerSecond + burnDps;
-  const burnText = cfg.ammo === "plasma" ? ` (burns ${formatNumber(burnDps, 1)}/s)` : "";
+  const directDps = hitDamage * totalProjectiles * attacksPerSecond;
+  const burnStackDps = cfg.ammo === "plasma" ? hitDamage * getPlasmaBurnDpsRate() : 0;
+  const burnDps = cfg.ammo === "plasma" ? getPlasmaSustainedBurnDps(directDps) : 0;
+  const dps = directDps + burnDps;
+  const burnText = cfg.ammo === "plasma" ? ` (burns up to ${formatNumber(burnDps, 1)}/s)` : "";
   return {
     cfg,
     dps,
+    directDps,
     hitDamage,
     volleyDamage,
     attacksPerSecond,
     totalProjectiles,
+    burnStackDps,
     burnDps,
+    burnRampSeconds: cfg.ammo === "plasma" ? getPlasmaBurnDuration() : 0,
     pattern: `${getSpreadLabel(cfg.spread)} - ${totalProjectiles} projectile${totalProjectiles === 1 ? "" : "s"}`,
     ammo: `${capitalize(cfg.ammo)}${burnText}`,
   };
@@ -7823,8 +7832,10 @@ function getPrimaryBayEffectiveStats(bayIndex, targetState = state) {
     damageScale: dualDamageScale,
     ...offense,
     dps: offense.dps * dualDamageScale,
+    directDps: offense.directDps * dualDamageScale,
     hitDamage: offense.hitDamage * dualDamageScale,
     volleyDamage: offense.volleyDamage * dualDamageScale,
+    burnStackDps: offense.burnStackDps * dualDamageScale,
     burnDps: offense.burnDps * dualDamageScale,
   };
 }
@@ -8240,7 +8251,10 @@ function getPrimaryDamageBreakdownRows(offense) {
       math: `Plasma hit damage = base * size * impulse size${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}.`,
     });
     if (offense.burnDps) {
-      rows.push({ text: `Burn ${formatNumber(offense.burnDps, 1)}/s after impact` });
+      rows.push({
+        text: `Burn ramps to ${formatNumber(offense.burnDps, 1)}/s over ${formatNumber(offense.burnRampSeconds, 1)}s`,
+        math: `Each hit adds ${formatNumber(offense.burnStackDps, 1)}/s; armor takes ${formatNumber(getPlasmaBurnArmorDamageScale() * 100, 0)}% burn without armor-class subtraction.`,
+      });
     }
   } else {
     rows.push({
@@ -8250,7 +8264,7 @@ function getPrimaryDamageBreakdownRows(offense) {
   }
   rows.push({ text: `Shots per second ${formatNumber(offense.attacksPerSecond, 2)}` });
   rows.push({
-    text: `DPS ${formatNumber(offense.dps, 1)} (${formatNumber(offense.hitDamage, 1)} x ${offense.totalProjectiles} projectile${offense.totalProjectiles === 1 ? "" : "s"} x ${formatNumber(offense.attacksPerSecond, 2)}/s${offense.burnDps ? ` + ${formatNumber(offense.burnDps, 1)} burn/s` : ""})`,
+    text: `DPS ${formatNumber(offense.dps, 1)} (${formatNumber(offense.directDps, 1)} direct/s${offense.burnDps ? ` + ${formatNumber(offense.burnDps, 1)} burn/s` : ""})`,
   });
   return rows;
 }
@@ -8393,7 +8407,13 @@ function getItemDisplayStats(item, slotId = null) {
           ? `Plasma hit damage = ${ECONOMY.plasma.baseDamage} * size ${formatNumber(offense.cfg.baseSizeFactor, 2)} * impulse ${formatNumber(offense.cfg.plasmaImpulseSizeScale, 2)}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`
           : `Kinetic hit damage = ${ECONOMY.kinetic.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)} * ${formatNumber(offense.cfg.velocityFactor, 2)}^${ECONOMY.kinetic.velocityExponent}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`,
       },
-      { label: "Ammo", value: offense.ammo, math: offense.burnDps ? `Burn DPS = hit damage * 0.45 = ${formatNumber(offense.burnDps, 1)}.` : "" },
+      {
+        label: "Ammo",
+        value: offense.ammo,
+        math: offense.burnDps
+          ? `Burn ramps to direct DPS * ${formatNumber(getPlasmaBurnMaxMultiplier(), 2)} = ${formatNumber(offense.burnDps, 1)}; armor takes ${formatNumber(getPlasmaBurnArmorDamageScale() * 100, 0)}% burn without armor-class subtraction.`
+          : "",
+      },
       specialValue ? { label: "Special", value: specialValue, math: "" } : null,
       {
         label: "Shots per Second",
@@ -9825,6 +9845,8 @@ function spawnEnemyFromSpec(spec) {
     patternTime: 0,
     dotTimer: 0,
     dotDps: 0,
+    dotDpsCap: 0,
+    dotStacks: [],
     empHitTimer: 0,
   };
 
@@ -10202,6 +10224,34 @@ function getPlasmaImpulseTuning(build) {
   };
 }
 
+function getPlasmaBurnDuration() {
+  return Math.max(0.1, ECONOMY.plasma.burnDuration ?? 3);
+}
+
+function getPlasmaBurnDpsRate() {
+  return Math.max(0, ECONOMY.plasma.burnDpsRate ?? 0.45);
+}
+
+function getPlasmaBurnMaxMultiplier() {
+  const naturalRamp = getPlasmaBurnDpsRate() * getPlasmaBurnDuration();
+  const configuredCap = ECONOMY.plasma.burnMaxDpsMultiplier ?? naturalRamp;
+  return Math.max(0, Math.min(naturalRamp, configuredCap));
+}
+
+function getPlasmaSustainedBurnDps(directDps) {
+  return Math.max(0, directDps) * getPlasmaBurnMaxMultiplier();
+}
+
+function getPlasmaBurnArmorDamageScale() {
+  return Math.max(0, ECONOMY.plasma.burnArmorDamageScale ?? 1);
+}
+
+function getPlasmaBurnDpsCapForBullet(damage, cfg, mountShots = 1) {
+  const cooldown = Math.max(0.01, cfg?.cooldown ?? 0);
+  const projectiles = Math.max(1, (cfg?.angles?.length || 1) * mountShots);
+  return getPlasmaSustainedBurnDps(Math.max(0, damage) * projectiles / cooldown);
+}
+
 function getFocusedSingleShotDamageMult({ spread, gunDiameter, cooldown }) {
   if (spread !== "focused") return 1;
   const base = FOCUSED_SINGLE_SHOT_DAMAGE_MULT[gunDiameter] || FOCUSED_SINGLE_SHOT_DAMAGE_MULT.medium;
@@ -10368,9 +10418,10 @@ function computePrimaryDamage({ ammo, speed, radius, damageBoostMult = null, bui
   return damage;
 }
 
-function firePlayerBullet({ build = null, damageScale = 1, xOffset = 0 } = {}) {
+function firePlayerBullet({ build = null, damageScale = 1, xOffset = 0, sourceKey = "primary" } = {}) {
   const cfg = getPrimaryFireConfig(build);
   const mount = state.weapon.mount || "front";
+  const mountShots = mount === "rear" ? 2 : 1;
   const visualTheme = getLevelVisualTheme();
   playSfx("laserSmall", 0.25);
 
@@ -10479,9 +10530,18 @@ function firePlayerBullet({ build = null, damageScale = 1, xOffset = 0 } = {}) {
         damageScale: mountScale,
       });
       // Apply mount scale by scaling damage post-compute.
-      bullets[bullets.length - 1].damage *= mountScale;
+      const spawnedBullet = bullets[bullets.length - 1];
+      spawnedBullet.damage *= mountScale;
+      if (cfg.ammo === "plasma") {
+        spawnedBullet.plasmaBurnDpsCap = getPlasmaBurnDpsCapForBullet(
+          spawnedBullet.damage,
+          cfg,
+          mountShots
+        );
+        spawnedBullet.plasmaBurnSourceKey = sourceKey;
+      }
       if (cfg.spread === "wide" || cfg.spread === "burst") {
-        bullets[bullets.length - 1].rotation += (index - 2) * 0.01;
+        spawnedBullet.rotation += (index - 2) * 0.01;
       }
     });
   };
@@ -10547,7 +10607,7 @@ function fireCurrentPrimaryWeapons({ dualMode = canDualFireCurrentLoadout() } = 
       if (cooldowns[bayIndex] > 0) return;
       const setup = getPrimaryBayBuildAndConfig(bayIndex);
       if (!setup) return;
-      firePlayerBullet({ build: setup.build, damageScale, xOffset });
+      firePlayerBullet({ build: setup.build, damageScale, xOffset, sourceKey: `primary-${bayIndex}` });
       cooldowns[bayIndex] = setup.cfg.cooldown;
       fired = true;
     });
@@ -10555,7 +10615,7 @@ function fireCurrentPrimaryWeapons({ dualMode = canDualFireCurrentLoadout() } = 
     return fired ? player.fireCooldown : null;
   }
   const activeBuild = getPrimaryBuildForItem(getPrimaryArmoryItem(state));
-  firePlayerBullet({ build: activeBuild });
+  firePlayerBullet({ build: activeBuild, sourceKey: "primary-active" });
   return getPrimaryFireConfig(activeBuild).cooldown;
 }
 
@@ -11367,11 +11427,7 @@ function update(delta) {
     if (enemy.playerCollisionCooldown > 0) {
       enemy.playerCollisionCooldown = Math.max(0, enemy.playerCollisionCooldown - delta);
     }
-    if (enemy.dotTimer > 0) {
-      enemy.dotTimer -= delta;
-      revealEnemyHealth(enemy);
-      applyDamageToEnemy(enemy, enemy.dotDps * delta, { chipFloor: false });
-    }
+    tickPlasmaBurn(enemy, delta);
     if (enemy.empHitTimer > 0) {
       enemy.empHitTimer = Math.max(0, enemy.empHitTimer - delta);
     }
@@ -11811,7 +11867,7 @@ function handleCollisions() {
         const directDamageDealt = Math.max(0, durabilityBefore - getEnemyRemainingDurability(enemy));
         healPlayerFromVampiricDamage(bullet, directDamageDealt);
         if (bullet.payload === "plasma") {
-          applyPlasmaBurn(enemy, directDamageDealt || bullet.damage);
+          applyPlasmaBurn(enemy, bullet.damage, bullet.plasmaBurnDpsCap, bullet.plasmaBurnSourceKey);
         } else if (bullet.payload === "emp") {
           if (!enemy.empImmune) {
             enemy.empHitTimer = Math.max(enemy.empHitTimer, 1.2);
@@ -11842,7 +11898,10 @@ function handleCollisions() {
             const splashDealt = Math.max(0, splashBefore - getEnemyRemainingDurability(other));
             healPlayerFromVampiricDamage(bullet, splashDealt);
             if (bullet.payload === "plasma") {
-              applyPlasmaBurn(other, splashDealt || splashDamage);
+              const splashBurnCap = Number.isFinite(bullet.plasmaBurnDpsCap)
+                ? bullet.plasmaBurnDpsCap * (bullet.explosiveDamageMult ?? 0.7) * scale
+                : bullet.plasmaBurnDpsCap;
+              applyPlasmaBurn(other, splashDamage, splashBurnCap, bullet.plasmaBurnSourceKey);
             }
           });
         }
@@ -12866,9 +12925,15 @@ function revealPlayerHealth() {
 function applyDamageToEnemy(
   enemy,
   damage,
-  { chipFloor = true, chipFloorRate = ECONOMY.minDamageFloor, minChipDamage = 1 } = {}
+  {
+    chipFloor = true,
+    chipFloorRate = ECONOMY.minDamageFloor,
+    minChipDamage = 1,
+    ignoreArmorClass = false,
+    armorDamageMult = 1,
+  } = {}
 ) {
-  // Shields absorb first; armor reduces per-hit damage by armorClass.
+  // Shields absorb first; armor usually reduces per-hit damage by armorClass.
   // Returns the total applied to any pool (for analytics/feel), but callers
   // should still treat "interaction" as happening even if applied is 0.
   const baseDamage = Math.max(0, damage);
@@ -12886,7 +12951,9 @@ function applyDamageToEnemy(
     const floorDamage = chipFloor
       ? Math.max(minChipDamage, baseDamage * chipFloorRate)
       : 0;
-    const effective = Math.max(floorDamage, remaining - (enemy.armorClass || 0));
+    const armorClass = ignoreArmorClass ? 0 : (enemy.armorClass || 0);
+    const armorLayerDamage = Math.max(0, remaining - armorClass) * Math.max(0, armorDamageMult);
+    const effective = Math.max(floorDamage, armorLayerDamage);
     if (effective <= 0) return applied;
     const toArmor = Math.min(enemy.armor, effective);
     enemy.armor -= toArmor;
@@ -12903,10 +12970,51 @@ function applyDamageToEnemy(
   return applied;
 }
 
-function applyPlasmaBurn(enemy, sourceDamage) {
+function syncPlasmaBurnState(enemy) {
+  if (!enemy) return;
+  const stacks = Array.isArray(enemy.dotStacks)
+    ? enemy.dotStacks.filter((stack) => stack && stack.timer > 0 && stack.dps > 0)
+    : [];
+  enemy.dotStacks = stacks;
+  const stackedDps = stacks.reduce((sum, stack) => sum + stack.dps, 0);
+  const capBySource = new Map();
+  stacks.forEach((stack, index) => {
+    if (!Number.isFinite(stack.cap) || stack.cap <= 0) return;
+    const sourceKey = stack.sourceKey || `plasma-stack-${index}`;
+    capBySource.set(sourceKey, Math.max(capBySource.get(sourceKey) || 0, stack.cap));
+  });
+  const cap = [...capBySource.values()].reduce((sum, value) => sum + value, 0);
+  enemy.dotDpsCap = cap;
+  enemy.dotDps = cap > 0 ? Math.min(stackedDps, cap) : stackedDps;
+  enemy.dotTimer = stacks.reduce((max, stack) => Math.max(max, stack.timer), 0);
+}
+
+function tickPlasmaBurn(enemy, delta) {
+  if (!enemy || delta <= 0) return;
+  syncPlasmaBurnState(enemy);
+  if (!enemy.dotStacks.length || enemy.dotDps <= 0) return;
+  revealEnemyHealth(enemy);
+  applyDamageToEnemy(enemy, enemy.dotDps * delta, {
+    chipFloor: false,
+    ignoreArmorClass: true,
+    armorDamageMult: getPlasmaBurnArmorDamageScale(),
+  });
+  enemy.dotStacks.forEach((stack) => {
+    stack.timer = Math.max(0, stack.timer - delta);
+  });
+  syncPlasmaBurnState(enemy);
+}
+
+function applyPlasmaBurn(enemy, sourceDamage, maxBurnDps = 0, sourceKey = "plasma") {
   if (!enemy || sourceDamage <= 0) return;
-  enemy.dotTimer = Math.max(enemy.dotTimer || 0, 3.0);
-  enemy.dotDps = Math.max(enemy.dotDps || 0, sourceDamage * 0.45);
+  if (!Array.isArray(enemy.dotStacks)) enemy.dotStacks = [];
+  enemy.dotStacks.push({
+    timer: getPlasmaBurnDuration(),
+    dps: sourceDamage * getPlasmaBurnDpsRate(),
+    cap: Number.isFinite(maxBurnDps) && maxBurnDps > 0 ? maxBurnDps : 0,
+    sourceKey,
+  });
+  syncPlasmaBurnState(enemy);
 }
 
 function healPlayerFromVampiricDamage(bullet, damageDealt) {

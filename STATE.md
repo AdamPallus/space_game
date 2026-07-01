@@ -128,6 +128,7 @@ Active docs in the repo root:
 - `ITEM_CLARITY_SPEC.md`: Phase 7 item clarity spec — implemented.
 - `LOOT_DEPTH_SPEC.md`: Phase 6 loot depth spec (affix magnitude rolls, aux potency) — implemented.
 - `STORY-PREMISE.md`: active tone and lore source.
+- `STORY-PREMISE-DEEP-HISTORY.md`: deep history and endgame arc extending the story premise; feeds the Story-Economy Arc in `ROADMAP.md`.
 - `CREDITS.md`: asset and tool credits.
 
 Archived docs live in `outdated_docs/`. They are useful historical context, but should not be treated as implementation instructions unless a new active doc links to them explicitly.

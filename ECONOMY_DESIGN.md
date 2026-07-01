@@ -236,7 +236,7 @@ Current implementation: Investments also houses permanent hull unlocks, the
 Dual Fire ship capability, and Ledger license tiers. The UI is a connected
 terminal upgrade tree rather than a card grid. (The former Aux tuning
 investment was retired in the Phase 6 loot pass — aux ability strength now
-rolls on the item, not on an upgrade track; see `LOOT_DEPTH_SPEC.md`.)
+rolls on the item, not on an upgrade track; see `outdated_docs/implemented_specs/LOOT_DEPTH_SPEC.md`.)
 
 Because the loot pass chose a pure hunt with no reroll bench, buying is the
 only money sink, so item value scales with roll quality

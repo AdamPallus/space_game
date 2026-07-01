@@ -6,12 +6,12 @@ Last audited: 2026-06-25
 item tooltip — a single shared stat block that renders identically across
 tooltip, inspector, market, and debrief. Companions: [STATE.md](STATE.md),
 [CURRENT_SYSTEMS.md](CURRENT_SYSTEMS.md), [UI_DESIGN.md](UI_DESIGN.md) (Ten
-Rules still bind), [LOOT_DEPTH_SPEC.md](LOOT_DEPTH_SPEC.md) (the Phase 6 roll
+Rules still bind), [LOOT_DEPTH_SPEC.md](outdated_docs/implemented_specs/LOOT_DEPTH_SPEC.md) (the Phase 6 roll
 system this surfaces).*
 
 This system is **implemented**. It was first authored as the Phase 4c spec,
 archived during a docs cleanup, and is restored here as the living reference
-because [LOOT_DEPTH_SPEC.md](LOOT_DEPTH_SPEC.md) extends it (rolled magnitudes
+because [LOOT_DEPTH_SPEC.md](outdated_docs/implemented_specs/LOOT_DEPTH_SPEC.md) extends it (rolled magnitudes
 and the roll-quality bar). Treat this file as the description of how item
 communication works today plus the rules any future item-UI change must keep.
 
@@ -95,7 +95,7 @@ to bottom:
 
 Headline stats are **intrinsic** (the item's own stat, identical regardless
 of the rest of the loadout); the delta is the **effective** install change.
-See [ITEM_CLARITY_SPEC.md](ITEM_CLARITY_SPEC.md) Part A. Stat order leads with
+See [ITEM_CLARITY_SPEC.md](outdated_docs/implemented_specs/ITEM_CLARITY_SPEC.md) Part A. Stat order leads with
 weapon identity (DPS → Pattern → Damage/shot → Ammo → Special); the
 roll-quality bar moves to the BOTTOM (Part B).
 

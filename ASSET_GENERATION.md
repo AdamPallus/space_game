@@ -13,7 +13,7 @@ source and process alpha locally with the existing sheet/removal tools.
 
 ## Overhaul Asset Notes
 
-The player-testing follow-up for `NEXT_OVERHAUL_SPEC.md` uses two related
+The player-testing follow-up for `outdated_docs/implemented_specs/NEXT_OVERHAUL_SPEC.md` uses two related
 generated packs:
 
 - The starter hull remains `assets/generated/pilot_sprites/player_interceptor.png`.

@@ -23,7 +23,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 
 These are intentional follow-up targets, not bugs in the docs:
 
-- The `NEXT_OVERHAUL_SPEC.md` cleanup/loadout pass is implemented for player testing, including hangar-first starts, explicit credit settlement, repair/booster caches, EMP projectile clear, browsing controls, Ledger license investments, mini weapons, second-primary swapping, named hulls, aux engineering, and opt-in compatible dual-fire.
+- The `outdated_docs/implemented_specs/NEXT_OVERHAUL_SPEC.md` cleanup/loadout pass is implemented for player testing, including hangar-first starts, explicit credit settlement, repair/booster caches, EMP projectile clear, browsing controls, Ledger license investments, mini weapons, second-primary swapping, named hulls, aux engineering, and opt-in compatible dual-fire.
 - Item durability remains deferred.
 - Cargo/economy hulls remain deferred.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader design direction rather than current gameplay systems.
@@ -60,6 +60,7 @@ node scripts/validate_levels.js
 python3 scripts/validate_generated_assets.py
 node scripts/validate_weapon_frames.js
 node scripts/balance_report.js
+node scripts/validate_docs.js
 git diff --check
 ```
 
@@ -125,10 +126,13 @@ Active docs in the repo root:
 - `LEVEL_JSON_FORMAT.md`: active level schema reference.
 - `WEAPON_FRAME_FORMAT.md`: active weapon-frame schema reference.
 - `ITEM_UX_SPEC.md`: active item-communication reference (intrinsic item stats, effective deltas, tooltip/inspector stat block, rarity treatment, roll-quality surfacing).
-- `ITEM_CLARITY_SPEC.md`: Phase 7 item clarity spec — implemented.
-- `LOOT_DEPTH_SPEC.md`: Phase 6 loot depth spec (affix magnitude rolls, aux potency) — implemented.
+- `ECONOMY_CONTROL_SPEC.md`: Phase 8 prelude spec (economy config extraction, credit-flow report, dev tuning console) — ready for Codex.
 - `STORY-PREMISE.md`: active tone and lore source.
 - `STORY-PREMISE-DEEP-HISTORY.md`: deep history and endgame arc extending the story premise; feeds the Story-Economy Arc in `ROADMAP.md`.
 - `CREDITS.md`: asset and tool credits.
 
 Archived docs live in `outdated_docs/`. They are useful historical context, but should not be treated as implementation instructions unless a new active doc links to them explicitly.
+
+### Doc lifecycle rule
+
+Every markdown file in the repo root is either a **durable reference** (listed above, kept current) or a **phase spec** (listed above with a "ready for Codex" or similar status). The change set that implements a phase spec must, in the same commit: move the spec to `outdated_docs/implemented_specs/`, update `STATE.md`, `CURRENT_SYSTEMS.md`, and `ROADMAP.md` to reflect the new behavior, and pass `node scripts/validate_docs.js` — which fails if any root doc is missing from this map or any mapped doc is missing from the root.

@@ -1,6 +1,6 @@
 # Current Systems
 
-Last audited: 2026-06-25
+Last audited: 2026-07-02
 
 This file explains how the game works today. It is intentionally descriptive rather than aspirational; new plans should start in `ROADMAP.md` and only graduate into this file after implementation.
 
@@ -36,7 +36,11 @@ Old Flight School save fields remain migration-compatible, but they no longer co
 
 The economy combines enemy kill bounties, explicit objective credits, mission completion credits, cargo recovery, Ledger market returns, and item collection. Score and elapsed mission time can remain as display or telemetry, but they do not silently convert into credits. Mission debrief copy breaks out kill bounties, objective credits, completion credits, recovery charges, dividends, writedowns, and market settlement.
 
-Ledger market state includes rotating stock, lot purchases, dividends, price movement, bulletins, volatility, sponsored listings, mispriced opportunities, and license tiers. Ledger licenses increase visible stock from 5 lots to 7, 9, and 11 lots at the documented upgrade costs, but the license purchase UI lives in Ledger Investments rather than Market. Market does not include a fixed Basic Gear section.
+Active economy tuning is loaded from `config/economy.json` before save migration or hangar rendering. Startup blocks with a visible error if the shipped config is missing or invalid. The config owns market rates and license tiers, extraction cargo and payout rates, item value ranges and roll-quality value scaling, drop tables, mission reward constants, investments, consumables, Credit Flow report targets, and legacy credit gates still needed for compatibility. Combat math, level enemy/objective credits, item affixes, rarity presentation, and level data remain outside the economy config.
+
+Ledger market state includes rotating stock, lot purchases, dividends, price movement, bulletins, volatility, sponsored listings, mispriced opportunities, and license tiers. Ledger licenses increase visible stock from 5 lots to 7, 9, and 11 lots at the documented upgrade costs, but the license purchase UI lives in Ledger Investments rather than Market. Market does not include a fixed Basic Gear section. Market lots preserve saved item/list value and compute purchase price at render and purchase time from current config rates; sale quotes derive the handling fee from `sellRate`, so config edits affect live sale payouts without code changes.
+
+`?devTuning=1` opens a compact economy tuning console on non-combat scenes. Numeric fields are grouped by config section, sparse localStorage overrides apply immediately outside combat, and active overrides show `TUNING OVERRIDES ACTIVE` across hangar scenes and the combat HUD. The console can reset all overrides or export the merged live config to download and clipboard.
 
 ## Items, Armory, And Archive
 
@@ -73,13 +77,16 @@ The current validation stack is:
 ```bash
 node --check main.js
 node --check scripts/balance_report.js
+node scripts/validate_economy_config.js
 node scripts/validate_levels.js
+python3 scripts/validate_generated_assets.py
 node scripts/validate_weapon_frames.js
 node scripts/balance_report.js
+node scripts/validate_docs.js
 git diff --check
 ```
 
-`balance_report.js` is the main guardrail for economy and item-pool drift. It mirrors primary damage math, mini rarity tuning, defense rarity tuning, per-instance affix magnitude rolls, reports focused single-shot DPS against multi-shot/burst output, checks the single-primary focus versus second-bay strain tradeoff, and reports the magnitude-roll DPS spread across same base + rarity items. `validate_levels.js`, `validate_generated_assets.py`, and `validate_weapon_frames.js` protect data and asset contracts. UI work should also receive a real browser smoke test.
+`balance_report.js` is the main guardrail for economy and item-pool drift. It mirrors primary damage math, mini rarity tuning, defense rarity tuning, per-instance affix magnitude rolls, reports focused single-shot DPS against multi-shot/burst output, checks the single-primary focus versus second-bay strain tradeoff, reports the magnitude-roll DPS spread across same base + rarity items, and prints a Credit Flow section with full-clear and short-loop expected credits plus affordability milestones. `validate_economy_config.js`, `validate_levels.js`, `validate_generated_assets.py`, and `validate_weapon_frames.js` protect economy, data, and asset contracts. UI work should also receive a real browser smoke test.
 
 ## Current Divergences From Desired Next State
 

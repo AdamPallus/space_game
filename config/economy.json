@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "market": {
+    "buyRate": 1,
+    "sellRate": 0.4,
+    "stockVersion": 4,
+    "stockLots": 5,
+    "licenseTiers": [
+      { "tier": 0, "lots": 5, "cost": 0 },
+      { "tier": 1, "lots": 7, "cost": 800 },
+      { "tier": 2, "lots": 9, "cost": 1800 },
+      { "tier": 3, "lots": 11, "cost": 4000 }
+    ],
+    "bulletinCadence": 3,
+    "bulletinBonusRate": 0.4,
+    "mispricedLotChance": 0.125,
+    "mispricedValueRange": [0.35, 0.5],
+    "mispricedMinProfitRate": 0.02,
+    "earlyRecallAuditThreshold": 3,
+    "stockRarityProgression": [
+      { "unlockedLevel": 1, "weights": { "scrap": 0.72, "certified": 0.28 } },
+      { "unlockedLevel": 3, "weights": { "scrap": 0.42, "certified": 0.48, "prototype": 0.1 } },
+      { "unlockedLevel": 6, "weights": { "scrap": 0.2, "certified": 0.5, "prototype": 0.27, "preFounding": 0.03 } },
+      { "unlockedLevel": 9, "weights": { "certified": 0.42, "prototype": 0.5, "preFounding": 0.08 } }
+    ],
+    "bulletinTags": [
+      { "tag": "kinetic", "label": "Kinetic frames" },
+      { "tag": "plasma", "label": "Plasma frames" },
+      { "tag": "anti-armor", "label": "Anti-armor gear" },
+      { "tag": "swarm", "label": "Swarm-control gear" },
+      { "tag": "wide", "label": "Wide-pattern frames" },
+      { "tag": "focused", "label": "Focused frames" },
+      { "tag": "dual", "label": "Dual-driver frames" },
+      { "tag": "rapid", "label": "Rapid-fire frames" },
+      { "tag": "homing", "label": "Homing arrays" },
+      { "tag": "explosive", "label": "Explosive impact gear" },
+      { "tag": "shield", "label": "Shield hardware" },
+      { "tag": "defense", "label": "Defense modules" },
+      { "tag": "aux", "label": "Aux systems" },
+      { "tag": "pierce", "label": "Pierce traces" },
+      { "tag": "heavy", "label": "Heavy-bore gear" },
+      { "tag": "regen", "label": "Regen hardware" },
+      { "tag": "control", "label": "Control systems" },
+      { "tag": "evasion", "label": "Evasion gear" },
+      { "tag": "tracking", "label": "Tracking gear" },
+      { "tag": "flow-rate", "label": "Flow-rate tuning" },
+      { "tag": "sustain", "label": "Sustain traces" }
+    ]
+  },
+  "extraction": {
+    "cargoSize": 3,
+    "deathBountyWritedownRate": 0.25,
+    "deathBountyKeepFraction": 0.75,
+    "recoveryBonusRate": { "min": 0.1, "max": 0.25 }
+  },
+  "itemValue": {
+    "rarityValueRanges": {
+      "scrap": [40, 80],
+      "certified": [150, 300],
+      "prototype": [500, 900],
+      "preFounding": [1500, 3000]
+    },
+    "rollQualityMultiplier": { "base": 0.85, "scale": 0.45 }
+  },
+  "dropTables": {
+    "itemBaseTierGates": { "1": 1, "2": 2, "3": 4, "4": 6 },
+    "defaultSlotWeights": {
+      "primary": 0.5,
+      "mini": 0.12,
+      "defense": 0.22,
+      "aux": 0.16
+    },
+    "ordinary": {
+      "chance": 0.02,
+      "rarityWeights": { "scrap": 1 }
+    },
+    "transport": {
+      "chance": 1,
+      "rarityWeights": { "scrap": 0.82, "certified": 0.18 },
+      "slotWeights": { "primary": 0.6, "defense": 0.25, "aux": 0.15 }
+    },
+    "captain": {
+      "chance": 0.6,
+      "minBaseCredit": 150,
+      "rarityWeights": { "scrap": 0.25, "certified": 0.65, "prototype": 0.1 },
+      "slotWeights": { "primary": 0.68, "defense": 0.22, "aux": 0.1 }
+    },
+    "boss": {
+      "chance": 1,
+      "rarityWeights": { "certified": 0.25, "prototype": 0.7, "preFounding": 0.05 },
+      "slotWeights": { "primary": 0.72, "defense": 0.2, "aux": 0.08 }
+    },
+    "eliteBonusChance": 0.15
+  },
+  "missionRewards": {
+    "enemyBountyDifficultyScale": 0.09,
+    "fallbackEnemyBaseCredit": 10,
+    "completionBase": 120,
+    "completionIncrement": 55,
+    "fallbackBossSalvageBaseCredit": 200
+  },
+  "investments": {
+    "engineering": {
+      "name": "Engineering Bay",
+      "tiers": [
+        { "cost": 200, "benefit": "Unlock basic consumables (bombs)" },
+        { "cost": 500, "benefit": "Reduce repair costs by 25%" },
+        { "cost": 1000, "benefit": "Unlock advanced consumables" },
+        { "cost": 2000, "benefit": "Consumables regenerate between missions" },
+        { "cost": 4000, "benefit": "Prototype gear each mission" }
+      ]
+    },
+    "operations": {
+      "name": "Operations Center",
+      "tiers": [
+        { "cost": 200, "benefit": "Unlock Patrol mission variants" },
+        { "cost": 500, "benefit": "Unlock Bonus Objectives (+credits)" },
+        { "cost": 1000, "benefit": "Unlock Skirmish variants" },
+        { "cost": 2000, "benefit": "Unlock Siege variants" },
+        { "cost": 4000, "benefit": "Unlock Elite modifier (2x diff, 3x credits)" }
+      ]
+    },
+    "shares": {
+      "name": "Fleet Shares",
+      "tiers": [
+        { "cost": 300, "benefit": "+5% passive credits per mission", "dividend": 0.05 },
+        { "cost": 800, "benefit": "+10% passive credits", "dividend": 0.1 },
+        { "cost": 1500, "benefit": "+10% + Fleet events (bonus payouts)", "dividend": 0.1 },
+        { "cost": 3000, "benefit": "+15% + Fleet Contracts access", "dividend": 0.15 },
+        { "cost": 6000, "benefit": "+20% + Boss bounty shares", "dividend": 0.2 }
+      ]
+    },
+    "hulls": {
+      "name": "Hull Licenses",
+      "tiers": [
+        { "cost": 600, "benefit": "Unlock Bastion defensive hull", "hullId": "bastion" },
+        { "cost": 1100, "benefit": "Unlock Relay tech/control hull", "hullId": "relay" },
+        { "cost": 1800, "benefit": "Unlock Broadside gunship hull", "hullId": "broadside" }
+      ]
+    },
+    "capabilities": {
+      "name": "Ship Capabilities",
+      "tiers": [
+        { "cost": 900, "benefit": "Dual-Fire Coupler tier 1", "upgradeId": "dualFire", "upgradeLevel": 1 },
+        { "cost": 1800, "benefit": "Dual-Fire Coupler tier 2", "upgradeId": "dualFire", "upgradeLevel": 2 },
+        { "cost": 3400, "benefit": "Dual-Fire Coupler tier 3", "upgradeId": "dualFire", "upgradeLevel": 3 },
+        { "cost": 4600, "benefit": "Dual-Fire Coupler tier 4", "upgradeId": "dualFire", "upgradeLevel": 4 }
+      ]
+    }
+  },
+  "consumables": [
+    {
+      "id": "bomb",
+      "name": "Bomb Charge",
+      "desc": "Detonates a blast that damages nearby enemies.",
+      "cost": 220,
+      "usesPerMission": 1,
+      "cooldown": 12,
+      "unlockTier": 1,
+      "hudLabel": "Bomb"
+    },
+    {
+      "id": "shieldBoost",
+      "name": "Shield Booster",
+      "desc": "Restore shields and patch some hull.",
+      "cost": 160,
+      "usesPerMission": 2,
+      "cooldown": 10,
+      "unlockTier": 3,
+      "hudLabel": "Shield"
+    },
+    {
+      "id": "overcharge",
+      "name": "Overcharge",
+      "desc": "Temporarily increases primary damage.",
+      "cost": 260,
+      "usesPerMission": 1,
+      "cooldown": 18,
+      "duration": 6,
+      "unlockTier": 3,
+      "hudLabel": "Overcharge"
+    }
+  ],
+  "reportTargets": {
+    "certifiedAffordableMission": 3,
+    "firstInvestmentAffordableMission": 5,
+    "trackSaturationTooEarlyMission": 7,
+    "shortLoopEventFraction": 0.3333333333
+  },
+  "legacyCreditGates": {
+    "upgradeCostExponent": 1.35,
+    "shipPanelCostExponent": 1.45,
+    "shipUpgrades": [
+      { "id": "hull", "name": "Reinforced Hull", "desc": "+8% max hull per level.", "baseCost": 120 },
+      { "id": "shield", "name": "Shield Capacitors", "desc": "+10% max shields per level.", "baseCost": 140 },
+      { "id": "damage", "name": "Coil Blaster", "desc": "+10% primary damage per level.", "baseCost": 160 },
+      { "id": "fireRate", "name": "Fire Control", "desc": "+7% primary Shots per Second per level.", "baseCost": 150 },
+      { "id": "auxCooldown", "name": "Ability Recharge", "desc": "-8% ability recharge time per level.", "baseCost": 180 },
+      { "id": "cloakDuration", "name": "Ability Duration", "desc": "+12% ability duration per level.", "baseCost": 200 },
+      { "id": "dualFire", "name": "Dual-Fire Coupler", "desc": "Unlock simultaneous compatible primary fire at 60%, 70%, 85%, then 100% damage.", "baseCost": 900, "maxLevel": 4 }
+    ],
+    "supportUnlocks": [
+      { "id": "cloak", "name": "Cloaking Device", "desc": "Break enemy lock-on and reposition.", "unlockAt": 0, "cost": 0 },
+      { "id": "emp", "name": "EMP Burst", "desc": "Disable enemy fire and slow ships briefly.", "unlockAt": 350, "cost": 250 },
+      { "id": "bulwark", "name": "Bulwark Field", "desc": "Temporary super-shield buffer.", "unlockAt": 650, "cost": 400 }
+    ],
+    "weaponComponents": {
+      "barrel": [
+        { "id": "focused", "name": "Focused", "unlockAt": 0, "cost": 0 },
+        { "id": "spread", "name": "Spread", "unlockAt": 250, "cost": 180 }
+      ],
+      "trigger": [
+        { "id": "rapid", "name": "Rapid", "unlockAt": 0, "cost": 0 },
+        { "id": "burst", "name": "Burst", "unlockAt": 300, "cost": 220 }
+      ],
+      "mount": [
+        { "id": "front", "name": "Front Mount", "unlockAt": 0, "cost": 0 },
+        { "id": "rear", "name": "Rear Mount", "unlockAt": 500, "cost": 260 }
+      ],
+      "payload": [
+        { "id": "kinetic", "name": "Kinetic", "unlockAt": 0, "cost": 0 },
+        { "id": "plasma", "name": "Plasma", "unlockAt": 400, "cost": 260 },
+        { "id": "emp", "name": "EMP", "unlockAt": 900, "cost": 480 }
+      ],
+      "modifier": [
+        { "id": "none", "name": "None", "unlockAt": 0, "cost": 0 },
+        { "id": "pierce", "name": "Pierce", "unlockAt": 350, "cost": 240 },
+        { "id": "homing", "name": "Homing", "unlockAt": 800, "cost": 520 },
+        { "id": "vampiric", "name": "Vampiric", "unlockAt": 1200, "cost": 720 }
+      ]
+    }
+  }
+}

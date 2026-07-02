@@ -13647,7 +13647,7 @@ function creditForEnemy(enemy) {
   const base = Number.isFinite(enemy?.baseCredit)
     ? enemy.baseCredit
     : rewardConfig.fallbackEnemyBaseCredit;
-  return Math.round(base * difficultyScale);
+  return Math.round(base * difficultyScale * (rewardConfig.bountyRate ?? 1));
 }
 
 function creditRewardFor(missionState) {

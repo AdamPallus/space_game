@@ -93,6 +93,7 @@
     "eliteBonusChance": 0.15
   },
   "missionRewards": {
+    "bountyRate": 1,
     "enemyBountyDifficultyScale": 0.09,
     "fallbackEnemyBaseCredit": 10,
     "completionBase": 120,

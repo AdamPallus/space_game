@@ -235,6 +235,7 @@ function validateConfig(config) {
 
   const rewards = config.missionRewards;
   if (objectAt(rewards, "missionRewards")) {
+    numberAt(rewards.bountyRate, "missionRewards.bountyRate", { min: 0 });
     numberAt(rewards.enemyBountyDifficultyScale, "missionRewards.enemyBountyDifficultyScale", { min: 0 });
     numberAt(rewards.fallbackEnemyBaseCredit, "missionRewards.fallbackEnemyBaseCredit", { min: 0 });
     numberAt(rewards.completionBase, "missionRewards.completionBase", { min: 0 });

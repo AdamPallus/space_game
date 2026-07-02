@@ -918,7 +918,7 @@ function expectedKillCredit(enemy, time) {
     : rewards.fallbackEnemyBaseCredit;
   const difficultyScale =
     1 + creditFlowDifficultyAtElapsed(time) * rewards.enemyBountyDifficultyScale;
-  return Math.round(base * difficultyScale);
+  return Math.round(base * difficultyScale * (rewards.bountyRate ?? 1));
 }
 
 function isCreditFlowEliteLevel(level) {

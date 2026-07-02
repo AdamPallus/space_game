@@ -7,6 +7,9 @@ const ROOT = path.resolve(__dirname, "..");
 const ITEM_POOL_PATH = path.join(ROOT, "items", "item_pool.json");
 const WEAPON_FRAMES_PATH = path.join(ROOT, "items", "weapon_frames.json");
 const ENEMY_CATALOG_PATH = path.join(ROOT, "enemies", "enemy_catalog.json");
+const ECONOMY_CONFIG_PATH = path.join(ROOT, "config", "economy.json");
+const LEVEL_DIR = path.join(ROOT, "levels");
+const LEVEL_MANIFEST_PATH = path.join(LEVEL_DIR, "manifest.json");
 
 const ECONOMY = {
   minDamageFloor: 0.2,
@@ -69,6 +72,10 @@ function readJson(file) {
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
+
+const economyConfig = readJson(ECONOMY_CONFIG_PATH);
+const levelManifest = readJson(LEVEL_MANIFEST_PATH);
+const enemyCatalogEntries = readJson(ENEMY_CATALOG_PATH).entries || {};
 
 function createDefaultShipBuild() {
   return {
@@ -725,7 +732,7 @@ function isPreFoundingRelicBuild(row) {
 
 const pool = readJson(ITEM_POOL_PATH);
 const frames = readJson(WEAPON_FRAMES_PATH).entries || {};
-const enemies = Object.entries(readJson(ENEMY_CATALOG_PATH).entries || {})
+const enemies = Object.entries(enemyCatalogEntries)
   .map(([id, entry]) => normalizeEnemy(id, entry))
   .sort((a, b) => a.id.localeCompare(b.id));
 
@@ -835,6 +842,378 @@ function average(values) {
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 }
 
+function numericMissionIndex(levelId) {
+  const match = String(levelId).match(/^level(\d+)$/);
+  return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+}
+
+function getStandardLevelIds() {
+  const ids = Object.keys(levelManifest.variants || {});
+  return ids
+    .filter((id) => /^level\d+$/.test(id))
+    .sort((a, b) => numericMissionIndex(a) - numericMissionIndex(b));
+}
+
+function readLevel(levelId, failures) {
+  const file = path.join(LEVEL_DIR, `${levelId}.json`);
+  if (!fs.existsSync(file)) {
+    failures.push(`Credit Flow is missing ${levelId}.json.`);
+    return null;
+  }
+  return readJson(file);
+}
+
+function mergeCreditFlowEnemySpec(level, typeId, failures) {
+  const local = level?.enemyTypes?.[typeId];
+  if (!local || typeof local !== "object" || Array.isArray(local)) {
+    failures.push(`Credit Flow ${level?.id || "unknown"} event references missing enemy '${typeId}'.`);
+    return null;
+  }
+  const templateId = typeof local.template === "string" ? local.template : typeId;
+  const template = enemyCatalogEntries[templateId]?.template || {};
+  const merged = {
+    type: typeId,
+    ...clone(template),
+    ...clone(local),
+  };
+  delete merged.template;
+  return merged;
+}
+
+function getCreditFlowSpawns(level, failures) {
+  if (!Array.isArray(level?.events) || !level.events.length) {
+    failures.push(`Credit Flow ${level?.id || "unknown"} has no mission events.`);
+    return [];
+  }
+  const spawns = [];
+  level.events.forEach((event) => {
+    const spec = mergeCreditFlowEnemySpec(level, event.type, failures);
+    if (!spec) return;
+    const count = Math.max(1, Math.round(Number(event.count) || 1));
+    const startTime = Math.max(0, Number(event.time) || 0);
+    const interval = Math.max(0, Number(event.interval) || 0);
+    for (let i = 0; i < count; i += 1) {
+      spawns.push({
+        time: startTime + interval * i,
+        type: event.type,
+        enemy: spec,
+      });
+    }
+  });
+  return spawns.sort((a, b) => a.time - b.time);
+}
+
+function creditFlowMissionEndTime(spawns) {
+  return spawns.reduce((max, spawn) => Math.max(max, spawn.time), 0);
+}
+
+function creditFlowDifficultyAtElapsed(elapsed) {
+  return 1 + Math.max(0, elapsed) / 22;
+}
+
+function expectedKillCredit(enemy, time) {
+  const rewards = economyConfig.missionRewards || {};
+  const base = Number.isFinite(enemy?.baseCredit)
+    ? enemy.baseCredit
+    : rewards.fallbackEnemyBaseCredit;
+  const difficultyScale =
+    1 + creditFlowDifficultyAtElapsed(time) * rewards.enemyBountyDifficultyScale;
+  return Math.round(base * difficultyScale);
+}
+
+function isCreditFlowEliteLevel(level) {
+  if (level?.elite || level?.modifier === "elite" || level?.variant === "elite") return true;
+  if (Array.isArray(level?.modifiers) && level.modifiers.includes("elite")) return true;
+  return /elite/i.test(`${level?.id || ""} ${level?.name || ""}`);
+}
+
+function getCreditFlowDropSource(enemy) {
+  if (enemy?.isBoss || enemy?.boss || enemy?.type === "boss") return "boss";
+  if (enemy?.type === "transport" || enemy?.type === "bulwark" || enemy?.ai === "transport") {
+    return "transport";
+  }
+  const captain = economyConfig.dropTables?.captain || {};
+  if ((enemy?.baseCredit || 0) >= captain.minBaseCredit) return "captain";
+  return "ordinary";
+}
+
+function weightedAverage(weights, valueForKey) {
+  const entries = Object.entries(weights || {}).filter(([, weight]) => Number(weight) > 0);
+  const totalWeight = entries.reduce((sum, [, weight]) => sum + Number(weight), 0);
+  if (!totalWeight) return 0;
+  return entries.reduce((sum, [key, weight]) => sum + valueForKey(key) * Number(weight), 0) / totalWeight;
+}
+
+function expectedRarityListValue(rarity) {
+  const ranges = economyConfig.itemValue?.rarityValueRanges || {};
+  const [min, max] = ranges[rarity] || ranges.scrap;
+  const midpoint = (Number(min) + Number(max)) / 2;
+  const quality = economyConfig.itemValue?.rollQualityMultiplier || {};
+  const qualityMult =
+    rarity === "scrap"
+      ? 1
+      : quality.base + quality.scale * 0.5;
+  return midpoint * qualityMult;
+}
+
+function expectedSourceSalvageSaleValue(sourceKey, { force = false, elite = false } = {}) {
+  const dropTables = economyConfig.dropTables || {};
+  const source = dropTables[sourceKey] || dropTables.ordinary || {};
+  const baseChance = force ? 1 : Number(source.chance) || 0;
+  const eliteBonus = elite && sourceKey !== "boss" ? Number(dropTables.eliteBonusChance) || 0 : 0;
+  const chance = Math.max(0, Math.min(1, baseChance + eliteBonus));
+  const expectedListValue = weightedAverage(source.rarityWeights, expectedRarityListValue);
+  return chance * expectedListValue * economyConfig.market.sellRate;
+}
+
+function expectedPickupSalvageSaleValue(level, cutoff = Infinity) {
+  const pickups = Array.isArray(level?.pickups) ? level.pickups : [];
+  return pickups
+    .filter((pickup) => pickup.type === "salvage" && (Number(pickup.time) || 0) <= cutoff)
+    .reduce((sum, pickup) => {
+      const count = Math.max(1, Math.round(Number(pickup.count) || 1));
+      return (
+        sum +
+        count *
+          expectedRarityListValue(pickup.rarity || "scrap") *
+          economyConfig.market.sellRate
+      );
+    }, 0);
+}
+
+function objectiveCreditRewardForLevel(level) {
+  const explicit = level?.objectiveCredits ?? level?.objectiveCredit ?? level?.creditReward;
+  return Number.isFinite(explicit) ? Math.max(0, Math.round(explicit)) : 0;
+}
+
+function missionCompletionCreditForLevel(levelId) {
+  const index = getStandardLevelIds().findIndex((id) => id === levelId);
+  const rewards = economyConfig.missionRewards || {};
+  return Math.round(rewards.completionBase + Math.max(0, index) * rewards.completionIncrement);
+}
+
+function formatCreditAmount(value) {
+  return Math.round(value).toString();
+}
+
+function buildCreditFlowRow(levelId, index, mode, failures) {
+  const level = readLevel(levelId, failures);
+  if (!level) return null;
+  const spawns = getCreditFlowSpawns(level, failures);
+  const eventEndTime = creditFlowMissionEndTime(spawns);
+  if (!eventEndTime) failures.push(`Credit Flow ${levelId} has no timed enemy spawns.`);
+  const cutoff =
+    mode === "short"
+      ? eventEndTime * economyConfig.reportTargets.shortLoopEventFraction
+      : Infinity;
+  const includedSpawns = spawns.filter((spawn) => spawn.time <= cutoff);
+  const elite = isCreditFlowEliteLevel(level);
+  const killCredits = includedSpawns.reduce(
+    (sum, spawn) => sum + expectedKillCredit(spawn.enemy, spawn.time),
+    0
+  );
+  const enemySalvageSale = includedSpawns.reduce((sum, spawn) => {
+    const sourceKey = getCreditFlowDropSource(spawn.enemy);
+    return sum + expectedSourceSalvageSaleValue(sourceKey, {
+      force: sourceKey === "boss",
+      elite,
+    });
+  }, 0);
+  const pickupSalvageSale = expectedPickupSalvageSaleValue(level, cutoff);
+  const objectiveCredits = mode === "full" ? objectiveCreditRewardForLevel(level) : 0;
+  const completionCredits = mode === "full" ? missionCompletionCreditForLevel(levelId, index) : 0;
+  const grossCredits = killCredits + objectiveCredits + completionCredits;
+  const recoveryRate = economyConfig.extraction.recoveryBonusRate;
+  const expectedRecoveryBonus =
+    mode === "full"
+      ? grossCredits *
+        ((Number(recoveryRate.min) + Number(recoveryRate.max)) / 2)
+      : 0;
+  const expectedSalvageSale = enemySalvageSale + pickupSalvageSale;
+  const total =
+    killCredits +
+    objectiveCredits +
+    completionCredits +
+    expectedRecoveryBonus +
+    expectedSalvageSale;
+  const row = {
+    levelId,
+    mode,
+    killCredits,
+    objectiveCompletionCredits: objectiveCredits + completionCredits,
+    expectedRecoveryBonus,
+    expectedSalvageSale,
+    total,
+  };
+  Object.entries(row).forEach(([key, value]) => {
+    if (typeof value === "number" && !Number.isFinite(value)) {
+      failures.push(`Credit Flow ${levelId} ${mode} produced non-finite ${key}.`);
+    }
+  });
+  return row;
+}
+
+function firstAffordableMission(rows, cost) {
+  const row = rows.find((entry) => entry.cumulative >= cost);
+  return row ? row.levelId.replace("level", "M") : "n/a";
+}
+
+function collectAffordabilityItems() {
+  const items = [];
+  Object.entries(economyConfig.investments || {}).forEach(([trackKey, track]) => {
+    if (trackKey === "hulls") return;
+    (track.tiers || []).forEach((tier, index) => {
+      if (Number(tier.cost) > 0) {
+        items.push({
+          category: "Investment",
+          label: `${track.name || trackKey} T${index + 1}`,
+          cost: Math.round(Number(tier.cost)),
+          trackKey,
+        });
+      }
+    });
+  });
+  (economyConfig.market?.licenseTiers || []).slice(1).forEach((tier) => {
+    if (Number(tier.cost) > 0) {
+      items.push({
+        category: "Ledger License",
+        label: `Ledger T${tier.tier}`,
+        cost: Math.round(Number(tier.cost)),
+        trackKey: "marketLicense",
+      });
+    }
+  });
+  ((economyConfig.investments || {}).hulls?.tiers || []).forEach((tier, index) => {
+    if (Number(tier.cost) > 0) {
+      items.push({
+        category: "Hull License",
+        label: `${tier.hullId || `Hull T${index + 1}`}`,
+        cost: Math.round(Number(tier.cost)),
+        trackKey: "hulls",
+      });
+    }
+  });
+  (economyConfig.consumables || []).forEach((item) => {
+    if (Number(item.cost) > 0) {
+      items.push({
+        category: "Consumable",
+        label: item.name || item.id,
+        cost: Math.round(Number(item.cost)),
+        trackKey: "consumables",
+      });
+    }
+  });
+  return items.sort((a, b) => a.cost - b.cost || a.label.localeCompare(b.label));
+}
+
+function collectTrackTotals() {
+  return Object.entries(economyConfig.investments || {}).map(([trackKey, track]) => ({
+    trackKey,
+    name: track.name || trackKey,
+    cost: (track.tiers || []).reduce((sum, tier) => sum + Math.max(0, Number(tier.cost) || 0), 0),
+  }));
+}
+
+function printCreditFlowReport() {
+  const creditFailures = [];
+  const warnings = [];
+  const levelIds = getStandardLevelIds();
+  const fullRows = [];
+  const shortRows = [];
+
+  levelIds.forEach((levelId, index) => {
+    const full = buildCreditFlowRow(levelId, index, "full", creditFailures);
+    const short = buildCreditFlowRow(levelId, index, "short", creditFailures);
+    if (full) fullRows.push(full);
+    if (short) shortRows.push(short);
+  });
+
+  let fullCumulative = 0;
+  fullRows.forEach((row) => {
+    fullCumulative += row.total;
+    row.cumulative = fullCumulative;
+  });
+  let shortCumulative = 0;
+  shortRows.forEach((row) => {
+    shortCumulative += row.total;
+    row.cumulative = shortCumulative;
+  });
+
+  console.log("\nCredit Flow");
+  console.log(
+    `${"Mission".padEnd(8)} ${"Loop".padEnd(5)} ${"Kills".padStart(7)} ${"Obj+Comp".padStart(8)} ${"Recovery".padStart(8)} ${"Salvage".padStart(8)} ${"Total".padStart(8)} ${"Cumulative".padStart(10)}`
+  );
+  fullRows.forEach((fullRow, index) => {
+    const shortRow = shortRows[index];
+    [fullRow, shortRow].filter(Boolean).forEach((row) => {
+      console.log(
+        `${row.levelId.padEnd(8)} ${row.mode.padEnd(5)} ` +
+          `${formatCreditAmount(row.killCredits).padStart(7)} ` +
+          `${formatCreditAmount(row.objectiveCompletionCredits).padStart(8)} ` +
+          `${formatCreditAmount(row.expectedRecoveryBonus).padStart(8)} ` +
+          `${formatCreditAmount(row.expectedSalvageSale).padStart(8)} ` +
+          `${formatCreditAmount(row.total).padStart(8)} ` +
+          `${formatCreditAmount(row.cumulative).padStart(10)}`
+      );
+    });
+  });
+  console.log(
+    `No-spend cumulative full clear: ${fullRows
+      .map((row) => `${row.levelId.replace("level", "M")}=${formatCreditAmount(row.cumulative)}`)
+      .join(" | ")}`
+  );
+  console.log(
+    `No-spend cumulative short loop: ${shortRows
+      .map((row) => `${row.levelId.replace("level", "M")}=${formatCreditAmount(row.cumulative)}`)
+      .join(" | ")}`
+  );
+
+  const affordabilityItems = collectAffordabilityItems();
+  console.log("\nCredit Flow affordability milestones");
+  affordabilityItems.forEach((item) => {
+    console.log(
+      `${item.category.padEnd(15)} ${item.label.slice(0, 34).padEnd(34)} cost ${formatCreditAmount(item.cost).padStart(5)} | full ${firstAffordableMission(fullRows, item.cost).padEnd(4)} | short ${firstAffordableMission(shortRows, item.cost).padEnd(4)}`
+    );
+  });
+
+  const certifiedCost = expectedRarityListValue("certified") * economyConfig.market.buyRate;
+  const certifiedMission = firstAffordableMission(fullRows, certifiedCost);
+  const certifiedTarget = economyConfig.reportTargets?.certifiedAffordableMission ?? 3;
+  if (certifiedMission === "n/a" || Number(certifiedMission.slice(1)) > certifiedTarget) {
+    warnings.push(
+      `Average Certified item affordability lands at ${certifiedMission}; target is M${certifiedTarget}.`
+    );
+  }
+
+  const investmentItems = affordabilityItems.filter((item) => item.category === "Investment");
+  const firstInvestment = investmentItems[0];
+  const firstInvestmentMission = firstInvestment
+    ? firstAffordableMission(fullRows, firstInvestment.cost)
+    : "n/a";
+  const investmentTarget = economyConfig.reportTargets?.firstInvestmentAffordableMission ?? 5;
+  if (firstInvestmentMission === "n/a" || Number(firstInvestmentMission.slice(1)) > investmentTarget) {
+    warnings.push(
+      `Cheapest investment affordability lands at ${firstInvestmentMission}; target is M${investmentTarget}.`
+    );
+  }
+
+  const saturationThreshold = economyConfig.reportTargets?.trackSaturationTooEarlyMission ?? 7;
+  collectTrackTotals().forEach((track) => {
+    const mission = firstAffordableMission(fullRows, track.cost);
+    if (mission !== "n/a" && Number(mission.slice(1)) <= saturationThreshold) {
+      warnings.push(
+        `${track.name} total cost ${formatCreditAmount(track.cost)} is affordable by ${mission}; early saturation threshold is M${saturationThreshold}.`
+      );
+    }
+  });
+
+  if (warnings.length) {
+    console.warn("\nCredit Flow warnings:");
+    warnings.forEach((warning) => console.warn(`- ${warning}`));
+  }
+  return { failures: creditFailures, warnings };
+}
+
 const basePrimaryRows = matrix.filter((row) => row.id.startsWith("base:"));
 const focusedDps = basePrimaryRows
   .filter((row) => row.offense.spread === "focused")
@@ -938,6 +1317,8 @@ const toughestPlated = enemies
   )[0];
 
 const failures = [];
+const creditFlowReport = printCreditFlowReport();
+failures.push(...creditFlowReport.failures);
 if (!(singlePrimaryFocusMult > 1 && secondBayStrainMult > 0 && secondBayStrainMult < 1)) {
   failures.push("Loadout focus/strain multipliers are outside expected ranges.");
 }

@@ -119,6 +119,9 @@ const compendiumModeButtons = document.querySelectorAll("[data-compendium-mode]"
 const relicArchive = document.getElementById("relic-archive");
 
 const STORAGE_KEY = "mini-fighter-save";
+const ECONOMY_CONFIG_PATH = "config/economy.json";
+const ECONOMY_OVERRIDE_STORAGE_KEY = "mini-fighter-economy-overrides";
+const ECONOMY_PANEL_MINIMIZED_STORAGE_KEY = "mini-fighter-economy-panel-minimized";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
 const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
 const GENERATED_ROOT = "assets/generated";
@@ -273,7 +276,6 @@ const PROJECTILE_RUNTIME_PROFILE_KEYS = new Set([
 ]);
 
 const ECONOMY = {
-  cargoSize: 3,
   salvagePodSpeed: 40,
   fieldPickupSpeed: 46,
   cargoFullFlashSeconds: 1.1,
@@ -303,47 +305,7 @@ const ECONOMY = {
     singlePrimaryDamageBonus: 0.1,
     secondPrimaryDamagePenalty: 0.15,
   },
-  deathBountyWritedownRate: 0.25,
-  recoveryBonusRate: {
-    min: 0.1,
-    max: 0.25,
-  },
-  dropSources: {
-    defaultSlotWeights: {
-      primary: 0.5,
-      mini: 0.12,
-      defense: 0.22,
-      aux: 0.16,
-    },
-    ordinary: {
-      chance: 0.02,
-      rarityWeights: { scrap: 1 },
-    },
-    transport: {
-      chance: 1,
-      rarityWeights: { scrap: 0.82, certified: 0.18 },
-      slotWeights: { primary: 0.6, defense: 0.25, aux: 0.15 },
-    },
-    captain: {
-      chance: 0.6,
-      minBaseCredit: 150,
-      rarityWeights: { scrap: 0.25, certified: 0.65, prototype: 0.1 },
-      slotWeights: { primary: 0.68, defense: 0.22, aux: 0.1 },
-    },
-    boss: {
-      chance: 1,
-      rarityWeights: { certified: 0.25, prototype: 0.7, preFounding: 0.05 },
-      slotWeights: { primary: 0.72, defense: 0.2, aux: 0.08 },
-    },
-    eliteBonusChance: 0.15,
-  },
   rarityOrder: ["scrap", "certified", "prototype", "preFounding"],
-  itemBaseTierGates: {
-    1: 1,
-    2: 2,
-    3: 4,
-    4: 6,
-  },
   rarities: {
     scrap: {
       label: "Scrap-grade",
@@ -351,7 +313,6 @@ const ECONOMY = {
       color: "#9aa3b2",
       glow: "rgba(154, 163, 178, 0.72)",
       affixCount: 0,
-      valueRange: [40, 80],
       kineticImpulseBonus: 0,
     },
     certified: {
@@ -360,7 +321,6 @@ const ECONOMY = {
       color: "#4da6ff",
       glow: "rgba(77, 166, 255, 0.8)",
       affixCount: 1,
-      valueRange: [150, 300],
       kineticImpulseBonus: 0.07,
     },
     prototype: {
@@ -369,7 +329,6 @@ const ECONOMY = {
       color: "#b06bff",
       glow: "rgba(176, 107, 255, 0.84)",
       affixCount: 2,
-      valueRange: [500, 900],
       kineticImpulseBonus: 0.16,
     },
     preFounding: {
@@ -378,59 +337,332 @@ const ECONOMY = {
       color: "#f0b429",
       glow: "rgba(240, 180, 41, 0.9)",
       affixCount: 3,
-      valueRange: [1500, 3000],
       kineticImpulseBonus: 0.28,
     },
   },
-  market: {
-    buyRate: 1,
-    sellRate: 0.4,
-    handlingFeeRate: 0.6,
-    stockVersion: 4,
-    stockLots: 5,
-    licenseTiers: [
-      { tier: 0, lots: 5, cost: 0 },
-      { tier: 1, lots: 7, cost: 800 },
-      { tier: 2, lots: 9, cost: 1800 },
-      { tier: 3, lots: 11, cost: 4000 },
-    ],
-    bulletinCadence: 3,
-    bulletinBonusRate: 0.4,
-    mispricedLotChance: 0.125,
-    mispricedValueRange: [0.35, 0.5],
-    mispricedMinProfitRate: 0.02,
-    earlyRecallAuditThreshold: 3,
-    stockRarityProgression: [
-      { unlockedLevel: 1, weights: { scrap: 0.72, certified: 0.28 } },
-      { unlockedLevel: 3, weights: { scrap: 0.42, certified: 0.48, prototype: 0.1 } },
-      { unlockedLevel: 6, weights: { scrap: 0.2, certified: 0.5, prototype: 0.27, preFounding: 0.03 } },
-      { unlockedLevel: 9, weights: { certified: 0.42, prototype: 0.5, preFounding: 0.08 } },
-    ],
-    bulletinTags: [
-      { tag: "kinetic", label: "Kinetic frames" },
-      { tag: "plasma", label: "Plasma frames" },
-      { tag: "anti-armor", label: "Anti-armor gear" },
-      { tag: "swarm", label: "Swarm-control gear" },
-      { tag: "wide", label: "Wide-pattern frames" },
-      { tag: "focused", label: "Focused frames" },
-      { tag: "dual", label: "Dual-driver frames" },
-      { tag: "rapid", label: "Rapid-fire frames" },
-      { tag: "homing", label: "Homing arrays" },
-      { tag: "explosive", label: "Explosive impact gear" },
-      { tag: "shield", label: "Shield hardware" },
-      { tag: "defense", label: "Defense modules" },
-      { tag: "aux", label: "Aux systems" },
-      { tag: "pierce", label: "Pierce traces" },
-      { tag: "heavy", label: "Heavy-bore gear" },
-      { tag: "regen", label: "Regen hardware" },
-      { tag: "control", label: "Control systems" },
-      { tag: "evasion", label: "Evasion gear" },
-      { tag: "tracking", label: "Tracking gear" },
-      { tag: "flow-rate", label: "Flow-rate tuning" },
-      { tag: "sustain", label: "Sustain traces" },
-    ],
-  },
 };
+
+let baseEconomyConfig = null;
+let economyConfig = null;
+let economyOverrideDiff = {};
+let upgrades = [];
+let consumables = [];
+let consumablesById = {};
+let investments = {};
+let rmbWeapons = [];
+let weaponComponents = {};
+
+function deepClone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function isPlainObject(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function deepMerge(base, patch) {
+  if (!isPlainObject(base) || !isPlainObject(patch)) return deepClone(patch);
+  const merged = deepClone(base);
+  Object.entries(patch).forEach(([key, value]) => {
+    if (isPlainObject(value) && isPlainObject(merged[key])) {
+      merged[key] = deepMerge(merged[key], value);
+    } else {
+      merged[key] = deepClone(value);
+    }
+  });
+  return merged;
+}
+
+function deepDiff(base, value) {
+  if (Array.isArray(base) || Array.isArray(value)) {
+    return JSON.stringify(base) === JSON.stringify(value) ? undefined : deepClone(value);
+  }
+  if (isPlainObject(base) && isPlainObject(value)) {
+    const diff = {};
+    const keys = new Set([...Object.keys(base), ...Object.keys(value)]);
+    keys.forEach((key) => {
+      const child = deepDiff(base[key], value[key]);
+      if (child !== undefined) diff[key] = child;
+    });
+    return Object.keys(diff).length ? diff : undefined;
+  }
+  return base === value ? undefined : deepClone(value);
+}
+
+function setConfigPathValue(root, path, value) {
+  let node = root;
+  for (let i = 0; i < path.length - 1; i += 1) {
+    node = node[path[i]];
+  }
+  node[path[path.length - 1]] = value;
+}
+
+function getEconomyConfig() {
+  if (!economyConfig) throw new Error("Economy config has not loaded.");
+  return economyConfig;
+}
+
+function getMarketConfig() {
+  return getEconomyConfig().market || {};
+}
+
+function getExtractionConfig() {
+  return getEconomyConfig().extraction || {};
+}
+
+function getDropTableConfig() {
+  return getEconomyConfig().dropTables || {};
+}
+
+function getMissionRewardConfig() {
+  return getEconomyConfig().missionRewards || {};
+}
+
+function getRarityValueRange(rarity = "scrap") {
+  const ranges = getEconomyConfig().itemValue?.rarityValueRanges || {};
+  const range = ranges[rarity] || ranges.scrap;
+  if (!Array.isArray(range) || range.length !== 2) {
+    throw new Error(`Missing itemValue.rarityValueRanges.${rarity}.`);
+  }
+  return range;
+}
+
+function getRollQualityValueMultiplier(rollQuality) {
+  const config = getEconomyConfig().itemValue?.rollQualityMultiplier || {};
+  const base = config.base;
+  const scale = config.scale;
+  return base + scale * Math.max(0, Math.min(1, Number(rollQuality) || 0));
+}
+
+function getMarketSellRate() {
+  const value = getMarketConfig().sellRate;
+  return Math.max(0, Math.min(1, value));
+}
+
+function getMarketHandlingFeeRate() {
+  return Math.max(0, Math.min(1, 1 - getMarketSellRate()));
+}
+
+function getConfiguredCargoSize() {
+  const value = getExtractionConfig().cargoSize;
+  return Math.max(1, Math.round(value));
+}
+
+function normalizeEconomyLicenseTier(config, fallbackTier = 0) {
+  if (!isPlainObject(config)) throw new Error("market.licenseTiers entries must be objects.");
+  const lots = Number(config?.lots ?? config?.stockLots);
+  const tier = Number(config?.tier ?? fallbackTier);
+  const cost = Number(config?.cost);
+  if (!Number.isFinite(tier)) throw new Error("market.licenseTiers tier must be finite.");
+  if (!Number.isFinite(lots)) throw new Error("market.licenseTiers lots must be finite.");
+  if (!Number.isFinite(cost)) throw new Error("market.licenseTiers cost must be finite.");
+  return {
+    tier: Math.max(0, Math.round(tier)),
+    lots: Math.max(1, Math.round(lots)),
+    cost: Math.max(0, Math.round(cost)),
+  };
+}
+
+function normalizeEconomyConfig(config) {
+  if (!isPlainObject(config)) throw new Error("Economy config root must be an object.");
+  const normalized = deepClone(config);
+  if (!isPlainObject(normalized.market)) throw new Error("Economy config missing market.");
+  if (!isPlainObject(normalized.extraction)) throw new Error("Economy config missing extraction.");
+  if (!isPlainObject(normalized.itemValue)) throw new Error("Economy config missing itemValue.");
+  if (!isPlainObject(normalized.dropTables)) throw new Error("Economy config missing dropTables.");
+  if (!isPlainObject(normalized.investments)) throw new Error("Economy config missing investments.");
+  if (!Array.isArray(normalized.consumables)) throw new Error("Economy config missing consumables.");
+  const sellRate = Number(normalized.market.sellRate);
+  const buyRate = Number(normalized.market.buyRate);
+  const stockLots = Number(normalized.market.stockLots);
+  const stockVersion = Number(normalized.market.stockVersion);
+  if (!Number.isFinite(sellRate)) throw new Error("market.sellRate must be finite.");
+  if (!Number.isFinite(buyRate)) throw new Error("market.buyRate must be finite.");
+  if (!Number.isFinite(stockLots)) throw new Error("market.stockLots must be finite.");
+  if (!Number.isFinite(stockVersion)) throw new Error("market.stockVersion must be finite.");
+  if (!Array.isArray(normalized.market.licenseTiers)) {
+    throw new Error("market.licenseTiers must be an array.");
+  }
+  normalized.market.sellRate = Math.max(0, Math.min(1, sellRate));
+  normalized.market.buyRate = Math.max(0, buyRate);
+  normalized.market.stockLots = Math.max(1, Math.round(stockLots));
+  normalized.market.stockVersion = Math.max(1, Math.round(stockVersion));
+  normalized.market.licenseTiers = normalized.market.licenseTiers.map(normalizeEconomyLicenseTier);
+  if (!normalized.market.licenseTiers.length) throw new Error("market.licenseTiers must not be empty.");
+  const cargoSize = Number(normalized.extraction.cargoSize);
+  if (!Number.isFinite(cargoSize)) throw new Error("extraction.cargoSize must be finite.");
+  normalized.extraction.cargoSize = Math.max(1, Math.round(cargoSize));
+  const writedownRate = Number(normalized.extraction.deathBountyWritedownRate);
+  if (!Number.isFinite(writedownRate)) {
+    throw new Error("extraction.deathBountyWritedownRate must be finite.");
+  }
+  normalized.extraction.deathBountyWritedownRate = Math.max(
+    0,
+    Math.min(1, writedownRate)
+  );
+  const recovery = normalized.extraction.recoveryBonusRate || {};
+  const recoveryMin = Number(recovery.min);
+  const recoveryMax = Number(recovery.max);
+  if (!Number.isFinite(recoveryMin) || !Number.isFinite(recoveryMax)) {
+    throw new Error("extraction.recoveryBonusRate min/max must be finite.");
+  }
+  recovery.min = Math.max(0, Math.min(1, recoveryMin));
+  recovery.max = Math.max(recovery.min, Math.min(1, recoveryMax));
+  normalized.extraction.recoveryBonusRate = recovery;
+  return normalized;
+}
+
+function validateRuntimeEconomyConfig(config) {
+  const normalized = normalizeEconomyConfig(config);
+  const market = normalized.market;
+  if (!Array.isArray(market.stockRarityProgression) || !market.stockRarityProgression.length) {
+    throw new Error("market.stockRarityProgression must not be empty.");
+  }
+  if (!Array.isArray(market.bulletinTags)) throw new Error("market.bulletinTags must be an array.");
+  [
+    "bulletinCadence",
+    "bulletinBonusRate",
+    "mispricedLotChance",
+    "mispricedMinProfitRate",
+    "earlyRecallAuditThreshold",
+  ].forEach((key) => {
+    if (!Number.isFinite(Number(market[key]))) throw new Error(`market.${key} must be finite.`);
+    market[key] = Number(market[key]);
+  });
+  if (!Array.isArray(market.mispricedValueRange) || market.mispricedValueRange.length !== 2) {
+    throw new Error("market.mispricedValueRange must be [min,max].");
+  }
+  market.mispricedValueRange = market.mispricedValueRange.map((value) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) throw new Error("market.mispricedValueRange values must be finite.");
+    return numeric;
+  });
+  const ranges = normalized.itemValue.rarityValueRanges || {};
+  ECONOMY.rarityOrder.forEach((rarity) => {
+    const range = ranges[rarity];
+    if (!Array.isArray(range) || range.length !== 2) {
+      throw new Error(`itemValue.rarityValueRanges.${rarity} must be [min,max].`);
+    }
+    ranges[rarity] = range.map((value) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) {
+        throw new Error(`itemValue.rarityValueRanges.${rarity} values must be finite.`);
+      }
+      return numeric;
+    });
+  });
+  normalized.itemValue.rarityValueRanges = ranges;
+  const rollQuality = normalized.itemValue.rollQualityMultiplier || {};
+  if (!Number.isFinite(Number(rollQuality.base)) || !Number.isFinite(Number(rollQuality.scale))) {
+    throw new Error("itemValue.rollQualityMultiplier base/scale must be finite.");
+  }
+  rollQuality.base = Number(rollQuality.base);
+  rollQuality.scale = Number(rollQuality.scale);
+  normalized.itemValue.rollQualityMultiplier = rollQuality;
+  ["ordinary", "transport", "captain", "boss"].forEach((key) => {
+    if (!isPlainObject(normalized.dropTables[key])) {
+      throw new Error(`dropTables.${key} is required.`);
+    }
+  });
+  const rewards = normalized.missionRewards || {};
+  [
+    "enemyBountyDifficultyScale",
+    "fallbackEnemyBaseCredit",
+    "completionBase",
+    "completionIncrement",
+    "fallbackBossSalvageBaseCredit",
+  ].forEach((key) => {
+    if (!Number.isFinite(Number(rewards[key]))) throw new Error(`missionRewards.${key} must be finite.`);
+    rewards[key] = Number(rewards[key]);
+  });
+  normalized.missionRewards = rewards;
+  const gates = normalized.legacyCreditGates || {};
+  ["upgradeCostExponent", "shipPanelCostExponent"].forEach((key) => {
+    if (!Number.isFinite(Number(gates[key]))) throw new Error(`legacyCreditGates.${key} must be finite.`);
+    gates[key] = Number(gates[key]);
+  });
+  normalized.legacyCreditGates = gates;
+  Object.entries(normalized.investments).forEach(([key, track]) => {
+    if (!Array.isArray(track.tiers)) throw new Error(`investments.${key}.tiers must be an array.`);
+  });
+  return normalized;
+}
+
+function loadEconomyOverrideDiff() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ECONOMY_OVERRIDE_STORAGE_KEY) || "{}");
+    return isPlainObject(parsed) ? parsed : {};
+  } catch (error) {
+    console.warn("Ignoring invalid economy tuning overrides.", error);
+    return {};
+  }
+}
+
+function saveEconomyOverrideDiff(diff) {
+  economyOverrideDiff = isPlainObject(diff) ? diff : {};
+  if (Object.keys(economyOverrideDiff).length) {
+    localStorage.setItem(ECONOMY_OVERRIDE_STORAGE_KEY, JSON.stringify(economyOverrideDiff));
+  } else {
+    localStorage.removeItem(ECONOMY_OVERRIDE_STORAGE_KEY);
+  }
+}
+
+function hasEconomyOverrides() {
+  return !!economyOverrideDiff && Object.keys(economyOverrideDiff).length > 0;
+}
+
+function applyEconomyConfigDerivedData() {
+  const config = getEconomyConfig();
+  upgrades = deepClone(config.legacyCreditGates?.shipUpgrades || []);
+  consumables = deepClone(config.consumables || []);
+  consumablesById = Object.fromEntries(consumables.map((item) => [item.id, item]));
+  investments = deepClone(config.investments || {});
+  rmbWeapons = deepClone(config.legacyCreditGates?.supportUnlocks || []);
+  weaponComponents = deepClone(config.legacyCreditGates?.weaponComponents || {});
+}
+
+function applyEconomyConfig(config, { persistOverrides = false } = {}) {
+  const normalized = validateRuntimeEconomyConfig(config);
+  if (!baseEconomyConfig) baseEconomyConfig = deepClone(normalized);
+  economyConfig = normalized;
+  applyEconomyConfigDerivedData();
+  updateTuningBadge();
+  if (persistOverrides) {
+    saveEconomyOverrideDiff(deepDiff(baseEconomyConfig, economyConfig) || {});
+  }
+}
+
+async function loadEconomyConfig() {
+  const response = await fetch(ECONOMY_CONFIG_PATH, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Could not load ${ECONOMY_CONFIG_PATH} (${response.status}).`);
+  }
+  baseEconomyConfig = validateRuntimeEconomyConfig(await response.json());
+  economyOverrideDiff = loadEconomyOverrideDiff();
+  let merged = baseEconomyConfig;
+  if (hasEconomyOverrides()) {
+    try {
+      merged = validateRuntimeEconomyConfig(deepMerge(baseEconomyConfig, economyOverrideDiff));
+    } catch (error) {
+      console.warn("Clearing invalid economy tuning overrides.", error);
+      saveEconomyOverrideDiff({});
+      merged = baseEconomyConfig;
+    }
+  }
+  economyConfig = deepClone(merged);
+  applyEconomyConfigDerivedData();
+}
+
+function showStartupError(error) {
+  console.error(error);
+  const panel = document.createElement("div");
+  panel.className = "startup-error";
+  panel.innerHTML = `
+    <strong>Startup blocked</strong>
+    <span>${escapeHtml(error?.message || error || "Unknown startup error")}</span>
+  `;
+  document.body.appendChild(panel);
+}
 
 const SINGLE_PRIMARY_FOCUS_RATE = ECONOMY.loadout.singlePrimaryDamageBonus;
 const SECOND_PRIMARY_STRAIN_RATE = ECONOMY.loadout.secondPrimaryDamagePenalty;
@@ -502,52 +734,6 @@ const LEDGER_COPY = {
   sellEmpty: "No recovered inventory available for sale.",
   earlyRecallAudit: "Pattern flagged: repeated early RTB. No action taken.",
 };
-
-const upgrades = [
-  {
-    id: "hull",
-    name: "Reinforced Hull",
-    desc: "+8% max hull per level.",
-    baseCost: 120,
-  },
-  {
-    id: "shield",
-    name: "Shield Capacitors",
-    desc: "+10% max shields per level.",
-    baseCost: 140,
-  },
-  {
-    id: "damage",
-    name: "Coil Blaster",
-    desc: "+10% primary damage per level.",
-    baseCost: 160,
-  },
-  {
-    id: "fireRate",
-    name: "Fire Control",
-    desc: "+7% primary Shots per Second per level.",
-    baseCost: 150,
-  },
-  {
-    id: "auxCooldown",
-    name: "Ability Recharge",
-    desc: "-8% ability recharge time per level.",
-    baseCost: 180,
-  },
-  {
-    id: "cloakDuration",
-    name: "Ability Duration",
-    desc: "+12% ability duration per level.",
-    baseCost: 200,
-  },
-  {
-    id: "dualFire",
-    name: "Dual-Fire Coupler",
-    desc: "Unlock simultaneous compatible primary fire at 60%, 70%, 85%, then 100% damage.",
-    baseCost: 900,
-    maxLevel: 4,
-  },
-];
 
 function createDefaultShipBuild() {
   return {
@@ -673,93 +859,6 @@ const defaultStarterWeaponLoadouts = [
 
 let starterWeaponLoadouts = [];
 let starterWeaponLoadoutsById = {};
-
-const consumables = [
-  {
-    id: "bomb",
-    name: "Bomb Charge",
-    desc: "Detonates a blast that damages nearby enemies.",
-    cost: 220,
-    usesPerMission: 1,
-    cooldown: 12,
-    unlockTier: 1,
-    hudLabel: "Bomb",
-  },
-  {
-    id: "shieldBoost",
-    name: "Shield Booster",
-    desc: "Restore shields and patch some hull.",
-    cost: 160,
-    usesPerMission: 2,
-    cooldown: 10,
-    unlockTier: 3,
-    hudLabel: "Shield",
-  },
-  {
-    id: "overcharge",
-    name: "Overcharge",
-    desc: "Temporarily increases primary damage.",
-    cost: 260,
-    usesPerMission: 1,
-    cooldown: 18,
-    duration: 6,
-    unlockTier: 3,
-    hudLabel: "Overcharge",
-  },
-];
-
-const consumablesById = Object.fromEntries(consumables.map((item) => [item.id, item]));
-
-// Fleet Investment System
-const investments = {
-  engineering: {
-    name: "Engineering Bay",
-    tiers: [
-      { cost: 200, benefit: "Unlock basic consumables (bombs)" },
-      { cost: 500, benefit: "Reduce repair costs by 25%" },
-      { cost: 1000, benefit: "Unlock advanced consumables" },
-      { cost: 2000, benefit: "Consumables regenerate between missions" },
-      { cost: 4000, benefit: "Prototype gear each mission" },
-    ],
-  },
-  operations: {
-    name: "Operations Center",
-    tiers: [
-      { cost: 200, benefit: "Unlock Patrol mission variants" },
-      { cost: 500, benefit: "Unlock Bonus Objectives (+credits)" },
-      { cost: 1000, benefit: "Unlock Skirmish variants" },
-      { cost: 2000, benefit: "Unlock Siege variants" },
-      { cost: 4000, benefit: "Unlock Elite modifier (2x diff, 3x credits)" },
-    ],
-  },
-  shares: {
-    name: "Fleet Shares",
-    tiers: [
-      { cost: 300, benefit: "+5% passive credits per mission", dividend: 0.05 },
-      { cost: 800, benefit: "+10% passive credits", dividend: 0.10 },
-      { cost: 1500, benefit: "+10% + Fleet events (bonus payouts)", dividend: 0.10 },
-      { cost: 3000, benefit: "+15% + Fleet Contracts access", dividend: 0.15 },
-      { cost: 6000, benefit: "+20% + Boss bounty shares", dividend: 0.20 },
-    ],
-  },
-  hulls: {
-    name: "Hull Licenses",
-    tiers: [
-      { cost: 600, benefit: "Unlock Bastion defensive hull", hullId: "bastion" },
-      { cost: 1100, benefit: "Unlock Relay tech/control hull", hullId: "relay" },
-      { cost: 1800, benefit: "Unlock Broadside gunship hull", hullId: "broadside" },
-    ],
-  },
-  capabilities: {
-    name: "Ship Capabilities",
-    tiers: [
-      { cost: 900, benefit: "Dual-Fire Coupler tier 1", upgradeId: "dualFire", upgradeLevel: 1 },
-      { cost: 1800, benefit: "Dual-Fire Coupler tier 2", upgradeId: "dualFire", upgradeLevel: 2 },
-      { cost: 3400, benefit: "Dual-Fire Coupler tier 3", upgradeId: "dualFire", upgradeLevel: 3 },
-      { cost: 4600, benefit: "Dual-Fire Coupler tier 4", upgradeId: "dualFire", upgradeLevel: 4 },
-    ],
-  },
-};
 
 const investmentTreeBranches = {
   engineering: {
@@ -2618,10 +2717,11 @@ function createRolledItem(baseId, baseEntry, rarity) {
   ].filter(Boolean);
   const rarityLabel = rarityConfig.label;
   const name = `${rarityLabel} ${baseEntry.name}${affixNames.length ? ` — ${affixNames.join(", ")}` : ""}`;
-  const baseValue = randomIntInclusive(rarityConfig.valueRange[0], rarityConfig.valueRange[1]);
+  const valueRange = getRarityValueRange(rarity);
+  const baseValue = randomIntInclusive(valueRange[0], valueRange[1]);
   // God rolls cost more to buy and fetch more on sale, feeding the pure-hunt money sink.
   const value = Number.isFinite(rollQuality)
-    ? Math.round(baseValue * (0.85 + 0.45 * rollQuality))
+    ? Math.round(baseValue * getRollQualityValueMultiplier(rollQuality))
     : baseValue;
   const tags = Array.from(
     new Set([
@@ -2710,7 +2810,7 @@ function getCampaignProgressLevelForItemPools({ includeActiveMission = false } =
 
 function getMaxUnlockedItemBaseTier({ sourceKey = null, includeActiveMission = false } = {}) {
   const progressLevel = getCampaignProgressLevelForItemPools({ includeActiveMission });
-  const gates = ECONOMY.itemBaseTierGates || { 1: 1 };
+  const gates = getDropTableConfig().itemBaseTierGates || { 1: 1 };
   let maxTier = 1;
   Object.entries(gates).forEach(([tier, minCampaignLevel]) => {
     if (progressLevel >= minCampaignLevel) {
@@ -2805,7 +2905,7 @@ function getDropSourceKey(enemy) {
   if (enemy.isBoss) return "boss";
   const transportIds = new Set(["transport", "bulwark"]);
   if (transportIds.has(enemy.type) || enemy.ai === "transport") return "transport";
-  const captainConfig = ECONOMY.dropSources.captain;
+  const captainConfig = getDropTableConfig().captain || {};
   if ((enemy.baseCredit || 0) >= captainConfig.minBaseCredit) return "captain";
   return "ordinary";
 }
@@ -2813,18 +2913,19 @@ function getDropSourceKey(enemy) {
 function rollSalvageDrop(enemy, { force = false, forceSource = null } = {}) {
   if (!itemPoolCatalog) return null;
   const sourceKey = forceSource || getDropSourceKey(enemy);
-  const sourceConfig = ECONOMY.dropSources[sourceKey] || ECONOMY.dropSources.ordinary;
+  const dropTables = getDropTableConfig();
+  const sourceConfig = dropTables[sourceKey] || dropTables.ordinary;
   const elite = missionHasEliteModifier();
   const chance = Math.min(
     1,
-    (sourceConfig.chance ?? 0) + (elite && sourceKey !== "boss" ? ECONOMY.dropSources.eliteBonusChance : 0)
+    (sourceConfig.chance ?? 0) + (elite && sourceKey !== "boss" ? dropTables.eliteBonusChance : 0)
   );
   if (!force && Math.random() > chance) return null;
   const weights = elite && sourceKey !== "boss"
     ? shiftRarityWeightsUp(sourceConfig.rarityWeights)
     : sourceConfig.rarityWeights;
   const rarity = rollWeighted(weights);
-  const slotWeights = sourceConfig.slotWeights || ECONOMY.dropSources.defaultSlotWeights;
+  const slotWeights = sourceConfig.slotWeights || dropTables.defaultSlotWeights;
   const preferredSlotType = rollWeighted(slotWeights);
   const item =
     rollItemForRarity(rarity, {
@@ -3000,7 +3101,7 @@ function addItemsToArmoryInventory(items, { recordRelics = true } = {}) {
 function createDefaultLedgerMarketState() {
   return {
     stock: [],
-    stockVersion: ECONOMY.market.stockVersion,
+    stockVersion: getMarketConfig().stockVersion,
     licenseTier: 0,
     stockMissionCount: null,
     bulletin: null,
@@ -3021,10 +3122,11 @@ function normalizeLedgerMarketState(targetState = state) {
   const pending = existing.pendingBulletinSales || {};
   const stockVersion =
     Number.isFinite(existing.stockVersion) ? existing.stockVersion : 0;
-  const isCurrentStockVersion = stockVersion === ECONOMY.market.stockVersion;
+  const marketConfig = getMarketConfig();
+  const isCurrentStockVersion = stockVersion === marketConfig.stockVersion;
   const maxLicenseTier = Math.max(
     0,
-    ...Object.keys(ECONOMY.market.licenseTiers || {}).map((tier) => Number(tier) || 0)
+    ...getMarketLicenseTiers().map((config) => Number(config.tier) || 0)
   );
   const normalized = {
     ...defaults,
@@ -3037,11 +3139,11 @@ function normalizeLedgerMarketState(targetState = state) {
             item: cloneItem(lot.item),
             price: Math.max(0, Math.round(Number(lot.price) || 0)),
             listValue: Math.max(0, Math.round(Number(lot.listValue) || getItemListValue(lot.item))),
-            priceRate: Number.isFinite(lot.priceRate) ? lot.priceRate : ECONOMY.market.buyRate,
+            priceRate: Number.isFinite(lot.priceRate) ? lot.priceRate : marketConfig.buyRate,
             clericalAdjustment: !!lot.clericalAdjustment,
           }))
       : [],
-    stockVersion: ECONOMY.market.stockVersion,
+    stockVersion: marketConfig.stockVersion,
     stockMissionCount: isCurrentStockVersion && Number.isFinite(existing.stockMissionCount)
       ? existing.stockMissionCount
       : defaults.stockMissionCount,
@@ -3096,23 +3198,29 @@ function normalizeLedgerLicenseConfig(config, tier = 0) {
     tier: Number(config?.tier ?? tier) || 0,
     stockLots: Number.isFinite(stockLots)
       ? Math.max(1, Math.round(stockLots))
-      : ECONOMY.market.stockLots,
+      : getMarketConfig().stockLots,
     cost: Math.max(0, Math.round(Number(config?.cost) || 0)),
   };
 }
 
+function getMarketLicenseTiers() {
+  const tiers = getMarketConfig().licenseTiers;
+  return Array.isArray(tiers) ? tiers : [];
+}
+
 function getLedgerLicenseConfig(tier = getLedgerLicenseTier()) {
-  const config = ECONOMY.market.licenseTiers?.[tier] || ECONOMY.market.licenseTiers?.[0];
+  const tiers = getMarketLicenseTiers();
+  const config = tiers.find((entry) => Number(entry?.tier) === Number(tier)) || tiers[0];
   return normalizeLedgerLicenseConfig(config, tier);
 }
 
 function getLedgerStockLotCount(targetState = state) {
-  return getLedgerLicenseConfig(getLedgerLicenseTier(targetState)).stockLots || ECONOMY.market.stockLots;
+  return getLedgerLicenseConfig(getLedgerLicenseTier(targetState)).stockLots || getMarketConfig().stockLots;
 }
 
 function getNextLedgerLicenseConfig(targetState = state) {
   const nextTier = getLedgerLicenseTier(targetState) + 1;
-  const config = ECONOMY.market.licenseTiers?.[nextTier];
+  const config = getMarketLicenseTiers().find((entry) => Number(entry?.tier) === nextTier);
   return config ? normalizeLedgerLicenseConfig(config, nextTier) : null;
 }
 
@@ -3138,13 +3246,12 @@ async function purchaseLedgerLicense() {
 
 function getItemListValue(item) {
   if (Number.isFinite(item?.value)) return Math.max(0, Math.round(item.value));
-  const rarityConfig = getRarityConfig(item?.rarity || "scrap");
-  const [min, max] = rarityConfig.valueRange || [40, 80];
+  const [min, max] = getRarityValueRange(item?.rarity || "scrap");
   return Math.round((min + max) / 2);
 }
 
 function pickDemandBulletinTag(previousTag = null) {
-  const tags = ECONOMY.market.bulletinTags;
+  const tags = getMarketConfig().bulletinTags || [];
   if (!tags.length) return null;
   const candidates = tags.length > 1 ? tags.filter((entry) => entry.tag !== previousTag) : tags;
   const picked = candidates[Math.floor(Math.random() * candidates.length)];
@@ -3153,7 +3260,7 @@ function pickDemandBulletinTag(previousTag = null) {
 
 function refreshDemandBulletin({ force = false } = {}) {
   const ledger = getLedgerMarketState();
-  const cadence = Math.max(1, ECONOMY.market.bulletinCadence || 3);
+  const cadence = Math.max(1, getMarketConfig().bulletinCadence);
   const missionCount = state.missionCount || 0;
   const shouldPick =
     force ||
@@ -3184,8 +3291,9 @@ function itemMatchesDemandBulletin(item, bulletin = getActiveDemandBulletin()) {
 
 function getMarketRarityWeights() {
   const unlockedLevel = state.unlockedLevels || 1;
-  let selected = ECONOMY.market.stockRarityProgression[0]?.weights || { scrap: 1 };
-  ECONOMY.market.stockRarityProgression.forEach((entry) => {
+  const progression = getMarketConfig().stockRarityProgression || [];
+  let selected = progression[0]?.weights || { scrap: 1 };
+  progression.forEach((entry) => {
     if (unlockedLevel >= entry.unlockedLevel) selected = entry.weights;
   });
   return selected;
@@ -3207,12 +3315,13 @@ function createLedgerLot(index, clericalAdjustment = false, itemOptions = {}) {
   const item = rollMarketItem(itemOptions);
   if (!item) return null;
   const listValue = getItemListValue(item);
-  let priceRate = ECONOMY.market.buyRate;
+  const marketConfig = getMarketConfig();
+  let priceRate = marketConfig.buyRate;
   if (clericalAdjustment) {
-    const [min, max] = ECONOMY.market.mispricedValueRange;
+    const [min, max] = marketConfig.mispricedValueRange;
     const profitableMax = Math.max(
       min,
-      Math.min(max, ECONOMY.market.sellRate - (ECONOMY.market.mispricedMinProfitRate || 0))
+      Math.min(max, getMarketSellRate() - marketConfig.mispricedMinProfitRate)
     );
     priceRate = min + Math.random() * (profitableMax - min);
   }
@@ -3234,7 +3343,7 @@ function rollLedgerStock({ force = false } = {}) {
   const usedBaseIds = new Set();
   const lotCount = getLedgerStockLotCount();
   const mispricedIndex =
-    Math.random() < ECONOMY.market.mispricedLotChance
+    Math.random() < getMarketConfig().mispricedLotChance
       ? Math.floor(Math.random() * lotCount)
       : -1;
   const stockSpecs = [
@@ -3256,7 +3365,7 @@ function rollLedgerStock({ force = false } = {}) {
     }
   }
   ledger.stock = lots;
-  ledger.stockVersion = ECONOMY.market.stockVersion;
+  ledger.stockVersion = getMarketConfig().stockVersion;
   ledger.stockMissionCount = state.missionCount || 0;
   return ledger.stock;
 }
@@ -3282,12 +3391,12 @@ async function ensureLedgerMarketReady() {
 
 function getItemSellQuote(item) {
   const listValue = getItemListValue(item);
-  const handlingFee = Math.round(listValue * ECONOMY.market.handlingFeeRate);
+  const handlingFee = Math.round(listValue * getMarketHandlingFeeRate());
   const basePayout = Math.max(0, listValue - handlingFee);
   const bulletin = getActiveDemandBulletin();
   const bulletinMatch = itemMatchesDemandBulletin(item, bulletin);
   const bulletinBonus = bulletinMatch
-    ? Math.round(basePayout * ECONOMY.market.bulletinBonusRate)
+    ? Math.round(basePayout * getMarketConfig().bulletinBonusRate)
     : 0;
   return {
     listValue,
@@ -3457,7 +3566,7 @@ function settleLedgerAfterMission(outcome) {
     ledger.consecutiveEarlyRecalls = 0;
   }
   const earlyRecallAudit =
-    ledger.consecutiveEarlyRecalls >= ECONOMY.market.earlyRecallAuditThreshold;
+    ledger.consecutiveEarlyRecalls >= getMarketConfig().earlyRecallAuditThreshold;
   refreshDemandBulletin();
   rollLedgerStock({ force: true });
   return {
@@ -3508,28 +3617,287 @@ const devRequestedLevelId = getDevParam("level");
 const devRequestedBackground = getDevParam("bg");
 const devInvincible = isDevFlagEnabled("devInvincible");
 const devAutoFire = isDevFlagEnabled("devAutoFire");
+const devTuning = isDevFlagEnabled("devTuning");
 const devUiSkin = getAnyDevParam(["uiSkin", "skin", "buttonSkin", "buttons"]).toLowerCase();
 const devGeneratedUiSkin = ["generated", "1", "true", "yes", "on"].includes(devUiSkin);
 if (devGeneratedUiSkin) {
   document.body.classList.add("generated-ui-skin");
   document.body.dataset.uiSkin = "generated";
 }
-const state = loadState();
-if (devSkipOnboarding) {
-  shouldAutoLaunchFreshPilotMission = false;
-  state.debugSkipOnboarding = true;
-  state.debugUnlock = true;
-  state.onboardingStage = ONBOARDING_STAGE_COMPLETE;
-  state.unlockedLevels = Math.max(state.unlockedLevels || 1, 99);
-  state.systemUnlocks = { loadout: true, economy: true, compendium: true };
-}
-if (devInvincible) {
-  state.debugInvincible = true;
-}
-refreshSystemUnlocks();
-syncShipBuildToLegacy();
-saveState();
+let state = null;
 let mission = null;
+
+function applyDevStateFlags() {
+  if (!state) return;
+  if (devSkipOnboarding) {
+    shouldAutoLaunchFreshPilotMission = false;
+    state.debugSkipOnboarding = true;
+    state.debugUnlock = true;
+    state.onboardingStage = ONBOARDING_STAGE_COMPLETE;
+    state.unlockedLevels = Math.max(state.unlockedLevels || 1, 99);
+    state.systemUnlocks = { loadout: true, economy: true, compendium: true };
+  }
+  if (devInvincible) {
+    state.debugInvincible = true;
+  }
+  refreshSystemUnlocks();
+  syncShipBuildToLegacy();
+  saveState();
+}
+
+let tuningPanel = null;
+let tuningBadge = null;
+let tuningPanelBody = null;
+let tuningStatus = "";
+let tuningPanelMinimized = false;
+
+const TUNING_SECTION_LABELS = {
+  market: "Market",
+  extraction: "Extraction",
+  itemValue: "Item Value",
+  dropTables: "Drop Tables",
+  missionRewards: "Mission Rewards",
+  investments: "Investments",
+  consumables: "Consumables",
+  reportTargets: "Report Targets",
+  legacyCreditGates: "Legacy Gates",
+};
+
+function isTuningEditableNumber(path, value) {
+  if (!Number.isFinite(value)) return false;
+  const key = String(path[path.length - 1] || "");
+  if (key === "tier") return false;
+  return true;
+}
+
+function collectNumericTuningFields(node, path = [], fields = []) {
+  if (typeof node === "number") {
+    if (isTuningEditableNumber(path, node)) fields.push({ path: path.slice(), value: node });
+    return fields;
+  }
+  if (!node || typeof node !== "object") return fields;
+  Object.entries(node).forEach(([key, value]) => {
+    collectNumericTuningFields(value, [...path, key], fields);
+  });
+  return fields;
+}
+
+function getTuningFieldsBySection() {
+  if (!economyConfig) return {};
+  const sections = {};
+  Object.keys(TUNING_SECTION_LABELS).forEach((section) => {
+    sections[section] = collectNumericTuningFields(economyConfig[section], [section]);
+  });
+  return sections;
+}
+
+function tuningPathToInputName(path) {
+  return path
+    .map((part) => String(part).replace(/[^a-zA-Z0-9_-]/g, "_"))
+    .join(".");
+}
+
+function formatTuningPath(path) {
+  return path
+    .slice(1)
+    .map((part, index) => {
+      if (/^\d+$/.test(String(part))) return `[${part}]`;
+      const label = String(part)
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .replace(/[_-]/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+      return index > 0 && /^\[\d+\]$/.test(String(path[index])) ? label : label;
+    })
+    .join(" ");
+}
+
+function getTuningInputConfig(path) {
+  const lower = path.join(".").toLowerCase();
+  const last = String(path[path.length - 1] || "").toLowerCase();
+  const integer =
+    /cost|credit|lots|count|version|cadence|threshold|unlock|uses|level|slots|basecredit/.test(lower) ||
+    ["duration", "cooldown"].includes(last) === false && /time$/.test(last);
+  const rateLike = /rate|chance|fraction|dividend|quality|multiplier|bonus|writedown|sellrate|buyrate/.test(lower);
+  return {
+    step: integer ? "1" : "0.01",
+    min: "0",
+    max: rateLike && !/cost|credit|basecredit|lots|count/.test(lower) ? "1" : "",
+  };
+}
+
+function ensureTuningUi() {
+  if (!tuningBadge) {
+    tuningBadge = document.createElement("div");
+    tuningBadge.className = "tuning-badge";
+    tuningBadge.textContent = "TUNING OVERRIDES ACTIVE";
+    tuningBadge.hidden = true;
+    document.body.appendChild(tuningBadge);
+  }
+  if (!devTuning || tuningPanel) return;
+  tuningPanelMinimized =
+    localStorage.getItem(ECONOMY_PANEL_MINIMIZED_STORAGE_KEY) === "1";
+  tuningPanel = document.createElement("aside");
+  tuningPanel.className = "tuning-panel";
+  tuningPanel.innerHTML = `
+    <header class="tuning-panel-head">
+      <div>
+        <span class="kicker">Dev Tuning</span>
+        <strong>Economy Control</strong>
+      </div>
+      <div class="tuning-panel-actions">
+        <button type="button" class="btn ghost small" data-tuning-action="export">Export</button>
+        <button type="button" class="btn ghost small" data-tuning-action="reset">Reset</button>
+        <button type="button" class="btn ghost small" data-tuning-action="toggle-minimize" aria-pressed="false">Minimize</button>
+      </div>
+    </header>
+    <div class="tuning-panel-status" data-tuning-status></div>
+    <div class="tuning-panel-body" data-tuning-body></div>
+  `;
+  tuningPanelBody = tuningPanel.querySelector("[data-tuning-body]");
+  document.body.appendChild(tuningPanel);
+  tuningPanel.addEventListener("input", handleTuningPanelInput);
+  tuningPanel.addEventListener("click", handleTuningPanelClick);
+}
+
+function updateTuningBadge() {
+  ensureTuningUi();
+  if (!tuningBadge) return;
+  tuningBadge.hidden = !hasEconomyOverrides();
+}
+
+function renderTuningPanel() {
+  ensureTuningUi();
+  updateTuningBadge();
+  if (!devTuning || !tuningPanel || !tuningPanelBody || !economyConfig) return;
+  const shouldShow = !mission?.active;
+  tuningPanel.hidden = !shouldShow;
+  if (!shouldShow) return;
+  tuningPanel.classList.toggle("minimized", tuningPanelMinimized);
+  const minimizeButton = tuningPanel.querySelector("[data-tuning-action='toggle-minimize']");
+  if (minimizeButton) {
+    minimizeButton.textContent = tuningPanelMinimized ? "Open" : "Minimize";
+    minimizeButton.setAttribute("aria-pressed", tuningPanelMinimized ? "true" : "false");
+    minimizeButton.title = tuningPanelMinimized ? "Open economy tuning panel" : "Minimize economy tuning panel";
+  }
+  const statusEl = tuningPanel.querySelector("[data-tuning-status]");
+  if (statusEl) {
+    statusEl.textContent = tuningStatus || (hasEconomyOverrides() ? "Sparse local overrides active." : "Using shipped config.");
+  }
+  if (tuningPanelMinimized) return;
+  const sections = getTuningFieldsBySection();
+  tuningPanelBody.innerHTML = Object.entries(sections)
+    .filter(([, fields]) => fields.length)
+    .map(([section, fields]) => `
+      <section class="tuning-section">
+        <h3>${escapeHtml(TUNING_SECTION_LABELS[section] || section)}</h3>
+        <div class="tuning-grid">
+          ${fields.map(renderTuningInput).join("")}
+        </div>
+      </section>
+    `)
+    .join("");
+}
+
+function renderTuningInput(field) {
+  const { step, min, max } = getTuningInputConfig(field.path);
+  const pathName = tuningPathToInputName(field.path);
+  return `
+    <label class="tuning-field">
+      <span title="${escapeHtml(field.path.join("."))}">${escapeHtml(formatTuningPath(field.path))}</span>
+      <input
+        type="number"
+        data-tuning-path="${escapeHtml(pathName)}"
+        value="${escapeHtml(String(field.value))}"
+        step="${step}"
+        min="${min}"
+        ${max ? `max="${max}"` : ""}
+      />
+    </label>
+  `;
+}
+
+function pathNameToTuningPath(pathName) {
+  return String(pathName)
+    .split(".")
+    .map((part) => (/^\d+$/.test(part) ? Number(part) : part));
+}
+
+function applyTuningOverride(path, value) {
+  if (!baseEconomyConfig || !economyConfig) return;
+  const nextConfig = deepClone(economyConfig);
+  const { step } = getTuningInputConfig(path);
+  const normalizedValue = step === "1" ? Math.round(value) : value;
+  setConfigPathValue(nextConfig, path, normalizedValue);
+  applyEconomyConfig(nextConfig, { persistOverrides: true });
+  tuningStatus = hasEconomyOverrides() ? "Sparse local overrides active." : "Using shipped config.";
+  if (!mission?.active) safeUpdateHangar();
+}
+
+function handleTuningPanelInput(event) {
+  const input = event.target?.closest?.("[data-tuning-path]");
+  if (!input) return;
+  const value = Number(input.value);
+  if (!Number.isFinite(value)) return;
+  const path = pathNameToTuningPath(input.dataset.tuningPath);
+  try {
+    applyTuningOverride(path, value);
+  } catch (error) {
+    tuningStatus = error?.message || "Invalid tuning value.";
+    renderTuningPanel();
+  }
+}
+
+function handleTuningPanelClick(event) {
+  const action = event.target?.closest?.("[data-tuning-action]")?.dataset?.tuningAction;
+  if (!action) return;
+  if (action === "toggle-minimize") {
+    tuningPanelMinimized = !tuningPanelMinimized;
+    localStorage.setItem(
+      ECONOMY_PANEL_MINIMIZED_STORAGE_KEY,
+      tuningPanelMinimized ? "1" : "0"
+    );
+    renderTuningPanel();
+    return;
+  }
+  if (action === "reset") {
+    applyEconomyConfig(baseEconomyConfig, { persistOverrides: true });
+    tuningStatus = "Overrides cleared.";
+    if (!mission?.active) safeUpdateHangar();
+    renderTuningPanel();
+  }
+  if (action === "export") {
+    exportMergedEconomyConfig();
+  }
+}
+
+function exportMergedEconomyConfig() {
+  if (!economyConfig) return;
+  const json = `${JSON.stringify(economyConfig, null, 2)}\n`;
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "economy.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard
+      .writeText(json)
+      .then(() => {
+        tuningStatus = "Merged JSON downloaded and copied.";
+        renderTuningPanel();
+      })
+      .catch(() => {
+        tuningStatus = "Merged JSON downloaded. Clipboard copy failed.";
+        renderTuningPanel();
+      });
+  } else {
+    tuningStatus = "Merged JSON downloaded.";
+    renderTuningPanel();
+  }
+}
 
 const player = {
   x: 0,
@@ -5484,7 +5852,8 @@ function upgradeCost(upgradeId) {
   if (!definition) return Infinity;
   const level = state.upgrades[upgradeId] || 0;
   const base = definition.baseCost;
-  return Math.round(base * Math.pow(1.35, level));
+  const exponent = getEconomyConfig().legacyCreditGates.upgradeCostExponent;
+  return Math.round(base * Math.pow(exponent, level));
 }
 
 function getUpgradeDefinition(upgradeId) {
@@ -5744,6 +6113,7 @@ async function startMission({ showIntro = false } = {}) {
   overlay.hidden = true;
   hangarPanel.hidden = true;
   debriefPanel.hidden = true;
+  renderTuningPanel();
   updateMobileControls();
   hudMission.textContent = level?.name
     ? `Mission ${state.missionCount + 1}: ${level.name}`
@@ -5769,14 +6139,16 @@ function endMission({ ejected = false, completed = false } = {}) {
   const objectiveCredits = objectiveCreditRewardFor(mission, completed);
   const completionCredits = missionCompletionCreditFor(mission, completed);
   const grossBounty = killBounty + objectiveCredits + completionCredits;
+  const extractionConfig = getExtractionConfig();
+  const recoveryConfig = extractionConfig.recoveryBonusRate;
   const recoveryRate = completed
-    ? ECONOMY.recoveryBonusRate.min +
-      Math.random() * (ECONOMY.recoveryBonusRate.max - ECONOMY.recoveryBonusRate.min)
+    ? recoveryConfig.min +
+      Math.random() * (recoveryConfig.max - recoveryConfig.min)
     : 0;
   const recoveryBonus = completed ? Math.round(grossBounty * recoveryRate) : 0;
   const hullWritedown = completed || ejected
     ? 0
-    : Math.round(grossBounty * ECONOMY.deathBountyWritedownRate);
+    : Math.round(grossBounty * extractionConfig.deathBountyWritedownRate);
   const bountyKept = grossBounty - hullWritedown;
   const subtotal = bountyKept + recoveryBonus;
   const dividends = calculateDividends(subtotal);
@@ -5784,7 +6156,12 @@ function endMission({ ejected = false, completed = false } = {}) {
   const cargoAtEnd = Array.isArray(state.cargo) ? state.cargo.map(cloneItem) : [];
   if (completed && !mission.bossSalvage?.length) {
     const fallbackBossDrop = rollSalvageDrop(
-      { isBoss: true, baseCredit: 200, type: "boss", ai: "boss" },
+      {
+        isBoss: true,
+        baseCredit: getMissionRewardConfig().fallbackBossSalvageBaseCredit,
+        type: "boss",
+        ai: "boss",
+      },
       { force: true, forceSource: "boss" }
     );
     if (fallbackBossDrop?.item) {
@@ -6158,6 +6535,7 @@ function updateHangar() {
     setHangarTab("hub", { renderLevels: activeHangarTab === "mission" });
     return;
   }
+  renderTuningPanel();
   updateMobileControls();
 }
 
@@ -6199,7 +6577,7 @@ async function autoLaunchFreshPilotMission() {
 function getLedgerLicenseInvestmentConfig() {
   return {
     name: "Market License",
-    tiers: (ECONOMY.market.licenseTiers || [])
+    tiers: getMarketLicenseTiers()
       .slice(1)
       .map((config, index) => {
         const tierConfig = normalizeLedgerLicenseConfig(config, index + 1);
@@ -7283,56 +7661,6 @@ async function renderItemCompendiumAsync() {
   }
 }
 
-const rmbWeapons = [
-  {
-    id: "cloak",
-    name: "Cloaking Device",
-    desc: "Break enemy lock-on and reposition.",
-    unlockAt: 0,
-    cost: 0,
-  },
-  {
-    id: "emp",
-    name: "EMP Burst",
-    desc: "Disable enemy fire and slow ships briefly.",
-    unlockAt: 350,
-    cost: 250,
-  },
-  {
-    id: "bulwark",
-    name: "Bulwark Field",
-    desc: "Temporary super-shield buffer.",
-    unlockAt: 650,
-    cost: 400,
-  },
-];
-
-const weaponComponents = {
-  barrel: [
-    { id: "focused", name: "Focused", unlockAt: 0, cost: 0 },
-    { id: "spread", name: "Spread", unlockAt: 250, cost: 180 },
-  ],
-  trigger: [
-    { id: "rapid", name: "Rapid", unlockAt: 0, cost: 0 },
-    { id: "burst", name: "Burst", unlockAt: 300, cost: 220 },
-  ],
-  mount: [
-    { id: "front", name: "Front Mount", unlockAt: 0, cost: 0 },
-    { id: "rear", name: "Rear Mount", unlockAt: 500, cost: 260 },
-  ],
-  payload: [
-    { id: "kinetic", name: "Kinetic", unlockAt: 0, cost: 0 },
-    { id: "plasma", name: "Plasma", unlockAt: 400, cost: 260 },
-    { id: "emp", name: "EMP", unlockAt: 900, cost: 480 },
-  ],
-  modifier: [
-    { id: "none", name: "None", unlockAt: 0, cost: 0 },
-    { id: "pierce", name: "Pierce", unlockAt: 350, cost: 240 },
-    { id: "homing", name: "Homing", unlockAt: 800, cost: 520 },
-    { id: "vampiric", name: "Vampiric", unlockAt: 1200, cost: 720 },
-  ],
-};
-
 const upgradeCategories = {
   primary: ["damage", "fireRate"],
   aux: ["auxCooldown", "cloakDuration"],
@@ -7396,7 +7724,8 @@ function ensureAuxSelection() {
 
 
 function shipPanelUpgradeCost(baseCost, level) {
-  return Math.round(baseCost * Math.pow(1.45, level));
+  const exponent = getEconomyConfig().legacyCreditGates.shipPanelCostExponent;
+  return Math.round(baseCost * Math.pow(exponent, level));
 }
 
 function formatNumber(value, decimals = 1) {
@@ -8374,7 +8703,7 @@ function getItemDisplayStats(item, slotId = null) {
   const { innateLines, affixLines, specialLines } = getItemLanguageLines(item);
   const tags = Array.isArray(item?.tags) ? item.tags.slice(0, 5) : [];
   const footer = [
-    Number.isFinite(item?.value) ? `Sell ${formatCredits(Math.round(item.value * ECONOMY.market.sellRate))}` : "",
+    Number.isFinite(item?.value) ? `Sell ${formatCredits(Math.round(item.value * getMarketSellRate()))}` : "",
     tags.length ? tags.join(" · ") : "",
   ].filter(Boolean).join("   ");
   let headline;
@@ -9672,11 +10001,12 @@ function renderLedgerBulletinPanel(ledger) {
     return;
   }
   const missionsSince = (state.missionCount || 0) - (bulletin.missionCount || 0);
-  const nextRefresh = Math.max(1, ECONOMY.market.bulletinCadence - missionsSince);
+  const marketConfig = getMarketConfig();
+  const nextRefresh = Math.max(1, marketConfig.bulletinCadence - missionsSince);
   ledgerBulletin.innerHTML = `
     <span class="ledger-bulletin-kicker">${LEDGER_COPY.demandBulletin}</span>
     <strong>${escapeHtml(bulletin.label)}</strong>
-    <span>+${Math.round(ECONOMY.market.bulletinBonusRate * 100)}% sale payout | refresh in ${nextRefresh} mission${nextRefresh === 1 ? "" : "s"}</span>
+    <span>+${Math.round(marketConfig.bulletinBonusRate * 100)}% sale payout | refresh in ${nextRefresh} mission${nextRefresh === 1 ? "" : "s"}</span>
   `;
 }
 
@@ -10119,7 +10449,7 @@ function getCargoItems() {
 
 function collectSalvagePod(pod) {
   const cargo = getCargoItems();
-  if (cargo.length >= ECONOMY.cargoSize) {
+  if (cargo.length >= getConfiguredCargoSize()) {
     pod.rejected = true;
     cargoHudMessageTimer = ECONOMY.cargoFullFlashSeconds;
     spawnFloatingText(player.x, player.y - 32, LEDGER_COPY.cargoFull, "#f97316");
@@ -12719,7 +13049,8 @@ function updateCargoHud() {
   if (!hudCargoPips) return;
   const cargo = getCargoItems();
   hudCargoPips.innerHTML = "";
-  for (let i = 0; i < ECONOMY.cargoSize; i += 1) {
+  const cargoSize = getConfiguredCargoSize();
+  for (let i = 0; i < cargoSize; i += 1) {
     const item = cargo[i];
     const rarity = item?.rarity || null;
     const pip = document.createElement("span");
@@ -12859,6 +13190,10 @@ function bindSharedUiFeedback() {
 
 function updateMobileControls() {
   if (!mobileControls) return;
+  if (!state) {
+    mobileControls.hidden = true;
+    return;
+  }
   const inMission = mission && mission.active;
   const inHangar = !inMission && overlay && !overlay.hidden && hangarPanel && !hangarPanel.hidden;
   const inMissionTab = activeHangarTab === "mission";
@@ -13318,8 +13653,11 @@ function drawExplosion(boom) {
 }
 
 function creditForEnemy(enemy) {
-  const difficultyScale = 1 + mission.difficulty * 0.09;
-  const base = enemy.baseCredit || 10;
+  const rewardConfig = getMissionRewardConfig();
+  const difficultyScale = 1 + mission.difficulty * (rewardConfig.enemyBountyDifficultyScale ?? 0.09);
+  const base = Number.isFinite(enemy?.baseCredit)
+    ? enemy.baseCredit
+    : rewardConfig.fallbackEnemyBaseCredit;
   return Math.round(base * difficultyScale);
 }
 
@@ -13338,7 +13676,11 @@ function missionCompletionCreditFor(missionState, completed = false) {
   if (!completed) return 0;
   const levelId = missionBaseIdFor(missionState?.level?.id || selectedLevelId);
   const levelIndex = Math.max(0, availableLevels.findIndex((level) => level.id === levelId));
-  return Math.round(120 + levelIndex * 55);
+  const rewardConfig = getMissionRewardConfig();
+  return Math.round(
+    rewardConfig.completionBase +
+      levelIndex * rewardConfig.completionIncrement
+  );
 }
 
 function getBossSpawnTime(level) {
@@ -13455,15 +13797,32 @@ function gameLoop(now) {
   requestAnimationFrame(gameLoop);
 }
 
-safeUpdateHangar();
-Promise.all([ensureWeaponFrameCatalogLoaded(), ensureItemPoolLoaded()])
-  .then(() => {
-    if (mission?.active) return;
-    refreshSavedInventoryCatalogBuilds(state);
-    syncStarterArmoryState();
-    saveState();
+async function bootstrapGame() {
+  try {
+    await loadEconomyConfig();
+    state = loadState();
+    applyDevStateFlags();
+    updateTuningBadge();
+    renderTuningPanel();
     safeUpdateHangar();
-  })
-  .catch(() => {});
-void autoLaunchFreshPilotMission();
-requestAnimationFrame(gameLoop);
+    Promise.all([ensureWeaponFrameCatalogLoaded(), ensureItemPoolLoaded()])
+      .then(() => {
+        if (mission?.active) return;
+        refreshSavedInventoryCatalogBuilds(state);
+        syncStarterArmoryState();
+        saveState();
+        safeUpdateHangar();
+        renderTuningPanel();
+      })
+      .catch((error) => {
+        console.warn("Non-fatal catalog refresh failed:", error);
+      });
+    void autoLaunchFreshPilotMission();
+    requestAnimationFrame(gameLoop);
+  } catch (error) {
+    console.error(error);
+    showStartupError(error);
+  }
+}
+
+void bootstrapGame();

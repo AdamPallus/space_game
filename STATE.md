@@ -1,6 +1,6 @@
 # Space Shooter Current State
 
-Last audited: 2026-06-25
+Last audited: 2026-07-02
 
 This is the first file to read before changing the game. It summarizes what is implemented now, which docs are still authoritative, which older specs are archived, and which validation commands should pass before committing.
 
@@ -13,7 +13,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 - A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
 - Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time or through explicit level-authored projectile profiles.
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
-- A Ledger market with rotating stock, daily lots, pricing, dividends, bulletins, volatility, sponsored listings, and license tiers that increase visible stock through Ledger Investments.
+- A Ledger market with rotating stock, daily lots, pricing, dividends, bulletins, volatility, sponsored listings, and license tiers that increase visible stock through Ledger Investments. Active economy tuning lives in `config/economy.json` and is validated before startup.
 - Search, sort, and filter controls for armory inventory, item archive, and Ledger sell views. The Armory main stage aligns Primary A/B with Defense A/B and shows each equipped primary's Effective DPS, Damage per Shot, and Shots per Second. The `Show Stats` control opens a player-facing popup with Offense, Defense, Aux, and Loadout readouts without shrinking the inventory rack.
 - Mini weapons with rarity-scaled output/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, one-primary primary-damage focus bonuses, aux engineering upgrades, and opt-in dual-fire tiers for compatible loadouts. Carrying a second primary applies a visible per-weapon primary-damage strain. Impulse budget now benefits kinetic and plasma weapons through different tradeoffs: kinetic turns impulse into speed-fed damage, while plasma turns impulse into larger, slower, higher-damage orbs. Shield layers take raw projectile damage before armor; armor class mitigates only hits that reach armor, uses the best installed armor class, and does not add duplicate armor-class values from multiple plates. Plasma burn stacks for three seconds from repeated hits and ignores armor-class subtraction while burning armor, but it still drains shields, armor, and hull in order and armor takes reduced burn.
 - Item cards/tooltips now split intrinsic item stats from effective install deltas. Weapon cards include kinetic/plasma damage breakdowns, installed modifier lines, unified Shots per Second terminology, and bottom-position roll-quality bars.
@@ -48,6 +48,7 @@ Useful dev query flags:
 - `?devSkip=1` unlocks progression for smoke testing.
 - `?devInvincible=1` makes combat survival tests easier.
 - `?devAutoFire=1` keeps the primary weapon firing during manual checks.
+- `?devTuning=1` opens the economy tuning console on non-combat scenes. Sparse local overrides persist in localStorage, show a `TUNING OVERRIDES ACTIVE` badge, and can be exported as merged JSON.
 
 ## Validation
 
@@ -56,6 +57,7 @@ Run these after changes that touch gameplay data, item generation, combat math, 
 ```bash
 node --check main.js
 node --check scripts/balance_report.js
+node scripts/validate_economy_config.js
 node scripts/validate_levels.js
 python3 scripts/validate_generated_assets.py
 node scripts/validate_weapon_frames.js
@@ -87,11 +89,13 @@ alpha processing described in `ASSET_GENERATION.md`.
 - `enemies/enemy_catalog.json`: enemy definitions referenced by level scripts.
 - `items/item_pool.json`: generated item archetypes, affixes, relics, and support items.
 - `items/weapon_frames.json`: guaranteed and generated weapon-frame definitions.
+- `config/economy.json`: active economy knobs for market, extraction, item value, drop tables, mission rewards, investments, consumables, report targets, and legacy credit gates.
+- `scripts/validate_economy_config.js`: structural validation for the economy config.
 - `scripts/validate_levels.js`: level and item-pool structural validation.
 - `scripts/validate_generated_assets.py`: campaign projectile-key and broadside boss sprite audit.
 - `scripts/generate_projectile_threat_levels.js`: generator for the profiled 11-mission, 3-variant campaign set.
 - `scripts/validate_weapon_frames.js`: weapon-frame schema validation.
-- `scripts/balance_report.js`: economy, item, and mission-balance checks.
+- `scripts/balance_report.js`: item, combat, and economy-balance checks, including Credit Flow expected-credit rows and affordability milestones.
 
 ## Implementation Map
 
@@ -112,6 +116,7 @@ Recent history shows these major pieces have already landed:
 - Pre-Founding weapon coverage pass: ten additional primary relic bases fill the missing spread/ammo combinations, with generated item-icon art in `assets/generated/item_icons_v3/` and plasma impulse scaling added to combat math and the balance report.
 - Plasma armor pressure pass: plasma burn now stacks from repeated hits, ramps to sustained burn DPS over three seconds, ignores armor-class subtraction while damaging armor, applies reduced burn to the armor layer, and is mirrored in the Armory stat math and `scripts/balance_report.js`.
 - Combat HUD clarity pass: enemy, boss, and player layered health bars now read hull, armor, shields left to right, and active plasma burn shows green future-loss previews on affected enemy and boss bars.
+- Economy control layer pass (Phase 8 prelude): active economy numbers moved from `main.js` into validated `config/economy.json`; runtime startup now blocks on missing/invalid economy config; market prices and sell quotes read current config at render/purchase/sale time; `scripts/balance_report.js` prints Credit Flow expected-credit and affordability rows; `?devTuning=1` provides sparse local overrides, reset, badge, and merged JSON export.
 
 ## Documentation Map
 
@@ -126,9 +131,8 @@ Active docs in the repo root:
 - `LEVEL_JSON_FORMAT.md`: active level schema reference.
 - `WEAPON_FRAME_FORMAT.md`: active weapon-frame schema reference.
 - `ITEM_UX_SPEC.md`: active item-communication reference (intrinsic item stats, effective deltas, tooltip/inspector stat block, rarity treatment, roll-quality surfacing).
-- `ECONOMY_CONTROL_SPEC.md`: Phase 8 prelude spec (economy config extraction, credit-flow report, dev tuning console) — ready for Codex.
 - `ACT2_SILENT_LINEAGES_DESIGN.md`: Act 2 campaign design (three sibling-lineage factions, branching mission graph, 11 authored missions); the v1 playable data pass ships alongside it.
-- `ACT2_CODEX_SPEC.md`: Act 2 engine upgrades (mission-graph unlocks, minibosses, new AIs, boss phases) and art-pack generation — ready for Codex after the economy control hand-off.
+- `ACT2_CODEX_SPEC.md`: Act 2 engine upgrades (mission-graph unlocks, minibosses, new AIs, boss phases) and art-pack generation — ready for Codex, next hand-off.
 - `STORY-PREMISE.md`: active tone and lore source.
 - `STORY-PREMISE-DEEP-HISTORY.md`: deep history and endgame arc extending the story premise; feeds the Story-Economy Arc in `ROADMAP.md`.
 - `CREDITS.md`: asset and tool credits.

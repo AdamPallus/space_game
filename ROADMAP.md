@@ -1,6 +1,6 @@
 # Roadmap
 
-Last audited: 2026-06-25
+Last audited: 2026-07-02
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
@@ -48,6 +48,17 @@ The `outdated_docs/implemented_specs/ITEM_CLARITY_SPEC.md` Phase 7 pass has been
 - The Armory Show Stats popup is player-facing: Offense, Defense, Aux, and Loadout only, with no internal item ids or mission count.
 - The Armory main stage now aligns Primary A/B with Defense A/B, centers the fire-mode selector between the primary bays, and shows each equipped primary's Effective DPS, Damage per Shot, and Shots per Second.
 
+## Economy Control Layer Implemented
+
+The `outdated_docs/implemented_specs/ECONOMY_CONTROL_SPEC.md` Phase 8 prelude has been implemented without balance changes:
+
+- Active economy knobs now live in validated `config/economy.json`, loaded before save migration and hangar rendering.
+- `main.js` reads market, extraction, item value, drop table, mission reward, investment, consumable, report-target, and legacy credit-gate values from the config while leaving combat math, level data, enemy data, and item affixes authoritative in their existing files.
+- Ledger lots keep saved item/list value and compute current purchase/sale quotes from live config, with sale handling fee derived from `sellRate`.
+- `scripts/validate_economy_config.js` checks required sections, numeric ranges, tier ordering, ids, hull ids, upgrade ids, and report targets.
+- `scripts/balance_report.js` now prints Credit Flow full-clear and first-third short-loop rows, no-spend cumulative baselines, affordability milestones, and warnings for target/saturation concerns.
+- `?devTuning=1` provides a compact non-combat economy console with sparse local overrides, immediate rerendering, active override badge, reset, and merged JSON export.
+
 ## Next Player-Testing Priorities
 
 These should be tuned with deployed player feedback before adding another broad system:
@@ -55,7 +66,7 @@ These should be tuned with deployed player feedback before adding another broad 
 - Mini weapon output by targeting arc, especially 360-degree turret damage.
 - Second-primary damage strain versus one-primary damage focus value.
 - Dual-fire compatibility and damage-scaling tiers.
-- Ledger license costs and whether broader daily stock creates too much market noise.
+- Ledger license costs and whether broader daily stock creates too much market noise, now using `?devTuning=1` and the Credit Flow report for rapid config-only iteration.
 - Early hard-mission pickup placement and whether it encourages extraction decisions without making failure farming optimal.
 - Cache readability at combat scale.
 - Armor-class readability across profiled campaign missions, especially chip-fire erasure versus heavy and boss-hazard threat.
@@ -69,8 +80,7 @@ These should be tuned with deployed player feedback before adding another broad 
 
 Settled direction from the 2026-07-01 story session (`STORY-PREMISE-DEEP-HISTORY.md`). These phases come after the tuning priorities above, and the order is load-bearing: each phase is the setup for the next one's story beat. The economy is the narrative delivery mechanism — receipts, remittances, and manifest lines tell the story; no cutscenes.
 
-0. **Phase 8 prelude — Economy control layer (spec ready: `ECONOMY_CONTROL_SPEC.md`).** Extract every economy number from `main.js` into validated `config/economy.json`, add a credit-flow section to `balance_report.js` (cumulative expected credits per mission vs. everything buyable), and add a `?devTuning=1` in-game tuning console with localStorage overrides and JSON export. Behavior-identical extraction — no balance changes. This is the next Codex hand-off; it makes all later economy tuning a play-side loop with no code round-trips.
-1. **Phase 8 — The Bill Arrives (credit sink + leash).** Build the two designed-but-deferred sinks from `ECONOMY_DESIGN.md`: Family Tier (§7 — signed remittance liabilities plus gray-market perks delivered by named family members) and Hull Ownership (§6 — lease writedown vs. owned flat refit plus mod bay). This is the fix for the credit surplus: money starts buying a life instead of just gear, and the Chapter 1 leash appears on screen as a recurring red receipt line the player chose to sign.
+1. **Phase 8 — The Bill Arrives (credit sink + leash).** Build the two designed-but-deferred sinks from `ECONOMY_DESIGN.md`: Family Tier (§7 — signed remittance liabilities plus gray-market perks delivered by named family members) and Hull Ownership (§6 — lease writedown vs. owned flat refit plus mod bay). This is the fix for the credit surplus: money starts buying a life instead of just gear, and the Chapter 1 leash appears on screen as a recurring red receipt line the player chose to sign. Use `config/economy.json`, Credit Flow, and `?devTuning=1` for tuning instead of code edits.
 2. **Phase 9 — Planet Raids (the hidden extraction).** Build the surface-layer sketch (`ECONOMY_DESIGN.md` §9) as a distinct raid mission type. Surface targets are loot, not threats; raids gate the next tier of consumables and the deferred cargo/economy hulls. Every raid debrief carries a **sealed manifest** line — cargo the player delivered, never saw, and is not paid for ("Manifest line 7 — sealed under Ledger seal."). Sealed manifests accumulate visibly in the archive. Pre-Founding relic lore lines begin pointing at what the manifests contain.
 3. **Phase 10 — The Fork (Loyalist / Rebel).** Off-books resistance contracts that never appear on the mission board, versus a Ledger confidence track that eventually makes the true-believer case in full. Rebel path is autonomous drone allies with an escalating drift risk, per the deep-history doc. Do not spec this phase until 8 and 9 are playable — the fork only means something once the leash and the manifests have been felt.
 
@@ -79,7 +89,7 @@ Settled direction from the 2026-07-01 story session (`STORY-PREMISE-DEEP-HISTORY
 Design in `ACT2_SILENT_LINEAGES_DESIGN.md` (2026-07-02). Eleven longer (3–6 min) missions with named minibosses build the deep-history fiction into playable content: three sibling-lineage factions (Chorus, Tithe, Verdant), a branching Ledger-sanctioned/off-book fork, and a convergence finale at the Origin Hull that hands the player the black-box evidence Phase 10 spends. Status:
 
 - **Shipped (v1 data pass):** all 11 `act2_*` missions, 37 new catalog enemies/minibosses/bosses with placeholder art, linear board order after Mission 11. Playable now; validated.
-- **Next (Codex, `ACT2_CODEX_SPEC.md`):** engine pass (mission-graph unlocks + visible fork, miniboss banner/health bar/guaranteed drop, conductor/mimic/thief/lien/spawner/splitter AIs, tractor pattern hook, boss phases, debrief lore lines) and art pass (Chorus/Tithe/Verdant/Origin packs, three backgrounds, projectile variants). Run after the economy control hand-off to avoid main.js collisions.
+- **Next (Codex, `ACT2_CODEX_SPEC.md`):** engine pass (mission-graph unlocks + visible fork, miniboss banner/health bar/guaranteed drop, conductor/mimic/thief/lien/spawner/splitter AIs, tractor pattern hook, boss phases, debrief lore lines) and art pass (Chorus/Tithe/Verdant/Origin packs, three backgrounds, projectile variants). The economy control layer has landed, so this is the next Codex hand-off.
 - The Tithe's manifest lore lines are authored to converge with the Phase 9 sealed-manifest thread, and branch standing (sanctioned vs. off-book completions) is tracked as Phase 10 groundwork only.
 
 ## Deferred
@@ -95,9 +105,12 @@ Each shipped roadmap slice should update `CURRENT_SYSTEMS.md` when behavior chan
 ```bash
 node --check main.js
 node --check scripts/balance_report.js
+node scripts/validate_economy_config.js
 node scripts/validate_levels.js
+python3 scripts/validate_generated_assets.py
 node scripts/validate_weapon_frames.js
 node scripts/balance_report.js
+node scripts/validate_docs.js
 git diff --check
 ```
 

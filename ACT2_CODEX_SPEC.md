@@ -5,16 +5,19 @@ also run first; they don't conflict). Design intent and mission-by-mission
 fiction live in `ACT2_SILENT_LINEAGES_DESIGN.md`. The v1 playable data (11
 `act2_*` missions, 37 new catalog entries, `availableLevels` additions) is
 already committed and passes `scripts/validate_levels.js`; everything below
-upgrades that baseline without breaking it. Do this work **after** the
-`ECONOMY_CONTROL_SPEC.md` hand-off currently in flight to avoid main.js
-collisions.
+upgrades that baseline without breaking it. The economy control layer has
+already landed and is merged with this baseline — economy values live in
+`config/economy.json`, so any credit/drop numbers this work touches belong
+there, not in `main.js`.
 
 Validation for every slice:
 
 ```bash
 node --check main.js
+node scripts/validate_economy_config.js
 node scripts/validate_levels.js
 python3 scripts/validate_generated_assets.py
+node scripts/balance_report.js
 node scripts/validate_docs.js
 ```
 

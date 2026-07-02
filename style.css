@@ -138,6 +138,11 @@ button { font-family: inherit; }
   box-shadow: 0 18px 46px rgba(0, 0, 0, 0.38);
   overflow: hidden;
 }
+.tuning-panel.minimized {
+  width: min(250px, calc(100vw - 28px));
+  max-height: none;
+  grid-template-rows: auto;
+}
 .tuning-panel-head {
   display: flex;
   align-items: center;
@@ -149,6 +154,14 @@ button { font-family: inherit; }
 }
 .tuning-panel-head strong { display: block; font-size: 13px; }
 .tuning-panel-actions { display: flex; gap: 6px; }
+.tuning-panel.minimized .tuning-panel-head {
+  padding: 8px 10px;
+}
+.tuning-panel.minimized .tuning-panel-actions button:not([data-tuning-action="toggle-minimize"]),
+.tuning-panel.minimized .tuning-panel-status,
+.tuning-panel.minimized .tuning-panel-body {
+  display: none;
+}
 .tuning-panel-status {
   min-height: 26px;
   padding: 6px 12px;

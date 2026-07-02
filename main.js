@@ -121,6 +121,7 @@ const relicArchive = document.getElementById("relic-archive");
 const STORAGE_KEY = "mini-fighter-save";
 const ECONOMY_CONFIG_PATH = "config/economy.json";
 const ECONOMY_OVERRIDE_STORAGE_KEY = "mini-fighter-economy-overrides";
+const ECONOMY_PANEL_MINIMIZED_STORAGE_KEY = "mini-fighter-economy-panel-minimized";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
 const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
 const GENERATED_ROOT = "assets/generated";
@@ -3648,6 +3649,7 @@ let tuningPanel = null;
 let tuningBadge = null;
 let tuningPanelBody = null;
 let tuningStatus = "";
+let tuningPanelMinimized = false;
 
 const TUNING_SECTION_LABELS = {
   market: "Market",
@@ -3732,6 +3734,8 @@ function ensureTuningUi() {
     document.body.appendChild(tuningBadge);
   }
   if (!devTuning || tuningPanel) return;
+  tuningPanelMinimized =
+    localStorage.getItem(ECONOMY_PANEL_MINIMIZED_STORAGE_KEY) === "1";
   tuningPanel = document.createElement("aside");
   tuningPanel.className = "tuning-panel";
   tuningPanel.innerHTML = `
@@ -3743,6 +3747,7 @@ function ensureTuningUi() {
       <div class="tuning-panel-actions">
         <button type="button" class="btn ghost small" data-tuning-action="export">Export</button>
         <button type="button" class="btn ghost small" data-tuning-action="reset">Reset</button>
+        <button type="button" class="btn ghost small" data-tuning-action="toggle-minimize" aria-pressed="false">Minimize</button>
       </div>
     </header>
     <div class="tuning-panel-status" data-tuning-status></div>
@@ -3767,10 +3772,18 @@ function renderTuningPanel() {
   const shouldShow = !mission?.active;
   tuningPanel.hidden = !shouldShow;
   if (!shouldShow) return;
+  tuningPanel.classList.toggle("minimized", tuningPanelMinimized);
+  const minimizeButton = tuningPanel.querySelector("[data-tuning-action='toggle-minimize']");
+  if (minimizeButton) {
+    minimizeButton.textContent = tuningPanelMinimized ? "Open" : "Minimize";
+    minimizeButton.setAttribute("aria-pressed", tuningPanelMinimized ? "true" : "false");
+    minimizeButton.title = tuningPanelMinimized ? "Open economy tuning panel" : "Minimize economy tuning panel";
+  }
   const statusEl = tuningPanel.querySelector("[data-tuning-status]");
   if (statusEl) {
     statusEl.textContent = tuningStatus || (hasEconomyOverrides() ? "Sparse local overrides active." : "Using shipped config.");
   }
+  if (tuningPanelMinimized) return;
   const sections = getTuningFieldsBySection();
   tuningPanelBody.innerHTML = Object.entries(sections)
     .filter(([, fields]) => fields.length)
@@ -3837,6 +3850,15 @@ function handleTuningPanelInput(event) {
 function handleTuningPanelClick(event) {
   const action = event.target?.closest?.("[data-tuning-action]")?.dataset?.tuningAction;
   if (!action) return;
+  if (action === "toggle-minimize") {
+    tuningPanelMinimized = !tuningPanelMinimized;
+    localStorage.setItem(
+      ECONOMY_PANEL_MINIMIZED_STORAGE_KEY,
+      tuningPanelMinimized ? "1" : "0"
+    );
+    renderTuningPanel();
+    return;
+  }
   if (action === "reset") {
     applyEconomyConfig(baseEconomyConfig, { persistOverrides: true });
     tuningStatus = "Overrides cleared.";

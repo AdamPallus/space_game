@@ -1466,6 +1466,954 @@
         "fireCount": 24,
         "bulletSpeed": 200
       }
+    },
+    "chorister": {
+      "name": "Chorister Line Drone",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/shieldkite.png",
+        "hull": 24,
+        "shield": 46,
+        "shieldRegen": 14,
+        "armor": 0,
+        "speed": 66,
+        "score": 240,
+        "baseCredit": 30,
+        "radius": 18,
+        "pattern": "stall",
+        "patternParams": {
+          "stallY": 160,
+          "stallDuration": 2.6,
+          "strafeAmp": 140,
+          "strafeFreq": 1.25,
+          "postSpeedMult": 1.1
+        },
+        "fireRate": 2.2,
+        "fireMode": "spread",
+        "fireCount": 3,
+        "fireSpread": 0.5,
+        "bulletSpeed": 200,
+        "spriteScale": 0.72
+      }
+    },
+    "cantor": {
+      "name": "Cantor Lane-Caller",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/spark_skirmisher.png",
+        "hull": 20,
+        "shield": 34,
+        "shieldRegen": 12,
+        "armor": 0,
+        "speed": 130,
+        "score": 260,
+        "baseCredit": 34,
+        "radius": 17,
+        "pattern": "laneShift",
+        "patternParams": {
+          "shiftEvery": 1.0,
+          "shiftSpeed": 7,
+          "lanes": [
+            0.15,
+            0.35,
+            0.5,
+            0.65,
+            0.85
+          ]
+        },
+        "fireRate": 1.7,
+        "fireMode": "aim",
+        "bulletSpeed": 220,
+        "spriteScale": 0.66
+      }
+    },
+    "censer": {
+      "name": "Censer Shadow Drone",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/dart_skirmisher.png",
+        "hull": 18,
+        "shield": 24,
+        "shieldRegen": 10,
+        "armor": 0,
+        "speed": 138,
+        "score": 220,
+        "baseCredit": 28,
+        "radius": 16,
+        "ai": "skitter",
+        "aiParams": {
+          "dodgeRadius": 170,
+          "dodgeStrength": 1.9
+        },
+        "fireRate": 2.0,
+        "fireMode": "aim",
+        "bulletSpeed": 230,
+        "spriteScale": 0.64
+      }
+    },
+    "sexton": {
+      "name": "Sexton Reliquary Guard",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/plated_heavy.png",
+        "hull": 30,
+        "shield": 60,
+        "shieldRegen": 10,
+        "armor": 60,
+        "armorClass": 8,
+        "speed": 46,
+        "score": 280,
+        "baseCredit": 36,
+        "radius": 22,
+        "pattern": "drift",
+        "fireRate": 2.6,
+        "spriteScale": 0.66
+      }
+    },
+    "precentor": {
+      "name": "Precentor Line Anchor",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/warden_line_ship.png",
+        "hull": 48,
+        "shield": 110,
+        "shieldRegen": 16,
+        "armor": 0,
+        "speed": 100,
+        "score": 520,
+        "baseCredit": 74,
+        "radius": 24,
+        "ai": "sentinel",
+        "fireRate": 1.4,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.0,
+        "bulletSpeed": 210,
+        "spriteScale": 0.8
+      }
+    },
+    "choirmaster": {
+      "name": "Choirmaster",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/orbiter_core.png",
+        "hull": 260,
+        "shield": 420,
+        "shieldRegen": 18,
+        "armor": 0,
+        "speed": 92,
+        "score": 1600,
+        "baseCredit": 340,
+        "radius": 50,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "radiusX": 300,
+          "radiusY": 80,
+          "orbitSpeed": 0.7,
+          "warmupTime": 0.7
+        },
+        "fireRate": 1.0,
+        "fireMode": "radial",
+        "fireCount": 16,
+        "bulletSpeed": 175,
+        "spriteScale": 0.84
+      }
+    },
+    "precentor_prime": {
+      "name": "Precentor Prime",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/warden_line_ship.png",
+        "hull": 180,
+        "shield": 320,
+        "shieldRegen": 18,
+        "armor": 0,
+        "speed": 108,
+        "score": 1200,
+        "baseCredit": 260,
+        "radius": 34,
+        "ai": "sentinel",
+        "fireRate": 1.1,
+        "fireMode": "spread",
+        "fireCount": 9,
+        "fireSpread": 1.15,
+        "bulletSpeed": 215,
+        "spriteScale": 0.96
+      }
+    },
+    "teller": {
+      "name": "Teller Skiff",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/gnat_interceptor.png",
+        "hull": 22,
+        "shield": 0,
+        "armor": 0,
+        "speed": 148,
+        "score": 180,
+        "baseCredit": 26,
+        "radius": 15,
+        "pattern": "swoop",
+        "patternParams": {
+          "amplitude": 130,
+          "frequency": 4.6
+        },
+        "fireRate": 2.1,
+        "fireMode": "aim",
+        "bulletSpeed": 215,
+        "spriteScale": 0.6
+      }
+    },
+    "bailiff": {
+      "name": "Bailiff Repossession Drone",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/duelist_flanker.png",
+        "hull": 34,
+        "shield": 0,
+        "armor": 80,
+        "armorClass": 9,
+        "speed": 96,
+        "score": 300,
+        "baseCredit": 44,
+        "radius": 20,
+        "ai": "duelist",
+        "aiParams": {
+          "holdY": 200,
+          "standoff": 230,
+          "strafeSpeed": 1.1
+        },
+        "fireRate": 1.6,
+        "fireMode": "aim",
+        "bulletSpeed": 210,
+        "spriteScale": 0.72
+      }
+    },
+    "assessor": {
+      "name": "Assessor Lien Drone",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/reaper_predator.png",
+        "hull": 42,
+        "shield": 30,
+        "shieldRegen": 8,
+        "armor": 0,
+        "speed": 112,
+        "score": 320,
+        "baseCredit": 46,
+        "radius": 19,
+        "ai": "stalker",
+        "aggroRadius": 280,
+        "fireRate": 1.8,
+        "fireMode": "aim",
+        "bulletSpeed": 205,
+        "spriteScale": 0.7
+      }
+    },
+    "notary": {
+      "name": "Notary Gunline",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/escort_gunship.png",
+        "hull": 60,
+        "shield": 0,
+        "armor": 90,
+        "armorClass": 10,
+        "speed": 62,
+        "score": 380,
+        "baseCredit": 54,
+        "radius": 22,
+        "pattern": "strafe",
+        "fireRate": 1.7,
+        "fireMode": "spread",
+        "fireCount": 5,
+        "fireSpread": 0.85,
+        "bulletSpeed": 195,
+        "spriteScale": 0.74
+      }
+    },
+    "strongbox": {
+      "name": "Strongbox Vault Hauler",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/tank_bulwark.png",
+        "hull": 50,
+        "shield": 0,
+        "armor": 260,
+        "armorClass": 14,
+        "speed": 26,
+        "score": 700,
+        "baseCredit": 160,
+        "radius": 32,
+        "ai": "transport",
+        "fireRate": 3.4,
+        "spriteScale": 0.78
+      }
+    },
+    "auditor": {
+      "name": "The Auditor",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/captain_corvette.png",
+        "hull": 300,
+        "shield": 0,
+        "armor": 460,
+        "armorClass": 13,
+        "speed": 64,
+        "score": 1700,
+        "baseCredit": 380,
+        "radius": 42,
+        "pattern": "stall",
+        "patternParams": {
+          "stallY": 180,
+          "stallDuration": 14,
+          "strafeAmp": 200,
+          "strafeFreq": 0.9,
+          "postSpeedMult": 0.9
+        },
+        "fireRate": 1.2,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.05,
+        "bulletSpeed": 190,
+        "spriteScale": 0.9
+      }
+    },
+    "harbormaster": {
+      "name": "Harbormaster",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/captain_corvette.png",
+        "hull": 380,
+        "shield": 0,
+        "armor": 520,
+        "armorClass": 14,
+        "speed": 72,
+        "score": 1900,
+        "baseCredit": 420,
+        "radius": 44,
+        "pattern": "swoop",
+        "patternParams": {
+          "amplitude": 110,
+          "frequency": 2.2
+        },
+        "fireRate": 1.0,
+        "fireMode": "radial",
+        "fireCount": 18,
+        "bulletSpeed": 180,
+        "spriteScale": 0.94
+      }
+    },
+    "sporeling": {
+      "name": "Sporeling",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_scout.png",
+        "hull": 16,
+        "shield": 0,
+        "armor": 0,
+        "speed": 150,
+        "score": 110,
+        "baseCredit": 13,
+        "radius": 14,
+        "pattern": "zigzag",
+        "patternParams": {
+          "amplitude": 170,
+          "frequency": 5.6
+        },
+        "fireRate": 2.4,
+        "fireMode": "aim",
+        "bulletSpeed": 175,
+        "spriteScale": 0.72
+      }
+    },
+    "thornwing": {
+      "name": "Thornwing",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_fighter.png",
+        "hull": 34,
+        "shield": 0,
+        "armor": 0,
+        "speed": 118,
+        "score": 260,
+        "baseCredit": 34,
+        "radius": 19,
+        "pattern": "swoop",
+        "patternParams": {
+          "amplitude": 140,
+          "frequency": 3.8
+        },
+        "fireRate": 1.9,
+        "fireMode": "spread",
+        "fireCount": 3,
+        "fireSpread": 0.5,
+        "bulletSpeed": 205,
+        "spriteScale": 0.72
+      }
+    },
+    "bloomcaller": {
+      "name": "Bloomcaller Hive Node",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_turret.png",
+        "hull": 70,
+        "shield": 45,
+        "shieldRegen": 10,
+        "armor": 0,
+        "speed": 48,
+        "score": 420,
+        "baseCredit": 60,
+        "radius": 24,
+        "pattern": "stall",
+        "patternParams": {
+          "stallY": 190,
+          "stallDuration": 12,
+          "strafeAmp": 90,
+          "strafeFreq": 0.8,
+          "postSpeedMult": 0.8
+        },
+        "fireRate": 2.2,
+        "fireMode": "radial",
+        "fireCount": 8,
+        "bulletSpeed": 130,
+        "spriteScale": 0.74
+      }
+    },
+    "bramble": {
+      "name": "Bramble Growth",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_bruiser.png",
+        "hull": 60,
+        "shield": 0,
+        "armor": 150,
+        "armorClass": 11,
+        "speed": 38,
+        "score": 380,
+        "baseCredit": 52,
+        "radius": 26,
+        "pattern": "drift",
+        "fireRate": 2.8,
+        "fireMode": "radial",
+        "fireCount": 6,
+        "bulletSpeed": 125,
+        "spriteScale": 0.8
+      }
+    },
+    "seedcarrier": {
+      "name": "Seedcarrier",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_transport.png",
+        "hull": 110,
+        "shield": 0,
+        "armor": 40,
+        "armorClass": 6,
+        "speed": 52,
+        "score": 520,
+        "baseCredit": 96,
+        "radius": 30,
+        "ai": "transport",
+        "fireRate": 3.2,
+        "spriteScale": 0.8
+      }
+    },
+    "verdant_elite": {
+      "name": "Verdant Sovereign Drone",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_elite.png",
+        "hull": 100,
+        "shield": 60,
+        "shieldRegen": 10,
+        "armor": 0,
+        "speed": 122,
+        "score": 640,
+        "baseCredit": 92,
+        "radius": 22,
+        "pattern": "spiral",
+        "patternParams": {
+          "amplitude": 220,
+          "frequency": 5.0
+        },
+        "fireRate": 1.5,
+        "fireMode": "spread",
+        "fireCount": 5,
+        "fireSpread": 0.9,
+        "bulletSpeed": 195,
+        "spriteScale": 0.78
+      }
+    },
+    "broodmother": {
+      "name": "Broodmother",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_queen.png",
+        "hull": 460,
+        "shield": 200,
+        "shieldRegen": 12,
+        "armor": 0,
+        "speed": 84,
+        "score": 2000,
+        "baseCredit": 430,
+        "radius": 52,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "radiusX": 280,
+          "radiusY": 85,
+          "orbitSpeed": 0.62,
+          "warmupTime": 0.8
+        },
+        "fireRate": 1.3,
+        "fireMode": "radial",
+        "fireCount": 12,
+        "bulletSpeed": 135,
+        "spriteScale": 0.78
+      }
+    },
+    "rootward": {
+      "name": "Rootward Mass",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_bruiser.png",
+        "hull": 420,
+        "shield": 0,
+        "armor": 380,
+        "armorClass": 13,
+        "speed": 20,
+        "score": 1900,
+        "baseCredit": 400,
+        "radius": 46,
+        "ai": "transport",
+        "fireRate": 1.6,
+        "fireMode": "radial",
+        "fireCount": 10,
+        "bulletSpeed": 120,
+        "spriteScale": 1.1
+      }
+    },
+    "emissary_chorus": {
+      "name": "Emissary of the Chorus",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/orbiter_core.png",
+        "hull": 300,
+        "shield": 500,
+        "shieldRegen": 20,
+        "armor": 0,
+        "speed": 96,
+        "score": 2200,
+        "baseCredit": 460,
+        "radius": 52,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "radiusX": 310,
+          "radiusY": 85,
+          "orbitSpeed": 0.74,
+          "warmupTime": 0.6
+        },
+        "fireRate": 0.95,
+        "fireMode": "radial",
+        "fireCount": 18,
+        "bulletSpeed": 180,
+        "spriteScale": 0.88
+      }
+    },
+    "emissary_tithe": {
+      "name": "Emissary of the Tithe",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/captain_corvette.png",
+        "hull": 340,
+        "shield": 0,
+        "armor": 560,
+        "armorClass": 14,
+        "speed": 66,
+        "score": 2200,
+        "baseCredit": 460,
+        "radius": 44,
+        "pattern": "stall",
+        "patternParams": {
+          "stallY": 170,
+          "stallDuration": 16,
+          "strafeAmp": 220,
+          "strafeFreq": 0.85,
+          "postSpeedMult": 0.9
+        },
+        "fireRate": 1.05,
+        "fireMode": "spread",
+        "fireCount": 9,
+        "fireSpread": 1.2,
+        "bulletSpeed": 190,
+        "spriteScale": 0.94
+      }
+    },
+    "emissary_verdant": {
+      "name": "Emissary of the Verdant",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_queen.png",
+        "hull": 560,
+        "shield": 240,
+        "shieldRegen": 14,
+        "armor": 0,
+        "speed": 80,
+        "score": 2200,
+        "baseCredit": 460,
+        "radius": 50,
+        "pattern": "swoop",
+        "patternParams": {
+          "amplitude": 150,
+          "frequency": 1.9
+        },
+        "fireRate": 1.2,
+        "fireMode": "radial",
+        "fireCount": 14,
+        "bulletSpeed": 140,
+        "spriteScale": 0.74
+      }
+    },
+    "act2_dead_air:boss": {
+      "name": "The Doorkeeper",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level03.png",
+        "hull": 820,
+        "shield": 560,
+        "shieldRegen": 12,
+        "armor": 160,
+        "armorClass": 8,
+        "speed": 88,
+        "score": 2400,
+        "baseCredit": 660,
+        "radius": 70,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.0,
+        "fireMode": "radial",
+        "fireCount": 20,
+        "bulletSpeed": 185,
+        "spriteScale": 0.9
+      }
+    },
+    "act2_processional:boss": {
+      "name": "Processional Warden",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level02.png",
+        "hull": 900,
+        "shield": 780,
+        "shieldRegen": 16,
+        "armor": 120,
+        "armorClass": 8,
+        "speed": 94,
+        "score": 3000,
+        "baseCredit": 760,
+        "radius": 72,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.9,
+          "advance": 56,
+          "advanceTime": 0.75,
+          "sweepDuration": 2.6,
+          "retreatTime": 0.85,
+          "depth": 72
+        },
+        "isBoss": true,
+        "fireRate": 0.9,
+        "fireMode": "radial",
+        "fireCount": 22,
+        "bulletSpeed": 190,
+        "spriteScale": 0.96
+      }
+    },
+    "act2_antiphon:boss": {
+      "name": "The Antiphon",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level09.png",
+        "hull": 1000,
+        "shield": 900,
+        "shieldRegen": 18,
+        "armor": 100,
+        "armorClass": 6,
+        "speed": 132,
+        "score": 3400,
+        "baseCredit": 850,
+        "radius": 70,
+        "ai": "duelist",
+        "aiParams": {
+          "holdY": 185,
+          "standoff": 265,
+          "strafeSpeed": 1.2
+        },
+        "isBoss": true,
+        "fireRate": 0.85,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.3,
+        "bulletSpeed": 215,
+        "spriteScale": 0.92
+      }
+    },
+    "act2_doxology:boss": {
+      "name": "The Conductor",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level07.png",
+        "hull": 1700,
+        "shield": 1500,
+        "shieldRegen": 22,
+        "armor": 360,
+        "armorClass": 10,
+        "speed": 112,
+        "score": 5200,
+        "baseCredit": 1200,
+        "radius": 80,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.8,
+          "advance": 64,
+          "advanceTime": 0.66,
+          "sweepDuration": 2.3,
+          "retreatTime": 0.78,
+          "depth": 84
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.7,
+        "fireMode": "radial",
+        "fireCount": 26,
+        "bulletSpeed": 205,
+        "spriteScale": 0.98
+      }
+    },
+    "act2_repossession:boss": {
+      "name": "The Escrow",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level10.png",
+        "hull": 900,
+        "shield": 0,
+        "armor": 700,
+        "armorClass": 15,
+        "speed": 76,
+        "score": 3000,
+        "baseCredit": 900,
+        "radius": 78,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 0.95,
+        "fireMode": "radial",
+        "fireCount": 22,
+        "bulletSpeed": 175,
+        "spriteScale": 1.0
+      }
+    },
+    "act2_arrears:boss": {
+      "name": "The Adjuster",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level04.png",
+        "hull": 1100,
+        "shield": 220,
+        "shieldRegen": 8,
+        "armor": 900,
+        "armorClass": 15,
+        "speed": 92,
+        "score": 3600,
+        "baseCredit": 1050,
+        "radius": 76,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.85,
+          "advance": 60,
+          "advanceTime": 0.7,
+          "sweepDuration": 2.4,
+          "retreatTime": 0.8,
+          "depth": 78
+        },
+        "isBoss": true,
+        "fireRate": 0.8,
+        "fireMode": "radial",
+        "fireCount": 24,
+        "bulletSpeed": 190,
+        "spriteScale": 0.94
+      }
+    },
+    "act2_foreclosure:boss": {
+      "name": "The Collections Barge",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level10.png",
+        "hull": 1700,
+        "shield": 240,
+        "shieldRegen": 8,
+        "armor": 1500,
+        "armorClass": 16,
+        "speed": 70,
+        "score": 5600,
+        "baseCredit": 1500,
+        "radius": 92,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.75,
+        "fireMode": "radial",
+        "fireCount": 28,
+        "bulletSpeed": 180,
+        "spriteScale": 1.08
+      }
+    },
+    "act2_green_signal:boss": {
+      "name": "Gatekeeper Bloom",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_queen.png",
+        "hull": 1600,
+        "shield": 300,
+        "shieldRegen": 14,
+        "armor": 60,
+        "armorClass": 4,
+        "speed": 86,
+        "score": 3200,
+        "baseCredit": 800,
+        "radius": 74,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "fireRate": 1.0,
+        "fireMode": "radial",
+        "fireCount": 18,
+        "bulletSpeed": 140,
+        "spriteScale": 0.94
+      }
+    },
+    "act2_bloom:boss": {
+      "name": "Verdant Matriarch",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_queen.png",
+        "hull": 2400,
+        "shield": 420,
+        "shieldRegen": 16,
+        "armor": 80,
+        "armorClass": 4,
+        "speed": 96,
+        "score": 4400,
+        "baseCredit": 1150,
+        "radius": 80,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.8,
+          "advance": 62,
+          "advanceTime": 0.68,
+          "sweepDuration": 2.2,
+          "retreatTime": 0.78,
+          "depth": 86
+        },
+        "isBoss": true,
+        "fireRate": 0.85,
+        "fireMode": "radial",
+        "fireCount": 22,
+        "bulletSpeed": 150,
+        "spriteScale": 1.0
+      }
+    },
+    "act2_old_growth:boss": {
+      "name": "The Old Growth",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level06.png",
+        "hull": 2200,
+        "shield": 400,
+        "shieldRegen": 12,
+        "armor": 900,
+        "armorClass": 14,
+        "speed": 100,
+        "score": 5600,
+        "baseCredit": 1400,
+        "radius": 84,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.85,
+          "advance": 66,
+          "advanceTime": 0.66,
+          "sweepDuration": 2.3,
+          "retreatTime": 0.8,
+          "depth": 88
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.72,
+        "fireMode": "radial",
+        "fireCount": 26,
+        "bulletSpeed": 175,
+        "spriteScale": 1.02
+      }
+    },
+    "act2_pilgrimage:boss": {
+      "name": "The First Warden",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bosses_broadside_v1/boss_level08.png",
+        "hull": 2600,
+        "shield": 1500,
+        "shieldRegen": 24,
+        "armor": 1500,
+        "armorClass": 17,
+        "speed": 126,
+        "score": 8000,
+        "baseCredit": 2200,
+        "radius": 84,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "warmupTime": 0.6,
+          "radiusX": 330,
+          "radiusY": 100,
+          "orbitSpeed": 0.82,
+          "wobble": 20
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.55,
+        "fireMode": "radial",
+        "fireCount": 32,
+        "bulletSpeed": 230,
+        "spriteScale": 1.0
+      }
+    },
+    "vestibule_cantor": {
+      "name": "Vestibule Cantor",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/fleet_gaps_v1/spark_skirmisher.png",
+        "hull": 160,
+        "shield": 260,
+        "shieldRegen": 16,
+        "armor": 0,
+        "speed": 118,
+        "score": 1100,
+        "baseCredit": 240,
+        "radius": 30,
+        "pattern": "laneShift",
+        "patternParams": {
+          "shiftEvery": 0.9,
+          "shiftSpeed": 8,
+          "lanes": [
+            0.2,
+            0.4,
+            0.6,
+            0.8
+          ]
+        },
+        "fireRate": 1.1,
+        "fireMode": "spread",
+        "fireCount": 5,
+        "fireSpread": 0.9,
+        "bulletSpeed": 215,
+        "spriteScale": 0.92
+      }
     }
   }
 }

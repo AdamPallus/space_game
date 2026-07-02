@@ -1,0 +1,175 @@
+{
+  "id": "act2_old_growth",
+  "name": "Old Growth",
+  "background": "generatedBioNebula",
+  "visualTheme": "bio_v1",
+  "music": "space_boss_battle_bpm175.ogg",
+  "difficulty": "Deep Claims Finale",
+  "description": "A Founders-era warship, grown through. The oldest machine in the campaign and the most drifted lineage wearing one silhouette.",
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "sporeling": {
+      "hull": 20,
+      "speed": 160,
+      "attackPatterns": [
+        { "id": "spore_spit", "mode": "aim", "profile": "sporePuff", "fireRate": 2.2, "weight": 1, "speedJitter": 0.12 }
+      ]
+    },
+    "thornwing": {
+      "hull": 42,
+      "attackPatterns": [
+        { "id": "thorn_volley", "mode": "spread", "profile": "thornVolley", "count": 4, "spreadDeg": 34, "fireRate": 1.8, "weight": 3 },
+        { "id": "thorn_snap", "mode": "aim", "profile": "thornVolley", "fireRate": 1.4, "weight": 1 }
+      ]
+    },
+    "bloomcaller": {
+      "hull": 90,
+      "shield": 65,
+      "attackPatterns": [
+        { "id": "spore_pulse", "mode": "radial", "profile": "sporePuff", "count": 14, "fireRate": 2.1, "weight": 3, "speedJitter": 0.14 },
+        { "id": "heavy_bloom", "mode": "aim", "profile": "sporeOrb", "fireRate": 2.8, "weight": 1 }
+      ]
+    },
+    "bramble": {
+      "hull": 80,
+      "armor": 200,
+      "armorClass": 12,
+      "attackPatterns": [
+        { "id": "bramble_ring", "mode": "radial", "profile": "thornVolley", "count": 8, "fireRate": 2.6, "weight": 1 }
+      ]
+    },
+    "seedcarrier": {
+      "hull": 150,
+      "attackPatterns": [
+        { "id": "seed_drip", "mode": "aim", "profile": "sporePuff", "fireRate": 3.2, "weight": 1 }
+      ]
+    },
+    "verdant_elite": {
+      "hull": 115,
+      "shield": 70,
+      "attackPatterns": [
+        { "id": "sovereign_fan", "mode": "spread", "profile": "thornVolley", "count": 5, "spreadDeg": 48, "fireRate": 1.5, "weight": 3 },
+        { "id": "sovereign_orb", "mode": "aim", "profile": "sporeOrb", "fireRate": 2.6, "weight": 1 }
+      ]
+    },
+    "rootward": {
+      "attackPatterns": [
+        { "id": "root_ring", "mode": "radial", "profile": "sporeOrb", "count": 9, "fireRate": 2.2, "weight": 3, "speedJitter": 0.1 },
+        { "id": "root_burst", "mode": "radial", "profile": "thornVolley", "count": 12, "fireRate": 2.9, "weight": 2 }
+      ]
+    },
+    "boss": {
+      "template": "act2_old_growth:boss",
+      "attackPatterns": [
+        { "id": "grid_lance", "mode": "aim", "profile": "gridNeedle", "fireRate": 1.2, "weight": 3, "shots": [
+          { "profile": "gridNeedle", "angleOffsetDeg": -6 },
+          { "profile": "gridNeedle" },
+          { "profile": "gridNeedle", "angleOffsetDeg": 6 }
+        ] },
+        { "id": "overgrown_ring", "mode": "radial", "profile": "sporeOrb", "count": 14, "fireRate": 1.5, "weight": 4, "speedJitter": 0.12 },
+        { "id": "thorn_barrage", "mode": "spread", "profile": "thornVolley", "count": 9, "spreadDeg": 88, "fireRate": 1.25, "weight": 3 },
+        { "id": "founders_core", "mode": "aim", "profile": "growthCore", "fireRate": 1.9, "weight": 2, "shots": [
+          { "profile": "growthCore", "angleOffsetDeg": -9 },
+          { "profile": "growthCore", "angleOffsetDeg": 9 }
+        ] }
+      ]
+    }
+  },
+  "events": [
+    { "time": 2, "type": "sporeling", "count": 8, "interval": 0.34 },
+    { "time": 10, "type": "thornwing", "count": 4, "interval": 0.8 },
+    { "time": 18, "type": "bramble", "count": 2, "interval": 1.5 },
+    { "time": 27, "type": "bloomcaller", "count": 2, "interval": 1.7 },
+    { "time": 36, "type": "sporeling", "count": 9, "interval": 0.32 },
+    { "time": 45, "type": "seedcarrier", "count": 2, "interval": 4.0 },
+    { "time": 54, "type": "verdant_elite", "count": 2, "interval": 1.4 },
+    { "time": 63, "type": "thornwing", "count": 5, "interval": 0.7 },
+    { "time": 72, "type": "bramble", "count": 3, "interval": 1.3 },
+    { "time": 82, "type": "bloomcaller", "count": 3, "interval": 1.5 },
+    { "time": 92, "type": "sporeling", "count": 10, "interval": 0.3 },
+    { "time": 102, "type": "seedcarrier", "count": 2, "interval": 3.5 },
+    { "time": 112, "type": "verdant_elite", "count": 3, "interval": 1.2 },
+    { "time": 122, "type": "thornwing", "count": 5, "interval": 0.65 },
+    { "time": 132, "type": "bramble", "count": 3, "interval": 1.2 },
+    { "time": 140, "type": "sporeling", "count": 10, "interval": 0.28 },
+
+    { "time": 150, "type": "rootward", "count": 1 },
+    { "time": 154, "type": "bloomcaller", "count": 2, "interval": 1.5 },
+    { "time": 165, "type": "sporeling", "count": 8, "interval": 0.3 },
+    { "time": 176, "type": "thornwing", "count": 4, "interval": 0.7 },
+
+    { "time": 190, "type": "verdant_elite", "count": 3, "interval": 1.1 },
+    { "time": 200, "type": "bramble", "count": 4, "interval": 1.1 },
+    { "time": 212, "type": "bloomcaller", "count": 3, "interval": 1.3 },
+    { "time": 222, "type": "sporeling", "count": 12, "interval": 0.26 },
+    { "time": 232, "type": "seedcarrier", "count": 3, "interval": 3.0 },
+    { "time": 244, "type": "thornwing", "count": 6, "interval": 0.55 },
+    { "time": 256, "type": "verdant_elite", "count": 3, "interval": 1.0 },
+    { "time": 268, "type": "sporeling", "count": 12, "interval": 0.24 },
+
+    { "time": 285, "type": "boss", "count": 1 }
+  ],
+  "pickups": [
+    { "time": 32, "type": "salvage", "rarity": "prototype", "slotType": "primary", "x": 0.44, "y": -46 },
+    { "time": 98, "type": "salvage", "rarity": "prototype", "slotType": "primary", "x": 0.58, "y": -50 },
+    { "time": 158, "type": "shield_booster", "x": 0.5 },
+    { "time": 182, "type": "salvage", "rarity": "prototype", "slotType": "defense", "x": 0.4, "y": -48 },
+    { "time": 238, "type": "armor_patch", "x": 0.54 },
+    { "time": 274, "type": "shield_booster", "x": 0.46 }
+  ],
+  "projectileProfiles": {
+    "sporePuff": {
+      "threatClass": "chip",
+      "damage": 9,
+      "speed": 172,
+      "radius": 5,
+      "image": "enemy_space_cool_plasma_ball",
+      "width": 26,
+      "height": 26,
+      "animation": "orb",
+      "spinRate": 1.2
+    },
+    "thornVolley": {
+      "threatClass": "standard",
+      "damage": 21,
+      "speed": 248,
+      "radius": 4,
+      "image": "enemy_space_cool_standard_bolt",
+      "width": 16,
+      "height": 42,
+      "animation": "bolt"
+    },
+    "gridNeedle": {
+      "threatClass": "standard",
+      "damage": 24,
+      "speed": 300,
+      "radius": 3,
+      "image": "enemy_space_cool_chip_needle",
+      "width": 11,
+      "height": 38,
+      "animation": "lance"
+    },
+    "sporeOrb": {
+      "threatClass": "heavy",
+      "damage": 40,
+      "speed": 134,
+      "radius": 9,
+      "image": "enemy_space_cool_plasma_ball",
+      "width": 46,
+      "height": 46,
+      "animation": "orb",
+      "spinRate": 1.4
+    },
+    "growthCore": {
+      "threatClass": "bossHazard",
+      "damage": 62,
+      "speed": 120,
+      "radius": 13,
+      "image": "enemy_space_cool_boss_core",
+      "width": 72,
+      "height": 72,
+      "animation": "orb",
+      "spinRate": 1.2
+    }
+  }
+}

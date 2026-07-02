@@ -1,0 +1,167 @@
+{
+  "id": "act2_antiphon",
+  "name": "Antiphon",
+  "background": "generatedTealRift",
+  "music": "space_adventure_bpm140.ogg",
+  "difficulty": "Sanctioned",
+  "description": "A chant sung in answer. The Chorus has noticed you, and the vote has started copying its most decisive input: you.",
+  "completeOnBoss": true,
+  "enemyTypes": {
+    "censer": {
+      "hull": 22,
+      "shield": 32,
+      "speed": 146,
+      "aiParams": { "dodgeRadius": 190, "dodgeStrength": 2.1 },
+      "attackPatterns": [
+        { "id": "echo_snap", "mode": "aim", "profile": "hymnChip", "fireRate": 1.8, "weight": 1, "speedJitter": 0.1 }
+      ]
+    },
+    "cantor": {
+      "hull": 26,
+      "shield": 44,
+      "attackPatterns": [
+        { "id": "versicle", "mode": "aim", "profile": "versicleNeedle", "fireRate": 1.6, "weight": 3, "speedJitter": 0.06 },
+        { "id": "versicle_pair", "mode": "aim", "profile": "versicleNeedle", "fireRate": 2.2, "weight": 2, "shots": [
+          { "profile": "versicleNeedle", "angleOffsetDeg": -6 },
+          { "profile": "versicleNeedle", "angleOffsetDeg": 6 }
+        ] }
+      ]
+    },
+    "chorister": {
+      "hull": 30,
+      "shield": 60,
+      "attackPatterns": [
+        { "id": "hymn_volley", "mode": "spread", "profile": "hymnChip", "count": 3, "spreadDeg": 24, "fireRate": 2.0, "weight": 3 },
+        { "id": "response", "mode": "aim", "profile": "responseBolt", "fireRate": 2.7, "weight": 1 }
+      ]
+    },
+    "sexton": {
+      "hull": 34,
+      "shield": 70,
+      "attackPatterns": [
+        { "id": "guard_heavy", "mode": "aim", "profile": "hymnHeavy", "fireRate": 2.9, "weight": 1 }
+      ]
+    },
+    "precentor": {
+      "attackPatterns": [
+        { "id": "call_fan", "mode": "spread", "profile": "responseBolt", "count": 5, "spreadDeg": 44, "fireRate": 1.7, "weight": 3 },
+        { "id": "answer_heavy", "mode": "aim", "profile": "hymnHeavy", "fireRate": 3.0, "weight": 1 }
+      ]
+    },
+    "precentor_prime": {
+      "attackPatterns": [
+        { "id": "call_fan", "mode": "spread", "profile": "responseBolt", "count": 7, "spreadDeg": 56, "fireRate": 1.45, "weight": 3 },
+        { "id": "answer_pair", "mode": "aim", "profile": "hymnHeavy", "fireRate": 2.5, "weight": 2, "shots": [
+          { "profile": "hymnHeavy", "angleOffsetDeg": -8 },
+          { "profile": "hymnHeavy", "angleOffsetDeg": 8 }
+        ] }
+      ]
+    },
+    "boss": {
+      "template": "act2_antiphon:boss",
+      "attackPatterns": [
+        { "id": "mirror_fan", "mode": "spread", "profile": "responseBolt", "count": 5, "spreadDeg": 52, "fireRate": 1.0, "weight": 4 },
+        { "id": "answer_needles", "mode": "aim", "profile": "versicleNeedle", "fireRate": 1.3, "weight": 3, "shots": [
+          { "profile": "versicleNeedle", "angleOffsetDeg": -10 },
+          { "profile": "versicleNeedle" },
+          { "profile": "versicleNeedle", "angleOffsetDeg": 10 }
+        ] },
+        { "id": "argument_ring", "mode": "radial", "profile": "hymnChip", "count": 22, "fireRate": 1.7, "weight": 2, "speedJitter": 0.12 },
+        { "id": "closing_word", "mode": "aim", "profile": "antiphonRing", "fireRate": 2.6, "weight": 1 }
+      ]
+    }
+  },
+  "events": [
+    { "time": 2, "type": "censer", "count": 3, "interval": 0.8 },
+    { "time": 10, "type": "cantor", "count": 2, "interval": 1.0 },
+    { "time": 18, "type": "censer", "count": 3, "interval": 0.75 },
+    { "time": 26, "type": "chorister", "count": 5, "interval": 0.38 },
+    { "time": 34, "type": "cantor", "count": 3, "interval": 0.85 },
+    { "time": 44, "type": "censer", "count": 4, "interval": 0.7 },
+    { "time": 53, "type": "sexton", "count": 2, "interval": 1.5 },
+    { "time": 62, "type": "chorister", "count": 5, "interval": 0.36 },
+    { "time": 70, "type": "precentor", "count": 1 },
+    { "time": 80, "type": "cantor", "count": 3, "interval": 0.8 },
+    { "time": 90, "type": "censer", "count": 4, "interval": 0.65 },
+    { "time": 100, "type": "chorister", "count": 6, "interval": 0.34 },
+    { "time": 110, "type": "precentor", "count": 1 },
+    { "time": 118, "type": "cantor", "count": 4, "interval": 0.7 },
+
+    { "time": 128, "type": "precentor_prime", "count": 1 },
+    { "time": 132, "type": "precentor_prime", "count": 1 },
+    { "time": 138, "type": "censer", "count": 3, "interval": 0.8 },
+    { "time": 148, "type": "chorister", "count": 5, "interval": 0.36 },
+
+    { "time": 162, "type": "cantor", "count": 4, "interval": 0.65 },
+    { "time": 172, "type": "censer", "count": 5, "interval": 0.6 },
+    { "time": 182, "type": "chorister", "count": 6, "interval": 0.32 },
+    { "time": 192, "type": "sexton", "count": 3, "interval": 1.2 },
+    { "time": 202, "type": "precentor", "count": 2, "interval": 2.4 },
+    { "time": 214, "type": "censer", "count": 4, "interval": 0.6 },
+    { "time": 226, "type": "cantor", "count": 5, "interval": 0.6 },
+    { "time": 236, "type": "chorister", "count": 6, "interval": 0.3 },
+
+    { "time": 250, "type": "boss", "count": 1 }
+  ],
+  "pickups": [
+    { "time": 28, "type": "salvage", "rarity": "certified", "slotType": "aux", "x": 0.42, "y": -46 },
+    { "time": 84, "type": "salvage", "rarity": "prototype", "slotType": "defense", "x": 0.58, "y": -50 },
+    { "time": 154, "type": "shield_booster", "x": 0.5 },
+    { "time": 157, "type": "salvage", "rarity": "certified", "slotType": "primary", "x": 0.36, "y": -44 },
+    { "time": 240, "type": "armor_patch", "x": 0.52 }
+  ],
+  "projectileProfiles": {
+    "hymnChip": {
+      "threatClass": "chip",
+      "damage": 7,
+      "speed": 265,
+      "radius": 3,
+      "image": "enemy_space_cool_chip_dart",
+      "width": 13,
+      "height": 34,
+      "animation": "bolt"
+    },
+    "versicleNeedle": {
+      "threatClass": "chip",
+      "damage": 10,
+      "speed": 305,
+      "radius": 3,
+      "image": "enemy_space_cool_chip_needle",
+      "width": 11,
+      "height": 38,
+      "animation": "lance"
+    },
+    "responseBolt": {
+      "threatClass": "standard",
+      "damage": 19,
+      "speed": 240,
+      "radius": 4,
+      "image": "enemy_space_cool_standard_bolt",
+      "width": 16,
+      "height": 42,
+      "animation": "bolt"
+    },
+    "hymnHeavy": {
+      "threatClass": "heavy",
+      "damage": 36,
+      "speed": 155,
+      "radius": 8,
+      "image": "enemy_space_cool_heavy_core",
+      "width": 50,
+      "height": 50,
+      "animation": "orb",
+      "spinRate": 2.0
+    },
+    "antiphonRing": {
+      "threatClass": "bossHazard",
+      "damage": 56,
+      "speed": 145,
+      "radius": 12,
+      "image": "enemy_space_cool_boss_ring",
+      "width": 70,
+      "height": 70,
+      "animation": "orb",
+      "spinRate": 1.6
+    }
+  }
+}

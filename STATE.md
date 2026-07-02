@@ -127,6 +127,8 @@ Active docs in the repo root:
 - `WEAPON_FRAME_FORMAT.md`: active weapon-frame schema reference.
 - `ITEM_UX_SPEC.md`: active item-communication reference (intrinsic item stats, effective deltas, tooltip/inspector stat block, rarity treatment, roll-quality surfacing).
 - `ECONOMY_CONTROL_SPEC.md`: Phase 8 prelude spec (economy config extraction, credit-flow report, dev tuning console) — ready for Codex.
+- `ACT2_SILENT_LINEAGES_DESIGN.md`: Act 2 campaign design (three sibling-lineage factions, branching mission graph, 11 authored missions); the v1 playable data pass ships alongside it.
+- `ACT2_CODEX_SPEC.md`: Act 2 engine upgrades (mission-graph unlocks, minibosses, new AIs, boss phases) and art-pack generation — ready for Codex after the economy control hand-off.
 - `STORY-PREMISE.md`: active tone and lore source.
 - `STORY-PREMISE-DEEP-HISTORY.md`: deep history and endgame arc extending the story premise; feeds the Story-Economy Arc in `ROADMAP.md`.
 - `CREDITS.md`: asset and tool credits.

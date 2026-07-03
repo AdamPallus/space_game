@@ -1511,7 +1511,7 @@
         "radius": 17,
         "pattern": "laneShift",
         "patternParams": {
-          "shiftEvery": 1.0,
+          "shiftEvery": 1,
           "shiftSpeed": 7,
           "lanes": [
             0.15,
@@ -1545,7 +1545,7 @@
           "dodgeRadius": 170,
           "dodgeStrength": 1.9
         },
-        "fireRate": 2.0,
+        "fireRate": 2,
         "fireMode": "aim",
         "bulletSpeed": 230,
         "spriteScale": 0.64
@@ -1587,7 +1587,7 @@
         "fireRate": 1.4,
         "fireMode": "spread",
         "fireCount": 7,
-        "fireSpread": 1.0,
+        "fireSpread": 1,
         "bulletSpeed": 210,
         "spriteScale": 0.8
       }
@@ -1612,12 +1612,13 @@
           "orbitSpeed": 0.7,
           "warmupTime": 0.7
         },
-        "fireRate": 1.0,
+        "fireRate": 1,
         "fireMode": "radial",
         "fireCount": 16,
         "bulletSpeed": 175,
         "spriteScale": 0.84
-      }
+      },
+      "miniboss": true
     },
     "precentor_prime": {
       "name": "Precentor Prime",
@@ -1639,7 +1640,8 @@
         "fireSpread": 1.15,
         "bulletSpeed": 215,
         "spriteScale": 0.96
-      }
+      },
+      "miniboss": true
     },
     "teller": {
       "name": "Teller Skiff",
@@ -1777,7 +1779,8 @@
         "fireSpread": 1.05,
         "bulletSpeed": 190,
         "spriteScale": 0.9
-      }
+      },
+      "miniboss": true
     },
     "harbormaster": {
       "name": "Harbormaster",
@@ -1797,12 +1800,13 @@
           "amplitude": 110,
           "frequency": 2.2
         },
-        "fireRate": 1.0,
+        "fireRate": 1,
         "fireMode": "radial",
         "fireCount": 18,
         "bulletSpeed": 180,
         "spriteScale": 0.94
-      }
+      },
+      "miniboss": true
     },
     "sporeling": {
       "name": "Sporeling",
@@ -1935,7 +1939,7 @@
         "pattern": "spiral",
         "patternParams": {
           "amplitude": 220,
-          "frequency": 5.0
+          "frequency": 5
         },
         "fireRate": 1.5,
         "fireMode": "spread",
@@ -1970,7 +1974,8 @@
         "fireCount": 12,
         "bulletSpeed": 135,
         "spriteScale": 0.78
-      }
+      },
+      "miniboss": true
     },
     "rootward": {
       "name": "Rootward Mass",
@@ -1991,7 +1996,8 @@
         "fireCount": 10,
         "bulletSpeed": 120,
         "spriteScale": 1.1
-      }
+      },
+      "miniboss": true
     },
     "emissary_chorus": {
       "name": "Emissary of the Chorus",
@@ -2018,7 +2024,8 @@
         "fireCount": 18,
         "bulletSpeed": 180,
         "spriteScale": 0.88
-      }
+      },
+      "miniboss": true
     },
     "emissary_tithe": {
       "name": "Emissary of the Tithe",
@@ -2047,7 +2054,8 @@
         "fireSpread": 1.2,
         "bulletSpeed": 190,
         "spriteScale": 0.94
-      }
+      },
+      "miniboss": true
     },
     "emissary_verdant": {
       "name": "Emissary of the Verdant",
@@ -2072,7 +2080,8 @@
         "fireCount": 14,
         "bulletSpeed": 140,
         "spriteScale": 0.74
-      }
+      },
+      "miniboss": true
     },
     "act2_dead_air:boss": {
       "name": "The Doorkeeper",
@@ -2090,7 +2099,7 @@
         "radius": 70,
         "pattern": "bossSweep",
         "isBoss": true,
-        "fireRate": 1.0,
+        "fireRate": 1,
         "fireMode": "radial",
         "fireCount": 20,
         "bulletSpeed": 185,
@@ -2208,7 +2217,7 @@
         "fireMode": "radial",
         "fireCount": 22,
         "bulletSpeed": 175,
-        "spriteScale": 1.0
+        "spriteScale": 1
       }
     },
     "act2_arrears:boss": {
@@ -2282,7 +2291,7 @@
         "radius": 74,
         "pattern": "bossSweep",
         "isBoss": true,
-        "fireRate": 1.0,
+        "fireRate": 1,
         "fireMode": "radial",
         "fireCount": 18,
         "bulletSpeed": 140,
@@ -2317,7 +2326,7 @@
         "fireMode": "radial",
         "fireCount": 22,
         "bulletSpeed": 150,
-        "spriteScale": 1.0
+        "spriteScale": 1
       }
     },
     "act2_old_growth:boss": {
@@ -2380,7 +2389,7 @@
         "fireMode": "radial",
         "fireCount": 32,
         "bulletSpeed": 230,
-        "spriteScale": 1.0
+        "spriteScale": 1
       }
     },
     "vestibule_cantor": {
@@ -2413,7 +2422,8 @@
         "fireSpread": 0.9,
         "bulletSpeed": 215,
         "spriteScale": 0.92
-      }
+      },
+      "miniboss": true
     }
   }
 }

@@ -29,6 +29,83 @@
     "duelist": {},
     "boss": {
       "template": "ai_demo:boss"
+    },
+    "chorister": {
+      "hull": 34,
+      "shield": 70,
+      "aiParams": {
+        "linkedTo": [
+          "precentor"
+        ]
+      },
+      "fireRate": 2.1,
+      "fireMode": "spread",
+      "fireCount": 3,
+      "fireSpread": 0.5
+    },
+    "precentor": {
+      "ai": "conductor",
+      "aiParams": {
+        "conductorBuff": {
+          "fireRateMult": 0.85,
+          "shieldRegenBonus": 8
+        }
+      },
+      "fireRate": 1.4,
+      "fireMode": "spread",
+      "fireCount": 6,
+      "fireSpread": 0.9
+    },
+    "bailiff": {
+      "ai": "thief",
+      "aiParams": {
+        "escapeSpeed": 130,
+        "interest": 1.5,
+        "holdY": 200,
+        "standoff": 230
+      }
+    },
+    "assessor": {
+      "ai": "lien",
+      "aiParams": {
+        "attachRadius": 150,
+        "drainPerSecond": 6,
+        "holdY": 210,
+        "standoff": 210
+      }
+    },
+    "bloomcaller": {
+      "ai": "spawner",
+      "aiParams": {
+        "spawnEvery": 5,
+        "spawnType": "sporeling",
+        "maxAlive": 4
+      }
+    },
+    "sporeling": {},
+    "seedcarrier": {
+      "ai": "splitter",
+      "aiParams": {
+        "splitCount": 2,
+        "splitType": "sporeling"
+      }
+    },
+    "act2_antiphon:boss": {
+      "ai": "mimic",
+      "aiParams": {
+        "echoDelay": 2,
+        "holdY": 185,
+        "standoff": 265
+      },
+      "hull": 180,
+      "shield": 120,
+      "isBoss": false,
+      "fireRate": 1.2,
+      "fireMode": "spread",
+      "fireCount": 5,
+      "fireSpread": 0.9,
+      "spriteScale": 0.68,
+      "miniboss": true
     }
   },
   "events": [
@@ -75,9 +152,62 @@
       "interval": 0.38
     },
     {
-      "time": 44,
+      "time": 50,
+      "type": "precentor",
+      "count": 1
+    },
+    {
+      "time": 51,
+      "type": "chorister",
+      "count": 5,
+      "interval": 0.4
+    },
+    {
+      "time": 62,
+      "type": "act2_antiphon:boss",
+      "count": 1
+    },
+    {
+      "time": 76,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 90,
+      "type": "assessor",
+      "count": 2,
+      "interval": 1.8
+    },
+    {
+      "time": 104,
+      "type": "bloomcaller",
+      "count": 1
+    },
+    {
+      "time": 112,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 1
+    },
+    {
+      "time": 126,
       "type": "boss",
       "count": 1
+    }
+  ],
+  "pickups": [
+    {
+      "time": 50,
+      "type": "salvage",
+      "rarity": "certified",
+      "x": 0.25
+    },
+    {
+      "time": 52,
+      "type": "salvage",
+      "rarity": "certified",
+      "x": 0.72
     }
   ]
 }

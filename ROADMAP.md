@@ -88,8 +88,8 @@ Settled direction from the 2026-07-01 story session (`STORY-PREMISE-DEEP-HISTORY
 
 Design in `ACT2_SILENT_LINEAGES_DESIGN.md` (2026-07-02). Eleven longer (3–6 min) missions with named minibosses build the deep-history fiction into playable content: three sibling-lineage factions (Chorus, Tithe, Verdant), a branching Ledger-sanctioned/off-book fork, and a convergence finale at the Origin Hull that hands the player the black-box evidence Phase 10 spends. Status:
 
-- **Shipped (v1 data pass):** all 11 `act2_*` missions, 37 new catalog enemies/minibosses/bosses with placeholder art, linear board order after Mission 11. Playable now; validated.
-- **Next (Codex, `ACT2_CODEX_SPEC.md`):** engine pass (mission-graph unlocks + visible fork, miniboss banner/health bar/guaranteed drop, conductor/mimic/thief/lien/spawner/splitter AIs, tractor pattern hook, boss phases, debrief lore lines) and art pass (Chorus/Tithe/Verdant/Origin packs, three backgrounds, projectile variants). The economy control layer has landed, so this is the next Codex hand-off.
+- **Shipped:** all 11 `act2_*` missions, 37 new catalog enemies/minibosses/bosses, graph unlocks and visible fork, Deep Registry Shard gate, miniboss treatment, branch-standing records, conductor/mimic/thief/lien/spawner/splitter AIs, Collections Barge tractor hook, Doxology/Pilgrimage boss phases, and debrief lore lines. Playable now; validated.
+- **Next (art pass, `ACT2_CODEX_SPEC.md`):** Chorus/Tithe/Verdant/Origin generated packs, three backgrounds, projectile variants, sprite swaps, runtime registrations, compendium refresh, and visual QA. Placeholder/fallback art remains until this lands.
 - The Tithe's manifest lore lines are authored to converge with the Phase 9 sealed-manifest thread, and branch standing (sanctioned vs. off-book completions) is tracked as Phase 10 groundwork only.
 
 ## Deferred

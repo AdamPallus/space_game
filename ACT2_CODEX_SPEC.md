@@ -1,7 +1,8 @@
 # Act 2 Codex Spec — Engine Upgrades + Art Packs
 
-Status: ready for Codex, in two independent passes (engine, then art — art can
-also run first; they don't conflict). Design intent and mission-by-mission
+Status: engine pass implemented; art pass remains active. The two passes are
+independent, so art can continue in a separate worktree without conflicting
+with the shipped engine behavior. Design intent and mission-by-mission
 fiction live in `ACT2_SILENT_LINEAGES_DESIGN.md`. The v1 playable data (11
 `act2_*` missions, 37 new catalog entries, `availableLevels` additions) is
 already committed and passes `scripts/validate_levels.js`; everything below
@@ -25,7 +26,7 @@ plus a browser smoke test (`?devSkip=1&level=<id>`).
 
 ---
 
-## Pass 1 — Engine
+## Pass 1 — Engine (implemented)
 
 ### 1.1 Mission-graph unlocks (replaces the linear index for Act 2)
 
@@ -179,7 +180,7 @@ strings, pick one at random on completion):
 - `act2_pilgrimage`: the Ledger's closer: "Claim settled. Compliance
   appreciated."
 
-## Pass 2 — Art (Codex built-in imagegen, per `ASSET_GENERATION.md` rules)
+## Pass 2 — Art (remaining; Codex built-in imagegen, per `ASSET_GENERATION.md` rules)
 
 All packs: chroma-key sheet workflow → transparent PNGs, processed with the
 existing sheet tools. Enemies match the fleet scale anchors (~112px class);

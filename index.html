@@ -36,6 +36,14 @@
               <div class="boss-bar-fill boss-bar-burn" id="boss-burn-shield-fill"></div>
             </div>
           </div>
+          <div class="boss-progress miniboss-progress" id="miniboss-progress" hidden>
+            <span id="miniboss-label">Miniboss</span>
+            <div class="boss-bar miniboss-bar">
+              <div class="boss-bar-fill boss-bar-shield" id="miniboss-shield-fill"></div>
+              <div class="boss-bar-fill boss-bar-armor" id="miniboss-armor-fill"></div>
+              <div id="miniboss-progress-fill"></div>
+            </div>
+          </div>
           <div class="cargo-hud" aria-label="Cargo hold">
             <span class="cargo-label">Cargo</span>
             <div class="cargo-pips" id="hud-cargo-pips"></div>
@@ -65,6 +73,10 @@
               <div class="hangar-stat">
                 <span class="label">Credits</span>
                 <strong id="available-credits">0</strong>
+              </div>
+              <div class="hangar-stat">
+                <span class="label">Deep Claims</span>
+                <strong id="branch-standing">0 / 0</strong>
               </div>
             </div>
             <details class="audio-station">

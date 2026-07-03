@@ -12,109 +12,404 @@
       "shield": 36,
       "aggroRadius": 320,
       "attackPatterns": [
-        { "id": "lien_shot", "mode": "aim", "profile": "slugRound", "fireRate": 1.7, "weight": 3 },
-        { "id": "lien_pair", "mode": "aim", "profile": "slugRound", "fireRate": 2.5, "weight": 1, "shots": [
-          { "profile": "slugRound", "angleOffsetDeg": -5 },
-          { "profile": "slugRound", "angleOffsetDeg": 5 }
-        ] }
-      ]
+        {
+          "id": "lien_shot",
+          "mode": "aim",
+          "profile": "slugRound",
+          "fireRate": 1.7,
+          "weight": 3
+        },
+        {
+          "id": "lien_pair",
+          "mode": "aim",
+          "profile": "slugRound",
+          "fireRate": 2.5,
+          "weight": 1,
+          "shots": [
+            {
+              "profile": "slugRound",
+              "angleOffsetDeg": -5
+            },
+            {
+              "profile": "slugRound",
+              "angleOffsetDeg": 5
+            }
+          ]
+        }
+      ],
+      "ai": "lien",
+      "aiParams": {
+        "attachRadius": 150,
+        "drainPerSecond": 6,
+        "holdY": 210,
+        "standoff": 210
+      }
     },
     "teller": {
       "hull": 26,
       "speed": 154,
       "attackPatterns": [
-        { "id": "teller_snap", "mode": "aim", "profile": "tellerDart", "fireRate": 1.9, "weight": 1, "speedJitter": 0.08 }
+        {
+          "id": "teller_snap",
+          "mode": "aim",
+          "profile": "tellerDart",
+          "fireRate": 1.9,
+          "weight": 1,
+          "speedJitter": 0.08
+        }
       ]
     },
     "bailiff": {
       "hull": 38,
       "armor": 95,
       "attackPatterns": [
-        { "id": "writ_shot", "mode": "aim", "profile": "slugRound", "fireRate": 1.6, "weight": 3 },
-        { "id": "seizure_flak", "mode": "aim", "profile": "flakCore", "fireRate": 3.0, "weight": 1 }
-      ]
+        {
+          "id": "writ_shot",
+          "mode": "aim",
+          "profile": "slugRound",
+          "fireRate": 1.6,
+          "weight": 3
+        },
+        {
+          "id": "seizure_flak",
+          "mode": "aim",
+          "profile": "flakCore",
+          "fireRate": 3,
+          "weight": 1
+        }
+      ],
+      "ai": "thief",
+      "aiParams": {
+        "escapeSpeed": 130,
+        "interest": 1.5,
+        "holdY": 200,
+        "standoff": 230
+      }
     },
     "notary": {
       "hull": 66,
       "armor": 110,
       "attackPatterns": [
-        { "id": "stamp_fan", "mode": "spread", "profile": "slugRound", "count": 5, "spreadDeg": 48, "fireRate": 1.7, "weight": 3 },
-        { "id": "stamp_ring", "mode": "radial", "profile": "tellerDart", "count": 10, "fireRate": 3.4, "weight": 1 }
+        {
+          "id": "stamp_fan",
+          "mode": "spread",
+          "profile": "slugRound",
+          "count": 5,
+          "spreadDeg": 48,
+          "fireRate": 1.7,
+          "weight": 3
+        },
+        {
+          "id": "stamp_ring",
+          "mode": "radial",
+          "profile": "tellerDart",
+          "count": 10,
+          "fireRate": 3.4,
+          "weight": 1
+        }
       ]
     },
     "strongbox": {
       "attackPatterns": [
-        { "id": "vault_dart", "mode": "aim", "profile": "tellerDart", "fireRate": 3.4, "weight": 1 }
+        {
+          "id": "vault_dart",
+          "mode": "aim",
+          "profile": "tellerDart",
+          "fireRate": 3.4,
+          "weight": 1
+        }
       ]
     },
     "auditor": {
       "attackPatterns": [
-        { "id": "audit_fan", "mode": "spread", "profile": "slugRound", "count": 7, "spreadDeg": 60, "fireRate": 1.3, "weight": 3 },
-        { "id": "audit_seal", "mode": "aim", "profile": "flakCore", "fireRate": 2.3, "weight": 2, "shots": [
-          { "profile": "flakCore", "angleOffsetDeg": -8 },
-          { "profile": "flakCore", "angleOffsetDeg": 8 }
-        ] },
-        { "id": "audit_ring", "mode": "radial", "profile": "tellerDart", "count": 14, "fireRate": 3.0, "weight": 1 }
+        {
+          "id": "audit_fan",
+          "mode": "spread",
+          "profile": "slugRound",
+          "count": 7,
+          "spreadDeg": 60,
+          "fireRate": 1.3,
+          "weight": 3
+        },
+        {
+          "id": "audit_seal",
+          "mode": "aim",
+          "profile": "flakCore",
+          "fireRate": 2.3,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "flakCore",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "flakCore",
+              "angleOffsetDeg": 8
+            }
+          ]
+        },
+        {
+          "id": "audit_ring",
+          "mode": "radial",
+          "profile": "tellerDart",
+          "count": 14,
+          "fireRate": 3,
+          "weight": 1
+        }
       ]
     },
     "boss": {
       "template": "act2_arrears:boss",
       "attackPatterns": [
-        { "id": "ledger_stamp", "mode": "radial", "profile": "slugRound", "count": 24, "fireRate": 1.25, "weight": 4, "speedJitter": 0.1 },
-        { "id": "adjustment_fan", "mode": "spread", "profile": "slugRound", "count": 7, "spreadDeg": 66, "fireRate": 1.1, "weight": 3, "shots": [
-          { "profile": "tellerDart" },
-          { "profile": "slugRound" },
-          { "profile": "flakCore" },
-          { "profile": "adjusterCore" },
-          { "profile": "flakCore" },
-          { "profile": "slugRound" },
-          { "profile": "tellerDart" }
-        ] },
-        { "id": "final_notice", "mode": "aim", "profile": "adjusterCore", "fireRate": 1.9, "weight": 2, "shots": [
-          { "profile": "adjusterCore", "angleOffsetDeg": -7 },
-          { "profile": "adjusterCore", "angleOffsetDeg": 7 }
-        ] }
+        {
+          "id": "ledger_stamp",
+          "mode": "radial",
+          "profile": "slugRound",
+          "count": 24,
+          "fireRate": 1.25,
+          "weight": 4,
+          "speedJitter": 0.1
+        },
+        {
+          "id": "adjustment_fan",
+          "mode": "spread",
+          "profile": "slugRound",
+          "count": 7,
+          "spreadDeg": 66,
+          "fireRate": 1.1,
+          "weight": 3,
+          "shots": [
+            {
+              "profile": "tellerDart"
+            },
+            {
+              "profile": "slugRound"
+            },
+            {
+              "profile": "flakCore"
+            },
+            {
+              "profile": "adjusterCore"
+            },
+            {
+              "profile": "flakCore"
+            },
+            {
+              "profile": "slugRound"
+            },
+            {
+              "profile": "tellerDart"
+            }
+          ]
+        },
+        {
+          "id": "final_notice",
+          "mode": "aim",
+          "profile": "adjusterCore",
+          "fireRate": 1.9,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "adjusterCore",
+              "angleOffsetDeg": -7
+            },
+            {
+              "profile": "adjusterCore",
+              "angleOffsetDeg": 7
+            }
+          ]
+        }
       ]
     }
   },
   "events": [
-    { "time": 2, "type": "teller", "count": 5, "interval": 0.45 },
-    { "time": 10, "type": "assessor", "count": 2, "interval": 1.4 },
-    { "time": 19, "type": "notary", "count": 2, "interval": 1.6 },
-    { "time": 28, "type": "teller", "count": 5, "interval": 0.42 },
-    { "time": 36, "type": "assessor", "count": 2, "interval": 1.3 },
-    { "time": 45, "type": "bailiff", "count": 3, "interval": 1.2 },
-    { "time": 56, "type": "notary", "count": 2, "interval": 1.5 },
-    { "time": 64, "type": "teller", "count": 6, "interval": 0.4 },
-    { "time": 74, "type": "assessor", "count": 3, "interval": 1.1 },
-    { "time": 84, "type": "strongbox", "count": 1 },
-    { "time": 90, "type": "bailiff", "count": 3, "interval": 1.1 },
-    { "time": 100, "type": "notary", "count": 3, "interval": 1.3 },
-    { "time": 112, "type": "teller", "count": 7, "interval": 0.36 },
-
-    { "time": 125, "type": "auditor", "count": 1 },
-    { "time": 130, "type": "assessor", "count": 2, "interval": 1.2 },
-    { "time": 142, "type": "teller", "count": 5, "interval": 0.4 },
-
-    { "time": 155, "type": "auditor", "count": 1 },
-    { "time": 160, "type": "bailiff", "count": 2, "interval": 1.2 },
-    { "time": 170, "type": "notary", "count": 2, "interval": 1.4 },
-
-    { "time": 184, "type": "teller", "count": 7, "interval": 0.34 },
-    { "time": 194, "type": "assessor", "count": 4, "interval": 1.0 },
-    { "time": 205, "type": "bailiff", "count": 4, "interval": 1.0 },
-    { "time": 216, "type": "notary", "count": 3, "interval": 1.2 },
-    { "time": 226, "type": "strongbox", "count": 1 },
-    { "time": 232, "type": "teller", "count": 8, "interval": 0.32 },
-
-    { "time": 250, "type": "boss", "count": 1 }
+    {
+      "time": 2,
+      "type": "teller",
+      "count": 5,
+      "interval": 0.45
+    },
+    {
+      "time": 10,
+      "type": "assessor",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 19,
+      "type": "notary",
+      "count": 2,
+      "interval": 1.6
+    },
+    {
+      "time": 28,
+      "type": "teller",
+      "count": 5,
+      "interval": 0.42
+    },
+    {
+      "time": 36,
+      "type": "assessor",
+      "count": 2,
+      "interval": 1.3
+    },
+    {
+      "time": 45,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 56,
+      "type": "notary",
+      "count": 2,
+      "interval": 1.5
+    },
+    {
+      "time": 64,
+      "type": "teller",
+      "count": 6,
+      "interval": 0.4
+    },
+    {
+      "time": 74,
+      "type": "assessor",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 84,
+      "type": "strongbox",
+      "count": 1
+    },
+    {
+      "time": 90,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 100,
+      "type": "notary",
+      "count": 3,
+      "interval": 1.3
+    },
+    {
+      "time": 112,
+      "type": "teller",
+      "count": 7,
+      "interval": 0.36
+    },
+    {
+      "time": 125,
+      "type": "auditor",
+      "count": 1
+    },
+    {
+      "time": 130,
+      "type": "assessor",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 142,
+      "type": "teller",
+      "count": 5,
+      "interval": 0.4
+    },
+    {
+      "time": 155,
+      "type": "auditor",
+      "count": 1
+    },
+    {
+      "time": 160,
+      "type": "bailiff",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 170,
+      "type": "notary",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 184,
+      "type": "teller",
+      "count": 7,
+      "interval": 0.34
+    },
+    {
+      "time": 194,
+      "type": "assessor",
+      "count": 4,
+      "interval": 1
+    },
+    {
+      "time": 205,
+      "type": "bailiff",
+      "count": 4,
+      "interval": 1
+    },
+    {
+      "time": 216,
+      "type": "notary",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 226,
+      "type": "strongbox",
+      "count": 1
+    },
+    {
+      "time": 232,
+      "type": "teller",
+      "count": 8,
+      "interval": 0.32
+    },
+    {
+      "time": 250,
+      "type": "boss",
+      "count": 1
+    }
   ],
   "pickups": [
-    { "time": 32, "type": "salvage", "rarity": "certified", "slotType": "primary", "x": 0.58, "y": -46 },
-    { "time": 96, "type": "salvage", "rarity": "prototype", "slotType": "primary", "x": 0.4, "y": -50 },
-    { "time": 148, "type": "armor_patch", "x": 0.5 },
-    { "time": 176, "type": "salvage", "rarity": "certified", "slotType": "defense", "x": 0.64, "y": -46 },
-    { "time": 240, "type": "shield_booster", "x": 0.46 }
+    {
+      "time": 32,
+      "type": "salvage",
+      "rarity": "certified",
+      "slotType": "primary",
+      "x": 0.58,
+      "y": -46
+    },
+    {
+      "time": 96,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "primary",
+      "x": 0.4,
+      "y": -50
+    },
+    {
+      "time": 148,
+      "type": "armor_patch",
+      "x": 0.5
+    },
+    {
+      "time": 176,
+      "type": "salvage",
+      "rarity": "certified",
+      "slotType": "defense",
+      "x": 0.64,
+      "y": -46
+    },
+    {
+      "time": 240,
+      "type": "shield_booster",
+      "x": 0.46
+    }
   ],
   "projectileProfiles": {
     "tellerDart": {
@@ -146,7 +441,7 @@
       "width": 50,
       "height": 50,
       "animation": "orb",
-      "spinRate": 2.0
+      "spinRate": 2
     },
     "adjusterCore": {
       "threatClass": "bossHazard",
@@ -159,5 +454,10 @@
       "animation": "orb",
       "spinRate": 1.5
     }
-  }
+  },
+  "debriefLore": [
+    "Manifest line 5 - assessment applied to unregistered pilot.",
+    "Manifest line 6 - counterparty silence does not void debt.",
+    "Manifest audit - cargo remains payable after owner extinction."
+  ]
 }

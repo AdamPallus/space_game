@@ -42,6 +42,8 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "aggroRadius",
   "empImmune",
   "isBoss",
+  "miniboss",
+  "phases",
   "hpScale",
 ]);
 const PROJECTILE_PROFILE_KEYS = new Set([
@@ -72,6 +74,7 @@ const PROJECTILE_ATTACK_PATTERN_KEYS = new Set([
   "weight",
   "speedJitter",
   "shots",
+  "tractor",
 ]);
 const PROJECTILE_SHOT_KEYS = new Set([
   ...PROJECTILE_PROFILE_KEYS,
@@ -79,6 +82,7 @@ const PROJECTILE_SHOT_KEYS = new Set([
   "angleOffsetDeg",
   "speedJitter",
 ]);
+const BOSS_PHASE_KEYS = new Set(["label", "hpFraction", "attackPatterns", "speedMult"]);
 const PROJECTILE_ATTACK_MODES = new Set(["aim", "spread", "radial"]);
 const PROJECTILE_THREAT_CLASSES = new Set(["chip", "standard", "heavy", "bossHazard"]);
 const ROTATING_PROJECTILE_MAX_ASPECT = 1.5;
@@ -256,6 +260,55 @@ function validateAttackPattern(pattern, index, profiles, errors, context) {
       });
     }
   }
+  if (pattern.tractor !== undefined) {
+    if (!isPlainObject(pattern.tractor)) {
+      errors.push(`${label}.tractor must be an object.`);
+    } else {
+      ["duration", "strength"].forEach((key) => {
+        if (!Number.isFinite(pattern.tractor[key]) || pattern.tractor[key] <= 0) {
+          errors.push(`${label}.tractor.${key} must be a positive number.`);
+        }
+      });
+    }
+  }
+}
+
+function validateBossPhases(phases, profiles, errors, context) {
+  if (phases === undefined) return;
+  if (!Array.isArray(phases)) {
+    errors.push(`${context} phases must be an array.`);
+    return;
+  }
+  let previous = Infinity;
+  phases.forEach((phase, index) => {
+    const label = `${context} phases[${index}]`;
+    if (!isPlainObject(phase)) {
+      errors.push(`${label} must be an object.`);
+      return;
+    }
+    for (const key of Object.keys(phase)) {
+      if (!BOSS_PHASE_KEYS.has(key)) {
+        errors.push(`${label} uses unsupported field '${key}'.`);
+      }
+    }
+    if (!Number.isFinite(phase.hpFraction) || phase.hpFraction <= 0 || phase.hpFraction >= 1) {
+      errors.push(`${label}.hpFraction must be in (0,1).`);
+    } else if (phase.hpFraction >= previous) {
+      errors.push(`${label}.hpFraction values must be strictly descending.`);
+    } else {
+      previous = phase.hpFraction;
+    }
+    if (phase.speedMult !== undefined && (!Number.isFinite(phase.speedMult) || phase.speedMult <= 0)) {
+      errors.push(`${label}.speedMult must be a positive number.`);
+    }
+    if (!Array.isArray(phase.attackPatterns) || !phase.attackPatterns.length) {
+      errors.push(`${label}.attackPatterns must be a non-empty array.`);
+    } else {
+      phase.attackPatterns.forEach((pattern, patternIndex) => {
+        validateAttackPattern(pattern, patternIndex, profiles, errors, label);
+      });
+    }
+  });
 }
 
 function validateLevel(level) {
@@ -296,6 +349,7 @@ function validateLevel(level) {
         });
       }
     }
+    validateBossPhases(config.phases, projectileProfiles, errors, `Enemy '${typeId}'`);
     if (typeId === "boss") {
       if (typeof config.template !== "string" || !config.template) {
         errors.push(`Boss entry in '${levelId}' must declare a catalog template.`);
@@ -314,6 +368,11 @@ function validateLevel(level) {
   if (!Array.isArray(level.events)) {
     errors.push(`Mission '${levelId}' is missing a valid events array.`);
     return errors;
+  }
+  if (level.debriefLore !== undefined) {
+    if (!Array.isArray(level.debriefLore) || level.debriefLore.some((line) => typeof line !== "string")) {
+      errors.push(`Mission '${levelId}' debriefLore must be an array of strings.`);
+    }
   }
   level.events.forEach((event, index) => {
     if (!event || typeof event !== "object") {

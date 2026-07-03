@@ -16,6 +16,11 @@ const bossProgressFill = document.getElementById("boss-progress-fill");
 const bossBurnHullFill = document.getElementById("boss-burn-hull-fill");
 const bossBurnArmorFill = document.getElementById("boss-burn-armor-fill");
 const bossBurnShieldFill = document.getElementById("boss-burn-shield-fill");
+const minibossProgress = document.getElementById("miniboss-progress");
+const minibossLabel = document.getElementById("miniboss-label");
+const minibossShieldFill = document.getElementById("miniboss-shield-fill");
+const minibossArmorFill = document.getElementById("miniboss-armor-fill");
+const minibossProgressFill = document.getElementById("miniboss-progress-fill");
 const hudCargoPips = document.getElementById("hud-cargo-pips");
 const hudCargoStatus = document.getElementById("hud-cargo-status");
 const hudWeapons = document.getElementById("hud-weapons");
@@ -58,6 +63,7 @@ const hangarStatus = document.getElementById("hangar-status");
 
 const pilotRank = document.getElementById("pilot-rank");
 const availableCreditsEl = document.getElementById("available-credits");
+const branchStandingEl = document.getElementById("branch-standing");
 const lifetimeCreditsEl = document.getElementById("lifetime-credits");
 const lastMissionEl = document.getElementById("last-mission");
 const debugUnlock = document.getElementById("debug-unlock");
@@ -221,6 +227,8 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "aggroRadius",
   "empImmune",
   "isBoss",
+  "miniboss",
+  "phases",
   "hpScale",
 ]);
 const PROJECTILE_PROFILE_KEYS = new Set([
@@ -251,6 +259,7 @@ const PROJECTILE_ATTACK_PATTERN_KEYS = new Set([
   "weight",
   "speedJitter",
   "shots",
+  "tractor",
 ]);
 const PROJECTILE_SHOT_KEYS = new Set([
   ...PROJECTILE_PROFILE_KEYS,
@@ -258,6 +267,7 @@ const PROJECTILE_SHOT_KEYS = new Set([
   "angleOffsetDeg",
   "speedJitter",
 ]);
+const BOSS_PHASE_KEYS = new Set(["label", "hpFraction", "attackPatterns", "speedMult"]);
 const PROJECTILE_ATTACK_MODES = new Set(["aim", "spread", "radial"]);
 const PROJECTILE_THREAT_CLASSES = new Set(["chip", "standard", "heavy", "bossHazard"]);
 const PROJECTILE_RUNTIME_PROFILE_KEYS = new Set([
@@ -2910,7 +2920,7 @@ function getDropSourceKey(enemy) {
   return "ordinary";
 }
 
-function rollSalvageDrop(enemy, { force = false, forceSource = null } = {}) {
+function rollSalvageDrop(enemy, { force = false, forceSource = null, minRarity = null } = {}) {
   if (!itemPoolCatalog) return null;
   const sourceKey = forceSource || getDropSourceKey(enemy);
   const dropTables = getDropTableConfig();
@@ -2924,7 +2934,14 @@ function rollSalvageDrop(enemy, { force = false, forceSource = null } = {}) {
   const weights = elite && sourceKey !== "boss"
     ? shiftRarityWeightsUp(sourceConfig.rarityWeights)
     : sourceConfig.rarityWeights;
-  const rarity = rollWeighted(weights);
+  let rarity = rollWeighted(weights);
+  if (minRarity) {
+    const minIndex = ECONOMY.rarityOrder.indexOf(minRarity);
+    const rarityIndex = ECONOMY.rarityOrder.indexOf(rarity);
+    if (minIndex >= 0 && (rarityIndex < 0 || rarityIndex < minIndex)) {
+      rarity = minRarity;
+    }
+  }
   const slotWeights = sourceConfig.slotWeights || dropTables.defaultSlotWeights;
   const preferredSlotType = rollWeighted(slotWeights);
   const item =
@@ -4125,23 +4142,51 @@ const availableLevels = [
   { id: "level9", label: "Mission 9" },
   { id: "level10", label: "Mission 10" },
   { id: "level11", label: "Mission 11" },
-  { id: "act2_dead_air", label: "Act 2: Dead Air" },
-  { id: "act2_processional", label: "Act 2: Processional" },
-  { id: "act2_antiphon", label: "Act 2: Antiphon" },
-  { id: "act2_doxology", label: "Act 2: Doxology" },
-  { id: "act2_repossession", label: "Act 2: Repossession" },
-  { id: "act2_arrears", label: "Act 2: Arrears" },
-  { id: "act2_foreclosure", label: "Act 2: Foreclosure" },
-  { id: "act2_green_signal", label: "Act 2: The Green Signal" },
-  { id: "act2_bloom", label: "Act 2: Bloom" },
-  { id: "act2_old_growth", label: "Act 2: Old Growth" },
-  { id: "act2_pilgrimage", label: "Act 2: Pilgrimage" },
+  { id: "act2_dead_air", label: "Act 2: Dead Air", branch: "chorus", requires: [{ completed: "level11" }] },
+  {
+    id: "act2_processional",
+    label: "Act 2: Processional",
+    branch: "chorus",
+    contractTag: "Ledger-sanctioned",
+    contractClass: "sanctioned",
+    requires: [{ completed: "act2_dead_air" }],
+  },
+  { id: "act2_antiphon", label: "Act 2: Antiphon", branch: "chorus", requires: [{ completed: "act2_processional" }] },
+  { id: "act2_doxology", label: "Act 2: Doxology", branch: "chorus", requires: [{ completed: "act2_antiphon" }] },
+  {
+    id: "act2_repossession",
+    label: "Act 2: Repossession",
+    branch: "tithe",
+    contractTag: "Off-book",
+    contractClass: "offbook",
+    requires: [{ completed: "act2_dead_air" }],
+  },
+  { id: "act2_arrears", label: "Act 2: Arrears", branch: "tithe", requires: [{ completed: "act2_repossession" }] },
+  { id: "act2_foreclosure", label: "Act 2: Foreclosure", branch: "tithe", requires: [{ completed: "act2_arrears" }] },
+  { id: "act2_green_signal", label: "Act 2: The Green Signal", branch: "verdant", requires: [{ keyItem: "deep_registry_shard" }] },
+  { id: "act2_bloom", label: "Act 2: Bloom", branch: "verdant", requires: [{ completed: "act2_green_signal" }] },
+  { id: "act2_old_growth", label: "Act 2: Old Growth", branch: "verdant", requires: [{ completed: "act2_bloom" }] },
+  { id: "act2_pilgrimage", label: "Act 2: Pilgrimage", branch: "origin", requires: [{ completed: "act2_old_growth" }] },
   { id: "overhaul_demo", label: "Overhaul Demo", test: true },
   { id: "patterns_demo", label: "Pattern Lab", test: true },
   { id: "ai_demo", label: "AI Lab", test: true },
   { id: "generated_sprite_lab", label: "Generated Sprite Lab", test: true },
   { id: "biological_hive_lab", label: "Biological Hive Lab", test: true },
 ];
+const ACT2_FIRST_LEVEL_ID = "act2_dead_air";
+const ACT2_BRANCH_LABELS = {
+  chorus: "Sanctioned",
+  tithe: "Off-book",
+  verdant: "Verdant",
+  origin: "Origin",
+};
+const KEY_ITEM_REGISTRY = {
+  deep_registry_shard: {
+    name: "Deep Registry Shard",
+    decodedLabel: "Deep Registry Shard - decoded",
+    archive: "Decoded from either branch finale; opens the Verdant route.",
+  },
+};
 
 const LEVEL_MANIFEST_PATH = "levels/manifest.json";
 const DEFAULT_LEVEL_VARIANT_MANIFEST = {
@@ -4525,10 +4570,13 @@ function mergeLevelEnemySpec(level, typeId, overrides = {}) {
   if (!localConfig) return null;
   const templateKey = getLevelEnemyTemplateKey(level, typeId, localConfig);
   if (!templateKey) return null;
-  const template = getEnemyCatalogEntry(templateKey)?.template;
+  const catalogEntry = getEnemyCatalogEntry(templateKey);
+  const template = catalogEntry?.template;
   if (!template) return null;
   const merged = {
     type: typeId,
+    name: catalogEntry?.name,
+    miniboss: !!catalogEntry?.miniboss,
     ...template,
     ...localConfig,
     ...overrides,
@@ -4635,6 +4683,53 @@ function validateAttackPattern(pattern, index, profiles, errors, context) {
       });
     }
   }
+  if (pattern.tractor !== undefined) {
+    if (!isPlainObject(pattern.tractor)) {
+      errors.push(`${label}.tractor must be an object.`);
+    } else {
+      ["duration", "strength"].forEach((key) => {
+        if (!Number.isFinite(pattern.tractor[key]) || pattern.tractor[key] <= 0) {
+          errors.push(`${label}.tractor.${key} must be a positive number.`);
+        }
+      });
+    }
+  }
+}
+
+function validateBossPhases(phases, profiles, errors, context) {
+  if (phases === undefined) return;
+  if (!Array.isArray(phases)) {
+    errors.push(`${context} phases must be an array.`);
+    return;
+  }
+  let previous = Infinity;
+  phases.forEach((phase, index) => {
+    const label = `${context} phases[${index}]`;
+    if (!isPlainObject(phase)) {
+      errors.push(`${label} must be an object.`);
+      return;
+    }
+    Object.keys(phase).forEach((key) => {
+      if (!BOSS_PHASE_KEYS.has(key)) errors.push(`${label} uses unsupported field '${key}'.`);
+    });
+    if (!Number.isFinite(phase.hpFraction) || phase.hpFraction <= 0 || phase.hpFraction >= 1) {
+      errors.push(`${label}.hpFraction must be in (0,1).`);
+    } else if (phase.hpFraction >= previous) {
+      errors.push(`${label}.hpFraction values must be strictly descending.`);
+    } else {
+      previous = phase.hpFraction;
+    }
+    if (phase.speedMult !== undefined && (!Number.isFinite(phase.speedMult) || phase.speedMult <= 0)) {
+      errors.push(`${label}.speedMult must be a positive number.`);
+    }
+    if (!Array.isArray(phase.attackPatterns) || !phase.attackPatterns.length) {
+      errors.push(`${label}.attackPatterns must be a non-empty array.`);
+    } else {
+      phase.attackPatterns.forEach((pattern, patternIndex) => {
+        validateAttackPattern(pattern, patternIndex, profiles, errors, label);
+      });
+    }
+  });
 }
 
 function validateLevelData(level) {
@@ -4678,6 +4773,7 @@ function validateLevelData(level) {
         });
       }
     }
+    validateBossPhases(config.phases, projectileProfiles, errors, `Enemy '${typeId}'`);
     if (typeId === "boss") {
       if (typeof config.template !== "string" || !config.template) {
         errors.push(`Boss entry in '${levelId}' must declare a catalog template.`);
@@ -4698,6 +4794,11 @@ function validateLevelData(level) {
   if (!Array.isArray(level.events)) {
     errors.push(`Mission '${levelId}' is missing a valid events array.`);
     return errors;
+  }
+  if (level.debriefLore !== undefined) {
+    if (!Array.isArray(level.debriefLore) || level.debriefLore.some((line) => typeof line !== "string")) {
+      errors.push(`Mission '${levelId}' debriefLore must be an array of strings.`);
+    }
   }
   level.events.forEach((event, index) => {
     if (!event || typeof event !== "object") {
@@ -5410,6 +5511,9 @@ function loadState() {
       missionCount: 0,
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
+      completedMissions: {},
+      keyItems: [],
+      branchStanding: createDefaultBranchStanding(),
       onboardingStage: ONBOARDING_STAGE_COMPLETE,
       debugSkipOnboarding: false,
       systemUnlocks: { ...DEFAULT_SYSTEM_UNLOCKS },
@@ -5518,6 +5622,7 @@ function loadState() {
       parsed.rmbWeapon = "cloak";
     }
     parsed.unlockedLevels = parsed.unlockedLevels ?? 1;
+    normalizeAct2ProgressState(parsed);
     normalizeOnboardingState(parsed);
     parsed.debugUnlock = parsed.debugUnlock ?? false;
     parsed.debugInvincible = parsed.debugInvincible ?? false;
@@ -5643,6 +5748,9 @@ function loadState() {
       missionCount: 0,
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
+      completedMissions: {},
+      keyItems: [],
+      branchStanding: createDefaultBranchStanding(),
       onboardingStage: ONBOARDING_STAGE_COMPLETE,
       debugSkipOnboarding: false,
       systemUnlocks: { ...DEFAULT_SYSTEM_UNLOCKS },
@@ -6072,6 +6180,13 @@ async function startMission({ showIntro = false } = {}) {
     bossDefeated: false,
     bossFinishTimer: 0,
     bossSpawnTime: getBossSpawnTime(level),
+    activeMinibossId: null,
+    minibossBannerText: "",
+    minibossBannerTimer: 0,
+    bossPhaseBannerText: "",
+    bossPhaseBannerTimer: 0,
+    playerPositionHistory: [],
+    repossessedCount: 0,
     empTimer: 0,
     pickupIndex: 0,
     consumableSlots: consumablesState.slots,
@@ -6187,10 +6302,24 @@ function endMission({ ejected = false, completed = false } = {}) {
   const bulletinSaleSummary = capturePendingBulletinSaleSummary();
   const ledgerMissionSummary = settleLedgerAfterMission(outcome);
   let completedEntry = null;
+  const keyItemLines = [];
+  const debriefLoreLine = completed ? pickDebriefLoreLine(mission.level) : "";
   if (completed && mission.level?.id) {
     const completedBaseId = missionProgressionBaseIdFor(mission.level);
     completedEntry = availableLevels.find((level) => level.id === completedBaseId);
-    if (!completedEntry?.test) {
+    normalizeAct2ProgressState(state);
+    state.completedMissions[completedBaseId] =
+      Math.max(0, Math.floor(Number(state.completedMissions[completedBaseId]) || 0)) + 1;
+    if (completedEntry?.branch) {
+      state.branchStanding[completedEntry.branch] =
+        Math.max(0, Math.floor(Number(state.branchStanding[completedEntry.branch]) || 0)) + 1;
+    }
+    getMissionKeyItemRewards(completedBaseId).forEach((keyId) => {
+      const grant = grantKeyItem(keyId);
+      if (grant) keyItemLines.push(grant);
+    });
+    const usesGraphUnlock = Array.isArray(completedEntry?.requires) && completedEntry.requires.length > 0;
+    if (!completedEntry?.test && !usesGraphUnlock) {
       const currentIndex = availableLevels.findIndex((level) => level.id === completedBaseId);
       if (currentIndex !== -1 && state.unlockedLevels <= currentIndex + 1) {
         state.unlockedLevels = Math.min(availableLevels.length, currentIndex + 2);
@@ -6256,6 +6385,9 @@ function endMission({ ejected = false, completed = false } = {}) {
     earlyRecallAudit: ledgerMissionSummary.earlyRecallAudit,
     consecutiveEarlyRecalls: ledgerMissionSummary.consecutiveEarlyRecalls,
     onboardingMessage,
+    keyItemLines,
+    debriefLoreLine,
+    repossessedCount: mission.repossessedCount || 0,
   });
   playUiSfx("stamp");
   debriefTime.textContent = formatTime(mission.elapsed);
@@ -6335,6 +6467,27 @@ function renderDebriefSummary(summary) {
       rows.push({
         label: "Audit memo",
         text: `${LEDGER_COPY.earlyRecallAudit} (${summary.consecutiveEarlyRecalls} RTBs)`,
+        memo: true,
+      });
+    }
+    if (summary.repossessedCount > 0) {
+      rows.push({
+        label: "Repossessed by counterparty",
+        text: `${summary.repossessedCount} item${summary.repossessedCount === 1 ? "" : "s"}`,
+        fee: true,
+      });
+    }
+    (summary.keyItemLines || []).forEach((item) => {
+      rows.push({
+        label: item.label || getKeyItemLabel(item.id),
+        text: item.newlyGranted ? "decoded" : "decoded previously",
+        memo: true,
+      });
+    });
+    if (summary.debriefLoreLine) {
+      rows.push({
+        label: "Recovered line",
+        text: summary.debriefLoreLine,
         memo: true,
       });
     }
@@ -6454,6 +6607,10 @@ function updateHangar() {
   }
   if (availableCreditsEl) {
     setCountedNumber(availableCreditsEl, state.credits);
+  }
+  if (branchStandingEl) {
+    branchStandingEl.textContent = getBranchStandingLabel();
+    branchStandingEl.title = "Sanctioned record / Off-book record";
   }
   if (lifetimeCreditsEl) {
     setCountedNumber(lifetimeCreditsEl, state.lifetimeCredits);
@@ -6771,6 +6928,9 @@ function getMissionLockReason(levelId) {
   if (state.debugUnlock) return "Debug: unlocked";
   const entry = availableLevels.find((level) => level.id === levelId);
   if (entry?.test) return "Test mission";
+  if (Array.isArray(entry?.requires) && entry.requires.length) {
+    return getMissionUnlockRequirementText(levelId);
+  }
   const index = availableLevels.findIndex((level) => level.id === levelId);
   if (index <= 0) return "Unlocked";
   const requiredIndex = Math.max(1, index);
@@ -6833,6 +6993,118 @@ function missionProgressionBaseIdFor(level) {
   return match ? match[1] : level.id;
 }
 
+function createDefaultBranchStanding() {
+  return { chorus: 0, tithe: 0, verdant: 0, origin: 0 };
+}
+
+function normalizeAct2ProgressState(targetState) {
+  if (!targetState || typeof targetState !== "object") return;
+  targetState.completedMissions =
+    targetState.completedMissions && typeof targetState.completedMissions === "object" && !Array.isArray(targetState.completedMissions)
+      ? targetState.completedMissions
+      : {};
+  targetState.keyItems = Array.isArray(targetState.keyItems)
+    ? Array.from(new Set(targetState.keyItems.filter((id) => typeof id === "string" && id)))
+    : [];
+  targetState.branchStanding = {
+    ...createDefaultBranchStanding(),
+    ...(targetState.branchStanding && typeof targetState.branchStanding === "object" && !Array.isArray(targetState.branchStanding)
+      ? targetState.branchStanding
+      : {}),
+  };
+  Object.keys(targetState.branchStanding).forEach((key) => {
+    targetState.branchStanding[key] = Math.max(0, Math.floor(Number(targetState.branchStanding[key]) || 0));
+  });
+
+  const unlockedCount = Math.max(1, Math.floor(Number(targetState.unlockedLevels) || 1));
+  availableLevels.slice(0, unlockedCount - 1).forEach((entry) => {
+    if (!entry || entry.test) return;
+    const current = Math.max(0, Math.floor(Number(targetState.completedMissions[entry.id]) || 0));
+    targetState.completedMissions[entry.id] = Math.max(1, current);
+  });
+}
+
+function getMissionEntry(levelId) {
+  const baseId = missionBaseIdFor(levelId);
+  return availableLevels.find((level) => level.id === baseId || level.id === levelId) || null;
+}
+
+function getMissionCompletionCount(levelId, targetState = state) {
+  const baseId = missionBaseIdFor(levelId);
+  const completed = targetState?.completedMissions || {};
+  return Math.max(0, Math.floor(Number(completed[baseId] ?? completed[levelId]) || 0));
+}
+
+function hasCompletedMission(levelId, targetState = state) {
+  return getMissionCompletionCount(levelId, targetState) > 0;
+}
+
+function hasKeyItem(keyId, targetState = state) {
+  return Array.isArray(targetState?.keyItems) && targetState.keyItems.includes(keyId);
+}
+
+function getKeyItemLabel(keyId) {
+  return KEY_ITEM_REGISTRY[keyId]?.name || keyId;
+}
+
+function isMissionRequirementSatisfied(requirement, targetState = state) {
+  if (!isPlainObject(requirement)) return false;
+  if (requirement.completed) return hasCompletedMission(requirement.completed, targetState);
+  if (requirement.keyItem) return hasKeyItem(requirement.keyItem, targetState);
+  return false;
+}
+
+function getMissionUnlockRequirementText(levelId) {
+  const entry = getMissionEntry(levelId);
+  const requires = Array.isArray(entry?.requires) ? entry.requires : [];
+  if (!requires.length) return getMissionLockReason(levelId);
+  if (levelId === "act2_green_signal") return "Requires: Deep Registry Shard";
+  const labels = requires
+    .map((requirement) => {
+      if (requirement.completed) {
+        const requiredEntry = getMissionEntry(requirement.completed);
+        return `${(requiredEntry?.label || requirement.completed).replace(/^Act 2: /, "")} settled`;
+      }
+      if (requirement.keyItem) return getKeyItemLabel(requirement.keyItem);
+      return "";
+    })
+    .filter(Boolean);
+  return labels.length ? `Requires: ${labels.join(" or ")}` : "Requires: contract prerequisite";
+}
+
+function getBranchStandingLabel() {
+  const standing = state?.branchStanding || createDefaultBranchStanding();
+  return `${standing.chorus || 0} / ${standing.tithe || 0}`;
+}
+
+function getMissionKeyItemRewards(levelId) {
+  if (levelId === "act2_doxology" || levelId === "act2_foreclosure") {
+    return ["deep_registry_shard"];
+  }
+  return [];
+}
+
+function grantKeyItem(keyId) {
+  if (!keyId) return null;
+  normalizeAct2ProgressState(state);
+  const alreadyHeld = state.keyItems.includes(keyId);
+  if (!alreadyHeld) state.keyItems.push(keyId);
+  const registry = KEY_ITEM_REGISTRY[keyId] || {};
+  return {
+    id: keyId,
+    newlyGranted: !alreadyHeld,
+    label: registry.decodedLabel || registry.name || keyId,
+  };
+}
+
+function pickDebriefLoreLine(level) {
+  const lines = Array.isArray(level?.debriefLore)
+    ? level.debriefLore.filter((line) => typeof line === "string" && line.trim())
+    : [];
+  if (!lines.length) return "";
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
 const missionVariantCache = new Map();
 let missionVariantWarmupPromise = null;
 let missionSelectRenderVersion = 0;
@@ -6887,7 +7159,15 @@ async function renderLevelSelectAsync() {
   }
 
   const nextCards = [];
+  let insertedAct2Divider = false;
   for (const level of availableLevels) {
+    if (!insertedAct2Divider && level.id === ACT2_FIRST_LEVEL_ID) {
+      insertedAct2Divider = true;
+      const divider = document.createElement("div");
+      divider.className = "mission-divider";
+      divider.textContent = "Deep Claims";
+      nextCards.push(divider);
+    }
     const baseUnlocked = isLevelUnlocked(level.id);
     const groupIds = await getMissionGroupIds(level.id);
     if (renderVersion !== missionSelectRenderVersion) return;
@@ -6924,6 +7204,10 @@ async function renderLevelSelectAsync() {
     const desc = metaData.description || slideId.toUpperCase();
     const badge = metaData.difficulty || "Unknown";
     const variantLabel = groupIds.length > 1 ? `${idx + 1}/${groupIds.length}` : "";
+    const branchLabel = level.contractTag || (level.branch ? ACT2_BRANCH_LABELS[level.branch] : "");
+    const branchTagHtml = branchLabel
+      ? `<span class="mission-branch-tag ${escapeHtml(level.contractClass || level.branch || "")}">${escapeHtml(branchLabel)}</span>`
+      : "";
 
     const metaBits = [];
     if (bossTime) metaBits.push(`Boss ETA ${formatTime(bossTime)}`);
@@ -6954,6 +7238,9 @@ async function renderLevelSelectAsync() {
     if (uniqueTypes.length) {
       infoLines.push(`Enemy roster: ${uniqueTypes.slice(0, 8).map(capitalize).join(", ")}${uniqueTypes.length > 8 ? "…" : ""}`);
     }
+    if (branchLabel) {
+      infoLines.push(`Contract channel: ${branchLabel}.`);
+    }
 
     const lockTitle = onboardingLockedBase ? "Training" : "Locked";
     const lockReason = onboardingLockedBase
@@ -6971,6 +7258,7 @@ async function renderLevelSelectAsync() {
         <div class="mission-top">
           <h3 class="mission-title">${title}</h3>
           <span class="mission-badge">${badge}${variantLabel ? ` <span class="muted">(${variantLabel})</span>` : ""}</span>
+          ${branchTagHtml}
         </div>
         <p class="mission-desc">${desc}</p>
         <div class="mission-icons">${iconsHtml}</div>
@@ -7158,6 +7446,12 @@ function describeMovement(spec) {
   if (ai === "hunter") return "Actively hunts the pilot; aggression ramps as the mission drags on.";
   if (ai === "stalker") return "Lurks until you enter its aggro radius, then pursues.";
   if (ai === "transport") return "Slow hauler with mild weave; prioritizes survival over speed.";
+  if (ai === "conductor") return "Holds formation and buffs linked allies until destroyed.";
+  if (ai === "mimic") return "Mirrors delayed pilot movement while keeping a duel standoff.";
+  if (ai === "thief") return "Seizes loose salvage, then retreats off-field with the cargo.";
+  if (ai === "lien") return "Attaches near the pilot and drains live mission credits until killed.";
+  if (ai === "spawner") return "Holds position and periodically spawns child drones.";
+  if (ai === "splitter") return "Transport behavior that splits into smaller drones on death.";
   if (ai === "sentinel") return "Holds a firing line near the top and strafes to keep you in its sights.";
   if (ai === "skitter") return "Nervous skirmisher that attempts to dodge incoming fire.";
   if (ai === "duelist") return "Keeps a standoff distance and slides into flanking angles.";
@@ -7630,7 +7924,9 @@ async function renderItemCompendiumAsync() {
   );
 
   compendiumList.innerHTML = "";
+  let renderedCount = 0;
   filtered.forEach((entry) => {
+    renderedCount += 1;
     const foundCount = collection[entry.baseId]?.count || (discovered.has(entry.baseId) ? 1 : 0);
     const tags = Array.isArray(entry.tags) ? entry.tags.slice(0, 5) : [];
     const slot = normalizeArmorySlotType(entry.slotType);
@@ -7653,8 +7949,33 @@ async function renderItemCompendiumAsync() {
     `;
     compendiumList.appendChild(card);
   });
+  const keyItemEntries = (state.keyItems || [])
+    .map((keyId) => ({ keyId, ...(KEY_ITEM_REGISTRY[keyId] || {}) }))
+    .filter((entry) => {
+      if (filter !== "all" && filter !== "relic") return false;
+      if (!query) return true;
+      return `${entry.name || entry.keyId} ${entry.archive || ""}`.toLowerCase().includes(query);
+    });
+  keyItemEntries.forEach((entry) => {
+    renderedCount += 1;
+    const card = document.createElement("div");
+    card.className = "compendium-card item boss";
+    card.innerHTML = `
+      <div class="compendium-sprite key-item-sprite">KEY</div>
+      <div class="compendium-body">
+        <h3 class="compendium-title">${escapeHtml(entry.name || entry.keyId)}</h3>
+        <p class="compendium-subtitle">Key item decoded</p>
+        <div class="compendium-tags">
+          <span class="tag warn">KEY ITEM</span>
+          <span class="tag">Act 2</span>
+        </div>
+      </div>
+      <div class="compendium-details">${escapeHtml(entry.archive || "Recovered campaign key item.")}</div>
+    `;
+    compendiumList.appendChild(card);
+  });
 
-  if (!filtered.length) {
+  if (!renderedCount) {
     compendiumList.innerHTML = showAll
       ? `<div class="muted">No matching items found.</div>`
       : `<div class="muted">No item records yet. Keep or buy salvage to populate the item archive.</div>`;
@@ -10136,6 +10457,9 @@ function isLevelUnlocked(levelId, seen = null) {
     return false;
   }
   if (entry.test) return true;
+  if (Array.isArray(entry.requires) && entry.requires.length) {
+    return entry.requires.some((requirement) => isMissionRequirementSatisfied(requirement));
+  }
   const index = availableLevels.findIndex((level) => level.id === levelId);
   return index >= 0 && index < state.unlockedLevels;
 }
@@ -10150,6 +10474,7 @@ function spawnEnemyFromSpec(spec) {
   const enemy = {
     id: enemyIdCounter++,
     type: spec.type || "fighter",
+    name: spec.name || capitalize(spec.type || "fighter"),
     compendiumKey: null,
     radius: spec.radius ?? 20,
     speed: spec.speed ?? 70,
@@ -10174,6 +10499,8 @@ function spawnEnemyFromSpec(spec) {
     patternParams: spec.patternParams || {},
     spawnTime: mission.elapsed,
     isBoss: !!spec.isBoss,
+    miniboss: !!spec.miniboss,
+    parentSpawnerId: spec.parentSpawnerId ?? spec.aiParams?.parentSpawnerId ?? null,
     strafeDir: Math.random() < 0.5 ? -1 : 1,
     fireRate: spec.fireRate ?? 2.2,
     fireCooldown: Math.random() * (spec.fireRate ?? 2.2),
@@ -10182,6 +10509,11 @@ function spawnEnemyFromSpec(spec) {
     bulletDamage: spec.bulletDamage,
     projectileProfile: spec.projectileProfile,
     attackPatterns: Array.isArray(spec.attackPatterns) ? spec.attackPatterns : null,
+    baseAttackPatterns: Array.isArray(spec.attackPatterns) ? spec.attackPatterns.map((pattern) => cloneShipBuild(pattern)) : null,
+    phases: Array.isArray(spec.phases) ? spec.phases.map((phase) => cloneShipBuild(phase)) : [],
+    bossPhaseIndex: -1,
+    bossPhaseTransitionTimer: 0,
+    baseSpeed: spec.speed ?? 70,
     collisionDamage: spec.collisionDamage,
     damageScale: spec.damageScale ?? 1,
     aggroRadius: spec.aggroRadius,
@@ -10264,6 +10596,11 @@ function spawnEnemyFromSpec(spec) {
     enemy.phaseTimer = 0;
   }
 
+  if (Number.isFinite(spec.x)) enemy.x = spec.x;
+  if (Number.isFinite(spec.y)) enemy.y = spec.y;
+  if (Number.isFinite(spec.vx)) enemy.vx = spec.vx;
+  if (Number.isFinite(spec.vy)) enemy.vy = spec.vy;
+
   const spriteKey = spec.sprite;
   const spriteLooksLikePath =
     typeof spriteKey === "string" && (spriteKey.includes("/") || spriteKey.endsWith(".png"));
@@ -10284,6 +10621,11 @@ function spawnEnemyFromSpec(spec) {
   enemies.push(enemy);
   if (enemy.isBoss) {
     mission.bossAlive = true;
+  }
+  if (enemy.miniboss) {
+    mission.activeMinibossId = enemy.id;
+    mission.minibossBannerText = `${enemy.name || enemy.type}`.toUpperCase();
+    mission.minibossBannerTimer = 2.2;
   }
 }
 
@@ -11317,6 +11659,10 @@ function applyProjectileSpeedJitter(speed, pattern, shot) {
 }
 
 function getAimedEnemyAngle(enemy) {
+  if (enemy.scatterTimer > 0) {
+    const base = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+    return base + (Math.random() - 0.5) * 0.7;
+  }
   return player.cloakTimer > 0
     ? Math.random() * Math.PI * 2
     : Math.atan2(player.y - enemy.y, player.x - enemy.x);
@@ -11436,6 +11782,7 @@ function fireEnemyRadial(enemy, count = 16, pattern = null) {
 }
 
 function fireEnemyAttackPattern(enemy, pattern) {
+  if (pattern.tractor) queueTractorPattern(enemy, pattern.tractor);
   const mode = pattern.mode || pattern.fireMode || enemy.fireMode || "aim";
   if (mode === "spread") {
     fireEnemySpread(enemy, pattern.count || enemy.fireCount || 5, pattern.spread || enemy.fireSpread || 0.8, pattern);
@@ -11459,7 +11806,10 @@ function fireEnemyAttackPattern(enemy, pattern) {
 
 function getEnemyFireCooldown(enemy, pattern = null) {
   const rate = Number.isFinite(pattern?.fireRate) ? pattern.fireRate : enemy.fireRate;
-  return Math.max(0.4, rate * 0.95);
+  let multiplier = 0.95;
+  if (enemy.conductorBuff?.fireRateMult) multiplier *= enemy.conductorBuff.fireRateMult;
+  if (enemy.scatterTimer > 0) multiplier *= 2;
+  return Math.max(0.4, rate * multiplier);
 }
 
 function getEnemyProjectileDamageValues(spec, difficulty, level) {
@@ -11538,6 +11888,270 @@ function getEnemyBulletStyle(enemy) {
   };
 }
 
+function applySentinelMovement(enemy, delta, empFactor = 1) {
+  const width = canvas.width / window.devicePixelRatio;
+  const holdY = enemy.aiParams.holdY ?? 150;
+  const slide = enemy.aiParams.slideSpeed ?? 0.9;
+  const keepOut = enemy.aiParams.keepOut ?? 140;
+  const dx = player.x - enemy.x;
+  const dy = player.y - enemy.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  const desiredY = dist < keepOut ? Math.max(80, holdY - 70) : holdY;
+  const yErr = desiredY - enemy.y;
+  const targetVy = yErr * 1.2;
+  enemy.vy += (targetVy - enemy.vy) * 0.08;
+  const sway = Math.sin(mission.elapsed * 1.2 + enemy.id) * 50;
+  const targetX = Math.max(60, Math.min(width - 60, player.x + sway));
+  const xErr = targetX - enemy.x;
+  const targetVx = xErr * slide;
+  enemy.vx += (targetVx - enemy.vx) * 0.09;
+  enemy.x += enemy.vx * empFactor * delta;
+  enemy.y += enemy.vy * empFactor * delta;
+}
+
+function applyDuelistMovement(enemy, delta, empFactor = 1, target = player) {
+  const width = canvas.width / window.devicePixelRatio;
+  const holdY = enemy.aiParams.holdY ?? 190;
+  const standoff = enemy.aiParams.standoff ?? 240;
+  const strafeSpeed = enemy.aiParams.strafeSpeed ?? 1.0;
+  const dx = target.x - enemy.x;
+  const dy = target.y - enemy.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  const ux = dx / dist;
+  const uy = dy / dist;
+  const tx = -uy;
+  const ty = ux;
+  const radialErr = dist - standoff;
+  const radialPush = radialErr * 0.9;
+  const targetVx = (tx * enemy.speed * strafeSpeed + ux * radialPush) * empFactor;
+  const targetVy =
+    (ty * enemy.speed * 0.12 + uy * radialPush + (holdY - enemy.y) * 1.1) * empFactor;
+  enemy.vx += (targetVx - enemy.vx) * 0.1;
+  enemy.vy += (targetVy - enemy.vy) * 0.1;
+  if (enemy.x < 70) enemy.vx += 40 * empFactor;
+  if (enemy.x > width - 70) enemy.vx -= 40 * empFactor;
+  enemy.x += enemy.vx * empFactor * delta;
+  enemy.y += enemy.vy * empFactor * delta;
+}
+
+function getDelayedPlayerPosition(delaySeconds = 2) {
+  const history = Array.isArray(mission?.playerPositionHistory) ? mission.playerPositionHistory : [];
+  if (!history.length) return { x: player.x, y: player.y };
+  const targetTime = mission.elapsed - delaySeconds;
+  let best = history[0];
+  for (const sample of history) {
+    if (sample.t > targetTime) break;
+    best = sample;
+  }
+  return best || { x: player.x, y: player.y };
+}
+
+function linkedToMatchesConductor(linkedTo, conductorType) {
+  if (!linkedTo || !conductorType) return false;
+  if (Array.isArray(linkedTo)) return linkedTo.includes(conductorType);
+  return linkedTo === conductorType;
+}
+
+function updateConductorLinks(delta) {
+  const conductors = enemies.filter((enemy) => enemy.ai === "conductor" && enemy.hull > 0);
+  enemies.forEach((enemy) => {
+    if (!enemy.aiParams?.linkedTo || enemy.hull <= 0) return;
+    const conductor = conductors.find((candidate) => linkedToMatchesConductor(enemy.aiParams.linkedTo, candidate.type));
+    if (conductor) {
+      enemy.conductorBuff = conductor.aiParams?.conductorBuff || { fireRateMult: 0.85, shieldRegenBonus: 8 };
+      return;
+    }
+    if (enemy.conductorBuff) {
+      enemy.conductorBuff = null;
+      enemy.scatterTimer = Math.max(enemy.scatterTimer || 0, 1.2);
+      enemy.pattern = "zigzag";
+      enemy.patternParams = { ...(enemy.patternParams || {}), amplitude: 160, frequency: 5 };
+      enemy.patternTime = 0;
+      enemy.spawnX = enemy.x;
+      enemy.spawnY = enemy.y;
+    }
+    if (enemy.scatterTimer > 0) {
+      enemy.scatterTimer = Math.max(0, enemy.scatterTimer - delta);
+    }
+  });
+}
+
+function getNearestLooseSalvagePod(enemy) {
+  let best = null;
+  let bestDistance = Infinity;
+  salvagePods.forEach((pod) => {
+    if (!pod || pod.rejected || pod.kind && pod.kind !== "salvage") return;
+    const d = distance(enemy.x, enemy.y, pod.x, pod.y);
+    if (d < bestDistance) {
+      best = pod;
+      bestDistance = d;
+    }
+  });
+  return best;
+}
+
+function updateThiefEnemy(enemy, delta, empFactor = 1) {
+  const escapeSpeed = enemy.aiParams.escapeSpeed ?? 130;
+  if (enemy.carriedPod) {
+    enemy.vx *= 0.92;
+    enemy.vy = -escapeSpeed;
+    enemy.x += enemy.vx * empFactor * delta;
+    enemy.y += enemy.vy * empFactor * delta;
+    if (enemy.y < -70) {
+      enemy.escaped = true;
+      mission.repossessedCount = (mission.repossessedCount || 0) + 1;
+      spawnFloatingText(enemy.x, 36, "REPOSSESSED", "#f87171");
+    }
+    return;
+  }
+  const pod = getNearestLooseSalvagePod(enemy);
+  if (!pod) {
+    applyDuelistMovement(enemy, delta, empFactor);
+    return;
+  }
+  const dx = pod.x - enemy.x;
+  const dy = pod.y - enemy.y;
+  const d = Math.hypot(dx, dy) || 1;
+  const seekSpeed = enemy.speed * 1.15;
+  enemy.vx += ((dx / d) * seekSpeed - enemy.vx) * 0.12;
+  enemy.vy += ((dy / d) * seekSpeed - enemy.vy) * 0.12;
+  enemy.x += enemy.vx * empFactor * delta;
+  enemy.y += enemy.vy * empFactor * delta;
+  if (d < enemy.radius + pod.radius + 4) {
+    const index = salvagePods.indexOf(pod);
+    if (index >= 0) salvagePods.splice(index, 1);
+    enemy.carriedPod = pod;
+    enemy.vx *= 0.35;
+    enemy.vy = -escapeSpeed;
+    spawnFloatingText(enemy.x, enemy.y - 22, "SEIZED", "#f87171");
+  }
+}
+
+function updateLienEnemy(enemy, delta, empFactor = 1) {
+  const attachRadius = enemy.aiParams.attachRadius ?? 150;
+  const drainPerSecond = enemy.aiParams.drainPerSecond ?? 6;
+  const dx = player.x - enemy.x;
+  const dy = player.y - enemy.y;
+  const d = Math.hypot(dx, dy) || 1;
+  if (d > attachRadius) {
+    applyDuelistMovement(enemy, delta, empFactor);
+    return;
+  }
+  enemy.vx *= 0.88;
+  enemy.vy *= 0.88;
+  enemy.x += enemy.vx * empFactor * delta;
+  enemy.y += enemy.vy * empFactor * delta;
+  const drained = Math.min(mission.killCredits || 0, drainPerSecond * delta);
+  if (drained > 0) {
+    mission.killCredits -= drained;
+    enemy.lienDrained = (enemy.lienDrained || 0) + drained;
+    enemy.lienPopupTimer = (enemy.lienPopupTimer || 0) - delta;
+    if (enemy.lienPopupTimer <= 0) {
+      enemy.lienPopupTimer = 0.35;
+      spawnFloatingText(enemy.x, enemy.y + 18, "-cr", "#f87171");
+    }
+  }
+}
+
+function spawnRuntimeEnemy(type, overrides = {}) {
+  const spec = resolveEnemySpec(type, overrides);
+  if (!spec) return null;
+  spawnEnemyFromSpec(spec);
+  return enemies[enemies.length - 1] || null;
+}
+
+function updateSpawnerEnemy(enemy, delta) {
+  if (enemy.ai !== "spawner") return;
+  const spawnEvery = enemy.aiParams.spawnEvery ?? 7;
+  enemy.spawnChildTimer = Number.isFinite(enemy.spawnChildTimer) ? enemy.spawnChildTimer - delta : spawnEvery * 0.65;
+  if (enemy.spawnChildTimer > 0) return;
+  enemy.spawnChildTimer = spawnEvery;
+  const spawnType = enemy.aiParams.spawnType || "sporeling";
+  const maxAlive = enemy.aiParams.maxAlive ?? (enemy.type === "broodmother" ? 6 : 4);
+  const alive = enemies.filter((candidate) => candidate.parentSpawnerId === enemy.id && candidate.hull > 0).length;
+  if (alive >= maxAlive) return;
+  const angle = Math.random() * Math.PI * 2;
+  const child = spawnRuntimeEnemy(spawnType, {
+    x: enemy.x + Math.cos(angle) * Math.max(18, enemy.radius * 0.55),
+    y: enemy.y + Math.sin(angle) * Math.max(18, enemy.radius * 0.55),
+    vx: Math.cos(angle) * 38,
+    vy: 50 + Math.sin(angle) * 24,
+    parentSpawnerId: enemy.id,
+    aiParams: { parentSpawnerId: enemy.id },
+  });
+  if (child) spawnFloatingText(enemy.x, enemy.y - enemy.radius, "SPAWN", "#86efac");
+}
+
+function spawnSplitChildren(enemy) {
+  if (enemy.ai !== "splitter") return;
+  const splitCount = Math.max(0, Math.round(enemy.aiParams.splitCount ?? 2));
+  const splitType = enemy.aiParams.splitType || "sporeling";
+  for (let i = 0; i < splitCount; i += 1) {
+    const angle = (Math.PI * 2 * i) / Math.max(1, splitCount) + Math.random() * 0.35;
+    spawnRuntimeEnemy(splitType, {
+      x: enemy.x + Math.cos(angle) * 12,
+      y: enemy.y + Math.sin(angle) * 12,
+      vx: Math.cos(angle) * 85,
+      vy: Math.sin(angle) * 55 + 70,
+    });
+  }
+}
+
+function updateBossPhase(enemy, delta) {
+  if (!enemy.isBoss || !Array.isArray(enemy.phases) || !enemy.phases.length) return;
+  if (enemy.bossPhaseTransitionTimer > 0) {
+    enemy.bossPhaseTransitionTimer = Math.max(0, enemy.bossPhaseTransitionTimer - delta);
+  }
+  const nextIndex = (enemy.bossPhaseIndex || -1) + 1;
+  const nextPhase = enemy.phases[nextIndex];
+  if (!nextPhase) return;
+  const totalMax = (enemy.maxShield || 0) + (enemy.maxArmor || 0) + (enemy.maxHull || 0);
+  if (totalMax <= 0) return;
+  const remaining = getEnemyRemainingDurability(enemy);
+  const threshold = nextPhase.hpFraction * totalMax;
+  if (remaining > threshold) return;
+  enemy.bossPhaseIndex = nextIndex;
+  enemy.attackPatterns = Array.isArray(nextPhase.attackPatterns)
+    ? nextPhase.attackPatterns.map((pattern) => cloneShipBuild(pattern))
+    : enemy.attackPatterns;
+  enemy.speed = (enemy.baseSpeed || enemy.speed || 70) * (nextPhase.speedMult || 1);
+  const hold = mission?.level?.id === "act2_pilgrimage" ? 1.0 : 0.8;
+  enemy.bossPhaseTransitionTimer = hold;
+  enemy.fireCooldown = Math.max(enemy.fireCooldown || 0, hold);
+  const phaseLabel = nextPhase.label || `PHASE ${nextIndex + 2}`;
+  mission.bossPhaseBannerText = phaseLabel.toUpperCase();
+  mission.bossPhaseBannerTimer = 1.2;
+  screenFlash = Math.min(0.55, screenFlash + 0.28);
+  addCameraShake(0.18, enemy.x, enemy.y);
+}
+
+function queueTractorPattern(enemy, tractor) {
+  if (!isPlainObject(tractor)) return;
+  if (enemy.tractorTelegraphTimer > 0 || enemy.tractorActiveTimer > 0) return;
+  enemy.tractorTelegraphTimer = 1.0;
+  enemy.tractorPendingDuration = tractor.duration ?? 1.4;
+  enemy.tractorStrength = tractor.strength ?? 220;
+}
+
+function updateTractorEffect(enemy, delta) {
+  if (enemy.tractorTelegraphTimer > 0) {
+    enemy.tractorTelegraphTimer = Math.max(0, enemy.tractorTelegraphTimer - delta);
+    if (enemy.tractorTelegraphTimer === 0) {
+      enemy.tractorActiveTimer = Math.max(0, enemy.tractorPendingDuration || 1.4);
+      enemy.tractorPendingDuration = 0;
+    }
+  }
+  if (enemy.tractorActiveTimer > 0) {
+    enemy.tractorActiveTimer = Math.max(0, enemy.tractorActiveTimer - delta);
+    const dx = enemy.x - player.x;
+    const dy = enemy.y - player.y;
+    const d = Math.hypot(dx, dy) || 1;
+    const pull = Math.max(0, enemy.tractorStrength || 220) * delta;
+    player.x += (dx / d) * pull;
+    player.y += (dy / d) * pull;
+  }
+}
+
 function update(delta) {
   backgroundScroll += delta * 18;
   updateStarfield(delta);
@@ -11553,6 +12167,16 @@ function update(delta) {
   if (!mission || !mission.active || paused) return;
 
   mission.elapsed += delta;
+  mission.minibossBannerTimer = Math.max(0, (mission.minibossBannerTimer || 0) - delta);
+  mission.bossPhaseBannerTimer = Math.max(0, (mission.bossPhaseBannerTimer || 0) - delta);
+  if (!Array.isArray(mission.playerPositionHistory)) mission.playerPositionHistory = [];
+  mission.playerPositionHistory.push({ t: mission.elapsed, x: player.x, y: player.y });
+  while (
+    mission.playerPositionHistory.length > 2 &&
+    mission.elapsed - mission.playerPositionHistory[0].t > 4
+  ) {
+    mission.playerPositionHistory.shift();
+  }
   const dying = mission.deathTimer > 0;
   const bossFinishing = mission.bossFinishTimer > 0;
   const endingSequence = dying || bossFinishing;
@@ -11565,6 +12189,8 @@ function update(delta) {
   mission.spawnTimer -= delta;
   mission.enemyFireTimer -= delta;
   mission.difficulty = getMissionDifficultyAtElapsed(mission.elapsed);
+  updateConductorLinks(delta);
+  enemies.forEach((enemy) => updateBossPhase(enemy, delta));
   if (player.bulwarkTimer > 0) {
     player.bulwarkTimer = Math.max(0, player.bulwarkTimer - delta);
     if (player.bulwarkTimer === 0) {
@@ -11625,6 +12251,7 @@ function update(delta) {
   if (!endingSequence) {
     enemies.forEach((enemy) => {
       if (!enemy.empImmune && (globalEmp || enemy.empHitTimer > 0)) return;
+      if (enemy.bossPhaseTransitionTimer > 0) return;
       enemy.fireCooldown -= delta;
       if (enemy.fireCooldown > 0) return;
       if (enemy.y < 40) return;
@@ -11782,9 +12409,12 @@ function update(delta) {
       if (enemy.shieldCooldown > 0) {
         enemy.shieldCooldown = Math.max(0, enemy.shieldCooldown - delta);
       } else if (enemy.shield < enemy.maxShield) {
-        enemy.shield = Math.min(enemy.maxShield, enemy.shield + enemy.shieldRegen * delta);
+        const conductorRegen = enemy.conductorBuff?.shieldRegenBonus || 0;
+        enemy.shield = Math.min(enemy.maxShield, enemy.shield + (enemy.shieldRegen + conductorRegen) * delta);
       }
     }
+    updateSpawnerEnemy(enemy, delta);
+    updateTractorEffect(enemy, delta);
     if (enemy.pattern === "zigzag") {
       const amplitude = enemy.patternParams.amplitude ?? 90;
       const frequency = enemy.patternParams.frequency ?? 3;
@@ -12041,27 +12671,28 @@ function update(delta) {
     } else if (enemy.ai === "transport") {
       enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.03;
       enemy.vy += (enemy.speed * empFactor - enemy.vy) * 0.04;
-    } else if (enemy.ai === "sentinel") {
+    } else if (enemy.ai === "splitter") {
+      enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.03;
+      enemy.vy += (enemy.speed * empFactor - enemy.vy) * 0.04;
+    } else if (enemy.ai === "conductor" || enemy.ai === "sentinel") {
+      applySentinelMovement(enemy, delta, empFactor);
+      return;
+    } else if (enemy.ai === "mimic") {
+      const delay = enemy.aiParams.echoDelay ?? 2.0;
+      const echo = getDelayedPlayerPosition(delay);
       const width = canvas.width / window.devicePixelRatio;
-      const holdY = enemy.aiParams.holdY ?? 150;
-      const slide = enemy.aiParams.slideSpeed ?? 0.9;
-      const keepOut = enemy.aiParams.keepOut ?? 140;
-      const dx = player.x - enemy.x;
-      const dy = player.y - enemy.y;
-      const dist = Math.hypot(dx, dy) || 1;
-
-      // Prefer to hold near a fixed Y, but back off if the player gets too close.
-      const desiredY = dist < keepOut ? Math.max(80, holdY - 70) : holdY;
-      const yErr = desiredY - enemy.y;
-      const targetVy = yErr * 1.2;
-      enemy.vy += (targetVy - enemy.vy) * 0.08;
-
-      // Strafe to roughly align with player X, with a gentle sway.
-      const sway = Math.sin(mission.elapsed * 1.2 + enemy.id) * 50;
-      const targetX = Math.max(60, Math.min(width - 60, player.x + sway));
-      const xErr = targetX - enemy.x;
-      const targetVx = xErr * slide;
-      enemy.vx += (targetVx - enemy.vx) * 0.09;
+      const targetX = enemy.aiParams.mirror ? width - echo.x : echo.x;
+      applyDuelistMovement(enemy, delta, empFactor, { x: targetX, y: player.y });
+      return;
+    } else if (enemy.ai === "thief") {
+      updateThiefEnemy(enemy, delta, empFactor);
+      return;
+    } else if (enemy.ai === "lien") {
+      updateLienEnemy(enemy, delta, empFactor);
+      return;
+    } else if (enemy.ai === "spawner") {
+      applySentinelMovement(enemy, delta, empFactor);
+      return;
     } else if (enemy.ai === "skitter") {
       const dodgeRadius = enemy.aiParams.dodgeRadius ?? 150;
       const dodgeStrength = enemy.aiParams.dodgeStrength ?? 1.65;
@@ -12101,30 +12732,8 @@ function update(delta) {
         enemy.vx += Math.sin(mission.elapsed * 2.2 + enemy.id) * 0.08;
       }
     } else if (enemy.ai === "duelist") {
-      const width = canvas.width / window.devicePixelRatio;
-      const holdY = enemy.aiParams.holdY ?? 190;
-      const standoff = enemy.aiParams.standoff ?? 240;
-      const strafeSpeed = enemy.aiParams.strafeSpeed ?? 1.0;
-      const dx = player.x - enemy.x;
-      const dy = player.y - enemy.y;
-      const dist = Math.hypot(dx, dy) || 1;
-      const ux = dx / dist;
-      const uy = dy / dist;
-      const tx = -uy;
-      const ty = ux;
-
-      // Keep a standoff ring around the player, while also preferring a top-ish hold Y.
-      const radialErr = dist - standoff;
-      const radialPush = radialErr * 0.9;
-      const targetVx = (tx * enemy.speed * strafeSpeed + ux * radialPush) * empFactor;
-      const targetVy =
-        (ty * enemy.speed * 0.12 + uy * radialPush + (holdY - enemy.y) * 1.1) * empFactor;
-      enemy.vx += (targetVx - enemy.vx) * 0.1;
-      enemy.vy += (targetVy - enemy.vy) * 0.1;
-
-      // Avoid hugging edges.
-      if (enemy.x < 70) enemy.vx += 40 * empFactor;
-      if (enemy.x > width - 70) enemy.vx -= 40 * empFactor;
+      applyDuelistMovement(enemy, delta, empFactor);
+      return;
     } else {
       enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.05;
     }
@@ -12132,6 +12741,9 @@ function update(delta) {
     enemy.x += enemy.vx * empFactor * delta;
     enemy.y += enemy.vy * empFactor * delta;
   });
+
+  player.x = Math.max(40, Math.min(width - 40, player.x));
+  player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
 
   for (let i = enemies.length - 1; i >= 0; i -= 1) {
     const enemy = enemies[i];
@@ -12161,7 +12773,7 @@ function update(delta) {
   );
   cleanArrays(enemyBullets, (bullet) => bullet.y > height + 20 || bullet.x < -40 || bullet.x > width + 40);
   cleanArrays(salvagePods, (pod) => pod.y > height + 48);
-  cleanArrays(enemies, (enemy) => enemy.y > height + 60);
+  cleanArrays(enemies, (enemy) => enemy.y > height + 60 || enemy.escaped);
   cleanArrays(floatingTexts, (text) => text.life <= 0);
   cleanArrays(explosions, (boom) => boom.elapsed >= boom.duration);
 
@@ -12352,13 +12964,46 @@ function handleEnemyDestroyed(enemy, bullet) {
   const killKey = enemy.compendiumKey || compendiumKeyFor(mission?.level?.id || "unknown", enemy.type, enemy);
   state.killsByEnemyKey[killKey] = (state.killsByEnemyKey[killKey] ?? 0) + 1;
   spawnCreditPopup(enemy.x, enemy.y, creditEarned);
+  if (enemy.lienDrained > 0) {
+    const refund = Math.round(enemy.lienDrained * 1.5);
+    mission.killCredits += refund;
+    spawnCreditPopup(enemy.x, enemy.y - 24, refund);
+  }
+  spawnSplitChildren(enemy);
   spawnExplosion(enemy.x, enemy.y, enemy.radius, { intensity: 0.9, blend: "lighter", style: "kill", coalesce: false });
   playSfx("explosion", 0.135);
   const baseTrauma = Math.min(0.22, 0.03 + enemy.radius / 260);
   addCameraShake(enemy.isBoss ? 0.42 : baseTrauma, enemy.x, enemy.y);
   if (enemy.isBoss) {
     startBossDefeatSequence(enemy);
+  } else if (enemy.miniboss) {
+    if (mission.activeMinibossId === enemy.id) mission.activeMinibossId = null;
+    const drop = rollSalvageDrop(enemy, {
+      force: true,
+      forceSource: getDropSourceKey(enemy),
+      minRarity: "certified",
+    });
+    if (drop) spawnSalvagePod(enemy.x, enemy.y, drop);
+    spawnExplosion(enemy.x, enemy.y, Math.max(enemy.radius * 1.5, 44), {
+      intensity: 1.05,
+      blend: "lighter",
+      style: "kill",
+      coalesce: false,
+    });
+    addCameraShake(0.3, enemy.x, enemy.y);
+    spawnFloatingText(enemy.x, enemy.y - enemy.radius * 0.8, "MINIBOSS DOWN", "#d7c184");
   } else {
+    if (enemy.carriedPod) {
+      spawnSalvagePod(enemy.x, enemy.y, {
+        rarity: enemy.carriedPod.rarity || enemy.carriedPod.item?.rarity || "certified",
+        item: enemy.carriedPod.item,
+      });
+      const bonus = Math.round((enemy.aiParams?.interest ?? 1.5) * (enemy.baseCredit || 0));
+      if (bonus > 0) {
+        mission.killCredits += bonus;
+        spawnCreditPopup(enemy.x, enemy.y - 24, bonus);
+      }
+    }
     const drop = rollSalvageDrop(enemy);
     if (drop) {
       spawnSalvagePod(enemy.x, enemy.y, drop);
@@ -12453,6 +13098,7 @@ function render() {
     bullets.forEach(drawBullet);
     enemyBullets.forEach((bullet) => drawBullet(bullet, "#38bdf8"));
     enemies.forEach(drawEnemy);
+    drawTractorBeams();
     salvagePods.forEach(drawSalvagePod);
     explosions.forEach(drawExplosion);
     floatingTexts.forEach(drawFloatingText);
@@ -12469,6 +13115,7 @@ function render() {
       ctx.fillRect(0, 0, width, height);
       ctx.restore();
     }
+    drawMissionAnnouncements(width, height);
   } else if (showHangar && !showDebrief) {
     drawHangarScene(width, height);
   }
@@ -12770,6 +13417,70 @@ function drawSalvagePod(pod) {
   ctx.restore();
 }
 
+function drawCarriedPod(enemy) {
+  if (!enemy.carriedPod?.item) return;
+  drawSalvagePod({
+    ...enemy.carriedPod,
+    x: enemy.x,
+    y: enemy.y + enemy.radius * 0.45,
+    age: enemy.carriedPod.age || mission?.elapsed || 0,
+    rejected: false,
+  });
+}
+
+function drawTractorBeams() {
+  if (!mission?.active) return;
+  enemies.forEach((enemy) => {
+    const telegraph = enemy.tractorTelegraphTimer > 0;
+    const active = enemy.tractorActiveTimer > 0;
+    if (!telegraph && !active) return;
+    const alpha = active ? 0.62 : 0.25 + Math.sin((mission.elapsed || 0) * 18) * 0.12;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = active ? `rgba(248, 113, 113, ${alpha})` : `rgba(250, 204, 21, ${alpha})`;
+    ctx.lineWidth = active ? 5 : 2;
+    ctx.beginPath();
+    ctx.moveTo(enemy.x, enemy.y + enemy.radius * 0.2);
+    ctx.lineTo(player.x, player.y);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = active ? "rgba(254, 202, 202, 0.75)" : "rgba(254, 240, 138, 0.65)";
+    ctx.beginPath();
+    ctx.moveTo(enemy.x - 8, enemy.y + enemy.radius * 0.2);
+    ctx.lineTo(player.x + 8, player.y);
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function drawMissionAnnouncements(width, height) {
+  if (!mission?.active) return;
+  const lines = [];
+  if (mission.minibossBannerTimer > 0 && mission.minibossBannerText) {
+    lines.push({ text: mission.minibossBannerText, color: "#d7c184", alpha: Math.min(1, mission.minibossBannerTimer / 0.45) });
+  }
+  if (mission.bossPhaseBannerTimer > 0 && mission.bossPhaseBannerText) {
+    lines.push({ text: mission.bossPhaseBannerText, color: "#f87171", alpha: Math.min(1, mission.bossPhaseBannerTimer / 0.35) });
+  }
+  if (!lines.length) return;
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  lines.forEach((line, index) => {
+    const y = height * 0.18 + index * 34;
+    ctx.globalAlpha = Math.max(0, Math.min(1, line.alpha));
+    ctx.font = "700 22px Space Grotesk, sans-serif";
+    ctx.fillStyle = "rgba(2, 6, 16, 0.72)";
+    ctx.fillRect(width / 2 - 220, y - 18, 440, 36);
+    ctx.strokeStyle = line.color;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(width / 2 - 220, y - 18, 440, 36);
+    ctx.fillStyle = line.color;
+    ctx.fillText(line.text, width / 2, y);
+  });
+  ctx.restore();
+}
+
 function drawEnemy(enemy) {
   ctx.save();
   const usedSprite = drawSpriteCentered(enemy.sprite, enemy.x, enemy.y, enemy.spriteScale || 0.7);
@@ -12781,8 +13492,9 @@ function drawEnemy(enemy) {
     ctx.lineTo(enemy.radius, enemy.radius);
     ctx.lineTo(-enemy.radius, enemy.radius);
     ctx.closePath();
-    ctx.fill();
+      ctx.fill();
   }
+  drawCarriedPod(enemy);
 
   if (mission && mission.empTimer > 0) {
     const alpha = Math.min(1, mission.empTimer / player.empDuration);
@@ -13014,6 +13726,7 @@ function updateHud() {
     setBossBarLayer(bossProgressFill, 0, 0);
     clearBossBurnLayers();
     if (bossLabel) bossLabel.textContent = "Boss ETA";
+    if (minibossProgress) minibossProgress.hidden = true;
   } else {
     const runCredits = creditRewardFor(mission);
     hudHull.textContent = `${Math.max(0, Math.round(player.hull))}/${Math.round(player.maxHull)}`;
@@ -13040,6 +13753,7 @@ function updateHud() {
     }
     if (hudWeapons) hudWeapons.innerHTML = renderWeaponStripHtml({ showEmpty: true });
     updateBossProgress();
+    updateMinibossProgress();
   }
   updateCargoHud();
   updateConsumableHud();
@@ -13714,6 +14428,45 @@ function setBossBurnLayer(element, layerLeftPercent, currentValue, previewValue,
   const loss = Math.max(0, currentValue - Math.max(0, previewValue));
   const previewWidth = (Math.max(0, previewValue) / totalMax) * 100;
   setBossBarLayer(element, layerLeftPercent + previewWidth, (loss / totalMax) * 100);
+}
+
+function getActiveMiniboss() {
+  if (!mission?.active) return null;
+  if (mission.activeMinibossId !== null) {
+    const active = enemies.find((enemy) => enemy.id === mission.activeMinibossId && enemy.miniboss && enemy.hull > 0);
+    if (active) return active;
+  }
+  const fallback = enemies.find((enemy) => enemy.miniboss && enemy.hull > 0) || null;
+  mission.activeMinibossId = fallback ? fallback.id : null;
+  return fallback;
+}
+
+function updateMinibossProgress() {
+  if (!minibossProgress || !minibossProgressFill || !minibossLabel) return;
+  const miniboss = getActiveMiniboss();
+  if (!miniboss) {
+    minibossProgress.hidden = true;
+    setBossBarLayer(minibossShieldFill, 0, 0);
+    setBossBarLayer(minibossArmorFill, 0, 0);
+    setBossBarLayer(minibossProgressFill, 0, 0);
+    return;
+  }
+  minibossProgress.hidden = false;
+  const maxShield = miniboss.maxShield || 0;
+  const maxArmor = miniboss.maxArmor || 0;
+  const maxHull = miniboss.maxHull || 0;
+  const totalMax = maxShield + maxArmor + maxHull;
+  if (totalMax <= 0) return;
+  const shield = Math.max(0, miniboss.shield || 0);
+  const armor = Math.max(0, miniboss.armor || 0);
+  const hull = Math.max(0, miniboss.hull || 0);
+  const hullMaxWidth = (maxHull / totalMax) * 100;
+  const armorMaxWidth = (maxArmor / totalMax) * 100;
+  setBossBarLayer(minibossProgressFill, 0, (hull / totalMax) * 100);
+  setBossBarLayer(minibossArmorFill, hullMaxWidth, (armor / totalMax) * 100);
+  setBossBarLayer(minibossShieldFill, hullMaxWidth + armorMaxWidth, (shield / totalMax) * 100);
+  const remaining = shield + armor + hull;
+  minibossLabel.textContent = `${miniboss.name || "Miniboss"} ${Math.max(0, Math.round((remaining / totalMax) * 100))}%`;
 }
 
 function updateBossProgress() {

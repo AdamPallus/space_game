@@ -21,26 +21,67 @@
       "hull": 34,
       "shield": 70,
       "attackPatterns": [
-        { "id": "hymn_volley", "mode": "spread", "profile": "hymnChip", "count": 4, "spreadDeg": 30, "fireRate": 1.9, "weight": 3 },
-        { "id": "response", "mode": "aim", "profile": "responseBolt", "fireRate": 2.5, "weight": 1 }
+        {
+          "id": "hymn_volley",
+          "mode": "spread",
+          "profile": "hymnChip",
+          "count": 4,
+          "spreadDeg": 30,
+          "fireRate": 1.9,
+          "weight": 3
+        },
+        {
+          "id": "response",
+          "mode": "aim",
+          "profile": "responseBolt",
+          "fireRate": 2.5,
+          "weight": 1
+        }
       ]
     },
     "cantor": {
       "hull": 28,
       "shield": 50,
       "attackPatterns": [
-        { "id": "versicle_pair", "mode": "aim", "profile": "versicleNeedle", "fireRate": 1.9, "weight": 1, "shots": [
-          { "profile": "versicleNeedle", "angleOffsetDeg": -6 },
-          { "profile": "versicleNeedle", "angleOffsetDeg": 6 }
-        ] }
+        {
+          "id": "versicle_pair",
+          "mode": "aim",
+          "profile": "versicleNeedle",
+          "fireRate": 1.9,
+          "weight": 1,
+          "shots": [
+            {
+              "profile": "versicleNeedle",
+              "angleOffsetDeg": -6
+            },
+            {
+              "profile": "versicleNeedle",
+              "angleOffsetDeg": 6
+            }
+          ]
+        }
       ]
     },
     "precentor": {
       "hull": 56,
       "shield": 130,
       "attackPatterns": [
-        { "id": "line_fan", "mode": "spread", "profile": "responseBolt", "count": 6, "spreadDeg": 52, "fireRate": 1.6, "weight": 3 },
-        { "id": "line_heavy", "mode": "aim", "profile": "wardenCoreCool", "fireRate": 2.8, "weight": 1 }
+        {
+          "id": "line_fan",
+          "mode": "spread",
+          "profile": "responseBolt",
+          "count": 6,
+          "spreadDeg": 52,
+          "fireRate": 1.6,
+          "weight": 3
+        },
+        {
+          "id": "line_heavy",
+          "mode": "aim",
+          "profile": "wardenCoreCool",
+          "fireRate": 2.8,
+          "weight": 1
+        }
       ]
     },
     "bailiff": {
@@ -48,8 +89,20 @@
       "armor": 110,
       "armorClass": 10,
       "attackPatterns": [
-        { "id": "writ_shot", "mode": "aim", "profile": "slugRound", "fireRate": 1.5, "weight": 3 },
-        { "id": "seizure_flak", "mode": "aim", "profile": "wardenCoreWarm", "fireRate": 2.8, "weight": 1 }
+        {
+          "id": "writ_shot",
+          "mode": "aim",
+          "profile": "slugRound",
+          "fireRate": 1.5,
+          "weight": 3
+        },
+        {
+          "id": "seizure_flak",
+          "mode": "aim",
+          "profile": "wardenCoreWarm",
+          "fireRate": 2.8,
+          "weight": 1
+        }
       ]
     },
     "notary": {
@@ -57,141 +110,608 @@
       "armor": 130,
       "armorClass": 11,
       "attackPatterns": [
-        { "id": "stamp_fan", "mode": "spread", "profile": "slugRound", "count": 6, "spreadDeg": 54, "fireRate": 1.6, "weight": 1 }
+        {
+          "id": "stamp_fan",
+          "mode": "spread",
+          "profile": "slugRound",
+          "count": 6,
+          "spreadDeg": 54,
+          "fireRate": 1.6,
+          "weight": 1
+        }
       ]
     },
     "strongbox": {
       "baseCredit": 200,
       "attackPatterns": [
-        { "id": "vault_dart", "mode": "aim", "profile": "hymnChip", "fireRate": 3.2, "weight": 1 }
+        {
+          "id": "vault_dart",
+          "mode": "aim",
+          "profile": "hymnChip",
+          "fireRate": 3.2,
+          "weight": 1
+        }
       ]
     },
     "thornwing": {
       "hull": 42,
       "attackPatterns": [
-        { "id": "thorn_volley", "mode": "spread", "profile": "thornVolley", "count": 4, "spreadDeg": 34, "fireRate": 1.8, "weight": 1 }
+        {
+          "id": "thorn_volley",
+          "mode": "spread",
+          "profile": "thornVolley",
+          "count": 4,
+          "spreadDeg": 34,
+          "fireRate": 1.8,
+          "weight": 1
+        }
       ]
     },
     "bloomcaller": {
       "hull": 90,
       "shield": 65,
       "attackPatterns": [
-        { "id": "spore_pulse", "mode": "radial", "profile": "sporePuff", "count": 14, "fireRate": 2.1, "weight": 3, "speedJitter": 0.14 },
-        { "id": "heavy_bloom", "mode": "aim", "profile": "sporeOrb", "fireRate": 2.8, "weight": 1 }
+        {
+          "id": "spore_pulse",
+          "mode": "radial",
+          "profile": "sporePuff",
+          "count": 14,
+          "fireRate": 2.1,
+          "weight": 3,
+          "speedJitter": 0.14
+        },
+        {
+          "id": "heavy_bloom",
+          "mode": "aim",
+          "profile": "sporeOrb",
+          "fireRate": 2.8,
+          "weight": 1
+        }
       ]
     },
     "sporeling": {
       "hull": 20,
       "speed": 160,
       "attackPatterns": [
-        { "id": "spore_spit", "mode": "aim", "profile": "sporePuff", "fireRate": 2.2, "weight": 1, "speedJitter": 0.12 }
+        {
+          "id": "spore_spit",
+          "mode": "aim",
+          "profile": "sporePuff",
+          "fireRate": 2.2,
+          "weight": 1,
+          "speedJitter": 0.12
+        }
       ]
     },
     "emissary_chorus": {
       "attackPatterns": [
-        { "id": "emissary_ring", "mode": "radial", "profile": "hymnChip", "count": 24, "fireRate": 1.25, "weight": 3, "speedJitter": 0.12 },
-        { "id": "emissary_cores", "mode": "aim", "profile": "wardenCoreCool", "fireRate": 2.2, "weight": 2, "shots": [
-          { "profile": "wardenCoreCool", "angleOffsetDeg": -8 },
-          { "profile": "wardenCoreCool", "angleOffsetDeg": 8 }
-        ] }
+        {
+          "id": "emissary_ring",
+          "mode": "radial",
+          "profile": "hymnChip",
+          "count": 24,
+          "fireRate": 1.25,
+          "weight": 3,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "emissary_cores",
+          "mode": "aim",
+          "profile": "wardenCoreCool",
+          "fireRate": 2.2,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "wardenCoreCool",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "wardenCoreCool",
+              "angleOffsetDeg": 8
+            }
+          ]
+        }
       ]
     },
     "emissary_tithe": {
       "attackPatterns": [
-        { "id": "emissary_fan", "mode": "spread", "profile": "slugRound", "count": 9, "spreadDeg": 72, "fireRate": 1.25, "weight": 3 },
-        { "id": "emissary_seal", "mode": "aim", "profile": "wardenCoreWarm", "fireRate": 2.2, "weight": 2, "shots": [
-          { "profile": "wardenCoreWarm", "angleOffsetDeg": -9 },
-          { "profile": "wardenCoreWarm", "angleOffsetDeg": 9 }
-        ] }
+        {
+          "id": "emissary_fan",
+          "mode": "spread",
+          "profile": "slugRound",
+          "count": 9,
+          "spreadDeg": 72,
+          "fireRate": 1.25,
+          "weight": 3
+        },
+        {
+          "id": "emissary_seal",
+          "mode": "aim",
+          "profile": "wardenCoreWarm",
+          "fireRate": 2.2,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "wardenCoreWarm",
+              "angleOffsetDeg": -9
+            },
+            {
+              "profile": "wardenCoreWarm",
+              "angleOffsetDeg": 9
+            }
+          ]
+        }
       ]
     },
     "emissary_verdant": {
       "attackPatterns": [
-        { "id": "emissary_bloom", "mode": "radial", "profile": "sporeOrb", "count": 12, "fireRate": 1.7, "weight": 3, "speedJitter": 0.12 },
-        { "id": "emissary_storm", "mode": "radial", "profile": "sporePuff", "count": 20, "fireRate": 2.4, "weight": 2, "speedJitter": 0.18 }
+        {
+          "id": "emissary_bloom",
+          "mode": "radial",
+          "profile": "sporeOrb",
+          "count": 12,
+          "fireRate": 1.7,
+          "weight": 3,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "emissary_storm",
+          "mode": "radial",
+          "profile": "sporePuff",
+          "count": 20,
+          "fireRate": 2.4,
+          "weight": 2,
+          "speedJitter": 0.18
+        }
       ]
     },
     "boss": {
       "template": "act2_pilgrimage:boss",
       "attackPatterns": [
-        { "id": "oath_lances", "mode": "aim", "profile": "wardenNeedle", "fireRate": 1.0, "weight": 4, "shots": [
-          { "profile": "wardenNeedle", "angleOffsetDeg": -5 },
-          { "profile": "wardenNeedle" },
-          { "profile": "wardenNeedle", "angleOffsetDeg": 5 }
-        ] },
-        { "id": "census_ring", "mode": "radial", "profile": "wardenBolt", "count": 28, "fireRate": 1.35, "weight": 3, "speedJitter": 0.08 },
-        { "id": "requiem_rings", "mode": "radial", "profile": "wardenRingCool", "count": 6, "fireRate": 2.8, "weight": 2, "shots": [
-          { "profile": "wardenRingCool" },
-          { "profile": "wardenRingWarm" },
-          { "profile": "wardenRingCool" },
-          { "profile": "wardenRingWarm" },
-          { "profile": "wardenRingCool" },
-          { "profile": "wardenRingWarm" }
-        ] },
-        { "id": "verdict_cores", "mode": "aim", "profile": "wardenCoreWarm", "fireRate": 1.7, "weight": 2, "shots": [
-          { "profile": "wardenCoreWarm", "angleOffsetDeg": -10 },
-          { "profile": "wardenCoreCool" },
-          { "profile": "wardenCoreWarm", "angleOffsetDeg": 10 }
-        ] }
+        {
+          "id": "oath_lances",
+          "mode": "aim",
+          "profile": "wardenNeedle",
+          "fireRate": 1,
+          "weight": 4,
+          "shots": [
+            {
+              "profile": "wardenNeedle",
+              "angleOffsetDeg": -5
+            },
+            {
+              "profile": "wardenNeedle"
+            },
+            {
+              "profile": "wardenNeedle",
+              "angleOffsetDeg": 5
+            }
+          ]
+        },
+        {
+          "id": "census_ring",
+          "mode": "radial",
+          "profile": "wardenBolt",
+          "count": 28,
+          "fireRate": 1.35,
+          "weight": 3,
+          "speedJitter": 0.08
+        }
+      ],
+      "phases": [
+        {
+          "label": "Census",
+          "hpFraction": 0.66,
+          "attackPatterns": [
+            {
+              "id": "oath_lances",
+              "mode": "aim",
+              "profile": "wardenNeedle",
+              "fireRate": 1,
+              "weight": 2,
+              "shots": [
+                {
+                  "profile": "wardenNeedle",
+                  "angleOffsetDeg": -5
+                },
+                {
+                  "profile": "wardenNeedle"
+                },
+                {
+                  "profile": "wardenNeedle",
+                  "angleOffsetDeg": 5
+                }
+              ]
+            },
+            {
+              "id": "census_ring",
+              "mode": "radial",
+              "profile": "wardenBolt",
+              "count": 28,
+              "fireRate": 1.35,
+              "weight": 3,
+              "speedJitter": 0.08
+            },
+            {
+              "id": "requiem_rings",
+              "mode": "radial",
+              "profile": "wardenRingCool",
+              "count": 6,
+              "fireRate": 2.8,
+              "weight": 2,
+              "shots": [
+                {
+                  "profile": "wardenRingCool"
+                },
+                {
+                  "profile": "wardenRingWarm"
+                },
+                {
+                  "profile": "wardenRingCool"
+                },
+                {
+                  "profile": "wardenRingWarm"
+                },
+                {
+                  "profile": "wardenRingCool"
+                },
+                {
+                  "profile": "wardenRingWarm"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Requiem",
+          "hpFraction": 0.33,
+          "attackPatterns": [
+            {
+              "id": "oath_lances",
+              "mode": "aim",
+              "profile": "wardenNeedle",
+              "fireRate": 1,
+              "weight": 2,
+              "shots": [
+                {
+                  "profile": "wardenNeedle",
+                  "angleOffsetDeg": -5
+                },
+                {
+                  "profile": "wardenNeedle"
+                },
+                {
+                  "profile": "wardenNeedle",
+                  "angleOffsetDeg": 5
+                }
+              ]
+            },
+            {
+              "id": "census_ring",
+              "mode": "radial",
+              "profile": "wardenBolt",
+              "count": 28,
+              "fireRate": 1.35,
+              "weight": 3,
+              "speedJitter": 0.08
+            },
+            {
+              "id": "requiem_rings",
+              "mode": "radial",
+              "profile": "wardenRingCool",
+              "count": 6,
+              "fireRate": 2.8,
+              "weight": 2,
+              "shots": [
+                {
+                  "profile": "wardenRingCool"
+                },
+                {
+                  "profile": "wardenRingWarm"
+                },
+                {
+                  "profile": "wardenRingCool"
+                },
+                {
+                  "profile": "wardenRingWarm"
+                },
+                {
+                  "profile": "wardenRingCool"
+                },
+                {
+                  "profile": "wardenRingWarm"
+                }
+              ]
+            },
+            {
+              "id": "verdict_cores",
+              "mode": "aim",
+              "profile": "wardenCoreWarm",
+              "fireRate": 1.7,
+              "weight": 2,
+              "shots": [
+                {
+                  "profile": "wardenCoreWarm",
+                  "angleOffsetDeg": -10
+                },
+                {
+                  "profile": "wardenCoreCool"
+                },
+                {
+                  "profile": "wardenCoreWarm",
+                  "angleOffsetDeg": 10
+                }
+              ]
+            }
+          ],
+          "speedMult": 1.12
+        }
       ]
     }
   },
   "events": [
-    { "time": 4, "type": "transport", "count": 1 },
-    { "time": 12, "type": "seedcarrier", "count": 1 },
-    { "time": 20, "type": "strongbox", "count": 1 },
-    { "time": 28, "type": "transport", "count": 1 },
-    { "time": 34, "type": "seedcarrier", "count": 1 },
-
-    { "time": 44, "type": "chorister", "count": 5, "interval": 0.36 },
-    { "time": 52, "type": "cantor", "count": 3, "interval": 0.8 },
-    { "time": 60, "type": "chorister", "count": 6, "interval": 0.34 },
-    { "time": 68, "type": "precentor", "count": 1 },
-    { "time": 76, "type": "cantor", "count": 4, "interval": 0.7 },
-    { "time": 84, "type": "chorister", "count": 6, "interval": 0.32 },
-    { "time": 92, "type": "precentor", "count": 2, "interval": 2.2 },
-
-    { "time": 104, "type": "bailiff", "count": 3, "interval": 1.1 },
-    { "time": 113, "type": "notary", "count": 2, "interval": 1.4 },
-    { "time": 121, "type": "strongbox", "count": 2, "interval": 4.0 },
-    { "time": 130, "type": "bailiff", "count": 4, "interval": 1.0 },
-    { "time": 140, "type": "notary", "count": 3, "interval": 1.2 },
-
-    { "time": 152, "type": "sporeling", "count": 9, "interval": 0.3 },
-    { "time": 160, "type": "thornwing", "count": 4, "interval": 0.7 },
-    { "time": 168, "type": "bloomcaller", "count": 2, "interval": 1.6 },
-    { "time": 176, "type": "sporeling", "count": 10, "interval": 0.28 },
-    { "time": 184, "type": "thornwing", "count": 5, "interval": 0.6 },
-
-    { "time": 196, "type": "emissary_chorus", "count": 1 },
-    { "time": 200, "type": "chorister", "count": 4, "interval": 0.4 },
-    { "time": 212, "type": "cantor", "count": 3, "interval": 0.8 },
-
-    { "time": 228, "type": "emissary_tithe", "count": 1 },
-    { "time": 232, "type": "bailiff", "count": 3, "interval": 1.1 },
-    { "time": 244, "type": "notary", "count": 2, "interval": 1.3 },
-
-    { "time": 260, "type": "emissary_verdant", "count": 1 },
-    { "time": 264, "type": "sporeling", "count": 8, "interval": 0.3 },
-    { "time": 274, "type": "thornwing", "count": 4, "interval": 0.65 },
-
-    { "time": 290, "type": "chorister", "count": 5, "interval": 0.34 },
-    { "time": 297, "type": "bailiff", "count": 3, "interval": 1.0 },
-    { "time": 304, "type": "sporeling", "count": 8, "interval": 0.28 },
-    { "time": 312, "type": "precentor", "count": 1 },
-    { "time": 318, "type": "bloomcaller", "count": 2, "interval": 1.5 },
-
-    { "time": 330, "type": "boss", "count": 1 }
+    {
+      "time": 4,
+      "type": "transport",
+      "count": 1
+    },
+    {
+      "time": 12,
+      "type": "seedcarrier",
+      "count": 1
+    },
+    {
+      "time": 20,
+      "type": "strongbox",
+      "count": 1
+    },
+    {
+      "time": 28,
+      "type": "transport",
+      "count": 1
+    },
+    {
+      "time": 34,
+      "type": "seedcarrier",
+      "count": 1
+    },
+    {
+      "time": 44,
+      "type": "chorister",
+      "count": 5,
+      "interval": 0.36
+    },
+    {
+      "time": 52,
+      "type": "cantor",
+      "count": 3,
+      "interval": 0.8
+    },
+    {
+      "time": 60,
+      "type": "chorister",
+      "count": 6,
+      "interval": 0.34
+    },
+    {
+      "time": 68,
+      "type": "precentor",
+      "count": 1
+    },
+    {
+      "time": 76,
+      "type": "cantor",
+      "count": 4,
+      "interval": 0.7
+    },
+    {
+      "time": 84,
+      "type": "chorister",
+      "count": 6,
+      "interval": 0.32
+    },
+    {
+      "time": 92,
+      "type": "precentor",
+      "count": 2,
+      "interval": 2.2
+    },
+    {
+      "time": 104,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 113,
+      "type": "notary",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 121,
+      "type": "strongbox",
+      "count": 2,
+      "interval": 4
+    },
+    {
+      "time": 130,
+      "type": "bailiff",
+      "count": 4,
+      "interval": 1
+    },
+    {
+      "time": 140,
+      "type": "notary",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 152,
+      "type": "sporeling",
+      "count": 9,
+      "interval": 0.3
+    },
+    {
+      "time": 160,
+      "type": "thornwing",
+      "count": 4,
+      "interval": 0.7
+    },
+    {
+      "time": 168,
+      "type": "bloomcaller",
+      "count": 2,
+      "interval": 1.6
+    },
+    {
+      "time": 176,
+      "type": "sporeling",
+      "count": 10,
+      "interval": 0.28
+    },
+    {
+      "time": 184,
+      "type": "thornwing",
+      "count": 5,
+      "interval": 0.6
+    },
+    {
+      "time": 196,
+      "type": "emissary_chorus",
+      "count": 1
+    },
+    {
+      "time": 200,
+      "type": "chorister",
+      "count": 4,
+      "interval": 0.4
+    },
+    {
+      "time": 212,
+      "type": "cantor",
+      "count": 3,
+      "interval": 0.8
+    },
+    {
+      "time": 228,
+      "type": "emissary_tithe",
+      "count": 1
+    },
+    {
+      "time": 232,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 244,
+      "type": "notary",
+      "count": 2,
+      "interval": 1.3
+    },
+    {
+      "time": 260,
+      "type": "emissary_verdant",
+      "count": 1
+    },
+    {
+      "time": 264,
+      "type": "sporeling",
+      "count": 8,
+      "interval": 0.3
+    },
+    {
+      "time": 274,
+      "type": "thornwing",
+      "count": 4,
+      "interval": 0.65
+    },
+    {
+      "time": 290,
+      "type": "chorister",
+      "count": 5,
+      "interval": 0.34
+    },
+    {
+      "time": 297,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 1
+    },
+    {
+      "time": 304,
+      "type": "sporeling",
+      "count": 8,
+      "interval": 0.28
+    },
+    {
+      "time": 312,
+      "type": "precentor",
+      "count": 1
+    },
+    {
+      "time": 318,
+      "type": "bloomcaller",
+      "count": 2,
+      "interval": 1.5
+    },
+    {
+      "time": 330,
+      "type": "boss",
+      "count": 1
+    }
   ],
   "pickups": [
-    { "time": 38, "type": "salvage", "rarity": "prototype", "slotType": "aux", "x": 0.42, "y": -46 },
-    { "time": 98, "type": "salvage", "rarity": "prototype", "slotType": "defense", "x": 0.6, "y": -50 },
-    { "time": 146, "type": "shield_booster", "x": 0.5 },
-    { "time": 190, "type": "salvage", "rarity": "prototype", "slotType": "primary", "x": 0.38, "y": -48 },
-    { "time": 222, "type": "armor_patch", "x": 0.56 },
-    { "time": 254, "type": "shield_booster", "x": 0.44 },
-    { "time": 284, "type": "armor_patch", "x": 0.5 },
-    { "time": 322, "type": "shield_booster", "x": 0.52 }
+    {
+      "time": 38,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "aux",
+      "x": 0.42,
+      "y": -46
+    },
+    {
+      "time": 98,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "defense",
+      "x": 0.6,
+      "y": -50
+    },
+    {
+      "time": 146,
+      "type": "shield_booster",
+      "x": 0.5
+    },
+    {
+      "time": 190,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "primary",
+      "x": 0.38,
+      "y": -48
+    },
+    {
+      "time": 222,
+      "type": "armor_patch",
+      "x": 0.56
+    },
+    {
+      "time": 254,
+      "type": "shield_booster",
+      "x": 0.44
+    },
+    {
+      "time": 284,
+      "type": "armor_patch",
+      "x": 0.5
+    },
+    {
+      "time": 322,
+      "type": "shield_booster",
+      "x": 0.52
+    }
   ],
   "projectileProfiles": {
     "hymnChip": {
@@ -295,7 +815,7 @@
       "width": 50,
       "height": 50,
       "animation": "orb",
-      "spinRate": 2.0
+      "spinRate": 2
     },
     "wardenCoreCool": {
       "threatClass": "heavy",
@@ -306,7 +826,7 @@
       "width": 50,
       "height": 50,
       "animation": "orb",
-      "spinRate": 2.0
+      "spinRate": 2
     },
     "wardenRingCool": {
       "threatClass": "bossHazard",
@@ -330,5 +850,8 @@
       "animation": "orb",
       "spinRate": 1.6
     }
-  }
+  },
+  "debriefLore": [
+    "Claim settled. Compliance appreciated."
+  ]
 }

@@ -350,6 +350,25 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   box-shadow: 0 0 8px rgba(74, 222, 128, 0.45);
   mix-blend-mode: screen;
 }
+.miniboss-progress {
+  font-size: 9px;
+  color: #d7c184;
+}
+.miniboss-bar {
+  width: 112px;
+  height: 4px;
+}
+#miniboss-progress-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: #d7c184;
+  transition: left 0.2s linear, width 0.2s linear;
+}
 
 .cargo-hud { display: flex; align-items: center; gap: 8px; }
 .cargo-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
@@ -1939,6 +1958,24 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
     url("assets/generated/scene_backdrops_v1/mission_board.png") center / cover;
   background-color: var(--panel-2);
 }
+.mission-divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 24px;
+  color: var(--amber);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.mission-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(240, 180, 41, 0.55), rgba(240, 180, 41, 0));
+}
 .mission-card {
   position: relative;
   height: 205px; /* uniform contract sheets; content is designed to fit */
@@ -1962,7 +1999,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   gap: 6px;
   padding: 12px 30px;
 }
-.mission-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mission-top { display: flex; align-items: center; justify-content: space-between; gap: 6px 8px; flex-wrap: wrap; }
 .mission-badge {
   font-size: 9px;
   font-weight: 700;
@@ -1972,6 +2009,23 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   border-radius: 999px;
   border: 1px solid var(--amber);
   color: var(--amber);
+}
+.mission-branch-tag {
+  font-size: 9px;
+  color: var(--ink);
+  background: rgba(10, 14, 22, 0.68);
+  border: 1px solid rgba(215, 193, 132, 0.5);
+  border-radius: 999px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.mission-branch-tag.offbook {
+  border-color: rgba(248, 113, 113, 0.62);
+  color: #fecaca;
+}
+.mission-branch-tag.sanctioned {
+  border-color: rgba(125, 211, 252, 0.62);
+  color: #bae6fd;
 }
 .mission-title { font-size: 15px; font-weight: 700; }
 .mission-meta {

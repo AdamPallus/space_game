@@ -12,27 +12,80 @@
       "shield": 70,
       "shieldRegen": 16,
       "attackPatterns": [
-        { "id": "hymn_volley", "mode": "spread", "profile": "hymnChip", "count": 4, "spreadDeg": 30, "fireRate": 1.9, "weight": 3 },
-        { "id": "response", "mode": "aim", "profile": "responseBolt", "fireRate": 2.5, "weight": 1 }
-      ]
+        {
+          "id": "hymn_volley",
+          "mode": "spread",
+          "profile": "hymnChip",
+          "count": 4,
+          "spreadDeg": 30,
+          "fireRate": 1.9,
+          "weight": 3
+        },
+        {
+          "id": "response",
+          "mode": "aim",
+          "profile": "responseBolt",
+          "fireRate": 2.5,
+          "weight": 1
+        }
+      ],
+      "aiParams": {
+        "linkedTo": [
+          "precentor",
+          "precentor_prime"
+        ]
+      }
     },
     "cantor": {
       "hull": 28,
       "shield": 50,
       "attackPatterns": [
-        { "id": "versicle_pair", "mode": "aim", "profile": "versicleNeedle", "fireRate": 1.9, "weight": 3, "shots": [
-          { "profile": "versicleNeedle", "angleOffsetDeg": -6 },
-          { "profile": "versicleNeedle", "angleOffsetDeg": 6 }
-        ] },
-        { "id": "versicle", "mode": "aim", "profile": "versicleNeedle", "fireRate": 1.5, "weight": 2, "speedJitter": 0.06 }
-      ]
+        {
+          "id": "versicle_pair",
+          "mode": "aim",
+          "profile": "versicleNeedle",
+          "fireRate": 1.9,
+          "weight": 3,
+          "shots": [
+            {
+              "profile": "versicleNeedle",
+              "angleOffsetDeg": -6
+            },
+            {
+              "profile": "versicleNeedle",
+              "angleOffsetDeg": 6
+            }
+          ]
+        },
+        {
+          "id": "versicle",
+          "mode": "aim",
+          "profile": "versicleNeedle",
+          "fireRate": 1.5,
+          "weight": 2,
+          "speedJitter": 0.06
+        }
+      ],
+      "aiParams": {
+        "linkedTo": [
+          "precentor",
+          "precentor_prime"
+        ]
+      }
     },
     "censer": {
       "hull": 24,
       "shield": 36,
       "speed": 150,
       "attackPatterns": [
-        { "id": "censer_snap", "mode": "aim", "profile": "hymnChip", "fireRate": 1.7, "weight": 1, "speedJitter": 0.1 }
+        {
+          "id": "censer_snap",
+          "mode": "aim",
+          "profile": "hymnChip",
+          "fireRate": 1.7,
+          "weight": 1,
+          "speedJitter": 0.1
+        }
       ]
     },
     "sexton": {
@@ -41,16 +94,43 @@
       "armor": 90,
       "armorClass": 9,
       "attackPatterns": [
-        { "id": "guard_heavy", "mode": "aim", "profile": "hymnHeavy", "fireRate": 2.7, "weight": 1 }
+        {
+          "id": "guard_heavy",
+          "mode": "aim",
+          "profile": "hymnHeavy",
+          "fireRate": 2.7,
+          "weight": 1
+        }
       ]
     },
     "precentor": {
       "hull": 56,
       "shield": 130,
       "attackPatterns": [
-        { "id": "ring_fan", "mode": "spread", "profile": "responseBolt", "count": 6, "spreadDeg": 52, "fireRate": 1.6, "weight": 3 },
-        { "id": "ring_heavy", "mode": "aim", "profile": "hymnHeavy", "fireRate": 2.8, "weight": 1 }
-      ]
+        {
+          "id": "ring_fan",
+          "mode": "spread",
+          "profile": "responseBolt",
+          "count": 6,
+          "spreadDeg": 52,
+          "fireRate": 1.6,
+          "weight": 3
+        },
+        {
+          "id": "ring_heavy",
+          "mode": "aim",
+          "profile": "hymnHeavy",
+          "fireRate": 2.8,
+          "weight": 1
+        }
+      ],
+      "ai": "conductor",
+      "aiParams": {
+        "conductorBuff": {
+          "fireRateMult": 0.85,
+          "shieldRegenBonus": 8
+        }
+      }
     },
     "choirmaster": {
       "hull": 320,
@@ -58,72 +138,408 @@
       "armor": 180,
       "armorClass": 10,
       "attackPatterns": [
-        { "id": "hymn_ring", "mode": "radial", "profile": "hymnChip", "count": 22, "fireRate": 1.25, "weight": 3, "speedJitter": 0.12 },
-        { "id": "grafted_pair", "mode": "aim", "profile": "hymnHeavy", "fireRate": 2.2, "weight": 2, "shots": [
-          { "profile": "hymnHeavy", "angleOffsetDeg": -8 },
-          { "profile": "conductorRing" },
-          { "profile": "hymnHeavy", "angleOffsetDeg": 8 }
-        ] }
+        {
+          "id": "hymn_ring",
+          "mode": "radial",
+          "profile": "hymnChip",
+          "count": 22,
+          "fireRate": 1.25,
+          "weight": 3,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "grafted_pair",
+          "mode": "aim",
+          "profile": "hymnHeavy",
+          "fireRate": 2.2,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "hymnHeavy",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "conductorRing"
+            },
+            {
+              "profile": "hymnHeavy",
+              "angleOffsetDeg": 8
+            }
+          ]
+        }
       ]
     },
     "boss": {
       "template": "act2_doxology:boss",
       "attackPatterns": [
-        { "id": "hymn_movement", "mode": "radial", "profile": "hymnChip", "count": 32, "fireRate": 1.15, "weight": 4, "speedJitter": 0.15 },
-        { "id": "versicle_lattice", "mode": "spread", "profile": "versicleNeedle", "count": 7, "spreadDeg": 72, "fireRate": 1.05, "weight": 3, "speedJitter": 0.06 },
-        { "id": "requiem_cores", "mode": "aim", "profile": "hymnHeavy", "fireRate": 1.6, "weight": 2, "shots": [
-          { "profile": "hymnHeavy", "angleOffsetDeg": -12 },
-          { "profile": "conductorRing" },
-          { "profile": "hymnHeavy", "angleOffsetDeg": 12 }
-        ] },
-        { "id": "final_verdict", "mode": "radial", "profile": "conductorRing", "count": 6, "fireRate": 3.4, "weight": 1 }
+        {
+          "id": "hymn_movement",
+          "mode": "radial",
+          "profile": "hymnChip",
+          "count": 32,
+          "fireRate": 1.15,
+          "weight": 4,
+          "speedJitter": 0.15
+        },
+        {
+          "id": "versicle_lattice",
+          "mode": "spread",
+          "profile": "versicleNeedle",
+          "count": 7,
+          "spreadDeg": 72,
+          "fireRate": 1.05,
+          "weight": 3,
+          "speedJitter": 0.06
+        },
+        {
+          "id": "requiem_cores",
+          "mode": "aim",
+          "profile": "hymnHeavy",
+          "fireRate": 1.6,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "hymnHeavy",
+              "angleOffsetDeg": -12
+            },
+            {
+              "profile": "conductorRing"
+            },
+            {
+              "profile": "hymnHeavy",
+              "angleOffsetDeg": 12
+            }
+          ]
+        }
+      ],
+      "phases": [
+        {
+          "hpFraction": 0.66,
+          "attackPatterns": [
+            {
+              "id": "hymn_movement",
+              "mode": "radial",
+              "profile": "hymnChip",
+              "count": 32,
+              "fireRate": 1.15,
+              "weight": 2,
+              "speedJitter": 0.15
+            },
+            {
+              "id": "versicle_lattice",
+              "mode": "spread",
+              "profile": "versicleNeedle",
+              "count": 7,
+              "spreadDeg": 72,
+              "fireRate": 1.05,
+              "weight": 3,
+              "speedJitter": 0.06
+            },
+            {
+              "id": "requiem_cores",
+              "mode": "aim",
+              "profile": "hymnHeavy",
+              "fireRate": 1.6,
+              "weight": 2,
+              "shots": [
+                {
+                  "profile": "hymnHeavy",
+                  "angleOffsetDeg": -12
+                },
+                {
+                  "profile": "conductorRing"
+                },
+                {
+                  "profile": "hymnHeavy",
+                  "angleOffsetDeg": 12
+                }
+              ]
+            },
+            {
+              "id": "final_verdict",
+              "mode": "radial",
+              "profile": "conductorRing",
+              "count": 6,
+              "fireRate": 3.4,
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "hpFraction": 0.33,
+          "attackPatterns": [
+            {
+              "id": "hymn_movement",
+              "mode": "radial",
+              "profile": "hymnChip",
+              "count": 32,
+              "fireRate": 1.15,
+              "weight": 2,
+              "speedJitter": 0.15
+            },
+            {
+              "id": "versicle_lattice",
+              "mode": "spread",
+              "profile": "versicleNeedle",
+              "count": 7,
+              "spreadDeg": 72,
+              "fireRate": 1.05,
+              "weight": 3,
+              "speedJitter": 0.06
+            },
+            {
+              "id": "requiem_cores",
+              "mode": "aim",
+              "profile": "hymnHeavy",
+              "fireRate": 1.6,
+              "weight": 2,
+              "shots": [
+                {
+                  "profile": "hymnHeavy",
+                  "angleOffsetDeg": -12
+                },
+                {
+                  "profile": "conductorRing"
+                },
+                {
+                  "profile": "hymnHeavy",
+                  "angleOffsetDeg": 12
+                }
+              ]
+            },
+            {
+              "id": "final_verdict",
+              "mode": "radial",
+              "profile": "conductorRing",
+              "count": 6,
+              "fireRate": 3.4,
+              "weight": 3
+            }
+          ],
+          "speedMult": 1.15
+        }
       ]
     }
   },
   "events": [
-    { "time": 2, "type": "chorister", "count": 5, "interval": 0.38 },
-    { "time": 10, "type": "cantor", "count": 3, "interval": 0.85 },
-    { "time": 18, "type": "chorister", "count": 5, "interval": 0.36 },
-    { "time": 26, "type": "sexton", "count": 2, "interval": 1.4 },
-    { "time": 34, "type": "censer", "count": 3, "interval": 0.8 },
-    { "time": 42, "type": "chorister", "count": 6, "interval": 0.34 },
-    { "time": 50, "type": "precentor", "count": 1 },
-
-    { "time": 62, "type": "chorister", "count": 6, "interval": 0.32 },
-    { "time": 70, "type": "cantor", "count": 4, "interval": 0.7 },
-    { "time": 78, "type": "sexton", "count": 3, "interval": 1.2 },
-    { "time": 88, "type": "censer", "count": 4, "interval": 0.7 },
-    { "time": 96, "type": "precentor", "count": 2, "interval": 2.4 },
-    { "time": 106, "type": "chorister", "count": 7, "interval": 0.3 },
-    { "time": 116, "type": "cantor", "count": 4, "interval": 0.65 },
-
-    { "time": 128, "type": "chorister", "count": 6, "interval": 0.3 },
-    { "time": 136, "type": "precentor", "count": 2, "interval": 2.0 },
-    { "time": 144, "type": "censer", "count": 4, "interval": 0.65 },
-
-    { "time": 150, "type": "choirmaster", "count": 1 },
-    { "time": 154, "type": "chorister", "count": 5, "interval": 0.36 },
-    { "time": 166, "type": "cantor", "count": 3, "interval": 0.8 },
-
-    { "time": 180, "type": "chorister", "count": 7, "interval": 0.28 },
-    { "time": 190, "type": "sexton", "count": 3, "interval": 1.1 },
-    { "time": 200, "type": "precentor", "count": 2, "interval": 1.8 },
-    { "time": 210, "type": "cantor", "count": 5, "interval": 0.6 },
-    { "time": 220, "type": "censer", "count": 5, "interval": 0.55 },
-    { "time": 232, "type": "chorister", "count": 8, "interval": 0.28 },
-    { "time": 244, "type": "precentor", "count": 2, "interval": 1.6 },
-    { "time": 256, "type": "chorister", "count": 7, "interval": 0.28 },
-    { "time": 268, "type": "cantor", "count": 5, "interval": 0.55 },
-
-    { "time": 285, "type": "boss", "count": 1 }
+    {
+      "time": 2,
+      "type": "chorister",
+      "count": 5,
+      "interval": 0.38
+    },
+    {
+      "time": 10,
+      "type": "cantor",
+      "count": 3,
+      "interval": 0.85
+    },
+    {
+      "time": 18,
+      "type": "chorister",
+      "count": 5,
+      "interval": 0.36
+    },
+    {
+      "time": 26,
+      "type": "sexton",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 34,
+      "type": "censer",
+      "count": 3,
+      "interval": 0.8
+    },
+    {
+      "time": 42,
+      "type": "chorister",
+      "count": 6,
+      "interval": 0.34
+    },
+    {
+      "time": 50,
+      "type": "precentor",
+      "count": 1
+    },
+    {
+      "time": 62,
+      "type": "chorister",
+      "count": 6,
+      "interval": 0.32
+    },
+    {
+      "time": 70,
+      "type": "cantor",
+      "count": 4,
+      "interval": 0.7
+    },
+    {
+      "time": 78,
+      "type": "sexton",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 88,
+      "type": "censer",
+      "count": 4,
+      "interval": 0.7
+    },
+    {
+      "time": 96,
+      "type": "precentor",
+      "count": 2,
+      "interval": 2.4
+    },
+    {
+      "time": 106,
+      "type": "chorister",
+      "count": 7,
+      "interval": 0.3
+    },
+    {
+      "time": 116,
+      "type": "cantor",
+      "count": 4,
+      "interval": 0.65
+    },
+    {
+      "time": 128,
+      "type": "chorister",
+      "count": 6,
+      "interval": 0.3
+    },
+    {
+      "time": 136,
+      "type": "precentor",
+      "count": 2,
+      "interval": 2
+    },
+    {
+      "time": 144,
+      "type": "censer",
+      "count": 4,
+      "interval": 0.65
+    },
+    {
+      "time": 150,
+      "type": "choirmaster",
+      "count": 1
+    },
+    {
+      "time": 154,
+      "type": "chorister",
+      "count": 5,
+      "interval": 0.36
+    },
+    {
+      "time": 166,
+      "type": "cantor",
+      "count": 3,
+      "interval": 0.8
+    },
+    {
+      "time": 180,
+      "type": "chorister",
+      "count": 7,
+      "interval": 0.28
+    },
+    {
+      "time": 190,
+      "type": "sexton",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 200,
+      "type": "precentor",
+      "count": 2,
+      "interval": 1.8
+    },
+    {
+      "time": 210,
+      "type": "cantor",
+      "count": 5,
+      "interval": 0.6
+    },
+    {
+      "time": 220,
+      "type": "censer",
+      "count": 5,
+      "interval": 0.55
+    },
+    {
+      "time": 232,
+      "type": "chorister",
+      "count": 8,
+      "interval": 0.28
+    },
+    {
+      "time": 244,
+      "type": "precentor",
+      "count": 2,
+      "interval": 1.6
+    },
+    {
+      "time": 256,
+      "type": "chorister",
+      "count": 7,
+      "interval": 0.28
+    },
+    {
+      "time": 268,
+      "type": "cantor",
+      "count": 5,
+      "interval": 0.55
+    },
+    {
+      "time": 285,
+      "type": "boss",
+      "count": 1
+    }
   ],
   "pickups": [
-    { "time": 30, "type": "salvage", "rarity": "certified", "slotType": "defense", "x": 0.4, "y": -46 },
-    { "time": 92, "type": "salvage", "rarity": "prototype", "slotType": "aux", "x": 0.62, "y": -50 },
-    { "time": 160, "type": "shield_booster", "x": 0.5 },
-    { "time": 174, "type": "salvage", "rarity": "prototype", "slotType": "defense", "x": 0.36, "y": -48 },
-    { "time": 226, "type": "armor_patch", "x": 0.55 },
-    { "time": 274, "type": "shield_booster", "x": 0.45 }
+    {
+      "time": 30,
+      "type": "salvage",
+      "rarity": "certified",
+      "slotType": "defense",
+      "x": 0.4,
+      "y": -46
+    },
+    {
+      "time": 92,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "aux",
+      "x": 0.62,
+      "y": -50
+    },
+    {
+      "time": 160,
+      "type": "shield_booster",
+      "x": 0.5
+    },
+    {
+      "time": 174,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "defense",
+      "x": 0.36,
+      "y": -48
+    },
+    {
+      "time": 226,
+      "type": "armor_patch",
+      "x": 0.55
+    },
+    {
+      "time": 274,
+      "type": "shield_booster",
+      "x": 0.45
+    }
   ],
   "projectileProfiles": {
     "hymnChip": {
@@ -165,7 +581,7 @@
       "width": 50,
       "height": 50,
       "animation": "orb",
-      "spinRate": 2.0
+      "spinRate": 2
     },
     "conductorRing": {
       "threatClass": "bossHazard",
@@ -178,5 +594,10 @@
       "animation": "orb",
       "spinRate": 1.6
     }
-  }
+  },
+  "debriefLore": [
+    "Oath fragment: final praise to the absent chain of command.",
+    "Oath fragment: verdict pending; all ships maintain chord.",
+    "Oath fragment: ... ... ... hold formation."
+  ]
 }

@@ -11,7 +11,14 @@
       "hull": 28,
       "speed": 158,
       "attackPatterns": [
-        { "id": "teller_snap", "mode": "aim", "profile": "tellerDart", "fireRate": 1.8, "weight": 1, "speedJitter": 0.08 }
+        {
+          "id": "teller_snap",
+          "mode": "aim",
+          "profile": "tellerDart",
+          "fireRate": 1.8,
+          "weight": 1,
+          "speedJitter": 0.08
+        }
       ]
     },
     "bailiff": {
@@ -19,100 +26,389 @@
       "armor": 110,
       "armorClass": 10,
       "attackPatterns": [
-        { "id": "writ_shot", "mode": "aim", "profile": "slugRound", "fireRate": 1.5, "weight": 3 },
-        { "id": "seizure_flak", "mode": "aim", "profile": "flakCore", "fireRate": 2.8, "weight": 1 }
-      ]
+        {
+          "id": "writ_shot",
+          "mode": "aim",
+          "profile": "slugRound",
+          "fireRate": 1.5,
+          "weight": 3
+        },
+        {
+          "id": "seizure_flak",
+          "mode": "aim",
+          "profile": "flakCore",
+          "fireRate": 2.8,
+          "weight": 1
+        }
+      ],
+      "ai": "thief",
+      "aiParams": {
+        "escapeSpeed": 130,
+        "interest": 1.5,
+        "holdY": 200,
+        "standoff": 230
+      }
     },
     "assessor": {
       "hull": 52,
       "shield": 40,
       "attackPatterns": [
-        { "id": "lien_shot", "mode": "aim", "profile": "slugRound", "fireRate": 1.6, "weight": 1 }
-      ]
+        {
+          "id": "lien_shot",
+          "mode": "aim",
+          "profile": "slugRound",
+          "fireRate": 1.6,
+          "weight": 1
+        }
+      ],
+      "ai": "lien",
+      "aiParams": {
+        "attachRadius": 150,
+        "drainPerSecond": 6,
+        "holdY": 210,
+        "standoff": 210
+      }
     },
     "notary": {
       "hull": 72,
       "armor": 130,
       "armorClass": 11,
       "attackPatterns": [
-        { "id": "stamp_fan", "mode": "spread", "profile": "slugRound", "count": 6, "spreadDeg": 54, "fireRate": 1.6, "weight": 3 },
-        { "id": "heavy_seal", "mode": "aim", "profile": "flakCore", "fireRate": 2.8, "weight": 1 }
+        {
+          "id": "stamp_fan",
+          "mode": "spread",
+          "profile": "slugRound",
+          "count": 6,
+          "spreadDeg": 54,
+          "fireRate": 1.6,
+          "weight": 3
+        },
+        {
+          "id": "heavy_seal",
+          "mode": "aim",
+          "profile": "flakCore",
+          "fireRate": 2.8,
+          "weight": 1
+        }
       ]
     },
     "strongbox": {
       "baseCredit": 190,
       "attackPatterns": [
-        { "id": "vault_dart", "mode": "aim", "profile": "tellerDart", "fireRate": 3.2, "weight": 1 }
+        {
+          "id": "vault_dart",
+          "mode": "aim",
+          "profile": "tellerDart",
+          "fireRate": 3.2,
+          "weight": 1
+        }
       ]
     },
     "harbormaster": {
       "attackPatterns": [
-        { "id": "harbor_ring", "mode": "radial", "profile": "slugRound", "count": 18, "fireRate": 1.5, "weight": 3, "speedJitter": 0.1 },
-        { "id": "harbor_seal", "mode": "aim", "profile": "flakCore", "fireRate": 2.2, "weight": 2, "shots": [
-          { "profile": "flakCore", "angleOffsetDeg": -9 },
-          { "profile": "bargeCore" },
-          { "profile": "flakCore", "angleOffsetDeg": 9 }
-        ] }
+        {
+          "id": "harbor_ring",
+          "mode": "radial",
+          "profile": "slugRound",
+          "count": 18,
+          "fireRate": 1.5,
+          "weight": 3,
+          "speedJitter": 0.1
+        },
+        {
+          "id": "harbor_seal",
+          "mode": "aim",
+          "profile": "flakCore",
+          "fireRate": 2.2,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "flakCore",
+              "angleOffsetDeg": -9
+            },
+            {
+              "profile": "bargeCore"
+            },
+            {
+              "profile": "flakCore",
+              "angleOffsetDeg": 9
+            }
+          ]
+        }
       ]
     },
     "boss": {
       "template": "act2_foreclosure:boss",
       "attackPatterns": [
-        { "id": "manifest_stamp", "mode": "radial", "profile": "slugRound", "count": 26, "fireRate": 1.15, "weight": 4, "speedJitter": 0.12 },
-        { "id": "cargo_wall", "mode": "spread", "profile": "flakCore", "count": 5, "spreadDeg": 58, "fireRate": 1.35, "weight": 3, "shots": [
-          { "profile": "flakCore" },
-          { "profile": "slugRound" },
-          { "profile": "bargeCore" },
-          { "profile": "slugRound" },
-          { "profile": "flakCore" }
-        ] },
-        { "id": "seizure_cores", "mode": "aim", "profile": "bargeCore", "fireRate": 1.8, "weight": 2, "shots": [
-          { "profile": "bargeCore", "angleOffsetDeg": -8 },
-          { "profile": "bargeCore", "angleOffsetDeg": 8 }
-        ] },
-        { "id": "dart_ring", "mode": "radial", "profile": "tellerDart", "count": 16, "fireRate": 2.6, "weight": 1, "speedJitter": 0.14 }
+        {
+          "id": "manifest_stamp",
+          "mode": "radial",
+          "profile": "slugRound",
+          "count": 26,
+          "fireRate": 1.15,
+          "weight": 4,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "cargo_wall",
+          "mode": "spread",
+          "profile": "flakCore",
+          "count": 5,
+          "spreadDeg": 58,
+          "fireRate": 1.35,
+          "weight": 3,
+          "shots": [
+            {
+              "profile": "flakCore"
+            },
+            {
+              "profile": "slugRound"
+            },
+            {
+              "profile": "bargeCore"
+            },
+            {
+              "profile": "slugRound"
+            },
+            {
+              "profile": "flakCore"
+            }
+          ]
+        },
+        {
+          "id": "seizure_cores",
+          "mode": "aim",
+          "profile": "bargeCore",
+          "fireRate": 1.8,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "bargeCore",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "bargeCore",
+              "angleOffsetDeg": 8
+            }
+          ],
+          "tractor": {
+            "duration": 1.4,
+            "strength": 220
+          }
+        },
+        {
+          "id": "dart_ring",
+          "mode": "radial",
+          "profile": "tellerDart",
+          "count": 16,
+          "fireRate": 2.6,
+          "weight": 1,
+          "speedJitter": 0.14
+        }
       ]
     }
   },
   "events": [
-    { "time": 2, "type": "teller", "count": 6, "interval": 0.4 },
-    { "time": 10, "type": "bailiff", "count": 3, "interval": 1.2 },
-    { "time": 20, "type": "notary", "count": 2, "interval": 1.5 },
-    { "time": 29, "type": "strongbox", "count": 2, "interval": 4.5 },
-    { "time": 38, "type": "assessor", "count": 3, "interval": 1.1 },
-    { "time": 48, "type": "teller", "count": 6, "interval": 0.38 },
-    { "time": 58, "type": "bailiff", "count": 3, "interval": 1.1 },
-    { "time": 68, "type": "notary", "count": 3, "interval": 1.3 },
-    { "time": 80, "type": "strongbox", "count": 1 },
-    { "time": 86, "type": "teller", "count": 7, "interval": 0.36 },
-    { "time": 96, "type": "assessor", "count": 3, "interval": 1.0 },
-    { "time": 106, "type": "bailiff", "count": 4, "interval": 1.0 },
-    { "time": 118, "type": "notary", "count": 3, "interval": 1.2 },
-    { "time": 130, "type": "teller", "count": 7, "interval": 0.34 },
-
-    { "time": 145, "type": "harbormaster", "count": 1 },
-    { "time": 148, "type": "strongbox", "count": 3, "interval": 3.5 },
-    { "time": 158, "type": "bailiff", "count": 2, "interval": 1.2 },
-    { "time": 168, "type": "teller", "count": 5, "interval": 0.4 },
-
-    { "time": 182, "type": "assessor", "count": 4, "interval": 0.95 },
-    { "time": 192, "type": "notary", "count": 4, "interval": 1.1 },
-    { "time": 204, "type": "bailiff", "count": 4, "interval": 0.95 },
-    { "time": 216, "type": "teller", "count": 8, "interval": 0.3 },
-    { "time": 228, "type": "strongbox", "count": 2, "interval": 4.0 },
-    { "time": 238, "type": "assessor", "count": 4, "interval": 0.9 },
-    { "time": 250, "type": "notary", "count": 4, "interval": 1.0 },
-    { "time": 262, "type": "teller", "count": 8, "interval": 0.3 },
-
-    { "time": 285, "type": "boss", "count": 1 }
+    {
+      "time": 2,
+      "type": "teller",
+      "count": 6,
+      "interval": 0.4
+    },
+    {
+      "time": 10,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 20,
+      "type": "notary",
+      "count": 2,
+      "interval": 1.5
+    },
+    {
+      "time": 29,
+      "type": "strongbox",
+      "count": 2,
+      "interval": 4.5
+    },
+    {
+      "time": 38,
+      "type": "assessor",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 48,
+      "type": "teller",
+      "count": 6,
+      "interval": 0.38
+    },
+    {
+      "time": 58,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 68,
+      "type": "notary",
+      "count": 3,
+      "interval": 1.3
+    },
+    {
+      "time": 80,
+      "type": "strongbox",
+      "count": 1
+    },
+    {
+      "time": 86,
+      "type": "teller",
+      "count": 7,
+      "interval": 0.36
+    },
+    {
+      "time": 96,
+      "type": "assessor",
+      "count": 3,
+      "interval": 1
+    },
+    {
+      "time": 106,
+      "type": "bailiff",
+      "count": 4,
+      "interval": 1
+    },
+    {
+      "time": 118,
+      "type": "notary",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 130,
+      "type": "teller",
+      "count": 7,
+      "interval": 0.34
+    },
+    {
+      "time": 145,
+      "type": "harbormaster",
+      "count": 1
+    },
+    {
+      "time": 148,
+      "type": "strongbox",
+      "count": 3,
+      "interval": 3.5
+    },
+    {
+      "time": 158,
+      "type": "bailiff",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 168,
+      "type": "teller",
+      "count": 5,
+      "interval": 0.4
+    },
+    {
+      "time": 182,
+      "type": "assessor",
+      "count": 4,
+      "interval": 0.95
+    },
+    {
+      "time": 192,
+      "type": "notary",
+      "count": 4,
+      "interval": 1.1
+    },
+    {
+      "time": 204,
+      "type": "bailiff",
+      "count": 4,
+      "interval": 0.95
+    },
+    {
+      "time": 216,
+      "type": "teller",
+      "count": 8,
+      "interval": 0.3
+    },
+    {
+      "time": 228,
+      "type": "strongbox",
+      "count": 2,
+      "interval": 4
+    },
+    {
+      "time": 238,
+      "type": "assessor",
+      "count": 4,
+      "interval": 0.9
+    },
+    {
+      "time": 250,
+      "type": "notary",
+      "count": 4,
+      "interval": 1
+    },
+    {
+      "time": 262,
+      "type": "teller",
+      "count": 8,
+      "interval": 0.3
+    },
+    {
+      "time": 285,
+      "type": "boss",
+      "count": 1
+    }
   ],
   "pickups": [
-    { "time": 34, "type": "salvage", "rarity": "certified", "slotType": "primary", "x": 0.44, "y": -46 },
-    { "time": 100, "type": "salvage", "rarity": "prototype", "slotType": "primary", "x": 0.6, "y": -50 },
-    { "time": 152, "type": "armor_patch", "x": 0.5 },
-    { "time": 174, "type": "salvage", "rarity": "prototype", "slotType": "defense", "x": 0.38, "y": -48 },
-    { "time": 234, "type": "shield_booster", "x": 0.54 },
-    { "time": 272, "type": "armor_patch", "x": 0.46 }
+    {
+      "time": 34,
+      "type": "salvage",
+      "rarity": "certified",
+      "slotType": "primary",
+      "x": 0.44,
+      "y": -46
+    },
+    {
+      "time": 100,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "primary",
+      "x": 0.6,
+      "y": -50
+    },
+    {
+      "time": 152,
+      "type": "armor_patch",
+      "x": 0.5
+    },
+    {
+      "time": 174,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "defense",
+      "x": 0.38,
+      "y": -48
+    },
+    {
+      "time": 234,
+      "type": "shield_booster",
+      "x": 0.54
+    },
+    {
+      "time": 272,
+      "type": "armor_patch",
+      "x": 0.46
+    }
   ],
   "projectileProfiles": {
     "tellerDart": {
@@ -144,7 +440,7 @@
       "width": 50,
       "height": 50,
       "animation": "orb",
-      "spinRate": 2.0
+      "spinRate": 2
     },
     "bargeCore": {
       "threatClass": "bossHazard",
@@ -157,5 +453,10 @@
       "animation": "orb",
       "spinRate": 1.4
     }
-  }
+  },
+  "debriefLore": [
+    "Manifest line 7 — seal matches your own.",
+    "Manifest closeout - seized cargo held under legacy remittance.",
+    "Manifest appendix - recipient tomb remains in good standing."
+  ]
 }

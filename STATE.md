@@ -10,6 +10,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 
 - A flat scene shell for hangar, mission select, armory, Ledger market, profile, item archive, compendium, and combat.
 - Scripted JSON missions in `levels/` with variants, lab encounters, bosses, salvage pods, item drops, enemy projectile profiles/attack patterns, and enemy catalog validation.
+- Act 2 "Deep Claims" missions now use data-driven graph unlocks, visible sanctioned/off-book branch presentation, miniboss treatment, branch-standing tracking, key-item gates, new lineage AIs, boss phases, tractor pulls, and debrief lore lines.
 - A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
 - Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time or through explicit level-authored projectile profiles.
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
@@ -27,6 +28,7 @@ These are intentional follow-up targets, not bugs in the docs:
 - Item durability remains deferred.
 - Cargo/economy hulls remain deferred.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader design direction rather than current gameplay systems.
+- The Act 2 art pass remains pending: Chorus, Tithe, Verdant additions, Origin boss, new backgrounds, projectile variants, and compendium art refresh are still tracked in `ACT2_CODEX_SPEC.md`.
 - The new overhaul systems still need player testing around second-bay damage strain, early hard-mission pickups, cache readability, hull art/readability, phone-sized Armory density, and whether high-rarity defense is now too strong. Recent tuning already made mini rarity matter, made defense rarity matter, gave focused single-shot primaries competitive DPS, clarified item stats, surfaced per-bay effective DPS on the Armory stage, and changed Dual Fire to independent per-weapon cadence.
 
 ## Run Locally
@@ -117,6 +119,7 @@ Recent history shows these major pieces have already landed:
 - Plasma armor pressure pass: plasma burn now stacks from repeated hits, ramps to sustained burn DPS over three seconds, ignores armor-class subtraction while damaging armor, applies reduced burn to the armor layer, and is mirrored in the Armory stat math and `scripts/balance_report.js`.
 - Combat HUD clarity pass: enemy, boss, and player layered health bars now read hull, armor, shields left to right, and active plasma burn shows green future-loss previews on affected enemy and boss bars.
 - Economy control layer pass (Phase 8 prelude): active economy numbers moved from `main.js` into validated `config/economy.json`; runtime startup now blocks on missing/invalid economy config; market prices and sell quotes read current config at render/purchase/sale time; `scripts/balance_report.js` prints Credit Flow expected-credit and affordability rows; `?devTuning=1` provides sparse local overrides, reset, badge, and merged JSON export.
+- Act 2 engine pass: graph unlocks and Deep Claims board presentation, Deep Registry Shard gating, branch-standing records, miniboss banner/health/drop treatment, conductor/mimic/thief/lien/spawner/splitter AIs, Collections Barge tractor pattern, Doxology/Pilgrimage boss phases, and debrief lore rows.
 
 ## Documentation Map
 
@@ -132,7 +135,7 @@ Active docs in the repo root:
 - `WEAPON_FRAME_FORMAT.md`: active weapon-frame schema reference.
 - `ITEM_UX_SPEC.md`: active item-communication reference (intrinsic item stats, effective deltas, tooltip/inspector stat block, rarity treatment, roll-quality surfacing).
 - `ACT2_SILENT_LINEAGES_DESIGN.md`: Act 2 campaign design (three sibling-lineage factions, branching mission graph, 11 authored missions); the v1 playable data pass ships alongside it.
-- `ACT2_CODEX_SPEC.md`: Act 2 engine upgrades (mission-graph unlocks, minibosses, new AIs, boss phases) and art-pack generation — ready for Codex, next hand-off.
+- `ACT2_CODEX_SPEC.md`: Act 2 hand-off; engine pass is implemented, art-pack generation remains active.
 - `STORY-PREMISE.md`: active tone and lore source.
 - `STORY-PREMISE-DEEP-HISTORY.md`: deep history and endgame arc extending the story premise; feeds the Story-Economy Arc in `ROADMAP.md`.
 - `CREDITS.md`: asset and tool credits.

@@ -1,0 +1,45 @@
+{
+  "source": "source_sheet_act2_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 3,
+    "rows": 2
+  },
+  "defaultPadding": 6,
+  "contactSheet": "contact_sheet_act2.png",
+  "sprites": [
+    {
+      "name": "enemy_space_gold_hymn_dart",
+      "cell": 0,
+      "size": [18, 54],
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_space_gold_hymn_ring",
+      "cell": 1,
+      "size": [78, 78],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_bio_spore_puff",
+      "cell": 2,
+      "size": [58, 58],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_bio_spore_orb",
+      "cell": 3,
+      "size": [58, 58],
+      "componentMode": "largest",
+      "componentMinArea": 8
+    },
+    {
+      "name": "enemy_bio_thorn_shard",
+      "cell": 4,
+      "size": [24, 62],
+      "componentMinArea": 8
+    }
+  ]
+}

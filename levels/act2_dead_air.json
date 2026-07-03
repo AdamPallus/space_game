@@ -1,7 +1,7 @@
 {
   "id": "act2_dead_air",
   "name": "Dead Air",
-  "background": "generatedDeepVoid",
+  "background": "generatedCathedralDrift",
   "music": "02_stillness_of_space.ogg",
   "difficulty": "Deep Claims",
   "description": "The picket line went quiet. Fly the silent volume, log what's left, salvage anything that doesn't object.",
@@ -108,7 +108,7 @@
       "damage": 6,
       "speed": 255,
       "radius": 3,
-      "image": "enemy_space_cool_chip_dart",
+      "image": "enemy_space_gold_hymn_dart",
       "width": 13,
       "height": 34,
       "animation": "bolt"
@@ -149,7 +149,7 @@
       "damage": 50,
       "speed": 138,
       "radius": 12,
-      "image": "enemy_space_cool_boss_ring",
+      "image": "enemy_space_gold_hymn_ring",
       "width": 70,
       "height": 70,
       "animation": "orb",

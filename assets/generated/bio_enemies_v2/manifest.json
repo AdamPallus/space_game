@@ -1,0 +1,23 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 3
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "bio_sporeling", "cell": 0, "size": [96, 96], "componentMode": "largest" },
+    { "name": "bio_thornwing", "cell": 1, "size": [112, 112], "componentMode": "largest" },
+    { "name": "bio_bloomcaller", "cell": 2, "size": [120, 120], "componentMode": "largest" },
+    { "name": "bio_bramble", "cell": 3, "size": [128, 128], "componentMode": "largest" },
+    { "name": "bio_seedcarrier", "cell": 4, "size": [128, 128], "componentMode": "largest" },
+    { "name": "bio_broodmother", "cell": 5, "size": [176, 176], "componentMode": "largest" },
+    { "name": "bio_rootward", "cell": 6, "size": [176, 176], "componentMode": "largest" },
+    { "name": "bio_emissary", "cell": 7, "size": [176, 176], "componentMode": "largest" },
+    { "name": "boss_gatekeeper_bloom", "cell": 8, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "boss_matriarch", "cell": 9, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "boss_old_growth", "cell": 10, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 }
+  ]
+}

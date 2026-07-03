@@ -117,6 +117,7 @@ Recent history shows these major pieces have already landed:
 - Plasma armor pressure pass: plasma burn now stacks from repeated hits, ramps to sustained burn DPS over three seconds, ignores armor-class subtraction while damaging armor, applies reduced burn to the armor layer, and is mirrored in the Armory stat math and `scripts/balance_report.js`.
 - Combat HUD clarity pass: enemy, boss, and player layered health bars now read hull, armor, shields left to right, and active plasma burn shows green future-loss previews on affected enemy and boss bars.
 - Economy control layer pass (Phase 8 prelude): active economy numbers moved from `main.js` into validated `config/economy.json`; runtime startup now blocks on missing/invalid economy config; market prices and sell quotes read current config at render/purchase/sale time; `scripts/balance_report.js` prints Credit Flow expected-credit and affordability rows; `?devTuning=1` provides sparse local overrides, reset, badge, and merged JSON export.
+- Act 2 independent art pass: Chorus, Tithe, Verdant, and First Warden generated sprite packs, Cathedral Drift / Arrears Field / Origin Hull backgrounds, and Act 2 Chorus/Verdant projectile additions are wired through catalog, level data, runtime registries, compendium source data, and generated-asset validation.
 
 ## Documentation Map
 

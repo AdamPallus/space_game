@@ -173,6 +173,25 @@ To jump straight into the biological visual test:
 http://127.0.0.1:8765/?devSkip=1&devInvincible=1&devAutoFire=1&level=biological_hive_lab
 ```
 
+## Act 2 Silent Lineages
+
+The Act 2 art pass adds generated faction packs in
+`assets/generated/chorus_fleet_v1/`, `assets/generated/tithe_fleet_v1/`,
+`assets/generated/bio_enemies_v2/`, and `assets/generated/origin_v1/`. These
+use the chroma-key sheet workflow, with broadside boss PNGs normalized to the
+Act 2 alpha-aspect contract before wiring through `enemies/enemy_catalog.json`.
+
+Act 2 backgrounds live alongside the earlier generated tiles in
+`assets/generated/backgrounds_v1/`: `cathedral_drift`, `arrears_field`, and
+`origin_hull`. Campaign levels use the native 1024 outputs; looped and repeat
+preview files remain committed as QA artifacts.
+
+Supplemental Act 2 projectile sprites live in
+`assets/generated/enemy_projectiles_space_v1/manifest_act2.json`: white-gold
+Chorus hymn dart/ring shots and green Verdant spore/thorn shots. Runtime keys
+are registered in the generated visual theme and level projectile profiles
+reference those keys directly.
+
 ## Generated UI Chrome
 
 Generated chrome exists in `assets/generated/ui_chrome_v1/` and

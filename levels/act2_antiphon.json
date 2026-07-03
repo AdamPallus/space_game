@@ -1,7 +1,7 @@
 {
   "id": "act2_antiphon",
   "name": "Antiphon",
-  "background": "generatedTealRift",
+  "background": "generatedCathedralDrift",
   "music": "space_adventure_bpm140.ogg",
   "difficulty": "Sanctioned",
   "description": "A chant sung in answer. The Chorus has noticed you, and the vote has started copying its most decisive input: you.",
@@ -116,7 +116,7 @@
       "damage": 7,
       "speed": 265,
       "radius": 3,
-      "image": "enemy_space_cool_chip_dart",
+      "image": "enemy_space_gold_hymn_dart",
       "width": 13,
       "height": 34,
       "animation": "bolt"
@@ -157,7 +157,7 @@
       "damage": 56,
       "speed": 145,
       "radius": 12,
-      "image": "enemy_space_cool_boss_ring",
+      "image": "enemy_space_gold_hymn_ring",
       "width": 70,
       "height": 70,
       "animation": "orb",

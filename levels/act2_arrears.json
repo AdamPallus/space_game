@@ -1,7 +1,7 @@
 {
   "id": "act2_arrears",
   "name": "Arrears",
-  "background": "generatedDerelictDebris",
+  "background": "generatedArrearsField",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Off-Book",
   "description": "The Tithe answers the raid the only way it knows how: it audits you. A collections detail is inbound with your account on file.",

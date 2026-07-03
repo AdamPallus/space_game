@@ -1,7 +1,7 @@
 {
   "id": "act2_repossession",
   "name": "Repossession",
-  "background": "generatedDerelictDebris",
+  "background": "generatedArrearsField",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Off-Book",
   "description": "The broker's contract doesn't say salvage. It says repossession, and it pays in advance. Hit the collection convoy.",

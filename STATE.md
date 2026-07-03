@@ -120,6 +120,7 @@ Recent history shows these major pieces have already landed:
 - Combat HUD clarity pass: enemy, boss, and player layered health bars now read hull, armor, shields left to right, and active plasma burn shows green future-loss previews on affected enemy and boss bars.
 - Economy control layer pass (Phase 8 prelude): active economy numbers moved from `main.js` into validated `config/economy.json`; runtime startup now blocks on missing/invalid economy config; market prices and sell quotes read current config at render/purchase/sale time; `scripts/balance_report.js` prints Credit Flow expected-credit and affordability rows; `?devTuning=1` provides sparse local overrides, reset, badge, and merged JSON export.
 - Act 2 engine pass: graph unlocks and Deep Claims board presentation, Deep Registry Shard gating, branch-standing records, miniboss banner/health/drop treatment, conductor/mimic/thief/lien/spawner/splitter AIs, Collections Barge tractor pattern, Doxology/Pilgrimage boss phases, and debrief lore rows.
+- Act 2 independent art pass: Chorus, Tithe, Verdant, and First Warden generated sprite packs, Cathedral Drift / Arrears Field / Origin Hull backgrounds, and Act 2 Chorus/Verdant projectile additions are wired through catalog, level data, runtime registries, compendium source data, and generated-asset validation.
 
 ## Documentation Map
 

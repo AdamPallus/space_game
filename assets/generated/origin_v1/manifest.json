@@ -1,0 +1,13 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 1,
+    "rows": 1
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "boss_first_warden", "cell": 0, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 }
+  ]
+}

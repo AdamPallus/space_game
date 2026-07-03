@@ -1,0 +1,13 @@
+{
+  "source": "source_boss_conductor_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 1,
+    "rows": 1
+  },
+  "contactSheet": "boss_conductor_contact_sheet.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "boss_conductor", "cell": 0, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 }
+  ]
+}

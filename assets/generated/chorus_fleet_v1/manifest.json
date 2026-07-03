@@ -1,0 +1,24 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "chorus_chorister", "cell": 0, "size": [112, 112], "componentMode": "largest" },
+    { "name": "chorus_cantor", "cell": 1, "size": [112, 112], "componentMode": "largest" },
+    { "name": "chorus_censer", "cell": 2, "size": [112, 112], "componentMode": "largest" },
+    { "name": "chorus_sexton", "cell": 3, "size": [120, 120], "componentMode": "largest" },
+    { "name": "chorus_precentor", "cell": 4, "size": [128, 128], "componentMode": "largest" },
+    { "name": "chorus_vestibule_cantor", "cell": 5, "size": [144, 144], "componentMode": "largest" },
+    { "name": "chorus_choirmaster", "cell": 6, "size": [176, 176], "componentMode": "largest" },
+    { "name": "chorus_precentor_prime", "cell": 7, "size": [152, 152], "componentMode": "largest" },
+    { "name": "chorus_emissary", "cell": 8, "size": [176, 176], "componentMode": "largest" },
+    { "name": "boss_doorkeeper", "cell": 9, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "boss_processional_warden", "cell": 10, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "boss_antiphon", "cell": 11, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 }
+  ]
+}

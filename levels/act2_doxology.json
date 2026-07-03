@@ -1,7 +1,7 @@
 {
   "id": "act2_doxology",
   "name": "Doxology",
-  "background": "generatedTealRift",
+  "background": "generatedCathedralDrift",
   "music": "space_boss_battle_bpm175.ogg",
   "difficulty": "Sanctioned Finale",
   "description": "The end of the hymn. Breach the rings around the Chorus mothership and silence the vote at its center.",
@@ -547,7 +547,7 @@
       "damage": 8,
       "speed": 270,
       "radius": 3,
-      "image": "enemy_space_cool_chip_dart",
+      "image": "enemy_space_gold_hymn_dart",
       "width": 13,
       "height": 34,
       "animation": "bolt"
@@ -588,7 +588,7 @@
       "damage": 60,
       "speed": 145,
       "radius": 12,
-      "image": "enemy_space_cool_boss_ring",
+      "image": "enemy_space_gold_hymn_ring",
       "width": 70,
       "height": 70,
       "animation": "orb",

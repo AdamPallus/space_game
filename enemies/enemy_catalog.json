@@ -1471,7 +1471,7 @@
       "name": "Chorister Line Drone",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/shieldkite.png",
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_chorister.png",
         "hull": 24,
         "shield": 46,
         "shieldRegen": 14,
@@ -1500,7 +1500,7 @@
       "name": "Cantor Lane-Caller",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/spark_skirmisher.png",
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_cantor.png",
         "hull": 20,
         "shield": 34,
         "shieldRegen": 12,
@@ -1531,7 +1531,7 @@
       "name": "Censer Shadow Drone",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/dart_skirmisher.png",
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_censer.png",
         "hull": 18,
         "shield": 24,
         "shieldRegen": 10,
@@ -1555,7 +1555,7 @@
       "name": "Sexton Reliquary Guard",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/plated_heavy.png",
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_sexton.png",
         "hull": 30,
         "shield": 60,
         "shieldRegen": 10,
@@ -1574,7 +1574,7 @@
       "name": "Precentor Line Anchor",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/warden_line_ship.png",
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_precentor.png",
         "hull": 48,
         "shield": 110,
         "shieldRegen": 16,
@@ -1596,7 +1596,7 @@
       "name": "Choirmaster",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/orbiter_core.png",
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_choirmaster.png",
         "hull": 260,
         "shield": 420,
         "shieldRegen": 18,
@@ -1624,7 +1624,7 @@
       "name": "Precentor Prime",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/warden_line_ship.png",
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_precentor_prime.png",
         "hull": 180,
         "shield": 320,
         "shieldRegen": 18,
@@ -1647,7 +1647,7 @@
       "name": "Teller Skiff",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/gnat_interceptor.png",
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_teller.png",
         "hull": 22,
         "shield": 0,
         "armor": 0,
@@ -1670,7 +1670,7 @@
       "name": "Bailiff Repossession Drone",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/duelist_flanker.png",
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_bailiff.png",
         "hull": 34,
         "shield": 0,
         "armor": 80,
@@ -1695,7 +1695,7 @@
       "name": "Assessor Lien Drone",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/reaper_predator.png",
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_assessor.png",
         "hull": 42,
         "shield": 30,
         "shieldRegen": 8,
@@ -1716,7 +1716,7 @@
       "name": "Notary Gunline",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/escort_gunship.png",
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_notary.png",
         "hull": 60,
         "shield": 0,
         "armor": 90,
@@ -1738,7 +1738,7 @@
       "name": "Strongbox Vault Hauler",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/tank_bulwark.png",
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_strongbox.png",
         "hull": 50,
         "shield": 0,
         "armor": 260,
@@ -1756,7 +1756,7 @@
       "name": "The Auditor",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/captain_corvette.png",
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_auditor.png",
         "hull": 300,
         "shield": 0,
         "armor": 460,
@@ -1786,7 +1786,7 @@
       "name": "Harbormaster",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/captain_corvette.png",
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_harbormaster.png",
         "hull": 380,
         "shield": 0,
         "armor": 520,
@@ -1812,7 +1812,7 @@
       "name": "Sporeling",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_scout.png",
+        "sprite": "assets/generated/bio_enemies_v2/bio_sporeling.png",
         "hull": 16,
         "shield": 0,
         "armor": 0,
@@ -1835,7 +1835,7 @@
       "name": "Thornwing",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_fighter.png",
+        "sprite": "assets/generated/bio_enemies_v2/bio_thornwing.png",
         "hull": 34,
         "shield": 0,
         "armor": 0,
@@ -1860,7 +1860,7 @@
       "name": "Bloomcaller Hive Node",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_turret.png",
+        "sprite": "assets/generated/bio_enemies_v2/bio_bloomcaller.png",
         "hull": 70,
         "shield": 45,
         "shieldRegen": 10,
@@ -1888,7 +1888,7 @@
       "name": "Bramble Growth",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_bruiser.png",
+        "sprite": "assets/generated/bio_enemies_v2/bio_bramble.png",
         "hull": 60,
         "shield": 0,
         "armor": 150,
@@ -1909,7 +1909,7 @@
       "name": "Seedcarrier",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_transport.png",
+        "sprite": "assets/generated/bio_enemies_v2/bio_seedcarrier.png",
         "hull": 110,
         "shield": 0,
         "armor": 40,
@@ -1953,7 +1953,7 @@
       "name": "Broodmother",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_queen.png",
+        "sprite": "assets/generated/bio_enemies_v2/bio_broodmother.png",
         "hull": 460,
         "shield": 200,
         "shieldRegen": 12,
@@ -1981,7 +1981,7 @@
       "name": "Rootward Mass",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_bruiser.png",
+        "sprite": "assets/generated/bio_enemies_v2/bio_rootward.png",
         "hull": 420,
         "shield": 0,
         "armor": 380,
@@ -2003,7 +2003,7 @@
       "name": "Emissary of the Chorus",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/orbiter_core.png",
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_emissary.png",
         "hull": 300,
         "shield": 500,
         "shieldRegen": 20,
@@ -2031,7 +2031,7 @@
       "name": "Emissary of the Tithe",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/captain_corvette.png",
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_emissary.png",
         "hull": 340,
         "shield": 0,
         "armor": 560,
@@ -2061,7 +2061,7 @@
       "name": "Emissary of the Verdant",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_queen.png",
+        "sprite": "assets/generated/bio_enemies_v2/bio_emissary.png",
         "hull": 560,
         "shield": 240,
         "shieldRegen": 14,
@@ -2087,7 +2087,7 @@
       "name": "The Doorkeeper",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_broadside_v1/boss_level03.png",
+        "sprite": "assets/generated/chorus_fleet_v1/boss_doorkeeper.png",
         "hull": 820,
         "shield": 560,
         "shieldRegen": 12,
@@ -2110,7 +2110,7 @@
       "name": "Processional Warden",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_broadside_v1/boss_level02.png",
+        "sprite": "assets/generated/chorus_fleet_v1/boss_processional_warden.png",
         "hull": 900,
         "shield": 780,
         "shieldRegen": 16,
@@ -2141,7 +2141,7 @@
       "name": "The Antiphon",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_broadside_v1/boss_level09.png",
+        "sprite": "assets/generated/chorus_fleet_v1/boss_antiphon.png",
         "hull": 1000,
         "shield": 900,
         "shieldRegen": 18,
@@ -2170,7 +2170,7 @@
       "name": "The Conductor",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_broadside_v1/boss_level07.png",
+        "sprite": "assets/generated/chorus_fleet_v1/boss_conductor.png",
         "hull": 1700,
         "shield": 1500,
         "shieldRegen": 22,
@@ -2202,7 +2202,7 @@
       "name": "The Escrow",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_broadside_v1/boss_level10.png",
+        "sprite": "assets/generated/tithe_fleet_v1/boss_escrow.png",
         "hull": 900,
         "shield": 0,
         "armor": 700,
@@ -2224,7 +2224,7 @@
       "name": "The Adjuster",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_broadside_v1/boss_level04.png",
+        "sprite": "assets/generated/tithe_fleet_v1/boss_adjuster.png",
         "hull": 1100,
         "shield": 220,
         "shieldRegen": 8,
@@ -2255,7 +2255,7 @@
       "name": "The Collections Barge",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_broadside_v1/boss_level10.png",
+        "sprite": "assets/generated/tithe_fleet_v1/boss_collections_barge.png",
         "hull": 1700,
         "shield": 240,
         "shieldRegen": 8,
@@ -2279,7 +2279,7 @@
       "name": "Gatekeeper Bloom",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_queen.png",
+        "sprite": "assets/generated/bio_enemies_v2/boss_gatekeeper_bloom.png",
         "hull": 1600,
         "shield": 300,
         "shieldRegen": 14,
@@ -2302,7 +2302,7 @@
       "name": "Verdant Matriarch",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_queen.png",
+        "sprite": "assets/generated/bio_enemies_v2/boss_matriarch.png",
         "hull": 2400,
         "shield": 420,
         "shieldRegen": 16,
@@ -2333,7 +2333,7 @@
       "name": "The Old Growth",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_broadside_v1/boss_level06.png",
+        "sprite": "assets/generated/bio_enemies_v2/boss_old_growth.png",
         "hull": 2200,
         "shield": 400,
         "shieldRegen": 12,
@@ -2365,7 +2365,7 @@
       "name": "The First Warden",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bosses_broadside_v1/boss_level08.png",
+        "sprite": "assets/generated/origin_v1/boss_first_warden.png",
         "hull": 2600,
         "shield": 1500,
         "shieldRegen": 24,
@@ -2396,7 +2396,7 @@
       "name": "Vestibule Cantor",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/fleet_gaps_v1/spark_skirmisher.png",
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_vestibule_cantor.png",
         "hull": 160,
         "shield": 260,
         "shieldRegen": 16,

@@ -1,0 +1,23 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 4,
+    "rows": 3
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "tithe_teller", "cell": 0, "size": [104, 104], "componentMode": "largest" },
+    { "name": "tithe_bailiff", "cell": 1, "size": [120, 120], "componentMode": "largest" },
+    { "name": "tithe_assessor", "cell": 2, "size": [112, 112], "componentMode": "largest" },
+    { "name": "tithe_notary", "cell": 3, "size": [120, 120], "componentMode": "largest" },
+    { "name": "tithe_strongbox", "cell": 4, "size": [128, 128], "componentMode": "largest" },
+    { "name": "tithe_auditor", "cell": 5, "size": [160, 160], "componentMode": "largest" },
+    { "name": "tithe_harbormaster", "cell": 6, "size": [168, 168], "componentMode": "largest" },
+    { "name": "tithe_emissary", "cell": 7, "size": [176, 176], "componentMode": "largest" },
+    { "name": "boss_escrow", "cell": 8, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "boss_adjuster", "cell": 9, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "boss_collections_barge", "cell": 10, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 }
+  ]
+}

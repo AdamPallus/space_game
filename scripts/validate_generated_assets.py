@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate generated campaign projectile and boss asset contracts."""
+"""Validate generated projectile, campaign boss, and Act 2 art contracts."""
 
 from __future__ import annotations
 
@@ -18,7 +18,45 @@ CATALOG_PATH = ROOT / "enemies" / "enemy_catalog.json"
 CAMPAIGN_MISSION_COUNT = 11
 MIN_BOSS_ASPECT = 1.55
 FORBIDDEN_PROJECTILE_TERMS = ("crescent", "comet", "wisp", "fire", "ember", "warm_boss_halo")
-DIRECTIONAL_TERMS = ("chip", "bolt", "slug", "needle", "dart")
+DIRECTIONAL_TERMS = ("chip", "bolt", "slug", "needle", "dart", "thorn_shard")
+ACT2_REQUIRED_CATALOG_IDS = (
+    "chorister",
+    "cantor",
+    "censer",
+    "sexton",
+    "precentor",
+    "vestibule_cantor",
+    "choirmaster",
+    "precentor_prime",
+    "emissary_chorus",
+    "act2_dead_air:boss",
+    "act2_processional:boss",
+    "act2_antiphon:boss",
+    "act2_doxology:boss",
+    "teller",
+    "bailiff",
+    "assessor",
+    "notary",
+    "strongbox",
+    "auditor",
+    "harbormaster",
+    "emissary_tithe",
+    "act2_repossession:boss",
+    "act2_arrears:boss",
+    "act2_foreclosure:boss",
+    "sporeling",
+    "thornwing",
+    "bloomcaller",
+    "bramble",
+    "seedcarrier",
+    "broodmother",
+    "rootward",
+    "emissary_verdant",
+    "act2_green_signal:boss",
+    "act2_bloom:boss",
+    "act2_old_growth:boss",
+    "act2_pilgrimage:boss",
+)
 
 
 def load_json(path: Path) -> dict:
@@ -49,9 +87,16 @@ def campaign_level_ids() -> list[str]:
     return ids
 
 
+def projectile_sprite_names() -> set[str]:
+    names: set[str] = set()
+    for manifest_path in sorted(PROJECTILE_DIR.glob("manifest*.json")):
+        manifest = load_json(manifest_path)
+        names.update(sprite["name"] for sprite in manifest.get("sprites", []))
+    return names
+
+
 def validate_projectiles(errors: list[str]) -> None:
-    manifest = load_json(PROJECTILE_DIR / "manifest.json")
-    sprite_names = {sprite["name"] for sprite in manifest.get("sprites", [])}
+    sprite_names = projectile_sprite_names()
     for name in sorted(sprite_names):
         sprite_path = PROJECTILE_DIR / f"{name}.png"
         if not sprite_path.exists():
@@ -59,8 +104,12 @@ def validate_projectiles(errors: list[str]) -> None:
             continue
         validate_transparent_corners(sprite_path, errors)
 
-    for level_id in campaign_level_ids():
-        level = load_json(LEVELS_DIR / f"{level_id}.json")
+    level_images: dict[str, list[str]] = {}
+    for level_path in sorted(LEVELS_DIR.glob("*.json")):
+        if level_path.name == "manifest.json":
+            continue
+        level = load_json(level_path)
+        level_id = level.get("id") or level_path.stem
         profiles = level.get("projectileProfiles") or {}
         images = []
         for profile_id, profile in profiles.items():
@@ -77,6 +126,10 @@ def validate_projectiles(errors: list[str]) -> None:
                 errors.append(f"{level_id}.{profile_id} uses retired ember animation")
             if any(term in image for term in DIRECTIONAL_TERMS) and "spinRate" in profile:
                 errors.append(f"{level_id}.{profile_id} directional projectile '{image}' must not spin")
+        level_images[level_id] = images
+
+    for level_id in campaign_level_ids():
+        images = level_images.get(level_id, [])
 
         if not any("_warm_" in image for image in images):
             errors.append(f"{level_id} does not include a warm projectile")
@@ -123,10 +176,38 @@ def validate_bosses(errors: list[str]) -> None:
         print("Boss alpha aspects:", ", ".join(aspects))
 
 
+def validate_act2_catalog_art(errors: list[str]) -> None:
+    catalog = load_json(CATALOG_PATH).get("entries", {})
+    aspects: list[str] = []
+    for entry_id in ACT2_REQUIRED_CATALOG_IDS:
+        entry = catalog.get(entry_id)
+        sprite = ((entry or {}).get("template") or {}).get("sprite") or ""
+        if not sprite:
+            errors.append(f"{entry_id} is missing an Act 2 sprite")
+            continue
+        path = ROOT / sprite
+        if not path.exists():
+            errors.append(f"{entry_id} sprite is missing: {sprite}")
+            continue
+        validate_transparent_corners(path, errors)
+        if not entry_id.endswith(":boss"):
+            continue
+        left, top, right, bottom = alpha_bbox(path)
+        width = right - left
+        height = bottom - top
+        aspect = width / height
+        aspects.append(f"{entry_id}={aspect:.2f}")
+        if aspect < MIN_BOSS_ASPECT:
+            errors.append(f"{sprite} alpha aspect {aspect:.2f} is below {MIN_BOSS_ASPECT:.2f}")
+    if aspects:
+        print("Act 2 boss alpha aspects:", ", ".join(aspects))
+
+
 def main() -> int:
     errors: list[str] = []
     validate_projectiles(errors)
     validate_bosses(errors)
+    validate_act2_catalog_art(errors)
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)

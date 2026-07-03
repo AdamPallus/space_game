@@ -8,8 +8,8 @@
     "licenseTiers": [
       { "tier": 0, "lots": 5, "cost": 0 },
       { "tier": 1, "lots": 7, "cost": 800 },
-      { "tier": 2, "lots": 9, "cost": 1800 },
-      { "tier": 3, "lots": 11, "cost": 4000 }
+      { "tier": 2, "lots": 9, "cost": 2000 },
+      { "tier": 3, "lots": 11, "cost": 5000 }
     ],
     "bulletinCadence": 3,
     "bulletinBonusRate": 0.4,
@@ -93,7 +93,7 @@
     "eliteBonusChance": 0.15
   },
   "missionRewards": {
-    "bountyRate": 1,
+    "bountyRate": 0.25,
     "enemyBountyDifficultyScale": 0.09,
     "fallbackEnemyBaseCredit": 10,
     "completionBase": 120,
@@ -106,9 +106,9 @@
       "tiers": [
         { "cost": 200, "benefit": "Unlock basic consumables (bombs)" },
         { "cost": 500, "benefit": "Reduce repair costs by 25%" },
-        { "cost": 1000, "benefit": "Unlock advanced consumables" },
-        { "cost": 2000, "benefit": "Consumables regenerate between missions" },
-        { "cost": 4000, "benefit": "Prototype gear each mission" }
+        { "cost": 1200, "benefit": "Unlock advanced consumables" },
+        { "cost": 2600, "benefit": "Consumables regenerate between missions" },
+        { "cost": 7000, "benefit": "Prototype gear each mission" }
       ]
     },
     "operations": {
@@ -116,9 +116,9 @@
       "tiers": [
         { "cost": 200, "benefit": "Unlock Patrol mission variants" },
         { "cost": 500, "benefit": "Unlock Bonus Objectives (+credits)" },
-        { "cost": 1000, "benefit": "Unlock Skirmish variants" },
-        { "cost": 2000, "benefit": "Unlock Siege variants" },
-        { "cost": 4000, "benefit": "Unlock Elite modifier (2x diff, 3x credits)" }
+        { "cost": 1200, "benefit": "Unlock Skirmish variants" },
+        { "cost": 2600, "benefit": "Unlock Siege variants" },
+        { "cost": 7000, "benefit": "Unlock Elite modifier (2x diff, 3x credits)" }
       ]
     },
     "shares": {
@@ -126,26 +126,26 @@
       "tiers": [
         { "cost": 300, "benefit": "+5% passive credits per mission", "dividend": 0.05 },
         { "cost": 800, "benefit": "+10% passive credits", "dividend": 0.1 },
-        { "cost": 1500, "benefit": "+10% + Fleet events (bonus payouts)", "dividend": 0.1 },
-        { "cost": 3000, "benefit": "+15% + Fleet Contracts access", "dividend": 0.15 },
-        { "cost": 6000, "benefit": "+20% + Boss bounty shares", "dividend": 0.2 }
+        { "cost": 2000, "benefit": "+10% + Fleet events (bonus payouts)", "dividend": 0.1 },
+        { "cost": 4500, "benefit": "+15% + Fleet Contracts access", "dividend": 0.15 },
+        { "cost": 9000, "benefit": "+20% + Boss bounty shares", "dividend": 0.2 }
       ]
     },
     "hulls": {
       "name": "Hull Licenses",
       "tiers": [
         { "cost": 600, "benefit": "Unlock Bastion defensive hull", "hullId": "bastion" },
-        { "cost": 1100, "benefit": "Unlock Relay tech/control hull", "hullId": "relay" },
-        { "cost": 1800, "benefit": "Unlock Broadside gunship hull", "hullId": "broadside" }
+        { "cost": 1500, "benefit": "Unlock Relay tech/control hull", "hullId": "relay" },
+        { "cost": 3200, "benefit": "Unlock Broadside gunship hull", "hullId": "broadside" }
       ]
     },
     "capabilities": {
       "name": "Ship Capabilities",
       "tiers": [
         { "cost": 900, "benefit": "Dual-Fire Coupler tier 1", "upgradeId": "dualFire", "upgradeLevel": 1 },
-        { "cost": 1800, "benefit": "Dual-Fire Coupler tier 2", "upgradeId": "dualFire", "upgradeLevel": 2 },
-        { "cost": 3400, "benefit": "Dual-Fire Coupler tier 3", "upgradeId": "dualFire", "upgradeLevel": 3 },
-        { "cost": 4600, "benefit": "Dual-Fire Coupler tier 4", "upgradeId": "dualFire", "upgradeLevel": 4 }
+        { "cost": 2200, "benefit": "Dual-Fire Coupler tier 2", "upgradeId": "dualFire", "upgradeLevel": 2 },
+        { "cost": 4500, "benefit": "Dual-Fire Coupler tier 3", "upgradeId": "dualFire", "upgradeLevel": 3 },
+        { "cost": 8000, "benefit": "Dual-Fire Coupler tier 4", "upgradeId": "dualFire", "upgradeLevel": 4 }
       ]
     }
   },

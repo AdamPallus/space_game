@@ -75,6 +75,7 @@ These should be tuned with deployed player feedback before adding another broad 
 - Pre-Founding primary relics now cover every spread/ammo pair, and plasma impulse scaling raises the late-game plasma ceiling. Tune the next longer mission set against stronger relic plasma and impulse-heavy kinetic builds rather than immediately nerfing the new top end.
 - Cloak still only hides even at a god roll. Phase 6b candidate: add an offense payoff (e.g. damage on the cloak-breaking shot, or a brief post-cloak Shots per Second spike) if duration/recharge rolls alone feel flat. No combat code yet.
 - Harder campaign content via authored high-damage projectile profiles, only after god rolls measurably raise the player ceiling (kept out of the loot pass deliberately).
+- First-pass economy scarcity tuning has landed (`bountyRate` 0.25 + repriced investment tracks; milestones now spread M1–M7+ in the balance report's Credit Flow section). Playtest whether salvage-first income feels right and whether late tiers feel earned rather than grindy. Known remaining gaps for level authoring, not config: the short-loop farm underpays its ~30% target (front-load more transport/captain salvage sources in early missions), and levels 9–11 pay less than 7–8 (harder missions should pay in loot quality — more and better drop sources — not bounty). Both apply to the Act 2 mission set.
 
 ## Story-Economy Arc (next broad systems, in this order)
 

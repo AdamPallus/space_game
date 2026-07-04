@@ -105,7 +105,48 @@ processional warden with a mirrored double prow), `boss_executor`
 (broadside, a barge refitted as a battering ram — crane arms become
 siege claws).
 
-### 2.2 Home background
+### 2.2 Music (ACE-Step 1.5 skill) → `assets/music/`
+
+First generated-music pass. Each Act 3 faction gets a combat track built on
+its identity; all three share one rule — **faster and more relentless than
+anything in the current pack** (the existing ceiling is 175 BPM boss music;
+these are invasion tracks). Workflow per track: instrumental only, generate
+2–3 candidates ~2:00–2:30 long, pick the take with the cleanest bar boundary,
+trim the loop on a downbeat, export `.ogg`, volume-match by ear against
+`space_boss_battle_bpm175.ogg`, set the level JSON `music` field, browser
+check that it loops without a pop. Credit the tool in `CREDITS.md`.
+
+1. **`act3_germination.ogg`** — Death Notice (Verdant). The sound of a
+   population arriving. Prompt direction: *instrumental, dark sci-fi action
+   hybrid, 150 bpm, driving tribal toms and insectile skittering percussion,
+   pulsing sub-bass heartbeat, tremolo strings and synth arpeggios that
+   layer and multiply as the track builds, breathing organic pads, urgent,
+   relentless, alien swarm, video-game combat loop.* The arpeggio layers
+   stacking up over the loop is the faction mechanic (spawners) in music.
+2. **`act3_unanimous_motion.ogg`** — Next of Kin (Chorus). A hymn
+   accelerated into a cavalry charge. Prompt direction: *instrumental,
+   gothic sci-fi battle music, 160 bpm, pipe organ ostinato, wordless choir
+   pads, machine-precise military snare and taiko, tolling bells, staccato
+   low strings, martial, cold, perfectly synchronized, relentless forward
+   march.* Precision matters more than aggression — quantized, inhumanly
+   tight, nothing swings.
+3. **`act3_final_notice.ogg`** — Death Duties (Tithe). Heavy industry
+   forecloses on you. Prompt direction: *instrumental, industrial cinematic
+   action, 148 bpm, anvil and metal-impact percussion, chain rattles, low
+   brass foghorn stabs, distorted engine-drone bass, hammering press-machine
+   groove with a menacing swagger, sci-fi siege, dark heavy loop.* This one
+   is allowed to groove — the Tithe is the only faction with swagger.
+4. **`act3_heir_apparent.ogg`** (deferred until P7 exists) — the finale
+   chimera. One shared motif restated three ways in one loop: organ/choir
+   statement, industrial brass statement, swarming organic statement,
+   ~170 bpm, each section bleeding into the next. Brief only for now; the
+   tri-phase boss it scores is blocked on §0.
+
+If the model handles these well, follow-up candidates: an Act 2 retune pass
+gets faction variants at lower intensity, and `02_stillness_of_space.ogg`
+gets a generated successor for Dead Air with a colder, emptier brief.
+
+### 2.3 Home background
 
 `home_hull` scrolling tile: the player's own mothership seen from the picket
 line — lit windows, inhabited, worth defending; the emotional inverse of

@@ -28,7 +28,7 @@ These are intentional follow-up targets, not bugs in the docs:
 - Item durability remains deferred.
 - Cargo/economy hulls remain deferred.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader design direction rather than current gameplay systems.
-- The Act 2 art pass remains pending: Chorus, Tithe, Verdant additions, Origin boss, new backgrounds, projectile variants, and compendium art refresh are still tracked in `ACT2_CODEX_SPEC.md`.
+- Act 2 needs a combat-intensity retune: playtesting found its encounters run at a fraction of Act 1 pressure (see the doctrine and telemetry floors in `ACT3_PROBATE_DESIGN.md`).
 - The new overhaul systems still need player testing around second-bay damage strain, early hard-mission pickups, cache readability, hull art/readability, phone-sized Armory density, and whether high-rarity defense is now too strong. Recent tuning already made mini rarity matter, made defense rarity matter, gave focused single-shot primaries competitive DPS, clarified item stats, surfaced per-bay effective DPS on the Armory stage, and changed Dual Fire to independent per-weapon cadence.
 
 ## Run Locally
@@ -135,8 +135,9 @@ Active docs in the repo root:
 - `LEVEL_JSON_FORMAT.md`: active level schema reference.
 - `WEAPON_FRAME_FORMAT.md`: active weapon-frame schema reference.
 - `ITEM_UX_SPEC.md`: active item-communication reference (intrinsic item stats, effective deltas, tooltip/inspector stat block, rarity treatment, roll-quality surfacing).
-- `ACT2_SILENT_LINEAGES_DESIGN.md`: Act 2 campaign design (three sibling-lineage factions, branching mission graph, 11 authored missions); the v1 playable data pass ships alongside it.
-- `ACT2_CODEX_SPEC.md`: Act 2 hand-off; engine pass is implemented, art-pack generation remains active.
+- `ACT2_SILENT_LINEAGES_DESIGN.md`: Act 2 campaign design (three sibling-lineage factions, branching mission graph, 11 authored missions); implemented, awaiting a combat-intensity retune.
+- `ACT3_PROBATE_DESIGN.md`: Act 3 invasion campaign design and the combat-pressure doctrine (measured tuning floors via `?devPressure=1`).
+- `ACT3_CODEX_SPEC.md`: Act 3 engine upgrades (rammer/latch AIs, breach integrity, Heirloom tier, lien cap) and invasion art — ready for Codex.
 - `STORY-PREMISE.md`: active tone and lore source.
 - `STORY-PREMISE-DEEP-HISTORY.md`: deep history and endgame arc extending the story premise; feeds the Story-Economy Arc in `ROADMAP.md`.
 - `CREDITS.md`: asset and tool credits.

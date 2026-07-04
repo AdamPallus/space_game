@@ -1,0 +1,513 @@
+{
+  "id": "act3_death_notice",
+  "name": "Death Notice",
+  "background": "generatedOriginHull",
+  "visualTheme": "bio_v1",
+  "music": "space_battle_bpm130.ogg",
+  "difficulty": "Invasion",
+  "description": "The seeds arrive first. A Verdant vanguard comes in at planetfall velocity, aimed straight at home \u2014 nothing out here is wandering anymore.",
+  "completeOnBoss": true,
+  "debriefLore": [
+    "Probate notice served. Response: germination.",
+    "Picket log: contact velocity exceeds every catalog ceiling. They are not drifting anymore.",
+    "Sample assay: seed casings imprinted with a hull registry. Yours."
+  ],
+  "enemyTypes": {
+    "sporeling": {
+      "hull": 22,
+      "speed": 165,
+      "attackPatterns": [
+        {
+          "id": "spore_spit",
+          "mode": "aim",
+          "profile": "sporePuff",
+          "fireRate": 1.3,
+          "weight": 1,
+          "speedJitter": 0.12
+        }
+      ]
+    },
+    "burster": {},
+    "thornwing": {
+      "hull": 62,
+      "speed": 128,
+      "attackPatterns": [
+        {
+          "id": "thorn_volley",
+          "mode": "spread",
+          "profile": "thornVolley",
+          "count": 4,
+          "spreadDeg": 32,
+          "fireRate": 1.1,
+          "weight": 3
+        },
+        {
+          "id": "thorn_snap",
+          "mode": "aim",
+          "profile": "thornVolley",
+          "fireRate": 0.95,
+          "weight": 2
+        }
+      ]
+    },
+    "strangler": {
+      "attackPatterns": [
+        {
+          "id": "strangle_needle",
+          "mode": "aim",
+          "profile": "strangleNeedle",
+          "fireRate": 0.9,
+          "weight": 3,
+          "speedJitter": 0.05
+        },
+        {
+          "id": "strangle_pair",
+          "mode": "aim",
+          "profile": "strangleNeedle",
+          "fireRate": 1.5,
+          "weight": 1,
+          "shots": [
+            {
+              "profile": "strangleNeedle",
+              "angleOffsetDeg": -4
+            },
+            {
+              "profile": "strangleNeedle",
+              "angleOffsetDeg": 4
+            }
+          ]
+        }
+      ],
+      "hull": 95,
+      "shield": 40
+    },
+    "bloomcaller": {
+      "hull": 150,
+      "shield": 95,
+      "ai": "spawner",
+      "aiParams": {
+        "spawnEvery": 5,
+        "spawnType": "sporeling",
+        "maxAlive": 4
+      },
+      "attackPatterns": [
+        {
+          "id": "spore_pulse",
+          "mode": "radial",
+          "profile": "sporePuff",
+          "count": 16,
+          "fireRate": 1.0,
+          "weight": 3,
+          "speedJitter": 0.14
+        },
+        {
+          "id": "heavy_bloom",
+          "mode": "aim",
+          "profile": "sporeOrb",
+          "fireRate": 1.5,
+          "weight": 2
+        }
+      ]
+    },
+    "seedcarrier": {
+      "hull": 150,
+      "ai": "splitter",
+      "aiParams": {
+        "splitCount": 3,
+        "splitType": "burster"
+      },
+      "attackPatterns": [
+        {
+          "id": "seed_drip",
+          "mode": "aim",
+          "profile": "sporePuff",
+          "fireRate": 2.6,
+          "weight": 1
+        }
+      ]
+    },
+    "seedcrown": {
+      "attackPatterns": [
+        {
+          "id": "crown_ring",
+          "mode": "radial",
+          "profile": "sporeOrb",
+          "count": 14,
+          "fireRate": 1.25,
+          "weight": 3,
+          "speedJitter": 0.1
+        },
+        {
+          "id": "crown_burst",
+          "mode": "radial",
+          "profile": "sporePuff",
+          "count": 24,
+          "fireRate": 1.6,
+          "weight": 2,
+          "speedJitter": 0.16
+        },
+        {
+          "id": "crown_core",
+          "mode": "aim",
+          "profile": "rootCore",
+          "fireRate": 2.6,
+          "weight": 1
+        }
+      ]
+    },
+    "boss": {
+      "template": "act3_death_notice:boss",
+      "attackPatterns": [
+        {
+          "id": "root_ring",
+          "mode": "radial",
+          "profile": "sporeOrb",
+          "count": 16,
+          "fireRate": 1.1,
+          "weight": 4,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "pollen_storm",
+          "mode": "radial",
+          "profile": "sporePuff",
+          "count": 26,
+          "fireRate": 1.3,
+          "weight": 3,
+          "speedJitter": 0.2
+        },
+        {
+          "id": "thorn_lattice",
+          "mode": "spread",
+          "profile": "thornVolley",
+          "count": 9,
+          "spreadDeg": 92,
+          "fireRate": 0.95,
+          "weight": 3,
+          "speedJitter": 0.06
+        },
+        {
+          "id": "root_cores",
+          "mode": "aim",
+          "profile": "rootCore",
+          "fireRate": 1.6,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "rootCore",
+              "angleOffsetDeg": -9
+            },
+            {
+              "profile": "rootCore",
+              "angleOffsetDeg": 9
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "time": 1.5,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.5
+    },
+    {
+      "time": 2,
+      "type": "sporeling",
+      "count": 45,
+      "interval": 3.8
+    },
+    {
+      "time": 4,
+      "type": "strangler",
+      "count": 3,
+      "interval": 1.0
+    },
+    {
+      "time": 5,
+      "type": "bloomcaller",
+      "count": 3,
+      "interval": 1.6
+    },
+    {
+      "time": 8,
+      "type": "burster",
+      "count": 37,
+      "interval": 4.4
+    },
+    {
+      "time": 8,
+      "type": "strangler",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 12,
+      "type": "thornwing",
+      "count": 6,
+      "interval": 0.5
+    },
+    {
+      "time": 18,
+      "type": "burster",
+      "count": 4,
+      "interval": 0.5
+    },
+    {
+      "time": 23,
+      "type": "thornwing",
+      "count": 7,
+      "interval": 0.6
+    },
+    {
+      "time": 29,
+      "type": "burster",
+      "count": 4,
+      "interval": 0.5
+    },
+    {
+      "time": 30,
+      "type": "strangler",
+      "count": 25,
+      "interval": 5.5
+    },
+    {
+      "time": 35,
+      "type": "strangler",
+      "count": 4,
+      "interval": 1.0
+    },
+    {
+      "time": 40,
+      "type": "bloomcaller",
+      "count": 15,
+      "interval": 9
+    },
+    {
+      "time": 41,
+      "type": "seedcarrier",
+      "count": 2,
+      "interval": 3.0
+    },
+    {
+      "time": 48,
+      "type": "bloomcaller",
+      "count": 3,
+      "interval": 1.4
+    },
+    {
+      "time": 55,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.55
+    },
+    {
+      "time": 61,
+      "type": "burster",
+      "count": 5,
+      "interval": 0.45
+    },
+    {
+      "time": 68,
+      "type": "strangler",
+      "count": 4,
+      "interval": 0.9
+    },
+    {
+      "time": 75,
+      "type": "seedcarrier",
+      "count": 2,
+      "interval": 2.6
+    },
+    {
+      "time": 81,
+      "type": "bloomcaller",
+      "count": 3,
+      "interval": 1.3
+    },
+    {
+      "time": 88,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.5
+    },
+    {
+      "time": 95,
+      "type": "seedcrown",
+      "count": 1
+    },
+    {
+      "time": 99,
+      "type": "burster",
+      "count": 5,
+      "interval": 0.45
+    },
+    {
+      "time": 107,
+      "type": "strangler",
+      "count": 5,
+      "interval": 0.8
+    },
+    {
+      "time": 115,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.5
+    },
+    {
+      "time": 122,
+      "type": "bloomcaller",
+      "count": 4,
+      "interval": 1.2
+    },
+    {
+      "time": 130,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 2.2
+    },
+    {
+      "time": 137,
+      "type": "burster",
+      "count": 6,
+      "interval": 0.4
+    },
+    {
+      "time": 144,
+      "type": "strangler",
+      "count": 5,
+      "interval": 0.75
+    },
+    {
+      "time": 152,
+      "type": "thornwing",
+      "count": 9,
+      "interval": 0.45
+    },
+    {
+      "time": 160,
+      "type": "bloomcaller",
+      "count": 4,
+      "interval": 1.1
+    },
+    {
+      "time": 167,
+      "type": "sporeling",
+      "count": 12,
+      "interval": 0.3
+    },
+    {
+      "time": 185,
+      "type": "boss",
+      "count": 1
+    },
+    {
+      "time": 188,
+      "type": "burster",
+      "count": 22,
+      "interval": 7.0
+    },
+    {
+      "time": 193,
+      "type": "sporeling",
+      "count": 20,
+      "interval": 7.0
+    },
+    {
+      "time": 198,
+      "type": "strangler",
+      "count": 8,
+      "interval": 16
+    }
+  ],
+  "pickups": [
+    {
+      "time": 45,
+      "type": "salvage",
+      "rarity": "certified",
+      "slotType": "primary",
+      "x": 0.42,
+      "y": -46
+    },
+    {
+      "time": 100,
+      "type": "shield_booster",
+      "x": 0.5
+    },
+    {
+      "time": 130,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "mini",
+      "x": 0.6,
+      "y": -50
+    },
+    {
+      "time": 176,
+      "type": "armor_patch",
+      "x": 0.48
+    },
+    {
+      "time": 205,
+      "type": "shield_booster",
+      "x": 0.54
+    }
+  ],
+  "projectileProfiles": {
+    "sporePuff": {
+      "threatClass": "chip",
+      "damage": 9,
+      "speed": 200,
+      "radius": 5,
+      "image": "enemy_space_cool_plasma_ball",
+      "width": 26,
+      "height": 26,
+      "animation": "orb",
+      "spinRate": 1.2
+    },
+    "thornVolley": {
+      "threatClass": "standard",
+      "damage": 26,
+      "speed": 275,
+      "radius": 4,
+      "image": "enemy_space_cool_standard_bolt",
+      "width": 16,
+      "height": 42,
+      "animation": "bolt"
+    },
+    "strangleNeedle": {
+      "threatClass": "standard",
+      "damage": 28,
+      "speed": 320,
+      "radius": 3,
+      "image": "enemy_space_cool_chip_needle",
+      "width": 11,
+      "height": 38,
+      "animation": "lance"
+    },
+    "sporeOrb": {
+      "threatClass": "heavy",
+      "damage": 46,
+      "speed": 140,
+      "radius": 9,
+      "image": "enemy_space_cool_plasma_ball",
+      "width": 46,
+      "height": 46,
+      "animation": "orb",
+      "spinRate": 1.4
+    },
+    "rootCore": {
+      "threatClass": "bossHazard",
+      "damage": 64,
+      "speed": 125,
+      "radius": 12,
+      "image": "enemy_space_cool_boss_core",
+      "width": 72,
+      "height": 72,
+      "animation": "orb",
+      "spinRate": 1.2
+    }
+  }
+}

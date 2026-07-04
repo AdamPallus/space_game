@@ -1,0 +1,473 @@
+{
+  "id": "act3_death_duties",
+  "name": "Death Duties",
+  "background": "generatedOriginHull",
+  "music": "space_boss_battle_bpm175.ogg",
+  "difficulty": "Invasion",
+  "description": "The Tithe has come to assess the estate \u2014 and the estate is your home. Grapplers board, gunwalls advance, and everything gets itemized.",
+  "completeOnBoss": true,
+  "debriefLore": [
+    "Notice of assessment, addressed to the estate. Line one: the hull you launched from.",
+    "Manifest line 7 \u2014 seal matches your own. Line 8 is blank. Line 8 is reserved.",
+    "The Executor does not accept payment plans."
+  ],
+  "enemyTypes": {
+    "teller": {
+      "hull": 30,
+      "speed": 162,
+      "attackPatterns": [
+        {
+          "id": "teller_snap",
+          "mode": "aim",
+          "profile": "tellerDart",
+          "fireRate": 1.1,
+          "weight": 1,
+          "speedJitter": 0.08
+        }
+      ]
+    },
+    "grappler": {},
+    "pressgang": {
+      "attackPatterns": [
+        {
+          "id": "wall_fan",
+          "mode": "spread",
+          "profile": "slugRound",
+          "count": 7,
+          "spreadDeg": 62,
+          "fireRate": 1.25,
+          "weight": 3
+        },
+        {
+          "id": "wall_flak",
+          "mode": "aim",
+          "profile": "flakCore",
+          "fireRate": 1.6,
+          "weight": 2
+        }
+      ],
+      "patternParams": {
+        "stallY": 200,
+        "stallDuration": 18,
+        "strafeAmp": 150,
+        "strafeFreq": 1.1,
+        "postSpeedMult": 1.0
+      },
+      "hull": 80,
+      "armor": 120,
+      "armorClass": 11
+    },
+    "assessor": {
+      "hull": 56,
+      "shield": 44,
+      "ai": "lien",
+      "aiParams": {
+        "attachRadius": 165,
+        "drainPerSecond": 8
+      },
+      "attackPatterns": [
+        {
+          "id": "lien_shot",
+          "mode": "aim",
+          "profile": "slugRound",
+          "fireRate": 1.2,
+          "weight": 1
+        }
+      ]
+    },
+    "strongbox": {
+      "baseCredit": 220,
+      "attackPatterns": [
+        {
+          "id": "vault_dart",
+          "mode": "aim",
+          "profile": "tellerDart",
+          "fireRate": 2.8,
+          "weight": 1
+        }
+      ]
+    },
+    "pressmaster": {
+      "attackPatterns": [
+        {
+          "id": "press_ring",
+          "mode": "radial",
+          "profile": "slugRound",
+          "count": 20,
+          "fireRate": 1.15,
+          "weight": 3,
+          "speedJitter": 0.1
+        },
+        {
+          "id": "press_seal",
+          "mode": "aim",
+          "profile": "flakCore",
+          "fireRate": 1.7,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "flakCore",
+              "angleOffsetDeg": -9
+            },
+            {
+              "profile": "executorCore"
+            },
+            {
+              "profile": "flakCore",
+              "angleOffsetDeg": 9
+            }
+          ]
+        }
+      ]
+    },
+    "boss": {
+      "template": "act3_death_duties:boss",
+      "attackPatterns": [
+        {
+          "id": "manifest_stamp",
+          "mode": "radial",
+          "profile": "slugRound",
+          "count": 24,
+          "fireRate": 0.95,
+          "weight": 4,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "cargo_wall",
+          "mode": "spread",
+          "profile": "flakCore",
+          "count": 7,
+          "spreadDeg": 74,
+          "fireRate": 1.15,
+          "weight": 3,
+          "shots": [
+            {
+              "profile": "flakCore"
+            },
+            {
+              "profile": "slugRound"
+            },
+            {
+              "profile": "executorCore"
+            },
+            {
+              "profile": "slugRound"
+            },
+            {
+              "profile": "executorCore"
+            },
+            {
+              "profile": "slugRound"
+            },
+            {
+              "profile": "flakCore"
+            }
+          ]
+        },
+        {
+          "id": "seizure",
+          "mode": "aim",
+          "profile": "executorCore",
+          "fireRate": 1.6,
+          "weight": 2,
+          "tractor": {
+            "duration": 1.2,
+            "strength": 210
+          },
+          "shots": [
+            {
+              "profile": "executorCore",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "executorCore",
+              "angleOffsetDeg": 8
+            }
+          ]
+        },
+        {
+          "id": "dart_ring",
+          "mode": "radial",
+          "profile": "tellerDart",
+          "count": 18,
+          "fireRate": 2.2,
+          "weight": 1,
+          "speedJitter": 0.14
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "time": 2,
+      "type": "teller",
+      "count": 40,
+      "interval": 4.4
+    },
+    {
+      "time": 3,
+      "type": "teller",
+      "count": 5,
+      "interval": 0.4
+    },
+    {
+      "time": 5,
+      "type": "assessor",
+      "count": 2,
+      "interval": 1.1
+    },
+    {
+      "time": 9,
+      "type": "pressgang",
+      "count": 2,
+      "interval": 1.6
+    },
+    {
+      "time": 10,
+      "type": "grappler",
+      "count": 38,
+      "interval": 4.5
+    },
+    {
+      "time": 13,
+      "type": "teller",
+      "count": 5,
+      "interval": 0.45
+    },
+    {
+      "time": 16,
+      "type": "assessor",
+      "count": 2,
+      "interval": 1.3
+    },
+    {
+      "time": 23,
+      "type": "grappler",
+      "count": 4,
+      "interval": 0.5
+    },
+    {
+      "time": 28,
+      "type": "pressgang",
+      "count": 10,
+      "interval": 14
+    },
+    {
+      "time": 29,
+      "type": "teller",
+      "count": 6,
+      "interval": 0.38
+    },
+    {
+      "time": 36,
+      "type": "pressgang",
+      "count": 2,
+      "interval": 1.5
+    },
+    {
+      "time": 44,
+      "type": "assessor",
+      "count": 2,
+      "interval": 1.1
+    },
+    {
+      "time": 52,
+      "type": "grappler",
+      "count": 5,
+      "interval": 0.45
+    },
+    {
+      "time": 55,
+      "type": "strongbox",
+      "count": 1
+    },
+    {
+      "time": 60,
+      "type": "teller",
+      "count": 6,
+      "interval": 0.36
+    },
+    {
+      "time": 68,
+      "type": "pressgang",
+      "count": 3,
+      "interval": 1.4
+    },
+    {
+      "time": 76,
+      "type": "assessor",
+      "count": 2,
+      "interval": 1.0
+    },
+    {
+      "time": 84,
+      "type": "grappler",
+      "count": 5,
+      "interval": 0.42
+    },
+    {
+      "time": 92,
+      "type": "teller",
+      "count": 7,
+      "interval": 0.34
+    },
+    {
+      "time": 105,
+      "type": "pressmaster",
+      "count": 1
+    },
+    {
+      "time": 109,
+      "type": "grappler",
+      "count": 4,
+      "interval": 0.5
+    },
+    {
+      "time": 117,
+      "type": "teller",
+      "count": 5,
+      "interval": 0.38
+    },
+    {
+      "time": 120,
+      "type": "strongbox",
+      "count": 1
+    },
+    {
+      "time": 126,
+      "type": "pressgang",
+      "count": 3,
+      "interval": 1.3
+    },
+    {
+      "time": 134,
+      "type": "assessor",
+      "count": 2,
+      "interval": 0.95
+    },
+    {
+      "time": 142,
+      "type": "grappler",
+      "count": 6,
+      "interval": 0.4
+    },
+    {
+      "time": 150,
+      "type": "teller",
+      "count": 7,
+      "interval": 0.32
+    },
+    {
+      "time": 158,
+      "type": "pressgang",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 166,
+      "type": "teller",
+      "count": 10,
+      "interval": 0.32
+    },
+    {
+      "time": 195,
+      "type": "boss",
+      "count": 1
+    },
+    {
+      "time": 198,
+      "type": "grappler",
+      "count": 16,
+      "interval": 9.0
+    },
+    {
+      "time": 205,
+      "type": "teller",
+      "count": 16,
+      "interval": 8.5
+    },
+    {
+      "time": 215,
+      "type": "assessor",
+      "count": 2,
+      "interval": 26
+    }
+  ],
+  "pickups": [
+    {
+      "time": 48,
+      "type": "salvage",
+      "rarity": "certified",
+      "slotType": "primary",
+      "x": 0.44,
+      "y": -46
+    },
+    {
+      "time": 111,
+      "type": "armor_patch",
+      "x": 0.5
+    },
+    {
+      "time": 138,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "primary",
+      "x": 0.58,
+      "y": -50
+    },
+    {
+      "time": 184,
+      "type": "shield_booster",
+      "x": 0.46
+    },
+    {
+      "time": 218,
+      "type": "armor_patch",
+      "x": 0.54
+    }
+  ],
+  "projectileProfiles": {
+    "tellerDart": {
+      "threatClass": "chip",
+      "damage": 10,
+      "speed": 280,
+      "radius": 3,
+      "image": "enemy_space_warm_chip_dart",
+      "width": 13,
+      "height": 34,
+      "animation": "bolt"
+    },
+    "slugRound": {
+      "threatClass": "standard",
+      "damage": 24,
+      "speed": 230,
+      "radius": 5,
+      "image": "enemy_space_warm_standard_slug",
+      "width": 16,
+      "height": 40,
+      "animation": "bolt"
+    },
+    "flakCore": {
+      "threatClass": "heavy",
+      "damage": 48,
+      "speed": 155,
+      "radius": 8,
+      "image": "enemy_space_warm_heavy_core",
+      "width": 50,
+      "height": 50,
+      "animation": "orb",
+      "spinRate": 2.0
+    },
+    "executorCore": {
+      "threatClass": "bossHazard",
+      "damage": 66,
+      "speed": 130,
+      "radius": 13,
+      "image": "enemy_space_warm_boss_core",
+      "width": 72,
+      "height": 72,
+      "animation": "orb",
+      "spinRate": 1.4
+    }
+  }
+}

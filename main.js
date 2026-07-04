@@ -3641,6 +3641,137 @@ const devRequestedBackground = getDevParam("bg");
 const devInvincible = isDevFlagEnabled("devInvincible");
 const devAutoFire = isDevFlagEnabled("devAutoFire");
 const devTuning = isDevFlagEnabled("devTuning");
+const devPressure = isDevFlagEnabled("devPressure");
+// Combat-pressure telemetry (?devPressure=1): records raw incoming threat per
+// mission so encounter tuning can target measured pressure floors instead of
+// guesses. Pair with ?devInvincible=1 for a static worst-case probe; read
+// results with window.__pressureReport().
+const pressureLog = devPressure
+  ? { missionId: null, sampleTimer: 0, samples: [], hits: [] }
+  : null;
+
+function pressureResetIfNewMission() {
+  if (!pressureLog || !mission) return;
+  const id = mission.level?.id || null;
+  if (pressureLog.missionId === id) return;
+  pressureLog.missionId = id;
+  pressureLog.samples.length = 0;
+  pressureLog.hits.length = 0;
+  pressureLog.sampleTimer = 0;
+}
+
+function pressureRecordHit(amount, collision) {
+  if (!pressureLog || !mission?.active || !Number.isFinite(amount) || amount <= 0) return;
+  pressureResetIfNewMission();
+  pressureLog.hits.push({ t: mission.elapsed, amount, collision: !!collision });
+}
+
+function pressureSample(delta) {
+  if (!pressureLog || !mission?.active) return;
+  pressureResetIfNewMission();
+  pressureLog.sampleTimer -= delta;
+  if (pressureLog.sampleTimer > 0) return;
+  pressureLog.sampleTimer = 0.25;
+  let near = 0;
+  for (const bullet of enemyBullets) {
+    const dx = bullet.x - player.x;
+    const dy = bullet.y - player.y;
+    if (dx * dx + dy * dy < 160 * 160) near += 1;
+  }
+  pressureLog.samples.push({
+    t: Math.round(mission.elapsed * 100) / 100,
+    enemies: enemies.length,
+    bullets: enemyBullets.length,
+    near,
+  });
+}
+
+// Post-processes the hit timeline through a fixed mid-tier reference build
+// (roughly a certified heavy-plate loadout) to estimate when a non-dodging
+// player would die. Mirrors applyDamage layer order: shield (non-collision
+// only) -> armor with armor-class subtraction -> hull.
+function pressureSimulateReferenceBuild(hits) {
+  const build = { shieldMax: 47, regenRate: 8, regenDelay: 2.5, armor: 60, armorClass: 8, hull: 100 };
+  let shield = build.shieldMax;
+  let armor = build.armor;
+  let hull = build.hull;
+  let lastT = 0;
+  let regenBlockedUntil = 0;
+  for (const hit of hits) {
+    const gap = Math.max(0, hit.t - Math.max(lastT, regenBlockedUntil));
+    shield = Math.min(build.shieldMax, shield + gap * build.regenRate);
+    let amount = hit.amount;
+    if (!hit.collision && shield > 0) {
+      const absorbed = Math.min(shield, amount);
+      shield -= absorbed;
+      amount -= absorbed;
+      if (absorbed > 0) regenBlockedUntil = hit.t + build.regenDelay;
+    }
+    if (amount > 0 && armor > 0) {
+      const effective = hit.collision ? amount : Math.max(0, amount - build.armorClass);
+      const toArmor = Math.min(armor, effective);
+      armor -= toArmor;
+      amount = effective - toArmor;
+    } else if (amount > 0 && !hit.collision) {
+      amount = Math.max(0, amount - build.armorClass * (armor > 0 ? 1 : 0));
+    }
+    if (amount > 0) hull -= amount;
+    if (hull <= 0) return { diesAt: Math.round(hit.t * 10) / 10, survives: false };
+    lastT = hit.t;
+  }
+  return { diesAt: null, survives: true, hullLeft: Math.round(hull), armorLeft: Math.round(armor) };
+}
+
+window.__pressureReport = () => {
+  if (!pressureLog) return { enabled: false };
+  const { samples, hits, missionId } = pressureLog;
+  const duration = samples.length ? samples[samples.length - 1].t : 0;
+  const totalDamage = hits.reduce((sum, hit) => sum + hit.amount, 0);
+  const collisionDamage = hits
+    .filter((hit) => hit.collision)
+    .reduce((sum, hit) => sum + hit.amount, 0);
+  let worst10s = 0;
+  let lo = 0;
+  for (let hi = 0; hi < hits.length; hi += 1) {
+    while (hits[hi].t - hits[lo].t > 10) lo += 1;
+    let sum = 0;
+    for (let i = lo; i <= hi; i += 1) sum += hits[i].amount;
+    worst10s = Math.max(worst10s, sum);
+  }
+  const quietWindows = [];
+  let quietStart = null;
+  samples.forEach((sample, index) => {
+    const quiet = sample.bullets === 0;
+    if (quiet && quietStart === null) quietStart = sample.t;
+    if ((!quiet || index === samples.length - 1) && quietStart !== null) {
+      const end = quiet ? sample.t : samples[Math.max(0, index - 1)].t;
+      if (end - quietStart >= 3) {
+        quietWindows.push({ from: Math.round(quietStart), to: Math.round(end) });
+      }
+      quietStart = null;
+    }
+  });
+  const activeSamples = samples.filter((sample) => sample.enemies > 0);
+  return {
+    enabled: true,
+    missionId,
+    duration: Math.round(duration),
+    totalDamage: Math.round(totalDamage),
+    collisionDamage: Math.round(collisionDamage),
+    avgIncomingDps: duration ? Math.round((totalDamage / duration) * 10) / 10 : 0,
+    worst10sDamage: Math.round(worst10s),
+    hitsTaken: hits.length,
+    quietWindows,
+    quietSecondsTotal: quietWindows.reduce((sum, w) => sum + (w.to - w.from), 0),
+    avgNearBullets: activeSamples.length
+      ? Math.round((activeSamples.reduce((sum, s) => sum + s.near, 0) / activeSamples.length) * 10) / 10
+      : 0,
+    maxNearBullets: samples.reduce((max, s) => Math.max(max, s.near), 0),
+    maxBullets: samples.reduce((max, s) => Math.max(max, s.bullets), 0),
+    maxEnemies: samples.reduce((max, s) => Math.max(max, s.enemies), 0),
+    referenceBuild: pressureSimulateReferenceBuild(hits),
+  };
+};
 const devUiSkin = getAnyDevParam(["uiSkin", "skin", "buttonSkin", "buttons"]).toLowerCase();
 const devGeneratedUiSkin = ["generated", "1", "true", "yes", "on"].includes(devUiSkin);
 if (devGeneratedUiSkin) {
@@ -4184,6 +4315,9 @@ const availableLevels = [
   { id: "act2_bloom", label: "Act 2: Bloom", branch: "verdant", requires: [{ completed: "act2_green_signal" }] },
   { id: "act2_old_growth", label: "Act 2: Old Growth", branch: "verdant", requires: [{ completed: "act2_bloom" }] },
   { id: "act2_pilgrimage", label: "Act 2: Pilgrimage", branch: "origin", requires: [{ completed: "act2_old_growth" }] },
+  { id: "act3_death_notice", label: "Act 3: Death Notice", requires: [{ completed: "act2_pilgrimage" }] },
+  { id: "act3_next_of_kin", label: "Act 3: Next of Kin", requires: [{ completed: "act3_death_notice" }] },
+  { id: "act3_death_duties", label: "Act 3: Death Duties", requires: [{ completed: "act3_next_of_kin" }] },
   { id: "overhaul_demo", label: "Overhaul Demo", test: true },
   { id: "patterns_demo", label: "Pattern Lab", test: true },
   { id: "ai_demo", label: "AI Lab", test: true },
@@ -12206,6 +12340,7 @@ function update(delta) {
   mission.spawnTimer -= delta;
   mission.enemyFireTimer -= delta;
   mission.difficulty = getMissionDifficultyAtElapsed(mission.elapsed);
+  pressureSample(delta);
   updateConductorLinks(delta);
   enemies.forEach((enemy) => updateBossPhase(enemy, delta));
   if (player.bulwarkTimer > 0) {
@@ -13029,6 +13164,7 @@ function handleEnemyDestroyed(enemy, bullet) {
 }
 
 function applyDamage(amount, { collision = false, sourceX = null, sourceY = null } = {}) {
+  pressureRecordHit(amount, collision);
   if (state.debugInvincible) return;
   revealPlayerHealth();
   player.hitTimer = 0.25;

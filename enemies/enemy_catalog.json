@@ -2424,6 +2424,304 @@
         "spriteScale": 0.92
       },
       "miniboss": true
+    },
+    "burster": {
+      "name": "Burster Seedpod",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v2/bio_sporeling.png",
+        "hull": 22,
+        "shield": 0,
+        "armor": 0,
+        "speed": 195,
+        "score": 130,
+        "baseCredit": 6,
+        "radius": 14,
+        "ai": "hunter",
+        "collisionDamage": 55,
+        "fireRate": 60,
+        "spriteScale": 0.62
+      }
+    },
+    "strangler": {
+      "name": "Strangler Vine-Hunter",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v1/bio_hunter.png",
+        "hull": 64,
+        "shield": 20,
+        "shieldRegen": 8,
+        "armor": 0,
+        "speed": 150,
+        "score": 340,
+        "baseCredit": 24,
+        "radius": 20,
+        "ai": "hunter",
+        "collisionDamage": 40,
+        "fireRate": 1.35,
+        "fireMode": "aim",
+        "bulletSpeed": 300,
+        "spriteScale": 0.78
+      }
+    },
+    "seedcrown": {
+      "name": "Seedcrown",
+      "boss": false,
+      "miniboss": true,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v2/bio_broodmother.png",
+        "hull": 620,
+        "shield": 260,
+        "shieldRegen": 14,
+        "armor": 0,
+        "speed": 90,
+        "score": 2200,
+        "baseCredit": 300,
+        "radius": 52,
+        "pattern": "bossOrbit",
+        "patternParams": {
+          "radiusX": 290,
+          "radiusY": 85,
+          "orbitSpeed": 0.7,
+          "warmupTime": 0.6
+        },
+        "ai": "spawner",
+        "aiParams": {
+          "spawnEvery": 5.5,
+          "spawnType": "burster",
+          "maxAlive": 3
+        },
+        "fireRate": 1.05,
+        "fireMode": "radial",
+        "fireCount": 14,
+        "bulletSpeed": 150,
+        "spriteScale": 0.8
+      }
+    },
+    "act3_death_notice:boss": {
+      "name": "Rootcrown",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/bio_enemies_v2/boss_matriarch.png",
+        "hull": 2000,
+        "shield": 420,
+        "shieldRegen": 14,
+        "armor": 100,
+        "armorClass": 5,
+        "speed": 104,
+        "score": 5200,
+        "baseCredit": 1250,
+        "radius": 80,
+        "pattern": "bossAdvanceSweep",
+        "patternParams": {
+          "pause": 0.6,
+          "advance": 70,
+          "advanceTime": 0.55,
+          "sweepDuration": 1.9,
+          "retreatTime": 0.6,
+          "depth": 96
+        },
+        "isBoss": true,
+        "fireRate": 0.6,
+        "fireMode": "radial",
+        "fireCount": 18,
+        "bulletSpeed": 165,
+        "spriteScale": 1.0
+      }
+    },
+    "zealot": {
+      "name": "Zealot Lane-Runner",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_censer.png",
+        "hull": 20,
+        "shield": 14,
+        "armor": 0,
+        "speed": 215,
+        "score": 150,
+        "baseCredit": 7,
+        "radius": 14,
+        "ai": "hunter",
+        "collisionDamage": 60,
+        "fireRate": 60,
+        "spriteScale": 0.62
+      }
+    },
+    "lictor": {
+      "name": "Lictor Line Anchor",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_precentor.png",
+        "hull": 70,
+        "shield": 140,
+        "shieldRegen": 18,
+        "armor": 0,
+        "speed": 105,
+        "score": 560,
+        "baseCredit": 46,
+        "radius": 24,
+        "ai": "sentinel",
+        "fireRate": 1.15,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.05,
+        "bulletSpeed": 235,
+        "spriteScale": 0.82
+      }
+    },
+    "lector": {
+      "name": "The Lector",
+      "boss": false,
+      "miniboss": true,
+      "template": {
+        "sprite": "assets/generated/chorus_fleet_v1/chorus_precentor_prime.png",
+        "hull": 260,
+        "shield": 520,
+        "shieldRegen": 22,
+        "armor": 0,
+        "speed": 112,
+        "score": 2300,
+        "baseCredit": 320,
+        "radius": 36,
+        "ai": "sentinel",
+        "fireRate": 0.85,
+        "fireMode": "spread",
+        "fireCount": 9,
+        "fireSpread": 1.2,
+        "bulletSpeed": 245,
+        "spriteScale": 0.98
+      }
+    },
+    "act3_next_of_kin:boss": {
+      "name": "The Claimant",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/chorus_fleet_v1/boss_processional_warden.png",
+        "hull": 1400,
+        "shield": 1300,
+        "shieldRegen": 22,
+        "armor": 100,
+        "armorClass": 6,
+        "speed": 138,
+        "score": 5600,
+        "baseCredit": 1350,
+        "radius": 76,
+        "ai": "mimic",
+        "aiParams": {
+          "echoDelay": 1.2,
+          "holdY": 190,
+          "standoff": 250
+        },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.55,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.25,
+        "bulletSpeed": 240,
+        "spriteScale": 0.98
+      }
+    },
+    "grappler": {
+      "name": "Grappler Boarding Skiff",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_bailiff.png",
+        "hull": 40,
+        "shield": 0,
+        "armor": 70,
+        "armorClass": 8,
+        "speed": 172,
+        "score": 320,
+        "baseCredit": 16,
+        "radius": 17,
+        "ai": "hunter",
+        "collisionDamage": 62,
+        "fireRate": 60,
+        "spriteScale": 0.7
+      }
+    },
+    "pressgang": {
+      "name": "Pressgang Gunwall",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_notary.png",
+        "hull": 80,
+        "shield": 0,
+        "armor": 120,
+        "armorClass": 11,
+        "speed": 58,
+        "score": 520,
+        "baseCredit": 40,
+        "radius": 22,
+        "pattern": "stall",
+        "patternParams": {
+          "stallY": 200,
+          "stallDuration": 30,
+          "strafeAmp": 150,
+          "strafeFreq": 1.1,
+          "postSpeedMult": 1.0
+        },
+        "fireRate": 1.3,
+        "fireMode": "spread",
+        "fireCount": 7,
+        "fireSpread": 1.0,
+        "bulletSpeed": 215,
+        "spriteScale": 0.76
+      }
+    },
+    "pressmaster": {
+      "name": "Pressmaster",
+      "boss": false,
+      "miniboss": true,
+      "template": {
+        "sprite": "assets/generated/tithe_fleet_v1/tithe_harbormaster.png",
+        "hull": 420,
+        "shield": 0,
+        "armor": 640,
+        "armorClass": 14,
+        "speed": 74,
+        "score": 2400,
+        "baseCredit": 340,
+        "radius": 44,
+        "pattern": "stall",
+        "patternParams": {
+          "stallY": 175,
+          "stallDuration": 40,
+          "strafeAmp": 230,
+          "strafeFreq": 0.95,
+          "postSpeedMult": 0.9
+        },
+        "fireRate": 0.8,
+        "fireMode": "radial",
+        "fireCount": 20,
+        "bulletSpeed": 195,
+        "spriteScale": 0.96
+      }
+    },
+    "act3_death_duties:boss": {
+      "name": "The Executor",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/tithe_fleet_v1/boss_collections_barge.png",
+        "hull": 1500,
+        "shield": 260,
+        "shieldRegen": 8,
+        "armor": 1300,
+        "armorClass": 15,
+        "speed": 84,
+        "score": 6000,
+        "baseCredit": 1450,
+        "radius": 88,
+        "pattern": "bossSweep",
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.6,
+        "fireMode": "radial",
+        "fireCount": 24,
+        "bulletSpeed": 195,
+        "spriteScale": 1.04
+      }
     }
   }
 }

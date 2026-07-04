@@ -1,0 +1,552 @@
+{
+  "id": "act3_next_of_kin",
+  "name": "Next of Kin",
+  "background": "generatedOriginHull",
+  "music": "space_adventure_bpm140.ogg",
+  "difficulty": "Invasion",
+  "description": "The procession breaks into a charge. The Chorus has finally agreed on something, and it is coming down your lane.",
+  "completeOnBoss": true,
+  "debriefLore": [
+    "Intercepted broadcast, all Chorus bands, unanimous: 'MOVE.' First passed motion in nine hundred years.",
+    "The oath fragment is complete again. Every missing word was a coordinate. The coordinates are home.",
+    "Claims desk advisory: kinship petitions filed against the estate. Petitioners inbound."
+  ],
+  "enemyTypes": {
+    "censer": {
+      "hull": 26,
+      "shield": 36,
+      "speed": 152,
+      "aiParams": {
+        "dodgeRadius": 190,
+        "dodgeStrength": 2.1
+      },
+      "attackPatterns": [
+        {
+          "id": "censer_snap",
+          "mode": "aim",
+          "profile": "hymnChip",
+          "fireRate": 1.0,
+          "weight": 1,
+          "speedJitter": 0.1
+        }
+      ]
+    },
+    "zealot": {},
+    "chorister": {
+      "hull": 44,
+      "shield": 96,
+      "shieldRegen": 16,
+      "attackPatterns": [
+        {
+          "id": "hymn_volley",
+          "mode": "spread",
+          "profile": "hymnChip",
+          "count": 4,
+          "spreadDeg": 30,
+          "fireRate": 1.25,
+          "weight": 3
+        },
+        {
+          "id": "response",
+          "mode": "aim",
+          "profile": "responseBolt",
+          "fireRate": 1.6,
+          "weight": 3
+        }
+      ]
+    },
+    "cantor": {
+      "hull": 38,
+      "shield": 64,
+      "attackPatterns": [
+        {
+          "id": "versicle_pair",
+          "mode": "aim",
+          "profile": "versicleNeedle",
+          "fireRate": 1.0,
+          "weight": 3,
+          "shots": [
+            {
+              "profile": "versicleNeedle",
+              "angleOffsetDeg": -5
+            },
+            {
+              "profile": "versicleNeedle",
+              "angleOffsetDeg": 5
+            }
+          ]
+        },
+        {
+          "id": "versicle",
+          "mode": "aim",
+          "profile": "versicleNeedle",
+          "fireRate": 0.95,
+          "weight": 2,
+          "speedJitter": 0.05
+        }
+      ]
+    },
+    "sexton": {
+      "hull": 44,
+      "shield": 86,
+      "armor": 100,
+      "armorClass": 9,
+      "attackPatterns": [
+        {
+          "id": "guard_heavy",
+          "mode": "aim",
+          "profile": "hymnHeavy",
+          "fireRate": 1.15,
+          "weight": 1
+        }
+      ]
+    },
+    "lictor": {
+      "attackPatterns": [
+        {
+          "id": "line_fan",
+          "mode": "spread",
+          "profile": "responseBolt",
+          "count": 7,
+          "spreadDeg": 58,
+          "fireRate": 0.95,
+          "weight": 3
+        },
+        {
+          "id": "line_heavy",
+          "mode": "aim",
+          "profile": "hymnHeavy",
+          "fireRate": 1.6,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "hymnHeavy",
+              "angleOffsetDeg": -7
+            },
+            {
+              "profile": "hymnHeavy",
+              "angleOffsetDeg": 7
+            }
+          ]
+        }
+      ],
+      "hull": 120,
+      "shield": 200
+    },
+    "lector": {
+      "attackPatterns": [
+        {
+          "id": "lector_fan",
+          "mode": "spread",
+          "profile": "responseBolt",
+          "count": 9,
+          "spreadDeg": 72,
+          "fireRate": 0.9,
+          "weight": 3,
+          "speedJitter": 0.05
+        },
+        {
+          "id": "lector_ring",
+          "mode": "radial",
+          "profile": "hymnChip",
+          "count": 22,
+          "fireRate": 1.4,
+          "weight": 2,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "lector_core",
+          "mode": "aim",
+          "profile": "claimRing",
+          "fireRate": 2.4,
+          "weight": 1
+        }
+      ]
+    },
+    "boss": {
+      "template": "act3_next_of_kin:boss",
+      "attackPatterns": [
+        {
+          "id": "mirror_fan",
+          "mode": "spread",
+          "profile": "responseBolt",
+          "count": 5,
+          "spreadDeg": 56,
+          "fireRate": 0.85,
+          "weight": 4
+        },
+        {
+          "id": "kin_needles",
+          "mode": "aim",
+          "profile": "versicleNeedle",
+          "fireRate": 1.05,
+          "weight": 3,
+          "shots": [
+            {
+              "profile": "versicleNeedle",
+              "angleOffsetDeg": -9
+            },
+            {
+              "profile": "versicleNeedle"
+            },
+            {
+              "profile": "versicleNeedle",
+              "angleOffsetDeg": 9
+            }
+          ]
+        },
+        {
+          "id": "claim_ring",
+          "mode": "radial",
+          "profile": "hymnChip",
+          "count": 26,
+          "fireRate": 1.35,
+          "weight": 3,
+          "speedJitter": 0.14
+        },
+        {
+          "id": "claim_cores",
+          "mode": "aim",
+          "profile": "claimRing",
+          "fireRate": 1.8,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "claimRing",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "claimRing",
+              "angleOffsetDeg": 8
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "time": 2,
+      "type": "censer",
+      "count": 45,
+      "interval": 3.9
+    },
+    {
+      "time": 3,
+      "type": "chorister",
+      "count": 7,
+      "interval": 0.4
+    },
+    {
+      "time": 4,
+      "type": "cantor",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 6,
+      "type": "sexton",
+      "count": 2,
+      "interval": 1.4
+    },
+    {
+      "time": 8,
+      "type": "zealot",
+      "count": 44,
+      "interval": 3.8
+    },
+    {
+      "time": 10,
+      "type": "cantor",
+      "count": 3,
+      "interval": 0.8
+    },
+    {
+      "time": 14,
+      "type": "chorister",
+      "count": 7,
+      "interval": 0.45
+    },
+    {
+      "time": 17,
+      "type": "chorister",
+      "count": 7,
+      "interval": 0.38
+    },
+    {
+      "time": 21,
+      "type": "chorister",
+      "count": 6,
+      "interval": 0.4
+    },
+    {
+      "time": 24,
+      "type": "zealot",
+      "count": 4,
+      "interval": 0.45
+    },
+    {
+      "time": 26,
+      "type": "lictor",
+      "count": 20,
+      "interval": 7
+    },
+    {
+      "time": 30,
+      "type": "lictor",
+      "count": 1
+    },
+    {
+      "time": 34,
+      "type": "cantor",
+      "count": 24,
+      "interval": 4.8
+    },
+    {
+      "time": 36,
+      "type": "cantor",
+      "count": 4,
+      "interval": 0.7
+    },
+    {
+      "time": 43,
+      "type": "chorister",
+      "count": 8,
+      "interval": 0.36
+    },
+    {
+      "time": 45,
+      "type": "zealot",
+      "count": 6,
+      "interval": 0.35
+    },
+    {
+      "time": 50,
+      "type": "sexton",
+      "count": 4,
+      "interval": 1.2
+    },
+    {
+      "time": 57,
+      "type": "zealot",
+      "count": 5,
+      "interval": 0.4
+    },
+    {
+      "time": 58,
+      "type": "chorister",
+      "count": 7,
+      "interval": 0.38
+    },
+    {
+      "time": 62,
+      "type": "lictor",
+      "count": 1
+    },
+    {
+      "time": 68,
+      "type": "cantor",
+      "count": 4,
+      "interval": 0.65
+    },
+    {
+      "time": 75,
+      "type": "chorister",
+      "count": 8,
+      "interval": 0.34
+    },
+    {
+      "time": 82,
+      "type": "censer",
+      "count": 4,
+      "interval": 0.6
+    },
+    {
+      "time": 89,
+      "type": "zealot",
+      "count": 5,
+      "interval": 0.38
+    },
+    {
+      "time": 95,
+      "type": "zealot",
+      "count": 7,
+      "interval": 0.35
+    },
+    {
+      "time": 100,
+      "type": "lector",
+      "count": 1
+    },
+    {
+      "time": 104,
+      "type": "chorister",
+      "count": 7,
+      "interval": 0.38
+    },
+    {
+      "time": 112,
+      "type": "cantor",
+      "count": 4,
+      "interval": 0.65
+    },
+    {
+      "time": 120,
+      "type": "sexton",
+      "count": 4,
+      "interval": 1.1
+    },
+    {
+      "time": 128,
+      "type": "zealot",
+      "count": 6,
+      "interval": 0.35
+    },
+    {
+      "time": 132,
+      "type": "lictor",
+      "count": 2,
+      "interval": 2.4
+    },
+    {
+      "time": 140,
+      "type": "chorister",
+      "count": 9,
+      "interval": 0.32
+    },
+    {
+      "time": 148,
+      "type": "cantor",
+      "count": 5,
+      "interval": 0.6
+    },
+    {
+      "time": 150,
+      "type": "zealot",
+      "count": 8,
+      "interval": 0.3
+    },
+    {
+      "time": 156,
+      "type": "censer",
+      "count": 5,
+      "interval": 0.55
+    },
+    {
+      "time": 165,
+      "type": "zealot",
+      "count": 8,
+      "interval": 0.4
+    },
+    {
+      "time": 190,
+      "type": "boss",
+      "count": 1
+    },
+    {
+      "time": 193,
+      "type": "zealot",
+      "count": 16,
+      "interval": 9.0
+    },
+    {
+      "time": 198,
+      "type": "censer",
+      "count": 14,
+      "interval": 9.5
+    },
+    {
+      "time": 208,
+      "type": "chorister",
+      "count": 7,
+      "interval": 0.5
+    }
+  ],
+  "pickups": [
+    {
+      "time": 47,
+      "type": "salvage",
+      "rarity": "certified",
+      "slotType": "defense",
+      "x": 0.4,
+      "y": -46
+    },
+    {
+      "time": 106,
+      "type": "shield_booster",
+      "x": 0.5
+    },
+    {
+      "time": 136,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "aux",
+      "x": 0.6,
+      "y": -50
+    },
+    {
+      "time": 180,
+      "type": "armor_patch",
+      "x": 0.46
+    },
+    {
+      "time": 212,
+      "type": "shield_booster",
+      "x": 0.55
+    }
+  ],
+  "projectileProfiles": {
+    "hymnChip": {
+      "threatClass": "chip",
+      "damage": 9,
+      "speed": 290,
+      "radius": 3,
+      "image": "enemy_space_cool_chip_dart",
+      "width": 13,
+      "height": 34,
+      "animation": "bolt"
+    },
+    "versicleNeedle": {
+      "threatClass": "chip",
+      "damage": 12,
+      "speed": 330,
+      "radius": 3,
+      "image": "enemy_space_cool_chip_needle",
+      "width": 11,
+      "height": 38,
+      "animation": "lance"
+    },
+    "responseBolt": {
+      "threatClass": "standard",
+      "damage": 22,
+      "speed": 265,
+      "radius": 4,
+      "image": "enemy_space_cool_standard_bolt",
+      "width": 16,
+      "height": 42,
+      "animation": "bolt"
+    },
+    "hymnHeavy": {
+      "threatClass": "heavy",
+      "damage": 44,
+      "speed": 165,
+      "radius": 8,
+      "image": "enemy_space_cool_heavy_core",
+      "width": 50,
+      "height": 50,
+      "animation": "orb",
+      "spinRate": 2.0
+    },
+    "claimRing": {
+      "threatClass": "bossHazard",
+      "damage": 62,
+      "speed": 150,
+      "radius": 12,
+      "image": "enemy_space_cool_boss_ring",
+      "width": 70,
+      "height": 70,
+      "animation": "orb",
+      "spinRate": 1.6
+    }
+  }
+}

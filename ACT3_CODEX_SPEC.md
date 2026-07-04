@@ -4,9 +4,23 @@ Status: ready for Codex. Design and combat doctrine in
 `ACT3_PROBATE_DESIGN.md`. The first three Act 3 missions
 (`act3_death_notice`, `act3_next_of_kin`, `act3_death_duties`) are authored,
 pressure-tested with `?devPressure=1`, and playable now using approximated
-mechanics; this spec upgrades them and unblocks P4–P7. The boss-phase
-hold-fire bug fix (separate task already filed) is a prerequisite for the P7
-chimera boss and should land first.
+mechanics; this spec upgrades them and unblocks P4–P7.
+
+## 0. Prerequisite bug fix: boss phases stop firing after the transition
+
+When a phased boss crosses an `hpFraction` threshold, the transition tell
+fires (screen flash + ~0.8s hold-fire) but the boss then **never resumes
+firing** for the rest of the fight. Repro: `?devSkip=1&devInvincible=1&devAutoFire=1`,
+launch Act 2: Doxology or Act 2: Pilgrimage (both bosses declare `phases` in
+their level JSON), damage the boss below the 0.66 threshold. Likely suspects,
+in order: the hold-fire timer set at transition is never cleared or is
+checked with inverted logic; the swapped-in phase `attackPatterns` lose
+weighted-pattern cooldown state and never re-initialize; damage ticks
+(plasma burn) crossing two thresholds in one frame re-trigger the tell
+repeatedly. Check the interaction between the phase-transition code,
+`fireEnemyAttackPattern`, and the boss's pattern cooldown fields. Verify the
+boss fires in every phase including after the final threshold. This blocks
+the P7 chimera boss and Act 3 boss phases generally — land it first.
 
 Validation per slice: the full `STATE.md` stack plus a browser smoke test and
 a `?devPressure=1` probe run — pressure numbers for the three shipped

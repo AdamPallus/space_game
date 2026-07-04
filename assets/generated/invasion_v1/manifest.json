@@ -1,0 +1,21 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#ff00ff",
+  "grid": {
+    "columns": 3,
+    "rows": 3
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "burster", "cell": 0, "size": [96, 96], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "zealot", "cell": 1, "size": [112, 112], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "grappler", "cell": 2, "size": [120, 120], "componentMinArea": 32 },
+    { "name": "strangler", "cell": 3, "size": [112, 112], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "lictor", "cell": 4, "size": [136, 136], "componentMinArea": 32 },
+    { "name": "pressgang", "cell": 5, "size": [136, 136], "componentMinArea": 32 },
+    { "name": "boss_rootcrown", "cell": 6, "size": [256, 256], "componentMinArea": 32 },
+    { "name": "boss_claimant", "cell": 7, "size": [256, 256], "componentMinArea": 32 },
+    { "name": "boss_executor", "cell": 8, "size": [256, 256], "componentMinArea": 32 }
+  ]
+}

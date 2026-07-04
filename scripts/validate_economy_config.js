@@ -6,7 +6,7 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const CONFIG_PATH = path.join(ROOT, "config", "economy.json");
 
-const VALID_RARITIES = ["scrap", "certified", "prototype", "preFounding"];
+const VALID_RARITIES = ["scrap", "certified", "prototype", "preFounding", "heirloom"];
 const VALID_SLOT_TYPES = ["primary", "mini", "defense", "aux"];
 const VALID_HULL_IDS = ["starter", "bastion", "relay", "broadside"];
 const VALID_UPGRADE_IDS = [

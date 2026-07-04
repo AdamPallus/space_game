@@ -43,6 +43,7 @@ const ECONOMY = {
     certified: { label: "Certified", affixCount: 1, kineticImpulseBonus: 0.07 },
     prototype: { label: "Prototype", affixCount: 2, kineticImpulseBonus: 0.16 },
     preFounding: { label: "Pre-Founding", affixCount: 3, kineticImpulseBonus: 0.28 },
+    heirloom: { label: "Heirloom", affixCount: 4, kineticImpulseBonus: 0.38 },
   },
 };
 
@@ -51,12 +52,14 @@ const MINI_RARITY_TUNING = {
   certified: { damageMult: 1.35, cooldownMult: 0.9, rangeMult: 1.04, speedMult: 1.03 },
   prototype: { damageMult: 1.75, cooldownMult: 0.8, rangeMult: 1.08, speedMult: 1.06 },
   preFounding: { damageMult: 2.25, cooldownMult: 0.72, rangeMult: 1.12, speedMult: 1.1 },
+  heirloom: { damageMult: 2.62, cooldownMult: 0.66, rangeMult: 1.16, speedMult: 1.14 },
 };
 const DEFENSE_RARITY_TUNING = {
   scrap: 1,
   certified: 1.33,
   prototype: 1.66,
   preFounding: 2,
+  heirloom: 2.35,
 };
 const BASE_ARMOR_CLASS = 10;
 const FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
@@ -150,7 +153,7 @@ function makeRng(seed) {
   };
 }
 
-function getApplicableAffixes(pool, slotType, baseBuild = {}, baseEntry = {}) {
+function getApplicableAffixes(pool, slotType, baseBuild = {}, baseEntry = {}, rarity = null) {
   const normalizedSlot = normalizeSlotType(slotType);
   const baseEffect = baseBuild.effect && baseBuild.effect !== "none" ? "weapon-effect" : null;
   return Object.entries(pool.affixes || {})
@@ -158,6 +161,8 @@ function getApplicableAffixes(pool, slotType, baseBuild = {}, baseEntry = {}) {
     .filter((affix) => {
       const allowedSlots = Array.isArray(affix.slotTypes) ? affix.slotTypes : [];
       if (!allowedSlots.map(normalizeSlotType).includes(normalizedSlot)) return false;
+      if (Array.isArray(affix.rarities) && rarity && !affix.rarities.includes(rarity)) return false;
+      if (Array.isArray(affix.rarities) && !rarity) return false;
       if (
         normalizedSlot === "defense" &&
         Array.isArray(affix.defenseTypes) &&
@@ -171,10 +176,10 @@ function getApplicableAffixes(pool, slotType, baseBuild = {}, baseEntry = {}) {
     });
 }
 
-function pickAffixes(pool, slotType, baseBuild, count, rng, baseEntry = {}) {
+function pickAffixes(pool, slotType, baseBuild, count, rng, baseEntry = {}, rarity = null) {
   const selected = [];
   const usedGroups = new Set();
-  const candidates = getApplicableAffixes(pool, slotType, baseBuild, baseEntry);
+  const candidates = getApplicableAffixes(pool, slotType, baseBuild, baseEntry, rarity);
   while (selected.length < count && candidates.length) {
     const index = Math.floor(rng() * candidates.length);
     const affix = candidates.splice(index, 1)[0];
@@ -211,7 +216,7 @@ function rollSampleItem(pool, id, entry, rarity, seed) {
     ? build.kineticImpulseBudget
     : 0;
   const slotType = normalizeSlotType(entry.slotType);
-  const affixes = pickAffixes(pool, entry.slotType, build, rarityConfig.affixCount || 0, rng, entry);
+  const affixes = pickAffixes(pool, entry.slotType, build, rarityConfig.affixCount || 0, rng, entry, rarity);
   affixes.forEach((affix) => {
     const patch = { ...(affix.build || {}) };
     delete patch.effectUpgrades;
@@ -232,7 +237,14 @@ function rollSampleItem(pool, id, entry, rarity, seed) {
     // Phase 6: roll an effect potency tier (certified 1, prototype 1-2, pre-Founding 2-3).
     const effect = affix.build && affix.build.effect;
     if (effect && effect !== "none" && affix.build.effectUpgrades && Number.isFinite(affix.build.effectUpgrades[effect])) {
-      const range = rarity === "prototype" ? [1, 2] : rarity === "preFounding" ? [2, 3] : [1, 1];
+      const range =
+        rarity === "heirloom"
+          ? [3, 4]
+          : rarity === "prototype"
+            ? [1, 2]
+            : rarity === "preFounding"
+              ? [2, 3]
+              : [1, 1];
       const tier = range[0] + Math.floor(rng() * (range[1] - range[0] + 1));
       applyBuildPatch(build, { effectUpgrades: { [effect]: tier } });
     } else if (affix.build && affix.build.effectUpgrades) {
@@ -779,6 +791,12 @@ Object.entries(pool.relics || {})
     rows.push(rollSampleItem(pool, id, entry, "preFounding", 3000 + index));
   });
 
+Object.entries(pool.heirlooms || {})
+  .filter(([, entry]) => normalizeSlotType(entry.slotType) === "primary")
+  .forEach(([id, entry], index) => {
+    rows.push(rollSampleItem(pool, id, entry, "heirloom", 4000 + index));
+  });
+
 const matrix = rows.map((row) => ({
   ...row,
   ttk: Object.fromEntries(enemies.map((enemy) => [enemy.id, simulateTtk(row.build, enemy)])),
@@ -807,8 +825,12 @@ console.log("\nMagnitude-roll DPS spread (same base + rarity, 200 rolls)");
   ["slug_cannon", "prototype"],
   ["needle_storm", "prototype"],
   ["longbow_rail", "preFounding"],
+  ["heirloom_tithe_mass_driver", "heirloom"],
 ].forEach(([baseId, rarity]) => {
-  const entry = (pool.entries && pool.entries[baseId]) || (pool.relics && pool.relics[baseId]);
+  const entry =
+    (pool.entries && pool.entries[baseId]) ||
+    (pool.relics && pool.relics[baseId]) ||
+    (pool.heirlooms && pool.heirlooms[baseId]);
   if (!entry) return;
   const samples = [];
   for (let i = 0; i < 200; i += 1) {

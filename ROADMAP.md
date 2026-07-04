@@ -97,9 +97,9 @@ Design in `ACT2_SILENT_LINEAGES_DESIGN.md` (2026-07-02). Eleven longer (3–6 mi
 
 Playtest verdict on Act 2 (2026-07-03): mechanically complete, not fun — nothing tried to kill the player. `ACT3_PROBATE_DESIGN.md` turns that diagnosis into a combat doctrine with measured pressure floors (`?devPressure=1` telemetry + reference-build simulation), and Act 3 ("They Followed You Home" — all three lineages converge on the player's mothership) is the doctrine's proving ground.
 
-- **Shipped:** pressure telemetry in `main.js`; Act 3 missions P1–P3 (Death Notice / Next of Kin / Death Duties), authored, sim-flown, and tuned to measured floors (P1 ~118 avg incoming DPS, P2 ~94, P3 ~237 vs. Act 1's Gauntlet at ~200 and Act 2's ~15), with rammer-style collision units approximated on existing AI.
-- **Next (Codex, `ACT3_CODEX_SPEC.md`):** rammer/latch AIs, breach-integrity defense stake, Heirloom rarity tier (the Act 3 gear ceiling, per the "assume best-available gear by end of Act 2" tuning decision), lien attach cap, invasion art. Boss-phase hold-fire bug fix is a prerequisite for the P7 finale boss.
-- **Then:** P4–P7 authored against the same floors after Adam confirms P1–P3 feel right; afterwards Act 2 gets a combat-only retune (event tables and fire rates; art/story/structure unchanged).
+- **Shipped:** pressure telemetry in `main.js`; Act 3 missions P1-P3 (Death Notice / Next of Kin / Death Duties), authored, sim-flown, and tuned to measured floors (P1 ~118 avg incoming DPS, P2 ~94, P3 ~237 vs. Act 1's Gauntlet at ~200 and Act 2's ~15); rammer/latch AIs, breach-integrity defense stake, Heirloom rarity tier and first Heirloom item families, lien attach cap, boss-phase resumption fix, generated `invasion_v1` sprites, and the generated `home_hull` background.
+- **Active follow-up (`ACT3_CODEX_SPEC.md`):** first ACE-Step music pass for the three shipped Act 3 missions, with `act3_heir_apparent.ogg` deferred until the P7 boss exists.
+- **Then:** P4-P7 authored against the same floors after Adam confirms P1-P3 feel right; afterwards Act 2 gets a combat-only retune (event tables and fire rates; art/story/structure unchanged).
 
 ## Deferred
 

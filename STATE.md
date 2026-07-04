@@ -1,6 +1,6 @@
 # Space Shooter Current State
 
-Last audited: 2026-07-02
+Last audited: 2026-07-04
 
 This is the first file to read before changing the game. It summarizes what is implemented now, which docs are still authoritative, which older specs are archived, and which validation commands should pass before committing.
 
@@ -11,6 +11,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 - A flat scene shell for hangar, mission select, armory, Ledger market, profile, item archive, compendium, and combat.
 - Scripted JSON missions in `levels/` with variants, lab encounters, bosses, salvage pods, item drops, enemy projectile profiles/attack patterns, and enemy catalog validation.
 - Act 2 "Deep Claims" missions now use data-driven graph unlocks, visible sanctioned/off-book branch presentation, miniboss treatment, branch-standing tracking, key-item gates, new lineage AIs, boss phases, tractor pulls, and debrief lore lines.
+- Act 3 "Probate" P1-P3 are playable defense missions around the player's mothership, with rammer/latch invasion AIs, mothership breach integrity, capped lien attachment, generated invasion art, and Heirloom boss/miniboss loot.
 - A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
 - Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time or through explicit level-authored projectile profiles.
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
@@ -28,7 +29,8 @@ These are intentional follow-up targets, not bugs in the docs:
 - Item durability remains deferred.
 - Cargo/economy hulls remain deferred.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader design direction rather than current gameplay systems.
-- Act 2 needs a combat-intensity retune: playtesting found its encounters run at a fraction of Act 1 pressure (see the doctrine and telemetry floors in `ACT3_PROBATE_DESIGN.md`).
+- Act 2 still needs a combat-only intensity retune after the Act 3 P1-P3 feel is confirmed; playtesting found its encounters run at a fraction of Act 1 pressure (see the doctrine and telemetry floors in `ACT3_PROBATE_DESIGN.md`).
+- The Act 3 music pass in `ACT3_CODEX_SPEC.md` is still active until generated `.ogg` tracks are selected, wired, loop-checked, and credited.
 - The new overhaul systems still need player testing around second-bay damage strain, early hard-mission pickups, cache readability, hull art/readability, phone-sized Armory density, and whether high-rarity defense is now too strong. Recent tuning already made mini rarity matter, made defense rarity matter, gave focused single-shot primaries competitive DPS, clarified item stats, surfaced per-bay effective DPS on the Armory stage, and changed Dual Fire to independent per-weapon cadence.
 
 ## Run Locally
@@ -110,7 +112,7 @@ Recent history shows these major pieces have already landed:
 - Phase 4b base archetypes: defense, support, relic, and weapon-item expansion.
 - Phase 4c communication UI: richer armory/item cards, tooltips, and item archive.
 - Weapon variety passes: additional projectile patterns, plasma visuals, and combat UI tuning.
-- Generated asset passes: UI chrome, item icon pack, combat fleet art, and mission backgrounds.
+- Generated asset passes: UI chrome, item icon pack, combat fleet art, Act 3 invasion art, and mission backgrounds.
 - Next Overhaul playable pass: hangar-first onboarding, explicit reward settlement, scripted caches, EMP projectile clear, browsing controls, Ledger license investment tiers, mini weapons with rarity scaling/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, aux engineering, explicit dual-fire mode selection, and independent dual-fire weapon timing.
 - Enemy projectile variety pass: root level `projectileProfiles`, weighted `attackPatterns`, per-shot overrides, warm/cool space-weapon projectile art, profiled three-variant campaign missions, compendium/stat summaries, and validator coverage for profile references, threat classes, rotating-sprite proportions, and broadside boss assets.
 - Loot depth pass (Phase 6): per-instance affix magnitude rolls (`roll` ranges in `item_pool.json`), effect-trace potency tiers, a stored `rollQuality` that scales item value and drives a tooltip roll-quality bar, pre-Founding 3-affix rolls, aux abilities with per-item rolled potency knobs (`auxPotency`/`auxRoll`) replacing the retired `auxPower` investment (old saves remap the capabilities ladder to dual-fire-only and refund spent aux credits), and a `balance_report.js` magnitude-roll DPS spread section.
@@ -121,6 +123,7 @@ Recent history shows these major pieces have already landed:
 - Economy control layer pass (Phase 8 prelude): active economy numbers moved from `main.js` into validated `config/economy.json`; runtime startup now blocks on missing/invalid economy config; market prices and sell quotes read current config at render/purchase/sale time; `scripts/balance_report.js` prints Credit Flow expected-credit and affordability rows; `?devTuning=1` provides sparse local overrides, reset, badge, and merged JSON export.
 - Act 2 engine pass: graph unlocks and Deep Claims board presentation, Deep Registry Shard gating, branch-standing records, miniboss banner/health/drop treatment, conductor/mimic/thief/lien/spawner/splitter AIs, Collections Barge tractor pattern, Doxology/Pilgrimage boss phases, and debrief lore rows.
 - Act 2 independent art pass: Chorus, Tithe, Verdant, and First Warden generated sprite packs, Cathedral Drift / Arrears Field / Origin Hull backgrounds, and Act 2 Chorus/Verdant projectile additions are wired through catalog, level data, runtime registries, compendium source data, and generated-asset validation.
+- Act 3 Probate engine/art pass: rammer and latch AIs, mothership breach-integrity fail state/HUD, capped lien attachment, fixed boss phase resumption, Heirloom rarity/item/drop support, generated `invasion_v1` sprites, and the generated `home_hull` background are wired into P1-P3.
 
 ## Documentation Map
 
@@ -137,7 +140,7 @@ Active docs in the repo root:
 - `ITEM_UX_SPEC.md`: active item-communication reference (intrinsic item stats, effective deltas, tooltip/inspector stat block, rarity treatment, roll-quality surfacing).
 - `ACT2_SILENT_LINEAGES_DESIGN.md`: Act 2 campaign design (three sibling-lineage factions, branching mission graph, 11 authored missions); implemented, awaiting a combat-intensity retune.
 - `ACT3_PROBATE_DESIGN.md`: Act 3 invasion campaign design and the combat-pressure doctrine (measured tuning floors via `?devPressure=1`).
-- `ACT3_CODEX_SPEC.md`: Act 3 engine upgrades (rammer/latch AIs, breach integrity, Heirloom tier, lien cap) and invasion art — ready for Codex.
+- `ACT3_CODEX_SPEC.md`: Act 3 generated-music pass remains active; engine upgrades and invasion art are implemented.
 - `STORY-PREMISE.md`: active tone and lore source.
 - `STORY-PREMISE-DEEP-HISTORY.md`: deep history and endgame arc extending the story premise; feeds the Story-Economy Arc in `ROADMAP.md`.
 - `CREDITS.md`: asset and tool credits.

@@ -1,12 +1,24 @@
 {
   "id": "act3_death_notice",
   "name": "Death Notice",
-  "background": "generatedOriginHull",
+  "background": "generatedHomeHull",
   "visualTheme": "bio_v1",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Invasion",
   "description": "The seeds arrive first. A Verdant vanguard comes in at planetfall velocity, aimed straight at home \u2014 nothing out here is wandering anymore.",
   "completeOnBoss": true,
+  "defense": {
+    "integrity": 100,
+    "breachDamage": {
+      "default": 4,
+      "burster": 12,
+      "thornwing": 8,
+      "strangler": 16,
+      "seedcarrier": 18,
+      "bloomcaller": 22,
+      "seedcrown": 34
+    }
+  },
   "debriefLore": [
     "Probate notice served. Response: germination.",
     "Picket log: contact velocity exceeds every catalog ceiling. They are not drifting anymore.",

@@ -2429,7 +2429,7 @@
       "name": "Burster Seedpod",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v2/bio_sporeling.png",
+        "sprite": "assets/generated/invasion_v1/burster.png",
         "hull": 22,
         "shield": 0,
         "armor": 0,
@@ -2437,7 +2437,12 @@
         "score": 130,
         "baseCredit": 6,
         "radius": 14,
-        "ai": "hunter",
+        "ai": "rammer",
+        "aiParams": {
+          "lockRange": 320,
+          "telegraph": 0.35,
+          "lungeSpeed": 370
+        },
         "collisionDamage": 55,
         "fireRate": 60,
         "spriteScale": 0.62
@@ -2447,7 +2452,7 @@
       "name": "Strangler Vine-Hunter",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v1/bio_hunter.png",
+        "sprite": "assets/generated/invasion_v1/strangler.png",
         "hull": 64,
         "shield": 20,
         "shieldRegen": 8,
@@ -2502,7 +2507,7 @@
       "name": "Rootcrown",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/bio_enemies_v2/boss_matriarch.png",
+        "sprite": "assets/generated/invasion_v1/boss_rootcrown.png",
         "hull": 2000,
         "shield": 420,
         "shieldRegen": 14,
@@ -2533,7 +2538,7 @@
       "name": "Zealot Lane-Runner",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/chorus_fleet_v1/chorus_censer.png",
+        "sprite": "assets/generated/invasion_v1/zealot.png",
         "hull": 20,
         "shield": 14,
         "armor": 0,
@@ -2541,7 +2546,12 @@
         "score": 150,
         "baseCredit": 7,
         "radius": 14,
-        "ai": "hunter",
+        "ai": "rammer",
+        "aiParams": {
+          "lockRange": 320,
+          "telegraph": 0.35,
+          "lungeSpeed": 390
+        },
         "collisionDamage": 60,
         "fireRate": 60,
         "spriteScale": 0.62
@@ -2551,7 +2561,7 @@
       "name": "Lictor Line Anchor",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/chorus_fleet_v1/chorus_precentor.png",
+        "sprite": "assets/generated/invasion_v1/lictor.png",
         "hull": 70,
         "shield": 140,
         "shieldRegen": 18,
@@ -2596,7 +2606,7 @@
       "name": "The Claimant",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/chorus_fleet_v1/boss_processional_warden.png",
+        "sprite": "assets/generated/invasion_v1/boss_claimant.png",
         "hull": 1400,
         "shield": 1300,
         "shieldRegen": 22,
@@ -2626,7 +2636,7 @@
       "name": "Grappler Boarding Skiff",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/tithe_fleet_v1/tithe_bailiff.png",
+        "sprite": "assets/generated/invasion_v1/grappler.png",
         "hull": 40,
         "shield": 0,
         "armor": 70,
@@ -2635,7 +2645,15 @@
         "score": 320,
         "baseCredit": 16,
         "radius": 17,
-        "ai": "hunter",
+        "ai": "latch",
+        "aiParams": {
+          "lockRange": 320,
+          "telegraph": 0.35,
+          "lungeSpeed": 350,
+          "latchDps": 14,
+          "dragMult": 0.8,
+          "maxLatch": 5
+        },
         "collisionDamage": 62,
         "fireRate": 60,
         "spriteScale": 0.7
@@ -2645,7 +2663,7 @@
       "name": "Pressgang Gunwall",
       "boss": false,
       "template": {
-        "sprite": "assets/generated/tithe_fleet_v1/tithe_notary.png",
+        "sprite": "assets/generated/invasion_v1/pressgang.png",
         "hull": 80,
         "shield": 0,
         "armor": 120,
@@ -2703,7 +2721,7 @@
       "name": "The Executor",
       "boss": true,
       "template": {
-        "sprite": "assets/generated/tithe_fleet_v1/boss_collections_barge.png",
+        "sprite": "assets/generated/invasion_v1/boss_executor.png",
         "hull": 1500,
         "shield": 260,
         "shieldRegen": 8,

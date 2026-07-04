@@ -23,7 +23,9 @@ const minibossArmorFill = document.getElementById("miniboss-armor-fill");
 const minibossProgressFill = document.getElementById("miniboss-progress-fill");
 const hudCargoPips = document.getElementById("hud-cargo-pips");
 const hudCargoStatus = document.getElementById("hud-cargo-status");
-const hudWeapons = document.getElementById("hud-weapons");
+const hudDefenseIntegrity = document.getElementById("hud-defense-integrity");
+const hudDefenseIntegrityFill = document.getElementById("hud-defense-integrity-fill");
+const hudDefenseIntegrityValue = document.getElementById("hud-defense-integrity-value");
 const hudItem1 = document.getElementById("hud-item-1");
 const hudItem2 = document.getElementById("hud-item-2");
 const shipGunValue = document.getElementById("ship-gun-value");
@@ -172,6 +174,8 @@ const GENERATED_BACKGROUND_URLS = {
   generatedArrearsFieldLooped: `${GENERATED_BACKGROUND_ROOT}/arrears_field_looped_1024.png`,
   generatedOriginHull: `${GENERATED_BACKGROUND_ROOT}/origin_hull_native_1024.png`,
   generatedOriginHullLooped: `${GENERATED_BACKGROUND_ROOT}/origin_hull_looped_1024.png`,
+  generatedHomeHull: `${GENERATED_BACKGROUND_ROOT}/home_hull_native_1024.png`,
+  generatedHomeHullLooped: `${GENERATED_BACKGROUND_ROOT}/home_hull_looped_1024.png`,
 };
 const overhaulKit = {
   hulls: {
@@ -321,7 +325,7 @@ const ECONOMY = {
     singlePrimaryDamageBonus: 0.1,
     secondPrimaryDamagePenalty: 0.15,
   },
-  rarityOrder: ["scrap", "certified", "prototype", "preFounding"],
+  rarityOrder: ["scrap", "certified", "prototype", "preFounding", "heirloom"],
   rarities: {
     scrap: {
       label: "Scrap-grade",
@@ -354,6 +358,14 @@ const ECONOMY = {
       glow: "rgba(240, 180, 41, 0.9)",
       affixCount: 3,
       kineticImpulseBonus: 0.28,
+    },
+    heirloom: {
+      label: "Heirloom",
+      shortLabel: "HEIR",
+      color: "#9adf8f",
+      glow: "rgba(154, 223, 143, 0.92)",
+      affixCount: 4,
+      kineticImpulseBonus: 0.38,
     },
   },
 };
@@ -715,12 +727,20 @@ const MINI_RARITY_TUNING = {
     speedMult: 1.1,
     effectChance: 0.88,
   },
+  heirloom: {
+    damageMult: 2.62,
+    cooldownMult: 0.66,
+    rangeMult: 1.16,
+    speedMult: 1.14,
+    effectChance: 1,
+  },
 };
 const DEFENSE_RARITY_TUNING = {
   scrap: 1,
   certified: 1.33,
   prototype: 1.66,
   preFounding: 2,
+  heirloom: 2.35,
 };
 const BASE_ARMOR_CLASS = 10;
 const FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
@@ -737,6 +757,7 @@ const LEDGER_COPY = {
   rtbComplete: "RTB complete. Bounty and cargo secured.",
   bossComplete: "Contract settled. Recovery crew attached boss salvage.",
   droneDestroyed: "Drone destroyed. Hull writedown applied; cargo claim voided.",
+  breachFailed: "BREACH — the Ledger bills you for the hull damage.",
   hullWritedown: "Hull writedown",
   recoveryBonus: "Recovery bonus",
   fleetDividends: "Fleet dividends",
@@ -2045,6 +2066,7 @@ const defaultItemIconByRarity = {
   certified: `${GENERATED_ITEM_ICON_ROOT}/weapon_frame_chassis.png`,
   prototype: `${GENERATED_ITEM_ICON_ROOT}/prototype_housing.png`,
   preFounding: `${GENERATED_ITEM_ICON_ROOT}/relic_housing.png`,
+  heirloom: `${GENERATED_ITEM_ICON_ROOT}/relic_housing.png`,
 };
 
 function getDefaultItemIcon(rarity = "certified") {
@@ -2071,11 +2093,13 @@ function normalizeItemPoolCatalog(catalog) {
   const entries = catalog?.entries && typeof catalog.entries === "object" ? catalog.entries : {};
   const affixes = catalog?.affixes && typeof catalog.affixes === "object" ? catalog.affixes : {};
   const relics = catalog?.relics && typeof catalog.relics === "object" ? catalog.relics : {};
+  const heirlooms = catalog?.heirlooms && typeof catalog.heirlooms === "object" ? catalog.heirlooms : {};
   return {
     version: catalog?.version || 1,
     entries,
     affixes,
     relics,
+    heirlooms,
   };
 }
 
@@ -2136,7 +2160,7 @@ function buildRuntimeItemPoolFromExistingGear() {
       miniWeapon: cloneShipBuild(item.miniWeapon || {}),
     };
   });
-  return { version: 1, entries, affixes: {}, relics: {} };
+  return { version: 1, entries, affixes: {}, relics: {}, heirlooms: {} };
 }
 
 async function loadItemPoolCatalog() {
@@ -2478,7 +2502,7 @@ function getCatalogAffix(affixId) {
   return affix && typeof affix === "object" ? { id: affixId, ...affix } : null;
 }
 
-function getApplicableAffixes(slotType, baseBuild = {}, baseEntry = {}) {
+function getApplicableAffixes(slotType, baseBuild = {}, baseEntry = {}, rarity = null) {
   const catalog = itemPoolCatalog || { affixes: {} };
   const normalizedSlot = normalizeArmorySlotType(slotType);
   const baseEffect = baseBuild.effect && baseBuild.effect !== "none" ? "weapon-effect" : null;
@@ -2487,6 +2511,8 @@ function getApplicableAffixes(slotType, baseBuild = {}, baseEntry = {}) {
     .filter((affix) => {
       const allowedSlots = Array.isArray(affix.slotTypes) ? affix.slotTypes : [];
       if (!allowedSlots.map(normalizeArmorySlotType).includes(normalizedSlot)) return false;
+      if (Array.isArray(affix.rarities) && rarity && !affix.rarities.includes(rarity)) return false;
+      if (Array.isArray(affix.rarities) && !rarity) return false;
       if (
         normalizedSlot === "defense" &&
         Array.isArray(affix.defenseTypes) &&
@@ -2504,10 +2530,10 @@ function pickAffixesForItem(
   slotType,
   baseBuild,
   count,
-  { excludeIds = new Set(), usedGroups = new Set(), baseEntry = {} } = {}
+  { excludeIds = new Set(), usedGroups = new Set(), baseEntry = {}, rarity = null } = {}
 ) {
   const selected = [];
-  const candidates = getApplicableAffixes(slotType, baseBuild, baseEntry).filter(
+  const candidates = getApplicableAffixes(slotType, baseBuild, baseEntry, rarity).filter(
     (affix) => !excludeIds.has(affix.id)
   );
   while (selected.length < count && candidates.length) {
@@ -2538,15 +2564,17 @@ function normalizeUniqueProperty(entry) {
 }
 
 // Phase 6 loot depth: per-instance magnitude rolls.
-// rarityTier mirrors ECONOMY.rarityOrder (scrap 0, certified 1, prototype 2, preFounding 3).
+// rarityTier mirrors ECONOMY.rarityOrder.
 function getRarityTier(rarity) {
   const index = ECONOMY.rarityOrder.indexOf(rarity);
   return index >= 0 ? index : 0;
 }
 
 // Effect-affix potency tier range by rarity (pierce count / homing / explosive / vampiric scale
-// off effectUpgrades in combat). certified always tier 1; prototype 1-2; pre-Founding 2-3.
+// off effectUpgrades in combat). certified always tier 1; prototype 1-2; pre-Founding 2-3;
+// Heirloom reaches the new Act 3 ceiling.
 function getEffectTierRange(rarity) {
+  if (rarity === "heirloom") return [3, 4];
   if (rarity === "prototype") return [1, 2];
   if (rarity === "preFounding") return [2, 3];
   return [1, 1];
@@ -2677,6 +2705,7 @@ function createRolledItem(baseId, baseEntry, rarity) {
     excludeIds: fixedAffixIds,
     usedGroups,
     baseEntry,
+    rarity,
   });
   const affixes = [...fixedAffixes, ...rolledAffixes];
   const rollPositions = [];
@@ -2868,12 +2897,14 @@ function itemEntryMatchesRollOptions(baseId, entry, options = {}) {
 }
 
 function getRollSourceForRarity(rarity) {
-  const catalog = itemPoolCatalog || { entries: {}, relics: {} };
+  const catalog = itemPoolCatalog || { entries: {}, relics: {}, heirlooms: {} };
   const relicEntries = Object.entries(catalog.relics || {});
+  const heirloomEntries = Object.entries(catalog.heirlooms || {});
+  const usingHeirlooms = rarity === "heirloom" && heirloomEntries.length;
   const usingRelics = rarity === "preFounding" && relicEntries.length;
   return {
-    rollSource: usingRelics ? catalog.relics : catalog.entries,
-    usingRelics,
+    rollSource: usingHeirlooms ? catalog.heirlooms : usingRelics ? catalog.relics : catalog.entries,
+    usingRelics: usingRelics || usingHeirlooms,
   };
 }
 
@@ -2924,6 +2955,44 @@ function getDropSourceKey(enemy) {
   const captainConfig = getDropTableConfig().captain || {};
   if ((enemy.baseCredit || 0) >= captainConfig.minBaseCredit) return "captain";
   return "ordinary";
+}
+
+function isAct3Level(level = mission?.level) {
+  return /^act3_/.test(String(level?.id || ""));
+}
+
+function getActiveMissionCompletionCount() {
+  if (!mission?.level?.id) return 0;
+  const baseId = missionProgressionBaseIdFor(mission.level);
+  return Math.max(0, Math.floor(Number(state.completedMissions?.[baseId]) || 0));
+}
+
+function getAct3LineageTags(level = mission?.level) {
+  const id = String(level?.id || "");
+  if (id.includes("death_notice")) return ["verdant"];
+  if (id.includes("next_of_kin")) return ["chorus"];
+  if (id.includes("death_duties")) return ["tithe"];
+  return ["chorus", "tithe", "verdant"];
+}
+
+function rollAct3HeirloomDrop(enemy, { boss = false, miniboss = false } = {}) {
+  if (!isAct3Level()) return null;
+  const guaranteed = boss && getActiveMissionCompletionCount() <= 0;
+  const chance = boss ? 0.16 : miniboss ? 0.12 : 0;
+  if (!guaranteed && Math.random() > chance) return null;
+  const item =
+    rollItemForRarity("heirloom", {
+      sourceKey: boss ? "act3Boss" : "act3Miniboss",
+      includeActiveMission: true,
+      anyTags: getAct3LineageTags(),
+    }) ||
+    rollItemForRarity("heirloom", {
+      sourceKey: boss ? "act3Boss" : "act3Miniboss",
+      includeActiveMission: true,
+    });
+  if (!item) return null;
+  item.dropSource = boss ? "act3Boss" : "act3Miniboss";
+  return { rarity: "heirloom", item };
 }
 
 function rollSalvageDrop(enemy, { force = false, forceSource = null, minRarity = null } = {}) {
@@ -3017,7 +3086,7 @@ function getRelicCollection(targetState = state) {
 function getRelicDiscoveryId(item) {
   if (!item) return null;
   if (item.relicId) return item.relicId;
-  if (item.rarity === "preFounding" && item.baseId) return item.baseId;
+  if ((item.rarity === "preFounding" || item.rarity === "heirloom") && item.baseId) return item.baseId;
   return null;
 }
 
@@ -3069,7 +3138,7 @@ function getItemCollection(targetState = state) {
 function findCatalogBaseIdBySourceId(sourceId, slotType = null) {
   if (!sourceId || !itemPoolCatalog) return null;
   const normalizedSlot = slotType ? normalizeArmorySlotType(slotType) : null;
-  const sources = [itemPoolCatalog.entries || {}, itemPoolCatalog.relics || {}];
+  const sources = [itemPoolCatalog.entries || {}, itemPoolCatalog.relics || {}, itemPoolCatalog.heirlooms || {}];
   for (const source of sources) {
     const match = Object.entries(source).find(([, entry]) => {
       if (!entry || entry.sourceId !== sourceId) return false;
@@ -4137,6 +4206,8 @@ const assets = {
     generatedArrearsFieldLooped: loadImage(GENERATED_BACKGROUND_URLS.generatedArrearsFieldLooped),
     generatedOriginHull: loadImage(GENERATED_BACKGROUND_URLS.generatedOriginHull),
     generatedOriginHullLooped: loadImage(GENERATED_BACKGROUND_URLS.generatedOriginHullLooped),
+    generatedHomeHull: loadImage(GENERATED_BACKGROUND_URLS.generatedHomeHull),
+    generatedHomeHullLooped: loadImage(GENERATED_BACKGROUND_URLS.generatedHomeHullLooped),
   },
   player: loadImage(`${ASSET_ROOT}/playerShip2_blue.png`),
   playerBullet: loadImage(`${ASSET_ROOT}/Lasers/laserBlue02.png`),
@@ -4883,6 +4954,32 @@ function validateBossPhases(phases, profiles, errors, context) {
   });
 }
 
+function validateLevelDefense(defense, errors, context) {
+  if (defense === undefined) return;
+  if (!isPlainObject(defense)) {
+    errors.push(`${context} defense must be an object.`);
+    return;
+  }
+  const allowed = new Set(["integrity", "breachDamage"]);
+  Object.keys(defense).forEach((key) => {
+    if (!allowed.has(key)) errors.push(`${context} defense uses unsupported field '${key}'.`);
+  });
+  if (!Number.isFinite(defense.integrity) || defense.integrity <= 0) {
+    errors.push(`${context} defense.integrity must be a positive number.`);
+  }
+  if (defense.breachDamage !== undefined) {
+    if (!isPlainObject(defense.breachDamage)) {
+      errors.push(`${context} defense.breachDamage must be an object.`);
+    } else {
+      Object.entries(defense.breachDamage).forEach(([key, value]) => {
+        if (!Number.isFinite(value) || value < 0) {
+          errors.push(`${context} defense.breachDamage.${key} must be a non-negative number.`);
+        }
+      });
+    }
+  }
+}
+
 function validateLevelData(level) {
   const errors = [];
   if (!level || typeof level !== "object") {
@@ -4890,6 +4987,7 @@ function validateLevelData(level) {
   }
   const levelId = level.id || "unknown";
   const projectileProfiles = isPlainObject(level.projectileProfiles) ? level.projectileProfiles : {};
+  validateLevelDefense(level.defense, errors, `Mission '${levelId}'`);
   if (level.projectileProfiles !== undefined) {
     if (!isPlainObject(level.projectileProfiles)) {
       errors.push(`Mission '${levelId}' projectileProfiles must be an object.`);
@@ -6279,6 +6377,18 @@ function initConsumablesForMission() {
   return { slots, uses, cooldowns };
 }
 
+function getLevelDefenseState(level) {
+  const defense = level?.defense;
+  if (!isPlainObject(defense)) return null;
+  const maxIntegrity = Number(defense.integrity);
+  if (!Number.isFinite(maxIntegrity) || maxIntegrity <= 0) return null;
+  return {
+    maxIntegrity,
+    integrity: maxIntegrity,
+    breachDamage: isPlainObject(defense.breachDamage) ? defense.breachDamage : {},
+  };
+}
+
 async function startMission({ showIntro = false } = {}) {
   closeShipModal();
   hideMissionIntro();
@@ -6313,6 +6423,7 @@ async function startMission({ showIntro = false } = {}) {
   if (refreshedSavedItems) saveState();
   applyUpgrades();
   const consumablesState = initConsumablesForMission();
+  const defenseState = getLevelDefenseState(level);
   state.cargo = [];
   mission = {
     active: true,
@@ -6336,6 +6447,10 @@ async function startMission({ showIntro = false } = {}) {
     minibossBannerTimer: 0,
     bossPhaseBannerText: "",
     bossPhaseBannerTimer: 0,
+    defenseIntegrity: defenseState?.integrity ?? null,
+    defenseMaxIntegrity: defenseState?.maxIntegrity ?? null,
+    defenseBreachDamage: defenseState?.breachDamage || {},
+    breachFailed: false,
     playerPositionHistory: [],
     repossessedCount: 0,
     empTimer: 0,
@@ -6539,6 +6654,7 @@ function endMission({ ejected = false, completed = false } = {}) {
     keyItemLines,
     debriefLoreLine,
     repossessedCount: mission.repossessedCount || 0,
+    breachFailed: !!mission.breachFailed,
   });
   playUiSfx("stamp");
   debriefTime.textContent = formatTime(mission.elapsed);
@@ -6571,7 +6687,9 @@ function escapeHtml(value) {
 
 function renderDebriefSummary(summary) {
   const outcomeCopy =
-    summary.outcome === "boss"
+    summary.breachFailed
+      ? LEDGER_COPY.breachFailed
+      : summary.outcome === "boss"
       ? LEDGER_COPY.bossComplete
       : summary.outcome === "rtb"
         ? LEDGER_COPY.rtbComplete
@@ -6586,7 +6704,9 @@ function renderDebriefSummary(summary) {
   }
   if (debriefStamp) {
     debriefStamp.textContent =
-      summary.outcome === "death"
+      summary.breachFailed
+        ? "BREACH CLAIM"
+        : summary.outcome === "death"
         ? "CLAIM ADJUSTED"
         : summary.outcome === "rtb"
           ? "RTB SETTLED"
@@ -7601,6 +7721,8 @@ function describeMovement(spec) {
   if (ai === "mimic") return "Mirrors delayed pilot movement while keeping a duel standoff.";
   if (ai === "thief") return "Seizes loose salvage, then retreats off-field with the cargo.";
   if (ai === "lien") return "Attaches near the pilot and drains live mission credits until killed.";
+  if (ai === "rammer") return "Telegraphs, locks the pilot's current position, then lunges in a straight line.";
+  if (ai === "latch") return "Telegraphs like a rammer, then boards the hull and drags steering until shaken loose.";
   if (ai === "spawner") return "Holds position and periodically spawns child drones.";
   if (ai === "splitter") return "Transport behavior that splits into smaller drones on death.";
   if (ai === "sentinel") return "Holds a firing line near the top and strafes to keep you in its sights.";
@@ -7904,7 +8026,7 @@ async function renderDroneCompendiumAsync() {
 }
 
 function getItemCatalogEntries() {
-  const catalog = itemPoolCatalog || { entries: {}, relics: {} };
+  const catalog = itemPoolCatalog || { entries: {}, relics: {}, heirlooms: {} };
   const regularItems = Object.entries(catalog.entries || {}).map(([baseId, entry]) => ({
     baseId,
     isRelic: false,
@@ -7916,8 +8038,15 @@ function getItemCatalogEntries() {
     tier: entry.tier || 4,
     ...entry,
   }));
+  const heirloomItems = Object.entries(catalog.heirlooms || {}).map(([baseId, entry]) => ({
+    baseId,
+    isRelic: true,
+    isHeirloom: true,
+    tier: entry.tier || 4,
+    ...entry,
+  }));
   const slotOrder = { primary: 0, mini: 1, defense: 2, aux: 3 };
-  return [...regularItems, ...relicItems].sort((a, b) => {
+  return [...regularItems, ...relicItems, ...heirloomItems].sort((a, b) => {
     const aSlot = slotOrder[normalizeArmorySlotType(a.slotType)] ?? 9;
     const bSlot = slotOrder[normalizeArmorySlotType(b.slotType)] ?? 9;
     if (aSlot !== bSlot) return aSlot - bSlot;
@@ -7949,7 +8078,7 @@ function getDiscoveredItemBaseIds() {
 
 function getItemCatalogSubtitle(entry, foundCount) {
   const slot = normalizeArmorySlotType(entry.slotType);
-  const tier = entry.isRelic ? "Pre-Founding relic" : `Tier ${entry.tier || 1}`;
+  const tier = entry.isHeirloom ? "Heirloom" : entry.isRelic ? "Pre-Founding relic" : `Tier ${entry.tier || 1}`;
   const found = foundCount > 0 ? ` | ${foundCount} found` : "";
   if (slot === "primary") {
     const ammo = capitalize(entry.build?.ammo || "kinetic");
@@ -8069,7 +8198,7 @@ async function renderItemCompendiumAsync() {
       .map((entry) => ({
         ...entry,
         id: entry.baseId,
-        rarity: entry.isRelic ? "preFounding" : entry.rarity || "",
+        rarity: entry.isHeirloom ? "heirloom" : entry.isRelic ? "preFounding" : entry.rarity || "",
       })),
     { filter, sort }
   );
@@ -8091,7 +8220,7 @@ async function renderItemCompendiumAsync() {
         <h3 class="compendium-title">${escapeHtml(entry.name || entry.baseId)}</h3>
         <p class="compendium-subtitle">${escapeHtml(getItemCatalogSubtitle(entry, foundCount))}</p>
         <div class="compendium-tags">
-          ${entry.isRelic ? `<span class="tag warn">RELIC</span>` : ""}
+          ${entry.isHeirloom ? `<span class="tag warn">HEIRLOOM</span>` : entry.isRelic ? `<span class="tag warn">RELIC</span>` : ""}
           <span class="tag">${escapeHtml(slot)}</span>
           ${tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
         </div>
@@ -8249,7 +8378,7 @@ function getItemBrowserRole(item) {
 
 function isItemRelic(item) {
   const tags = Array.isArray(item?.tags) ? item.tags : [];
-  return !!(item?.relicId || item?.rarity === "preFounding" || tags.includes("relic"));
+  return !!(item?.relicId || item?.rarity === "preFounding" || item?.rarity === "heirloom" || tags.includes("relic") || tags.includes("heirloom"));
 }
 
 function getItemBrowserValue(item, valueResolver = null) {
@@ -8926,9 +9055,10 @@ function getBuildLanguageLines(patch = {}) {
 
 function getBaseEntryForItem(item) {
   if (!item) return null;
-  const catalog = itemPoolCatalog || { entries: {}, relics: {} };
+  const catalog = itemPoolCatalog || { entries: {}, relics: {}, heirlooms: {} };
   return catalog.entries?.[item.baseId] ||
     catalog.relics?.[item.baseId] ||
+    catalog.heirlooms?.[item.baseId] ||
     starterWeaponLoadoutsById[item.id] ||
     starterMiniWeaponsById[item.id] ||
     defenseModulesById[item.id] ||
@@ -10929,7 +11059,9 @@ function spawnLevelPickup(entry) {
 
 function grantBossSalvage(enemy) {
   if (!mission) return;
-  const drop = rollSalvageDrop(enemy, { force: true, forceSource: "boss" });
+  const drop =
+    rollAct3HeirloomDrop(enemy, { boss: true }) ||
+    rollSalvageDrop(enemy, { force: true, forceSource: "boss" });
   if (!drop?.item) return;
   if (!Array.isArray(mission.bossSalvage)) mission.bossSalvage = [];
   mission.bossSalvage.push(drop.item);
@@ -12085,6 +12217,135 @@ function applyDuelistMovement(enemy, delta, empFactor = 1, target = player) {
   enemy.y += enemy.vy * empFactor * delta;
 }
 
+function applyStalkerMovement(enemy, delta, empFactor = 1) {
+  const dx = player.x - enemy.x;
+  const dy = player.y - enemy.y;
+  const distanceToPlayer = Math.hypot(dx, dy);
+  const aggro = enemy.aggroRadius ?? 220;
+  if (distanceToPlayer < aggro && player.cloakTimer <= 0) {
+    const chaseSpeed = enemy.speed * 1.05 * empFactor;
+    const targetVx = (dx / (distanceToPlayer || 1)) * chaseSpeed;
+    const targetVy = (dy / (distanceToPlayer || 1)) * chaseSpeed;
+    enemy.vx += (targetVx - enemy.vx) * 0.08;
+    enemy.vy += (targetVy - enemy.vy) * 0.08;
+  } else {
+    enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.05;
+    enemy.vy += (enemy.speed * 0.8 * empFactor - enemy.vy) * 0.05;
+  }
+  enemy.x += enemy.vx * empFactor * delta;
+  enemy.y += enemy.vy * empFactor * delta;
+}
+
+function getActiveLatchers() {
+  return enemies.filter((enemy) => enemy.ai === "latch" && enemy.latchState === "attached" && enemy.hull > 0);
+}
+
+function getActiveLatchDragMult() {
+  return getActiveLatchers().reduce(
+    (mult, enemy) => Math.min(mult, Number.isFinite(enemy.aiParams?.dragMult) ? enemy.aiParams.dragMult : 0.8),
+    1
+  );
+}
+
+function attachLatchEnemy(enemy) {
+  if (getActiveLatchers().length >= 2) return false;
+  const angle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+  enemy.latchState = "attached";
+  enemy.latchAngle = angle;
+  enemy.latchTimer = Math.max(0.2, enemy.aiParams?.maxLatch ?? 5);
+  enemy.latchTickTimer = 0.25;
+  enemy.latchPendingDamage = 0;
+  enemy.vx = 0;
+  enemy.vy = 0;
+  enemy.fireCooldown = Math.max(enemy.fireCooldown || 0, enemy.latchTimer);
+  spawnFloatingText(player.x, player.y - 28, "LATCHED", "#f97316");
+  return true;
+}
+
+function releaseLatchEnemy(enemy, { shaken = false } = {}) {
+  if (enemy.latchState !== "attached") return;
+  const angle = Number.isFinite(enemy.latchAngle) ? enemy.latchAngle : -Math.PI / 2;
+  enemy.latchState = "released";
+  enemy.latchTimer = 0;
+  enemy.latchPendingDamage = 0;
+  enemy.playerCollisionCooldown = 0.45;
+  enemy.vx = Math.cos(angle) * 120 + (Math.random() - 0.5) * 55;
+  enemy.vy = -95 + Math.sin(angle) * 40;
+  if (shaken) spawnFloatingText(enemy.x, enemy.y - 18, "SHAKEN", "#fde68a");
+}
+
+function updateAttachedLatchers(delta) {
+  getActiveLatchers().forEach((enemy) => {
+    enemy.latchTimer = Math.max(0, (enemy.latchTimer || 0) - delta);
+    const angle = Number.isFinite(enemy.latchAngle) ? enemy.latchAngle : -Math.PI / 2;
+    const offset = player.radius + enemy.radius * 0.72;
+    enemy.x = player.x + Math.cos(angle) * offset;
+    enemy.y = player.y + Math.sin(angle) * offset;
+    enemy.latchPendingDamage = (enemy.latchPendingDamage || 0) + (enemy.aiParams?.latchDps ?? 14) * delta;
+    enemy.latchTickTimer = (enemy.latchTickTimer || 0) - delta;
+    if (enemy.latchTickTimer <= 0 && enemy.latchPendingDamage > 0) {
+      applyDamage(enemy.latchPendingDamage, { sourceX: enemy.x, sourceY: enemy.y });
+      enemy.latchPendingDamage = 0;
+      enemy.latchTickTimer = 0.35;
+    }
+    if (enemy.latchTimer <= 0) releaseLatchEnemy(enemy);
+  });
+}
+
+function updateRammerEnemy(enemy, delta, empFactor = 1, { canLatch = false } = {}) {
+  if (enemy.latchState === "attached") return true;
+  if (enemy.latchState === "released") {
+    enemy.vy += (enemy.speed * 0.55 * empFactor - enemy.vy) * 0.03;
+    enemy.x += enemy.vx * empFactor * delta;
+    enemy.y += enemy.vy * empFactor * delta;
+    return true;
+  }
+
+  const lockRange = enemy.aiParams?.lockRange ?? 320;
+  const telegraph = enemy.aiParams?.telegraph ?? 0.35;
+  const lungeSpeed = enemy.aiParams?.lungeSpeed ?? 340;
+  if (enemy.rammerState === "lunge") {
+    enemy.x += enemy.vx * empFactor * delta;
+    enemy.y += enemy.vy * empFactor * delta;
+    return true;
+  }
+  if (enemy.rammerState === "telegraph") {
+    enemy.rammerTelegraphTimer = Math.max(0, (enemy.rammerTelegraphTimer || 0) - delta);
+    enemy.vx *= 0.82;
+    enemy.vy *= 0.82;
+    if (enemy.rammerTelegraphTimer <= 0) {
+      const target = enemy.rammerTarget || { x: player.x, y: player.y };
+      const dx = target.x - enemy.x;
+      const dy = target.y - enemy.y;
+      const d = Math.hypot(dx, dy) || 1;
+      enemy.vx = (dx / d) * lungeSpeed;
+      enemy.vy = (dy / d) * lungeSpeed;
+      enemy.rammerState = "lunge";
+      enemy.latchCanAttach = canLatch;
+    }
+    return true;
+  }
+
+  const dx = player.x - enemy.x;
+  const dy = player.y - enemy.y;
+  const distanceToPlayer = Math.hypot(dx, dy) || 1;
+  if (distanceToPlayer <= lockRange && player.cloakTimer <= 0) {
+    enemy.rammerState = "telegraph";
+    enemy.rammerTelegraphTimer = telegraph;
+    enemy.rammerTarget = { x: player.x, y: player.y };
+    enemy.vx = 0;
+    enemy.vy = 0;
+    spawnFloatingText(enemy.x, enemy.y - enemy.radius, "LOCK", canLatch ? "#f97316" : "#f87171");
+    return true;
+  }
+
+  enemy.vy += (enemy.speed * empFactor - enemy.vy) * 0.06;
+  enemy.vx += ((dx / distanceToPlayer) * enemy.speed * 0.32 * empFactor - enemy.vx) * 0.04;
+  enemy.x += enemy.vx * empFactor * delta;
+  enemy.y += enemy.vy * empFactor * delta;
+  return true;
+}
+
 function getDelayedPlayerPosition(delaySeconds = 2) {
   const history = Array.isArray(mission?.playerPositionHistory) ? mission.playerPositionHistory : [];
   if (!history.length) return { x: player.x, y: player.y };
@@ -12181,12 +12442,28 @@ function updateThiefEnemy(enemy, delta, empFactor = 1) {
 function updateLienEnemy(enemy, delta, empFactor = 1) {
   const attachRadius = enemy.aiParams.attachRadius ?? 150;
   const drainPerSecond = enemy.aiParams.drainPerSecond ?? 6;
+  const maxAttached = Math.max(1, Math.round(enemy.aiParams.maxAttached ?? 3));
   const dx = player.x - enemy.x;
   const dy = player.y - enemy.y;
   const d = Math.hypot(dx, dy) || 1;
   if (d > attachRadius) {
+    enemy.lienAttached = false;
     applyDuelistMovement(enemy, delta, empFactor);
     return;
+  }
+  if (!enemy.lienAttached) {
+    const attachedCount = enemies.filter((candidate) => (
+      candidate !== enemy &&
+      candidate.ai === "lien" &&
+      candidate.lienAttached &&
+      candidate.hull > 0
+    )).length;
+    if (attachedCount >= maxAttached) {
+      enemy.lienAttached = false;
+      applyStalkerMovement(enemy, delta, empFactor);
+      return;
+    }
+    enemy.lienAttached = true;
   }
   enemy.vx *= 0.88;
   enemy.vy *= 0.88;
@@ -12252,6 +12529,10 @@ function updateBossPhase(enemy, delta) {
   if (!enemy.isBoss || !Array.isArray(enemy.phases) || !enemy.phases.length) return;
   if (enemy.bossPhaseTransitionTimer > 0) {
     enemy.bossPhaseTransitionTimer = Math.max(0, enemy.bossPhaseTransitionTimer - delta);
+    if (enemy.bossPhaseTransitionTimer <= 0) {
+      enemy.fireCooldown = Math.min(enemy.fireCooldown || 0, 0.05);
+    }
+    return;
   }
   const nextIndex = (enemy.bossPhaseIndex || -1) + 1;
   const nextPhase = enemy.phases[nextIndex];
@@ -12268,7 +12549,7 @@ function updateBossPhase(enemy, delta) {
   enemy.speed = (enemy.baseSpeed || enemy.speed || 70) * (nextPhase.speedMult || 1);
   const hold = mission?.level?.id === "act2_pilgrimage" ? 1.0 : 0.8;
   enemy.bossPhaseTransitionTimer = hold;
-  enemy.fireCooldown = Math.max(enemy.fireCooldown || 0, hold);
+  enemy.fireCooldown = Math.min(enemy.fireCooldown || 0, 0.05);
   const phaseLabel = nextPhase.label || `PHASE ${nextIndex + 2}`;
   mission.bossPhaseBannerText = phaseLabel.toUpperCase();
   mission.bossPhaseBannerTimer = 1.2;
@@ -12301,6 +12582,42 @@ function updateTractorEffect(enemy, delta) {
     player.x += (dx / d) * pull;
     player.y += (dy / d) * pull;
   }
+}
+
+function getEnemyBreachDamage(enemy) {
+  const config = mission?.defenseBreachDamage || {};
+  const authored =
+    config[enemy.type] ??
+    config[enemy.compendiumKey] ??
+    config.default;
+  if (Number.isFinite(authored)) return Math.max(0, authored);
+  return Math.max(1, Math.round((enemy.score || 20) / 20));
+}
+
+function triggerBreachFailure() {
+  if (!mission?.active || mission.breachFailed) return;
+  mission.breachFailed = true;
+  mission.defenseIntegrity = 0;
+  screenFlash = Math.min(0.75, screenFlash + 0.45);
+  addCameraShake(0.55, player.x, player.y);
+  spawnFloatingText(player.x, player.y - 36, "BREACH", "#f87171");
+  endMission({ ejected: false, completed: false });
+}
+
+function handleDefenseBreaches(height) {
+  if (!mission?.active || !Number.isFinite(mission.defenseIntegrity)) return;
+  enemies.forEach((enemy) => {
+    if (!enemy || enemy.escaped || enemy.breachedDefense || enemy.hull <= 0 || enemy.isBoss) return;
+    if (enemy.y <= height + Math.min(enemy.radius || 0, 55)) return;
+    enemy.breachedDefense = true;
+    enemy.escaped = true;
+    const damage = getEnemyBreachDamage(enemy);
+    mission.defenseIntegrity = Math.max(0, mission.defenseIntegrity - damage);
+    spawnFloatingText(enemy.x, height - 34, `BREACH -${Math.round(damage)}`, "#f87171");
+    if (mission.defenseIntegrity <= 0) {
+      triggerBreachFailure();
+    }
+  });
 }
 
 function update(delta) {
@@ -12427,16 +12744,23 @@ function update(delta) {
   const height = canvas.height / window.devicePixelRatio;
 
   if (!endingSequence) {
+    const latchDragMult = getActiveLatchDragMult();
     if (inputMode === "touch" && touchState.active) {
       const dx = touchState.x - player.x;
       const dy = touchState.y - player.y;
       const distanceToTarget = Math.hypot(dx, dy) || 1;
-      const step = Math.min(distanceToTarget, touchState.maxSpeed * delta);
+      const step = Math.min(distanceToTarget, touchState.maxSpeed * latchDragMult * delta);
       player.x += (dx / distanceToTarget) * step;
       player.y += (dy / distanceToTarget) * step;
     } else if (pointer.active) {
-      player.x = pointer.x;
-      player.y = pointer.y;
+      if (latchDragMult < 1) {
+        const alpha = 1 - Math.exp(-16 * latchDragMult * delta);
+        player.x += (pointer.x - player.x) * alpha;
+        player.y += (pointer.y - player.y) * alpha;
+      } else {
+        player.x = pointer.x;
+        player.y = pointer.y;
+      }
     }
 
     player.x = Math.max(40, Math.min(width - 40, player.x));
@@ -12471,6 +12795,8 @@ function update(delta) {
       }
     }
   }
+
+  updateAttachedLatchers(delta);
 
   if (player.maxShield > 0) {
     if (player.shieldCooldown > 0) {
@@ -12790,20 +13116,14 @@ function update(delta) {
       return;
     }
     if (enemy.ai === "stalker") {
-      const dx = player.x - enemy.x;
-      const dy = player.y - enemy.y;
-      const distanceToPlayer = Math.hypot(dx, dy);
-      const aggro = enemy.aggroRadius ?? 220;
-      if (distanceToPlayer < aggro && player.cloakTimer <= 0) {
-        const chaseSpeed = enemy.speed * 1.05 * empFactor;
-        const targetVx = (dx / (distanceToPlayer || 1)) * chaseSpeed;
-        const targetVy = (dy / (distanceToPlayer || 1)) * chaseSpeed;
-        enemy.vx += (targetVx - enemy.vx) * 0.08;
-        enemy.vy += (targetVy - enemy.vy) * 0.08;
-      } else {
-        enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.05;
-        enemy.vy += (enemy.speed * 0.8 * empFactor - enemy.vy) * 0.05;
-      }
+      applyStalkerMovement(enemy, delta, empFactor);
+      return;
+    } else if (enemy.ai === "rammer") {
+      updateRammerEnemy(enemy, delta, empFactor);
+      return;
+    } else if (enemy.ai === "latch") {
+      updateRammerEnemy(enemy, delta, empFactor, { canLatch: true });
+      return;
     } else if (enemy.ai === "hunter") {
       if (player.cloakTimer > 0) {
         enemy.vx += Math.sin(mission.elapsed + enemy.x) * 0.06;
@@ -12925,6 +13245,8 @@ function update(delta) {
   );
   cleanArrays(enemyBullets, (bullet) => bullet.y > height + 20 || bullet.x < -40 || bullet.x > width + 40);
   cleanArrays(salvagePods, (pod) => pod.y > height + 48);
+  handleDefenseBreaches(height);
+  if (!mission?.active) return;
   cleanArrays(enemies, (enemy) => enemy.y > height + 60 || enemy.escaped);
   cleanArrays(floatingTexts, (text) => text.life <= 0);
   cleanArrays(explosions, (boom) => boom.elapsed >= boom.duration);
@@ -12981,6 +13303,9 @@ function handleCollisions() {
             enemy.empHitTimer = Math.max(enemy.empHitTimer, 1.2);
           }
         }
+        if (enemy.latchState === "attached" && directDamageDealt > 0) {
+          releaseLatchEnemy(enemy, { shaken: true });
+        }
         if (bullet.explosive && !bullet.exploded) {
           bullet.exploded = true;
           const radius = bullet.explosiveRadius ?? 90;
@@ -13034,6 +13359,12 @@ function handleCollisions() {
     const enemy = enemies[i];
     if (enemy.playerCollisionCooldown > 0) continue;
     if (distance(player.x, player.y, enemy.x, enemy.y) < player.radius + enemy.radius) {
+      if (enemy.ai === "latch" && enemy.latchState !== "attached" && enemy.latchCanAttach) {
+        if (attachLatchEnemy(enemy)) {
+          enemy.playerCollisionCooldown = 0.35;
+          continue;
+        }
+      }
       const base = enemy.collisionDamage ?? (22 + mission.difficulty * 2);
       applyDamage(base * (enemy.damageScale ?? 1), { collision: true, sourceX: enemy.x, sourceY: enemy.y });
       spawnExplosion(enemy.x, enemy.y, enemy.radius, { intensity: 0.55, blend: "lighter", style: "impact" });
@@ -13130,11 +13461,13 @@ function handleEnemyDestroyed(enemy, bullet) {
     startBossDefeatSequence(enemy);
   } else if (enemy.miniboss) {
     if (mission.activeMinibossId === enemy.id) mission.activeMinibossId = null;
-    const drop = rollSalvageDrop(enemy, {
-      force: true,
-      forceSource: getDropSourceKey(enemy),
-      minRarity: "certified",
-    });
+    const drop =
+      rollAct3HeirloomDrop(enemy, { miniboss: true }) ||
+      rollSalvageDrop(enemy, {
+        force: true,
+        forceSource: getDropSourceKey(enemy),
+        minRarity: "certified",
+      });
     if (drop) spawnSalvagePod(enemy.x, enemy.y, drop);
     spawnExplosion(enemy.x, enemy.y, Math.max(enemy.radius * 1.5, 44), {
       intensity: 1.05,
@@ -13581,6 +13914,31 @@ function drawCarriedPod(enemy) {
   });
 }
 
+function drawRammerTelegraph(enemy) {
+  if (enemy.rammerState !== "telegraph" || !(enemy.rammerTelegraphTimer > 0)) return;
+  const target = enemy.rammerTarget || { x: player.x, y: player.y };
+  const pulse = 0.5 + Math.sin((mission?.elapsed || 0) * 34) * 0.5;
+  const color = enemy.ai === "latch" ? "249, 115, 22" : "248, 113, 113";
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.strokeStyle = `rgba(${color}, ${0.24 + pulse * 0.32})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(enemy.x, enemy.y);
+  ctx.lineTo(target.x, target.y);
+  ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(enemy.x, enemy.y, enemy.radius + 7 + pulse * 5, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = `rgba(254, 240, 138, ${0.28 + pulse * 0.24})`;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(target.x, target.y, 13 + pulse * 4, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawTractorBeams() {
   if (!mission?.active) return;
   enemies.forEach((enemy) => {
@@ -13647,6 +14005,7 @@ function drawEnemy(enemy) {
     ctx.closePath();
       ctx.fill();
   }
+  drawRammerTelegraph(enemy);
   drawCarriedPod(enemy);
 
   if (mission && mission.empTimer > 0) {
@@ -13873,7 +14232,6 @@ function updateHud() {
     hudTime.textContent = "00:00";
     hudCredits.textContent = state.credits.toString();
     if (hudMini) hudMini.textContent = getCompactItemName(getSelectedMiniWeapon());
-    if (hudWeapons) hudWeapons.innerHTML = renderWeaponStripHtml({ showEmpty: true });
     setBossBarLayer(bossShieldFill, 0, 0);
     setBossBarLayer(bossArmorFill, 0, 0);
     setBossBarLayer(bossProgressFill, 0, 0);
@@ -13904,11 +14262,11 @@ function updateHud() {
           : getCompactItemName(mini)
         : "-";
     }
-    if (hudWeapons) hudWeapons.innerHTML = renderWeaponStripHtml({ showEmpty: true });
     updateBossProgress();
     updateMinibossProgress();
   }
   updateCargoHud();
+  updateDefenseIntegrityHud();
   updateConsumableHud();
 }
 
@@ -13933,6 +14291,28 @@ function updateCargoHud() {
   if (hudCargoStatus) {
     hudCargoStatus.hidden = cargoHudMessageTimer <= 0;
     hudCargoStatus.textContent = LEDGER_COPY.cargoFull;
+  }
+}
+
+function updateDefenseIntegrityHud() {
+  if (!hudDefenseIntegrity) return;
+  const hasDefense = !!mission && Number.isFinite(mission.defenseIntegrity) && Number.isFinite(mission.defenseMaxIntegrity);
+  hudDefenseIntegrity.hidden = !hasDefense;
+  if (!hasDefense) return;
+  const max = Math.max(1, mission.defenseMaxIntegrity);
+  const integrity = Math.max(0, mission.defenseIntegrity);
+  const pct = Math.max(0, Math.min(1, integrity / max));
+  if (hudDefenseIntegrityFill) {
+    hudDefenseIntegrityFill.style.width = `${Math.round(pct * 100)}%`;
+    hudDefenseIntegrityFill.style.background =
+      pct > 0.55
+        ? "linear-gradient(90deg, #facc15, #4ade80)"
+        : pct > 0.25
+          ? "linear-gradient(90deg, #f97316, #facc15)"
+          : "linear-gradient(90deg, #ef4444, #f97316)";
+  }
+  if (hudDefenseIntegrityValue) {
+    hudDefenseIntegrityValue.textContent = `${Math.ceil(pct * 100)}%`;
   }
 }
 

@@ -1,11 +1,23 @@
 {
   "id": "act3_next_of_kin",
   "name": "Next of Kin",
-  "background": "generatedOriginHull",
+  "background": "generatedHomeHull",
   "music": "space_adventure_bpm140.ogg",
   "difficulty": "Invasion",
   "description": "The procession breaks into a charge. The Chorus has finally agreed on something, and it is coming down your lane.",
   "completeOnBoss": true,
+  "defense": {
+    "integrity": 100,
+    "breachDamage": {
+      "default": 4,
+      "zealot": 12,
+      "chorister": 9,
+      "cantor": 8,
+      "sexton": 13,
+      "lictor": 20,
+      "lector": 34
+    }
+  },
   "debriefLore": [
     "Intercepted broadcast, all Chorus bands, unanimous: 'MOVE.' First passed motion in nine hundred years.",
     "The oath fragment is complete again. Every missing word was a coordinate. The coordinates are home.",

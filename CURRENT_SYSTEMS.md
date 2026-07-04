@@ -1,6 +1,6 @@
 # Current Systems
 
-Last audited: 2026-07-02
+Last audited: 2026-07-04
 
 This file explains how the game works today. It is intentionally descriptive rather than aspirational; new plans should start in `ROADMAP.md` and only graduate into this file after implementation.
 
@@ -18,6 +18,8 @@ Mission replays are intentionally stable. Completed mission count remains useful
 
 Act 2 adds lineage-specific enemy behavior on top of those contracts. Chorus conductors buff linked formations until destroyed, then survivors scatter. The Antiphon uses delayed mimic movement. Tithe bailiffs can seize loose salvage and retreat with it, while assessors can attach a lien drain to live mission credits until killed. Verdant bloomcallers and broodmothers spawn children, and seedcarriers split into sporelings on death. The Collections Barge can telegraph a tractor beam and pull the player during its seizure pattern. Doxology and Pilgrimage bosses can swap authored attack-pattern phases at HP thresholds with a hold-fire tell.
 
+Act 3 adds invasion behaviors and a defense stake for the player's mothership. Rammers telegraph, lock a point, then commit to a straight lunge. Grappler latches use the same commit rhythm but attach to the player hull on contact, dealing damage over time and slowing steering until shot loose or timed out, with two active latchers allowed at once. Missions can opt into `defense.integrity`; enemies that escape below the arena alive damage mothership integrity, and reaching zero ends the sortie with a breach failure settlement. Act 3 liens also honor `aiParams.maxAttached`, with extras falling back to stalker behavior instead of stacking endlessly.
+
 Named hulls shape loadouts through shield, armor, aux, mini, and second-bay modifiers. One-primary builds receive a visible primary-damage focus bonus, while carrying a second primary applies a visible per-weapon primary-damage strain unless hull choices mitigate it. The Armory main stage shows per-bay Effective DPS, Damage per Shot, and Shots per Second for equipped primary weapons; Dual Fire mode scales those per-weapon DPS and damage values while preserving each weapon's cadence. The Armory stat popup reports a player-facing readout for offense, defense, aux, and loadout, including the actual armor class combat uses and installed modifier explanations. Existing combat UI exposes health layers, mission objective state, cargo, selected support capability, equipped primary weapon icons, active primary bay or Dual Fire state, swap timing, and mini weapon state. Named Act 2 minibosses also show a brief field banner, a compact secondary health bar, guaranteed certified-or-better salvage on death, and a larger non-ending kill blast.
 
 EMP support affects enemies and firing behavior, and now clears nearby hostile projectiles in a bounded radius around the player with a visible pulse.
@@ -29,6 +31,8 @@ Mission scripts live in `levels/*.json`. They define metadata, backgrounds, wave
 The campaign has 11 Act 1 core missions, each with three player-facing carousel entries: Standard, Swarm, and Armored. All campaign entries use profiled projectile damage and weighted attack patterns. Completing any variant of `levelX` unlocks `levelX+1` through the base-level progression lookup, while lab-style encounters remain separate test entries.
 
 Act 2 uses a separate data-driven mission graph. Completing Mission 11 unlocks Dead Air; Dead Air opens the visible sanctioned/off-book fork; either Doxology or Foreclosure grants the Deep Registry Shard key item, which opens the Verdant route; Old Growth unlocks Pilgrimage. The mission board groups these entries under Deep Claims and shows locked prerequisites in plain contract language. Branch completions are tracked as sanctioned/off-book/Verdant/Origin standing for later phases, with only the sanctioned/off-book pair exposed in the hangar status strip.
+
+Act 3 currently includes the first three Probate missions: Death Notice, Next of Kin, and Death Duties. They use the generated `home_hull` background, Act 3 invasion sprites, mothership breach integrity, and pressure-authored enemy tables while the remaining P4-P7 missions stay deferred until P1-P3 feel is confirmed.
 
 ## Onboarding
 
@@ -48,7 +52,7 @@ Ledger market state includes rotating stock, lot purchases, dividends, price mov
 
 ## Items, Armory, And Archive
 
-The item system is data-driven through `items/item_pool.json` and `items/weapon_frames.json`. Implemented item categories include primary weapon frames, mini weapons, defense items, support items, named hulls, relics, and economy-facing salvage. Generated items can carry rarity, families, affixes, traits, and descriptive card copy. Primary weapons now have normal base coverage and Pre-Founding relic coverage across every spread/ammo pair documented in `WEAPON_FRAME_FORMAT.md`. Mini weapons apply rarity-scaled damage, firing speed, range, and projectile-speed tuning and can roll supported effects at higher rarities. Defense loot applies rarity-scaled armor-class and useful shield-strength tuning, with Pre-Founding defense doubling the current scaling above starter baselines. Existing saved mini and defense loot self-heals through one-time balance-version markers.
+The item system is data-driven through `items/item_pool.json` and `items/weapon_frames.json`. Implemented item categories include primary weapon frames, mini weapons, defense items, support items, named hulls, relics, Heirlooms, and economy-facing salvage. Generated items can carry rarity, families, affixes, traits, and descriptive card copy. Primary weapons now have normal base coverage and Pre-Founding relic coverage across every spread/ammo pair documented in `WEAPON_FRAME_FORMAT.md`. Heirloom items sit above Pre-Founding as Act 3-only drops from minibosses and bosses, with guaranteed first boss clears and lower repeat chances. The initial Heirloom families cover Chorus harmonic shield/aux pieces, Tithe kinetic mass-driver primaries, and Verdant plasma/vampiric graft primaries. Mini weapons apply rarity-scaled damage, firing speed, range, and projectile-speed tuning and can roll supported effects at higher rarities. Defense loot applies rarity-scaled armor-class and useful shield-strength tuning, with Pre-Founding defense doubling the current scaling above starter baselines and Heirlooms extending that ceiling. Existing saved mini and defense loot self-heals through one-time balance-version markers.
 
 Loot also has a vertical roll axis (Phase 6, see `outdated_docs/implemented_specs/LOOT_DEPTH_SPEC.md`). Each magnitude affix declares a `roll` range in `item_pool.json`; `createRolledItem` draws a per-instance float multiplier on its `buildAdd`, so two items of the same base and rarity with the same affixes differ in strength. Effect traces (pierce/homing/explosive/vampiric) roll a potency tier by rarity. Every item stores a `rollQuality` in [0,1] (mean normalized roll position) that scales its value and drives a roll-quality bar in the item display. Pre-Founding items roll three affixes where the pool allows. Aux items roll a per-instance ability potency (`auxPotency`/`auxRoll`) for cloak/EMP/bulwark plus offense and defense passives; the rolled magnitudes and ability knobs reconstruct from save without re-rolling. The retired `auxPower` investment was replaced by these rolls — old saves remap the Ledger capabilities ladder to dual-fire-only and refund the credits spent on aux tiers, and hull `auxPowerBonus` remains as a small identity perk that lifts the equipped aux item's roll.
 
@@ -64,7 +68,7 @@ Current gaps:
 
 ## Assets
 
-Generated art is now part of the live visual baseline. The current UI uses generated salvage chrome, generated item icons, promoted combat fleet art, generated mission backgrounds, the original generated starter hull, and v2 generated unlockable hulls that match the starter hull scale/style. Kenney assets remain credited and may still appear as fallback, historical comparison, or utility sprites. Mini weapons, shield boosters, and armor patch caches use generated overhaul art, while the EMP clear pulse is rendered in canvas.
+Generated art is now part of the live visual baseline. The current UI uses generated salvage chrome, generated item icons, promoted combat fleet art, generated mission backgrounds, the Act 3 invasion sprite pack, the original generated starter hull, and v2 generated unlockable hulls that match the starter hull scale/style. Kenney assets remain credited and may still appear as fallback, historical comparison, or utility sprites. Mini weapons, shield boosters, and armor patch caches use generated overhaul art, while the EMP clear pulse is rendered in canvas.
 
 Asset manifests and generation notes live in `ASSET_GENERATION.md`.
 
@@ -99,5 +103,5 @@ The most important remaining design mismatches are:
 - Item durability is not implemented and remains intentionally deferred.
 - Cargo/economy hulls are not part of the first hull pass.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader economy/lore direction rather than active gameplay systems.
-- The Act 2 art pack remains pending; current Act 2 engine behavior still uses placeholder/fallback sprites and backgrounds until the separate art pass lands.
 - The new overhaul systems need player-testing balance passes after deployment, especially second-bay strain, high-rarity defense strength, and early hard-mission pickup placement. If high armor class over-solves projectile density, the preferred counterbalance is adding visually obvious high-damage projectiles rather than simply raising all enemy DPS.
+- The Act 3 music pass remains pending until generated `.ogg` tracks are selected, wired, loop-checked, and credited.

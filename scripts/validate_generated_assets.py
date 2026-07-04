@@ -57,6 +57,17 @@ ACT2_REQUIRED_CATALOG_IDS = (
     "act2_old_growth:boss",
     "act2_pilgrimage:boss",
 )
+ACT3_INVASION_CATALOG_IDS = (
+    "burster",
+    "strangler",
+    "act3_death_notice:boss",
+    "zealot",
+    "lictor",
+    "act3_next_of_kin:boss",
+    "grappler",
+    "pressgang",
+    "act3_death_duties:boss",
+)
 
 
 def load_json(path: Path) -> dict:
@@ -203,11 +214,41 @@ def validate_act2_catalog_art(errors: list[str]) -> None:
         print("Act 2 boss alpha aspects:", ", ".join(aspects))
 
 
+def validate_act3_invasion_art(errors: list[str]) -> None:
+    catalog = load_json(CATALOG_PATH).get("entries", {})
+    aspects: list[str] = []
+    for entry_id in ACT3_INVASION_CATALOG_IDS:
+        entry = catalog.get(entry_id)
+        sprite = ((entry or {}).get("template") or {}).get("sprite") or ""
+        if not sprite:
+            errors.append(f"{entry_id} is missing an Act 3 invasion sprite")
+            continue
+        if "/invasion_v1/" not in sprite:
+            errors.append(f"{entry_id} should use invasion_v1 art, got '{sprite}'")
+        path = ROOT / sprite
+        if not path.exists():
+            errors.append(f"{entry_id} sprite is missing: {sprite}")
+            continue
+        validate_transparent_corners(path, errors)
+        if not entry_id.startswith("act3_") or not entry_id.endswith(":boss"):
+            continue
+        left, top, right, bottom = alpha_bbox(path)
+        width = right - left
+        height = bottom - top
+        aspect = width / height
+        aspects.append(f"{entry_id}={aspect:.2f}")
+        if aspect < MIN_BOSS_ASPECT:
+            errors.append(f"{sprite} alpha aspect {aspect:.2f} is below {MIN_BOSS_ASPECT:.2f}")
+    if aspects:
+        print("Act 3 invasion boss alpha aspects:", ", ".join(aspects))
+
+
 def main() -> int:
     errors: list[str] = []
     validate_projectiles(errors)
     validate_bosses(errors)
     validate_act2_catalog_art(errors)
+    validate_act3_invasion_art(errors)
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)

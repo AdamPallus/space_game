@@ -22,8 +22,8 @@ License: CC0 1.0 (public domain)
 Tracks used: space_adventure_bpm140.ogg, space_battle_bpm130.ogg, space_boss_battle_bpm175.ogg
 
 Generated Gameplay Assets
-Source: Generated locally using project prompts and processed with repository scripts.
-Assets: `assets/generated/` packs for combat sprites, projectiles, effects, UI chrome, salvage pods, item icons, scene backdrops, and mission backgrounds.
+Source: Generated with Codex built-in imagegen or earlier local project prompts, then processed with repository scripts.
+Assets: `assets/generated/` packs for combat sprites, projectiles, effects, UI chrome, salvage pods, item icons, scene backdrops, mission backgrounds, and Act 3 invasion art.
 Note: These assets are now part of the current game baseline unless a specific screen or level opts into legacy fallback art.
 
 Generated Boss Sprites

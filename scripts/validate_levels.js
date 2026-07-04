@@ -311,10 +311,37 @@ function validateBossPhases(phases, profiles, errors, context) {
   });
 }
 
+function validateLevelDefense(defense, errors, context) {
+  if (defense === undefined) return;
+  if (!isPlainObject(defense)) {
+    errors.push(`${context} defense must be an object.`);
+    return;
+  }
+  const allowed = new Set(["integrity", "breachDamage"]);
+  Object.keys(defense).forEach((key) => {
+    if (!allowed.has(key)) errors.push(`${context} defense uses unsupported field '${key}'.`);
+  });
+  if (!Number.isFinite(defense.integrity) || defense.integrity <= 0) {
+    errors.push(`${context} defense.integrity must be a positive number.`);
+  }
+  if (defense.breachDamage !== undefined) {
+    if (!isPlainObject(defense.breachDamage)) {
+      errors.push(`${context} defense.breachDamage must be an object.`);
+    } else {
+      Object.entries(defense.breachDamage).forEach(([key, value]) => {
+        if (!Number.isFinite(value) || value < 0) {
+          errors.push(`${context} defense.breachDamage.${key} must be a non-negative number.`);
+        }
+      });
+    }
+  }
+}
+
 function validateLevel(level) {
   const errors = [];
   const levelId = level.id || "unknown";
   const projectileProfiles = isPlainObject(level.projectileProfiles) ? level.projectileProfiles : {};
+  validateLevelDefense(level.defense, errors, `Mission '${levelId}'`);
   if (level.projectileProfiles !== undefined) {
     if (!isPlainObject(level.projectileProfiles)) {
       errors.push(`Mission '${levelId}' projectileProfiles must be an object.`);
@@ -546,6 +573,7 @@ function validateItemPool() {
   const entries = pool.entries;
   const affixes = pool.affixes || {};
   const relics = pool.relics || {};
+  const heirlooms = pool.heirlooms || {};
   if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
     errors.push("item pool must define entries.");
   }
@@ -554,6 +582,9 @@ function validateItemPool() {
   }
   if (typeof relics !== "object" || Array.isArray(relics)) {
     errors.push("item pool relics must be an object.");
+  }
+  if (typeof heirlooms !== "object" || Array.isArray(heirlooms)) {
+    errors.push("item pool heirlooms must be an object.");
   }
 
   const affixIds = new Set(Object.keys(affixes || {}));
@@ -598,6 +629,9 @@ function validateItemPool() {
   }
   for (const [id, entry] of Object.entries(relics || {})) {
     validateItemPoolEntry(id, entry, "Relic", affixIds, errors);
+  }
+  for (const [id, entry] of Object.entries(heirlooms || {})) {
+    validateItemPoolEntry(id, entry, "Heirloom", affixIds, errors);
   }
   return errors;
 }

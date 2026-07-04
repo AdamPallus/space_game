@@ -170,6 +170,44 @@
         "shieldCooldownLevel": -1
       },
       "roll": [0.7, 1.4]
+    },
+    "chorus_harmonic_return": {
+      "name": "Harmonic return",
+      "description": "Chorus harmonics feed recovered phase into shield and support loops.",
+      "tags": ["chorus", "shield", "regen", "aux"],
+      "rarities": ["heirloom"],
+      "slotTypes": ["defense", "aux"],
+      "defenseTypes": ["shield"],
+      "buildAdd": {
+        "shieldRegenLevel": 1,
+        "shieldCooldownLevel": -1,
+        "flowRateLevel": 1
+      },
+      "roll": [0.7, 1.5]
+    },
+    "tithe_mass_accounting": {
+      "name": "Mass accounting",
+      "description": "Tithe recoil ledgers turn launch mass into heavier kinetic carry-through.",
+      "tags": ["tithe", "kinetic", "impulse", "anti-armor"],
+      "rarities": ["heirloom"],
+      "slotTypes": ["primary"],
+      "buildAdd": {
+        "kineticImpulseBudget": 0.18,
+        "flowSizeLevel": 1
+      },
+      "roll": [0.75, 1.45]
+    },
+    "verdant_living_graft": {
+      "name": "Living graft",
+      "description": "Verdant graft tissue feeds burn pressure back into the hull link.",
+      "tags": ["verdant", "plasma", "vampiric", "sustain"],
+      "rarities": ["heirloom"],
+      "slotTypes": ["primary", "aux"],
+      "buildAdd": {
+        "flowSizeLevel": 1,
+        "shieldRegenLevel": 1
+      },
+      "roll": [0.7, 1.5]
     }
   },
   "entries": {
@@ -1557,6 +1595,256 @@
         }
       },
       "relicLore": "TODO(adam): Final Orphan Signal identification fragment."
+    }
+  },
+  "heirlooms": {
+    "heirloom_chorus_resonance_aegis": {
+      "slotType": "defense",
+      "defenseType": "shield",
+      "sourceId": "heirloom_chorus_resonance_aegis",
+      "tier": 4,
+      "name": "Resonance Aegis",
+      "subtitle": "Chorus Heirloom barrier",
+      "description": "A synchronized shield lattice that returns impacts as phase-stable recovery.",
+      "notes": "Heirlooms are not preserved relics; they are what the lineages became.",
+      "icon": "assets/generated/item_icons_v1/phase_shield_projector.png",
+      "tags": ["heirloom", "chorus", "shield", "defense", "regen"],
+      "affixes": ["chorus_harmonic_return"],
+      "build": {
+        "shieldMaxLevel": 3,
+        "shieldRegenLevel": 3,
+        "shieldCooldownLevel": -3
+      },
+      "uniqueProperty": {
+        "id": "resonance_unanimity",
+        "name": "Unanimous return",
+        "description": "Adds inhumanly synchronized shield recovery after every phase break.",
+        "tags": ["chorus", "shield", "regen"],
+        "buildAdd": {
+          "shieldMaxLevel": 1,
+          "shieldRegenLevel": 1,
+          "shieldCooldownLevel": -1
+        }
+      },
+      "relicLore": "Heirloom assay: Chorus drift did not preserve Founder shielding. It tuned a population into one recovery loop."
+    },
+    "heirloom_chorus_canticle_core": {
+      "slotType": "aux",
+      "ability": "emp",
+      "sourceId": "heirloom_chorus_canticle_core",
+      "tier": 4,
+      "name": "Canticle Core",
+      "subtitle": "Chorus Heirloom aux",
+      "description": "A support core that snaps hostile timing into silence on the same beat.",
+      "notes": "Heirlooms are not preserved relics; they are what the lineages became.",
+      "icon": "assets/generated/item_icons_v1/emp_burst_module.png",
+      "tags": ["heirloom", "chorus", "aux", "emp", "control", "shield"],
+      "affixes": ["chorus_harmonic_return"],
+      "build": {
+        "flowRateLevel": 2,
+        "shieldRegenLevel": 2,
+        "shieldCooldownLevel": -2,
+        "kineticImpulseBudget": 0.16
+      },
+      "uniqueProperty": {
+        "id": "canticle_downbeat",
+        "name": "Canticle downbeat",
+        "description": "Adds tighter EMP timing and a synchronized shield echo.",
+        "tags": ["chorus", "control", "shield"],
+        "buildAdd": {
+          "flowRateLevel": 1,
+          "shieldRegenLevel": 1
+        }
+      },
+      "relicLore": "Heirloom assay: the Chorus no longer stores commands. It stores agreement, and agreement has a pulse."
+    },
+    "heirloom_tithe_mass_driver": {
+      "slotType": "primary",
+      "sourceId": "heirloom_tithe_mass_driver",
+      "tier": 4,
+      "name": "Mass Driver",
+      "subtitle": "Tithe Heirloom cannon",
+      "description": "A foreclosure-bore kinetic driver that itemizes recoil before the slug exits.",
+      "notes": "Heirlooms are not preserved relics; they are what the lineages became.",
+      "icon": "assets/generated/item_icons_v2/slug_cannon.png",
+      "tags": ["heirloom", "tithe", "kinetic", "focused", "heavy", "anti-armor"],
+      "affixes": ["tithe_mass_accounting"],
+      "build": {
+        "gunDiameter": "large",
+        "spread": "focused",
+        "ammo": "kinetic",
+        "effect": "pierce",
+        "flowRateLevel": 0,
+        "flowVelocityLevel": 3,
+        "flowSizeLevel": 2,
+        "cooldownMult": 1.28,
+        "defenseSlots": ["shield", "armor"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 1,
+        "armorClass": 12,
+        "armorClassLevel": 1,
+        "armorDragLevel": 1,
+        "kineticImpulseBudget": 0.38
+      },
+      "uniqueProperty": {
+        "id": "foreclosure_bore",
+        "name": "Foreclosure bore",
+        "description": "Adds an executor-grade impulse reserve and deeper pierce tuning.",
+        "tags": ["tithe", "impulse", "pierce"],
+        "build": {
+          "effectUpgrades": {
+            "pierce": 3
+          }
+        },
+        "buildAdd": {
+          "kineticImpulseBudget": 0.22,
+          "flowVelocityLevel": 1
+        }
+      },
+      "relicLore": "Heirloom assay: the Tithe learned to bill mass itself. The slug is only the receipt."
+    },
+    "heirloom_tithe_garnishment_array": {
+      "slotType": "primary",
+      "sourceId": "heirloom_tithe_garnishment_array",
+      "tier": 4,
+      "name": "Garnishment Array",
+      "subtitle": "Tithe Heirloom repeater",
+      "description": "A paired kinetic press that extracts repeated payment from one firing cycle.",
+      "notes": "Heirlooms are not preserved relics; they are what the lineages became.",
+      "icon": "assets/generated/item_icons_v3/oathpair_driver.png",
+      "tags": ["heirloom", "tithe", "kinetic", "dual", "rapid", "driver", "anti-armor"],
+      "affixes": ["tithe_mass_accounting"],
+      "build": {
+        "gunDiameter": "small",
+        "spread": "dualRapid",
+        "ammo": "kinetic",
+        "effect": "explosive",
+        "flowRateLevel": 3,
+        "flowVelocityLevel": 2,
+        "flowSizeLevel": 1,
+        "cooldownMult": 0.72,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 0,
+        "shieldRegenLevel": 0,
+        "shieldCooldownLevel": 0,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.28
+      },
+      "uniqueProperty": {
+        "id": "compound_interest_press",
+        "name": "Compound-interest press",
+        "description": "Adds rapid-cycle mass reserve and a hard-edged impact burst.",
+        "tags": ["tithe", "flow-rate", "explosive"],
+        "build": {
+          "effectUpgrades": {
+            "explosive": 3
+          }
+        },
+        "buildAdd": {
+          "flowRateLevel": 1,
+          "kineticImpulseBudget": 0.16
+        }
+      },
+      "relicLore": "Heirloom assay: the Tithe's best weapons no longer collect once. They compound."
+    },
+    "heirloom_verdant_graft_lance": {
+      "slotType": "primary",
+      "sourceId": "heirloom_verdant_graft_lance",
+      "tier": 4,
+      "name": "Graft Lance",
+      "subtitle": "Verdant Heirloom plasma",
+      "description": "A living plasma emitter that roots burn pressure into the pilot's hull link.",
+      "notes": "Heirlooms are not preserved relics; they are what the lineages became.",
+      "icon": "assets/generated/item_icons_v3/starwound_lance.png",
+      "tags": ["heirloom", "verdant", "plasma", "focused", "vampiric", "sustain", "burn"],
+      "affixes": ["verdant_living_graft"],
+      "build": {
+        "gunDiameter": "large",
+        "spread": "focused",
+        "ammo": "plasma",
+        "effect": "vampiric",
+        "flowRateLevel": 0,
+        "flowVelocityLevel": 1,
+        "flowSizeLevel": 3,
+        "cooldownMult": 1.34,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 1,
+        "shieldCooldownLevel": -1,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.38
+      },
+      "uniqueProperty": {
+        "id": "rooted_burn_return",
+        "name": "Rooted burn return",
+        "description": "Adds stronger hull return and a larger plasma envelope.",
+        "tags": ["verdant", "plasma", "vampiric"],
+        "build": {
+          "effectUpgrades": {
+            "vampiric": 3
+          }
+        },
+        "buildAdd": {
+          "kineticImpulseBudget": 0.2,
+          "flowSizeLevel": 1
+        }
+      },
+      "relicLore": "Heirloom assay: Verdant drift did not lose the hull link. It made the wound photosynthetic."
+    },
+    "heirloom_verdant_rootwound_bloom": {
+      "slotType": "primary",
+      "sourceId": "heirloom_verdant_rootwound_bloom",
+      "tier": 4,
+      "name": "Rootwound Bloom",
+      "subtitle": "Verdant Heirloom spread",
+      "description": "A plasma bloom that multiplies across the lane and drinks back from every burn.",
+      "notes": "Heirlooms are not preserved relics; they are what the lineages became.",
+      "icon": "assets/generated/item_icons_v3/cinderloom_spray.png",
+      "tags": ["heirloom", "verdant", "plasma", "wide", "vampiric", "swarm", "burn"],
+      "affixes": ["verdant_living_graft"],
+      "build": {
+        "gunDiameter": "medium",
+        "spread": "wide",
+        "ammo": "plasma",
+        "effect": "vampiric",
+        "flowRateLevel": 2,
+        "flowVelocityLevel": 0,
+        "flowSizeLevel": 2,
+        "cooldownMult": 0.9,
+        "defenseSlots": ["shield", "none"],
+        "shieldMaxLevel": 1,
+        "shieldRegenLevel": 1,
+        "shieldCooldownLevel": -1,
+        "armorAmountLevel": 0,
+        "armorClass": 10,
+        "armorClassLevel": 0,
+        "armorDragLevel": 0,
+        "kineticImpulseBudget": 0.32
+      },
+      "uniqueProperty": {
+        "id": "multiplying_graft",
+        "name": "Multiplying graft",
+        "description": "Adds burn-fed sustain and a wider living plasma envelope.",
+        "tags": ["verdant", "vampiric", "swarm"],
+        "build": {
+          "effectUpgrades": {
+            "vampiric": 3
+          }
+        },
+        "buildAdd": {
+          "flowSizeLevel": 1,
+          "shieldRegenLevel": 1
+        }
+      },
+      "relicLore": "Heirloom assay: the Verdant answer to inheritance is not preservation. It is propagation."
     }
   }
 }

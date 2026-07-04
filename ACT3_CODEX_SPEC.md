@@ -1,10 +1,12 @@
 # Act 3 Codex Spec — Invasion Mechanics, Heirloom Tier, Art
 
-Status: ready for Codex. Design and combat doctrine in
+Status: engine/art implemented; generated music remains active. Design and combat doctrine in
 `ACT3_PROBATE_DESIGN.md`. The first three Act 3 missions
 (`act3_death_notice`, `act3_next_of_kin`, `act3_death_duties`) are authored,
-pressure-tested with `?devPressure=1`, and playable now using approximated
-mechanics; this spec upgrades them and unblocks P4–P7.
+pressure-tested with `?devPressure=1`, and playable now with the Act 3
+mechanics/art upgrades in place. Keep this root spec active until §2.2 music is
+selected, wired, loop-checked, and credited; then archive it with the normal
+doc lifecycle.
 
 ## 0. Prerequisite bug fix: boss phases stop firing after the transition
 

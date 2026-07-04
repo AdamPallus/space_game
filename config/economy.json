@@ -58,7 +58,8 @@
       "scrap": [40, 80],
       "certified": [150, 300],
       "prototype": [500, 900],
-      "preFounding": [1500, 3000]
+      "preFounding": [1500, 3000],
+      "heirloom": [2200, 3900]
     },
     "rollQualityMultiplier": { "base": 0.85, "scale": 0.45 }
   },

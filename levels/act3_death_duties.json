@@ -1,11 +1,22 @@
 {
   "id": "act3_death_duties",
   "name": "Death Duties",
-  "background": "generatedOriginHull",
+  "background": "generatedHomeHull",
   "music": "space_boss_battle_bpm175.ogg",
   "difficulty": "Invasion",
   "description": "The Tithe has come to assess the estate \u2014 and the estate is your home. Grapplers board, gunwalls advance, and everything gets itemized.",
   "completeOnBoss": true,
+  "defense": {
+    "integrity": 100,
+    "breachDamage": {
+      "default": 4,
+      "grappler": 14,
+      "pressgang": 18,
+      "assessor": 12,
+      "strongbox": 24,
+      "pressmaster": 36
+    }
+  },
   "debriefLore": [
     "Notice of assessment, addressed to the estate. Line one: the hull you launched from.",
     "Manifest line 7 \u2014 seal matches your own. Line 8 is blank. Line 8 is reserved.",
@@ -63,7 +74,8 @@
       "ai": "lien",
       "aiParams": {
         "attachRadius": 165,
-        "drainPerSecond": 8
+        "drainPerSecond": 8,
+        "maxAttached": 3
       },
       "attackPatterns": [
         {

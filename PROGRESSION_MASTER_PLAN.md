@@ -84,12 +84,25 @@ build feeds both the survival sim and the throughput solver. Initial set:
 
 | build id | intent |
 |---|---|
-| `act1_entry` | Cadet frame, shield only, no mini — the fresh-save ship |
+| `act1_entry` | the requisition kit (Part 3): scrap Cadet, one shield, no mini |
 | `act1_mid_certified` | certified weapon + one defense module (≈ the current hard-coded probe build) |
 | `act1_finale_prototype` | two good prototype weapons (median rolls), full act-1 unlocks |
 | `act2_relic_full` | best Pre-Founding loadout, median rolls, dual fire tier 4 |
 | `act3_heirloom_mixed` | relic base + 2–3 heirlooms with good (p75) rolls |
 | `wrongtool_rapid` / `wrongtool_breaker` | same tier as the act under test, wrong role — used for the overwhelm checks |
+
+Each act-tier build additionally comes in two **defensive archetypes**, because
+defense is a playstyle axis the current probe can't see: `_shieldonly` (max
+shield/regen, zero armor, no armor drag → highest DPS; survives 1–3 big hits
+then must find a regen window, and regen is denied by *any* hit, however small)
+and `_armored` (armor class near the cap, armor drag → lower DPS; chip fire is
+erased outright and the player triages big hits instead of dodging everything).
+The survival sim replays the same recorded hit timeline through every archetype
+— invincible-probe data plus math, no extra flying. The player armor-class cap
+(currently 30) and the armor firing-rate drag are first-class levers in
+`config/balance_reference.json`, and the sim can model N armor-pack uses as
+added armor budget so the consumable crutch (Part 5c) is part of the same
+calculation.
 
 The same file holds canonical **enemy profiles** per act (`act1_swarm`,
 `act1_armored`, `act2_chorus_swarm`, `act2_tithe_plated`, `act3_armored`, …) with
@@ -104,7 +117,14 @@ timeline, and compare spawned HP-mass per second (armor-class subtraction and
 chip floor included, per the enemy damage math) against the build's kill
 capacity. Output per mission: peak concurrent enemies, periods where the stack
 grows, clear margin (kill throughput ÷ spawn throughput), and the breach upper
-bound for defense missions. This is pure math on data we have — it runs in
+bound for defense missions. The probe report gains matching defense-side
+metrics computed from the hit/sample timeline: **chip-erasure fraction** (share
+of incoming hits at or below a given armor class — what an armored build
+ignores for free), **regen-denial uptime** (share of mission time within
+`regenDelay` of any hit — what a shield-only build suffers), and a big-hit
+histogram. Together these say *which defensive archetype a mission is aimed
+at*, which is authored intent (Rule 9), not an accident to discover in
+playtest. This is pure math on data we have — it runs in
 milliseconds and is the tool that catches "armored enemies pile up and the swarm
 eats you," which the survival probe alone cannot see.
 
@@ -121,33 +141,32 @@ current Processional ≈ 15 — and the full validation stack passes.
 
 ## 3. Act 1 unlock ladder (Phase B)
 
-Ship capabilities move from "everything at start / bought in Investments" to
-mission-clear rewards. New save block, e.g.:
+The governing distinction, straight from the fiction: **items are found or
+bought; capabilities are trusted to you.** The Ledger will sell you anything —
+it will not let an unproven pilot fly a twin-bay chassis. Capability unlocks are
+therefore mission-clear rewards only, delivered in debrief as Ledger trust
+notices ("Refit authorization: second defense hardpoint — your service record
+supports the liability"), and *nothing* item-shaped is ever unlock-gated. If a
+slot is open, the player may put any owned item in it, from any source, at any
+time. New save block:
 
 ```
 state.shipUnlocks = {
   defenseSlots: 1,          // 1 → 2
-  armorPlating: false,      // armor defense type available
   miniSlot: false,
   secondPrimaryBay: false,  // swap mode
   dualFireTier: 0,          // 0–4, mission-granted (see below)
-  aux: { cloak: true, emp: false, bulwark: false },
-  starterFrames: ["fundamentals"],
 }
 ```
 
-The cadence (clearing any variant of the mission grants the unlock, shown as a
-debrief reward moment with real copy — these are the act's system beats):
+The cadence — four capability beats across the act, each one a refit
+authorization on the player's chassis line:
 
-| clear | unlock | why here |
+| clear | capability | why here |
 |---|---|---|
-| start | Cadet Kinetic Frame only; 1 primary bay, 1 defense slot (shield), cloak, no mini | a simple ship; current buffed Cadet makes M1–M2 easy, which is fine |
-| M1 | Area Control starter frame | first swarm-lean mission follows; teaches role choice |
-| M2 | Armor Break starter frame + armor plating defense type | first armored-lean mission follows |
+| start | 1 primary bay, 1 defense slot, 1 aux, no mini, no second bay | a drone you outfit yourself |
 | M3 | second defense slot | first survivability wall |
-| M4 | EMP aux | replaces the 350-credit gate |
-| M5 | mini weapon slot + Tick Autogun granted | mid-act toy |
-| M6 | Bulwark aux | replaces the 650-credit gate |
+| M5 | mini weapon slot | mid-act toy; minis flow from drops and the market, not a grant |
 | M8 | second primary bay (Swap mode) | the act's big system beat before the final stretch |
 | M11 (Last Light) | **Dual Fire tier 1** + guaranteed Pre-Founding relic in the boss crate | the finale reward is the fantasy: both guns firing |
 
@@ -159,17 +178,33 @@ credits already spent on it (precedent: the `auxPower` retirement refund).
 Engineering and hull investments stay credit-purchased — money keeps buying
 comfort; missions grant capability.
 
+**Requisition-grade starter kit.** The current starter items are good enough
+that early drops are just scrap-for-cash; that kills the loot loop in the act
+that teaches it. Fresh saves get exactly one of each, explicitly scrap-tier with
+fixed low-median rolls and zero affixes: the Cadet Kinetic Frame, one basic
+shield module, one basic cloak. The three-frame starter stage system
+(`starterUnlockStage`) retires — the Area Control and Armor Break identities
+live in the drop and market pools like every other weapon, and there are no
+guaranteed early drops: the player's second weapon is whatever the field gives
+them, which is the point. First consequences to verify: the first certified
+drop should beat the kit, and the `act1_entry` reference build (Part 2b) is
+this kit, so M1–M2 must stay clearable with it.
+
 **Migration:** existing saves are grandfathered — every unlock whose gating
 mission is already completed (or whose old gate was already purchased/used) is
-granted. Adam's save must load with nothing taken away.
+granted, and existing owned items are untouched. Adam's save must load with
+nothing taken away. (The old EMP/bulwark credit gates are already gone from the
+live game; no unlock replaces them — aux items are simply found or bought.)
 
-**UI:** locked bays/slots render with a lock and "Unlocks after Mission N" copy in
-the Armory; the mission board card for the next unlock mission may tease it.
+**UI:** locked bays/slots render with a lock and "Authorization pending —
+Mission N" copy in the Armory; the mission board card for the next unlock
+mission may tease it.
 
-**Phase B gate:** scripted fresh-save walkthrough confirms each unlock fires at
-its mission; migration check on a copy of a maxed save shows no regression;
-validators pass; **Adam plays M1–M5 on a fresh save** and confirms the drip feels
-good before Phase C starts.
+**Phase B gate:** scripted fresh-save walkthrough confirms each capability fires
+at its mission and that M1–M3 are clearable with the requisition kit; migration
+check on a copy of a maxed save shows no regression; validators pass; **Adam
+plays M1–M5 on a fresh save** and confirms the drip feels good before Phase C
+starts.
 
 ## 4. Loot: roll distribution, drop tables, duplicates (Phase C)
 
@@ -205,6 +240,15 @@ boss/miniboss sources (starting points; Codex tunes against the I5 economy gate)
 
 Target: a player entering Act 2 sees their first relic within ~3–5 boss kills.
 No duplicate protection anywhere — the roll axis is the dedupe.
+
+**4d. Provenance.** Roll quality gets a fiction. The Ledger authenticates
+everything, so an item's `rollQuality` band renders as an archival provenance
+line on cards and tooltips: **Disputed** (bottom band) → **Attested** →
+**Certified True Copy** → **Notarized** → **Sealed Original** (top ~5%). One
+string table, zero mechanics — but "I finally pulled a Sealed Original Dead
+Name" is a sentence players say out loud, and it makes the roll axis (the
+actual endgame chase) speak the game's language instead of hiding in a bar
+graph.
 
 ## 5. Items: creative work order (Phase C)
 
@@ -272,6 +316,26 @@ canon for **all** new content. Two additions:
   mission are both legitimate. The swarm/armored *variants* stay an Act 1-only
   device.
 - **Rule 8 — the flee exemption** (Part 1a): retreating enemies never breach.
+- **Rule 9 — defense is a role too.** The lineages check the player's defensive
+  identity the way they check weapons, and the mapping falls out of the damage
+  math: **Chorus** chip volume denies shield regen but is erased by armor class
+  → armor-favored; **Tithe** heavy slugs punch past flat AC subtraction but
+  come sparsely enough to hide and recharge → shield-favored; **Verdant**
+  collision pressure bypasses shields *and* ignores armor class → mobility,
+  EMP, and bulwark-favored. Author this crosswise with the offense checks
+  (Chorus: swarm offense-check but armor defense-favor) so no single ship
+  answers a whole branch — finding the crossed answer is the build game. Each
+  mission's brief may declare a defensive lean; each act must contain missions
+  favoring each archetype so neither shields-only nor armor is dominant across
+  an act.
+- **Rule 10 — bombers carry the breach.** In defense-stake missions, breach
+  pressure is concentrated in designated bomber-class enemies ("claimants"):
+  slow armored caskets, fast weaving couriers. Chaff drones breach negligibly
+  or not at all — letting a stray fighter slip past is forgiven; letting a
+  casket through is not. Bombers are priority-target gameplay, and on missions
+  that mix armored caskets with courier swarms they're the forcing function for
+  mixed loadouts and Dual Fire. Not every mission does this; when one does, the
+  `breachDamage` map says so explicitly.
 
 Invariants, evaluated by the harness against `config/balance_reference.json`
 (median rolls unless stated; thresholds live in the config, these are the
@@ -299,8 +363,15 @@ starting values):
 - **I5 (economy):** crutch loadout net-negative per Part 5c; first relic within
   ~3–5 Act 2 boss kills in the drop simulation; Credit Flow milestones stay
   within `reportTargets`.
+- **D1 (defensive viability):** every mission is survivable by at least one
+  defensive archetype of the act-appropriate tier (survival sim on the probe
+  timeline), and within each act both archetypes are the favored answer
+  somewhere (per the Rule 9 metrics). The AC cap and armor drag stay levers:
+  if armor over-solves an act, tune the mission's big-hit share, not the whole
+  DPS curve.
 - **I6 (no Act 1 regression):** Act 1 mission content untouched except unlock
-  wiring; existing probe baselines within 15%.
+  wiring; existing probe baselines within 15%; M1–M3 clearable by the
+  requisition-kit `act1_entry` build.
 
 **Wrong-tool feel:** `wrongtool_*` builds should show stack growth (overwhelm)
 on role-check missions — that's the punishment that makes swapping and loadout
@@ -367,7 +438,12 @@ Pressure tiers below refer to I3's Act 2 ramp. Briefs:
 Same fiction ("They Followed You Home"), same breach stake, same heirloom reward
 identity — re-authored to the raised floors (I3: 250 → 400), the Act 3 armored
 doctrine (I1: armorClass beats same-tier rapid per-shot; more HP mass per wave),
-and the fixed flee/breach contract. P1–P3 are re-authored, not patched. Briefs:
+the fixed flee/breach contract, and Rule 10: breach pressure lives in named
+bomber classes, not in every stray drone. The claimant wing per lineage —
+Verdant **seedcaskets** (slow, plated, splitting), Chorus **processional
+carriers** (shielded columns that dive in formation), Tithe **writ couriers**
+(fast, weaving, low HP) — so "which bombers are coming" is also "which weapons
+to bring." P1–P3 are re-authored, not patched. Briefs:
 
 1. **P1 — Death Notice** (Verdant vanguard; hybrid; ≥ 250). Keep the shipped
    concept — burster rammers from second two, rooted bloomcallers, sporeling
@@ -387,7 +463,10 @@ and the fixed flee/breach contract. P1–P3 are re-authored, not patched. Briefs
    EMP-spam both get answered.
 6. **P6 — Escheat** (siege; defense-max; ≥ 350). The state claims the estate:
    maximum breach pressure, waves that mostly want the mothership, not you.
-   Triage as gameplay. I4 matters most here — winnable, barely, with the right
+   Rule 10 at full volume — mixed claimant wings (armored seedcaskets behind
+   courier screens) while fighter chaff harasses but barely breaches. Triage as
+   gameplay: you cannot kill everything, and the mission is authored so you
+   don't have to. I4 matters most here — winnable, barely, with the right
    build.
 7. **P7 — Probate** (finale; full hybrid; ≥ 380–400). **The Executor** — the
    inheritance judgment itself, a boss that cycles all three lineages' pattern
@@ -399,15 +478,47 @@ and the fixed flee/breach contract. P1–P3 are re-authored, not patched. Briefs
 negative clear margin from P3 on; `act3_heirloom_mixed` clears P7; **Adam flies
 P1, P4, and P7.**
 
-## 9. Work order summary
+## 9. Underwriting (Phase F — creative addition)
+
+Retiring the swarm/armored variants after Act 1 removes the game's only
+player-facing difficulty valve. Its replacement should come from the fiction,
+and the fiction is insurance. Every sortie launches under one of three coverage
+terms, chosen on the mission board and written in contract language:
+
+- **Underwritten.** Premium at launch (~15% of the mission's median payout).
+  If you die or abort, recovered cargo and item drops are honored anyway — the
+  claim pays out. The catch is the clause: the Ledger reserves **right of first
+  refusal**, and any Pre-Founding-or-better drop has a ~25% chance to be
+  compulsorily purchased at book value. Book value systematically underpays
+  god rolls (sale value scales with `rollQuality` by design), so safety costs
+  you exactly the thing you're hunting. Perfectly fair. Infuriating. In
+  character.
+- **Standard.** Extraction rules as shipped.
+- **Off-Book.** The Ledger disavows the sortie: no completion credits, and a
+  disavowal fee on failure. In exchange, untaxed salvage: drop chance +30% and
+  the roll floor lifts by ~0.08. Death still loses everything. Off-book
+  completions already exist as tracked branch standing — which means by the
+  time the Phase 10 fork asks the player whose side they're on, they've been
+  *practicing* the answer one sortie at a time, and the game has the receipts.
+
+This is the "spend money when you're close" loop generalized: underwrite while
+grinding for the breakthrough drop, fly standard by default, go off-book when
+strong and greedy. Implementation is mission-launch UI + `economy.json`
+multipliers + debrief lines — no combat code. Gate: Credit Flow shows Standard
+remains the best progression EV (underwriting is comfort, off-book is greed;
+neither dominates), and drop-sim confirms off-book doesn't collapse
+missions-to-first-relic below the I5 target.
+
+## 10. Work order summary
 
 | phase | contents | gate |
 |---|---|---|
 | **A** | flee/breach contract, act hiding, auto-probe + timescale, reference-build config, throughput solver, probe runner script | baselines reproduced (Gauntlet ≈ 200, old Processional ≈ 15); validators pass |
-| **B** | unlock ladder, starter kit trim, dual-fire migration + refund, unlock UI | fresh-save walkthrough + migration check; **Adam plays M1–M5** |
-| **C** | roll curve + floors, act drop tables, named aux items, mini trinket rework, consumables + pricing | I1 + I5 in balance_report; Adam eyeballs a drop session |
-| **D** | Act 2's 11 missions from Part 7 briefs | per-mission I2/I3/I4; **Adam flies 3 checkpoints**; Act 2 unhides |
-| **E** | Act 3's 7 missions from Part 8 briefs | per-mission gates; **Adam flies P1/P4/P7**; Act 3 unhides |
+| **B** | capability ladder, requisition starter kit, dual-fire migration + refund, unlock UI | fresh-save walkthrough + migration check; **Adam plays M1–M5** |
+| **C** | roll curve + floors, act drop tables, provenance labels, named aux items, mini trinket rework, consumables + pricing | I1 + I5 in balance_report; Adam eyeballs a drop session |
+| **D** | Act 2's 11 missions from Part 7 briefs | per-mission I2/I3/I4/D1; **Adam flies 3 checkpoints**; Act 2 unhides |
+| **E** | Act 3's 7 missions from Part 8 briefs (claimant wings per Rule 10) | per-mission gates; **Adam flies P1/P4/P7**; Act 3 unhides |
+| **F** | underwriting terms (Part 9): board UI, economy multipliers, debrief lines | Credit Flow EV check; **Adam approves the contract copy** |
 
 Phases are separate Codex runs. Each ships with `CURRENT_SYSTEMS.md` updated and
 the standard validation stack green:

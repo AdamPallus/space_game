@@ -1,8 +1,18 @@
 # Roadmap
 
-Last audited: 2026-07-02
+Last audited: 2026-07-06
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
+
+## Active master plan (2026-07-06)
+
+`PROGRESSION_MASTER_PLAN.md` is now the governing plan for difficulty,
+progression, loot, and all Act 2/Act 3 mission content. It supersedes the Act 2
+combat retune and Act 3 P4-P7 items below: Acts 2 and 3 are hidden and
+re-authored from creative briefs against a measured balance harness, ship
+capabilities become mission-clear unlocks, and loot moves to a skewed roll
+curve with act-aware drop tables. The Story-Economy Arc phases (Family Tier,
+Planet Raids, The Fork) remain queued behind it.
 
 ## Player-Testing Overhaul Implemented
 

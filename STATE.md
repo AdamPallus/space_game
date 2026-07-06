@@ -132,6 +132,7 @@ Active docs in the repo root:
 - `STATE.md`: current source of truth and validation checklist.
 - `CURRENT_SYSTEMS.md`: detailed explanation of implemented systems.
 - `ROADMAP.md`: prioritized next work.
+- `PROGRESSION_MASTER_PLAN.md`: governing plan for difficulty, progression, loot, and Act 2/3 re-authoring (phases A-E, ready for Codex; each phase graduates per the doc lifecycle rule as it ships).
 - `ECONOMY_DESIGN.md`: active economy design thesis and long-term direction.
 - `UI_DESIGN.md`: active visual and interaction design rules.
 - `ASSET_GENERATION.md`: current generated-asset workflow and manifest.

@@ -36,6 +36,21 @@ builds something worthy to hit.
   a theoretical desire for perfect balance, decides whether the challenge is
   exciting, tedious, illegible, or impossible.
 
+### Gear-tier contract
+
+- **Gold / Pre-Founding is the Act 2 target tier.** A cohesive, role-appropriate
+  gold build must be able to clear Act 2 with learned execution. Gold primaries
+  are the offensive baseline; the loadout may still need a suitable defensive
+  answer, support item, and consumables.
+- Act 2 is not balanced around **green / Heirloom** gear. Heirlooms are the next
+  power tier and should make early Act 2 noticeably easier rather than becoming
+  an invisible entry requirement.
+- Tier does not erase role. A gold swarm weapon may fail an armor check and a
+  gold armor breaker may drown in Processional. That is a loadout problem, not a
+  reason to raise the required rarity.
+- Orphan Signal is a gold Pre-Founding aux and is valid Act 2 equipment. Canticle
+  Core is a green Chorus Heirloom and therefore sits above the intended baseline.
+
 ## 2. Campaign truth and preservation policy
 
 - The known-good campaign is Mission 1 through Mission 8, **Last Light**.
@@ -225,6 +240,10 @@ window. The follow-up gives it a dedicated shield-heavy orbiting hold: it enters
 establishes position, and remains until killed. Its durability is reduced enough
 that sustained anti-swarm damage can realistically finish it before the second
 miniboss beat.
+
+Adam's follow-up replaced the green Canticle Core with the gold Orphan Signal to
+test the intended tier. Processional should remain difficult but fully winnable
+at that gold baseline; a Heirloom clear would not prove the Act 2 gate.
 
 ## 7. Later slices — draft backlog, not authorization
 

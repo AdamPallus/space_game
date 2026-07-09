@@ -30,6 +30,10 @@ This direction is folded into the current master plan and governs the active sli
   explosion may wipe a lower-tier swarm, and a sufficiently advanced kinetic
   stream may melt lower-tier armor. Outgearing content is intentional evidence
   that the loot hunt worked.
+- **Gold clears Act 2; green outgears it.** Role-appropriate Pre-Founding gear is
+  the Act 2 balance target. Heirlooms must not become required for Act 2 and
+  should make its early missions materially easier. Orphan Signal is valid Act 2
+  equipment; Canticle Core is intentionally above the baseline.
 - **The known-good campaign ends at Last Light.** Missions 1 through 8 and their
   armor/swarm/hybrid replay vocabulary are the usable Act 1 foundation. Missions
   9-11 and the current Act 2/3 mission scripts are disposable experiments, not

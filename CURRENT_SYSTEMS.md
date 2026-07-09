@@ -34,6 +34,8 @@ The player-facing Act 1 campaign has eight core missions ending at Mission 8, La
 
 Clearing Last Light unlocks Crossed Claims, the player-validated hybrid slice whose newly authored waves overlap mobile shielded screens, conductor support, armored gunwalls/strongboxes, latch attackers, and a phased boss. Clearing Crossed Claims unlocks Processional, a player-validated Chorus swarm mission with synchronized ranks, lane-callers, collision skirmishers, conductor buffs and collapse, two shield-heavy miniboss beats, and a phased Processional Warden. The first Vestibule Cantor enters an orbiting hold and remains present until killed rather than following its catalog lane-shift descent offscreen. Neither mission changes weapon math.
 
+The authored Act 2 target tier is a cohesive, role-appropriate Pre-Founding (gold) loadout. Heirloom (green) equipment is the next power tier: it is not required for Act 2 and should noticeably outgear its early missions. Orphan Signal is a Pre-Founding aux and valid baseline equipment; Canticle Core is a Chorus Heirloom above that baseline.
+
 The normal board hides Missions 9–11 and every remaining old Act 2/3 encounter card. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox. No broader Act 2 or Act 3 campaign is currently active.
 
 ## Onboarding

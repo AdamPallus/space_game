@@ -1,126 +1,229 @@
 {
   "id": "act2_repossession",
   "name": "Repossession",
-  "background": "generatedArrearsField",
+  "background": "generatedArrearsFieldLooped",
   "music": "space_battle_bpm130.ogg",
-  "difficulty": "Off-Book",
-  "description": "The broker's contract doesn't say salvage. It says repossession, and it pays in advance. Hit the collection convoy.",
+  "difficulty": "Tithe Armor",
+  "description": "The second reply is an invoice written before your mothership existed. The Tithe recognizes your ship as disputed collateral and sends a collection column to take it back.",
   "completeOnBoss": true,
+  "projectileProfiles": {
+    "tellerDart": {
+      "threatClass": "chip",
+      "damage": 10,
+      "speed": 275,
+      "radius": 3,
+      "image": "enemy_space_warm_chip_dart",
+      "width": 13,
+      "height": 34,
+      "animation": "bolt"
+    },
+    "slugRound": {
+      "threatClass": "standard",
+      "damage": 32,
+      "speed": 220,
+      "radius": 5,
+      "image": "enemy_space_warm_standard_slug",
+      "width": 16,
+      "height": 40,
+      "animation": "bolt"
+    },
+    "flakCore": {
+      "threatClass": "heavy",
+      "damage": 60,
+      "speed": 158,
+      "radius": 8,
+      "image": "enemy_space_warm_heavy_core",
+      "width": 50,
+      "height": 50,
+      "animation": "orb",
+      "spinRate": 2
+    },
+    "escrowCore": {
+      "threatClass": "bossHazard",
+      "damage": 85,
+      "speed": 138,
+      "radius": 12,
+      "image": "enemy_space_warm_boss_core",
+      "width": 70,
+      "height": 70,
+      "animation": "orb",
+      "spinRate": 1.5
+    }
+  },
   "enemyTypes": {
     "teller": {
+      "hull": 45,
+      "speed": 165,
+      "collisionDamage": 24,
       "attackPatterns": [
         {
           "id": "teller_snap",
           "mode": "aim",
           "profile": "tellerDart",
-          "fireRate": 2,
+          "fireRate": 1.4,
           "weight": 1,
-          "speedJitter": 0.08
+          "speedJitter": 0.1
         }
       ]
     },
     "bailiff": {
+      "hull": 120,
+      "shield": 0,
+      "armor": 720,
+      "armorClass": 30,
+      "speed": 88,
       "attackPatterns": [
         {
           "id": "writ_shot",
           "mode": "aim",
           "profile": "slugRound",
-          "fireRate": 1.7,
+          "fireRate": 1.25,
           "weight": 3
         },
         {
           "id": "seizure_pair",
           "mode": "aim",
           "profile": "slugRound",
-          "fireRate": 2.4,
+          "fireRate": 1.8,
           "weight": 1,
           "shots": [
             {
               "profile": "slugRound",
-              "angleOffsetDeg": -6
+              "angleOffsetDeg": -7
             },
             {
               "profile": "slugRound",
-              "angleOffsetDeg": 6
+              "angleOffsetDeg": 7
             }
           ]
         }
       ],
       "ai": "thief",
       "aiParams": {
-        "escapeSpeed": 130,
-        "interest": 1.5,
-        "holdY": 200,
-        "standoff": 230
+        "escapeSpeed": 145,
+        "interest": 1.8,
+        "holdY": 205,
+        "standoff": 235
       }
     },
     "assessor": {
+      "hull": 130,
+      "shield": 100,
+      "shieldRegen": 14,
+      "armor": 0,
+      "speed": 125,
       "attackPatterns": [
         {
           "id": "assessment",
           "mode": "aim",
           "profile": "slugRound",
-          "fireRate": 1.9,
+          "fireRate": 1.3,
           "weight": 1
         }
-      ]
+      ],
+      "ai": "lien",
+      "aiParams": {
+        "attachRadius": 175,
+        "drainPerSecond": 12,
+        "maxAttached": 2
+      }
     },
     "notary": {
+      "hull": 180,
+      "shield": 0,
+      "armor": 1050,
+      "armorClass": 34,
+      "speed": 54,
+      "pattern": "stall",
+      "patternParams": {
+        "stallY": 188,
+        "stallDuration": 18,
+        "strafeAmp": 170,
+        "strafeFreq": 0.85,
+        "postSpeedMult": 0.9
+      },
       "attackPatterns": [
         {
           "id": "stamp_fan",
           "mode": "spread",
           "profile": "slugRound",
           "count": 5,
-          "spreadDeg": 46,
-          "fireRate": 1.8,
+          "spreadDeg": 52,
+          "fireRate": 1.3,
           "weight": 3
         },
         {
           "id": "heavy_seal",
           "mode": "aim",
           "profile": "flakCore",
-          "fireRate": 3.2,
+          "fireRate": 1.9,
           "weight": 1
         }
       ]
     },
     "strongbox": {
+      "hull": 320,
+      "shield": 0,
+      "armor": 2600,
+      "armorClass": 42,
+      "speed": 30,
       "attackPatterns": [
         {
-          "id": "vault_dart",
+          "id": "vault_heavy",
           "mode": "aim",
-          "profile": "tellerDart",
-          "fireRate": 3.6,
+          "profile": "flakCore",
+          "fireRate": 1.65,
+          "weight": 3
+        },
+        {
+          "id": "vault_stamp",
+          "mode": "spread",
+          "profile": "slugRound",
+          "count": 5,
+          "spreadDeg": 46,
+          "fireRate": 2.2,
           "weight": 1
         }
       ]
     },
     "auditor": {
+      "hull": 650,
+      "shield": 0,
+      "armor": 2200,
+      "armorClass": 38,
+      "speed": 82,
+      "pattern": "bossOrbit",
+      "patternParams": {
+        "radiusX": 245,
+        "radiusY": 54,
+        "orbitSpeed": 0.72,
+        "warmupTime": 0.7,
+        "wobble": 8
+      },
       "attackPatterns": [
         {
           "id": "audit_fan",
           "mode": "spread",
           "profile": "slugRound",
           "count": 7,
-          "spreadDeg": 58,
-          "fireRate": 1.35,
+          "spreadDeg": 62,
+          "fireRate": 1,
           "weight": 3
         },
         {
           "id": "audit_seal",
           "mode": "aim",
           "profile": "flakCore",
-          "fireRate": 2.4,
+          "fireRate": 1.45,
           "weight": 2,
           "shots": [
             {
               "profile": "flakCore",
-              "angleOffsetDeg": -8
+              "angleOffsetDeg": -9
             },
             {
               "profile": "flakCore",
-              "angleOffsetDeg": 8
+              "angleOffsetDeg": 9
             }
           ]
         }
@@ -128,23 +231,28 @@
     },
     "boss": {
       "template": "act2_repossession:boss",
+      "hull": 2500,
+      "shield": 0,
+      "armor": 5200,
+      "armorClass": 40,
+      "speed": 84,
       "attackPatterns": [
         {
           "id": "slug_stamp",
           "mode": "radial",
           "profile": "slugRound",
-          "count": 20,
-          "fireRate": 1.3,
+          "count": 22,
+          "fireRate": 1.05,
           "weight": 4,
-          "speedJitter": 0.1
+          "speedJitter": 0.12
         },
         {
           "id": "vault_fan",
           "mode": "spread",
           "profile": "slugRound",
-          "count": 5,
-          "spreadDeg": 54,
-          "fireRate": 1.2,
+          "count": 7,
+          "spreadDeg": 68,
+          "fireRate": 0.95,
           "weight": 3,
           "shots": [
             {
@@ -152,6 +260,12 @@
             },
             {
               "profile": "slugRound"
+            },
+            {
+              "profile": "flakCore"
+            },
+            {
+              "profile": "escrowCore"
             },
             {
               "profile": "flakCore"
@@ -168,241 +282,284 @@
           "id": "escrow_core",
           "mode": "aim",
           "profile": "escrowCore",
-          "fireRate": 2.3,
-          "weight": 2
+          "fireRate": 1.45,
+          "weight": 2,
+          "tractor": {
+            "duration": 1.1,
+            "strength": 175
+          }
+        }
+      ],
+      "phases": [
+        {
+          "label": "Compound interest",
+          "hpFraction": 0.64,
+          "speedMult": 1.12,
+          "attackPatterns": [
+            {
+              "id": "compound_stamp",
+              "mode": "radial",
+              "profile": "slugRound",
+              "count": 28,
+              "fireRate": 0.82,
+              "weight": 3,
+              "speedJitter": 0.14
+            },
+            {
+              "id": "compound_core",
+              "mode": "aim",
+              "profile": "escrowCore",
+              "fireRate": 1.1,
+              "weight": 2,
+              "tractor": {
+                "duration": 1.2,
+                "strength": 190
+              },
+              "shots": [
+                {
+                  "profile": "flakCore",
+                  "angleOffsetDeg": -10
+                },
+                {
+                  "profile": "escrowCore"
+                },
+                {
+                  "profile": "flakCore",
+                  "angleOffsetDeg": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Final notice",
+          "hpFraction": 0.26,
+          "speedMult": 1.24,
+          "attackPatterns": [
+            {
+              "id": "final_notice",
+              "mode": "radial",
+              "profile": "flakCore",
+              "count": 24,
+              "fireRate": 0.68,
+              "weight": 4,
+              "speedJitter": 0.16
+            },
+            {
+              "id": "seizure_order",
+              "mode": "spread",
+              "profile": "escrowCore",
+              "count": 5,
+              "spreadDeg": 76,
+              "fireRate": 0.95,
+              "weight": 2
+            }
+          ]
         }
       ]
     }
   },
   "events": [
     {
-      "time": 2,
+      "time": 1,
       "type": "teller",
-      "count": 5,
-      "interval": 0.5
+      "count": 8,
+      "interval": 0.3
     },
     {
-      "time": 9,
-      "type": "strongbox",
-      "count": 1
-    },
-    {
-      "time": 14,
+      "time": 5,
       "type": "bailiff",
+      "count": 3,
+      "interval": 1.1
+    },
+    {
+      "time": 10,
+      "type": "notary",
       "count": 2,
       "interval": 1.4
     },
     {
-      "time": 23,
-      "type": "teller",
-      "count": 5,
-      "interval": 0.45
-    },
-    {
-      "time": 31,
-      "type": "notary",
-      "count": 2,
-      "interval": 1.6
-    },
-    {
-      "time": 40,
+      "time": 15,
       "type": "strongbox",
       "count": 1
     },
     {
-      "time": 45,
-      "type": "assessor",
-      "count": 2,
-      "interval": 1.5
-    },
-    {
-      "time": 54,
+      "time": 18,
       "type": "teller",
       "count": 6,
-      "interval": 0.4
+      "interval": 0.35
     },
     {
-      "time": 63,
+      "time": 22,
+      "type": "assessor",
+      "count": 2,
+      "interval": 1
+    },
+    {
+      "time": 26,
       "type": "bailiff",
-      "count": 3,
-      "interval": 1.2
+      "count": 4,
+      "interval": 0.9
     },
     {
-      "time": 74,
+      "time": 30,
       "type": "notary",
-      "count": 2,
-      "interval": 1.5
-    },
-    {
-      "time": 83,
-      "type": "strongbox",
-      "count": 2,
-      "interval": 5
-    },
-    {
-      "time": 92,
-      "type": "teller",
-      "count": 6,
-      "interval": 0.38
-    },
-    {
-      "time": 102,
-      "type": "assessor",
       "count": 3,
-      "interval": 1.2
+      "interval": 1.1
     },
     {
-      "time": 115,
+      "time": 34,
+      "type": "strongbox",
+      "count": 1
+    },
+    {
+      "time": 38,
+      "type": "teller",
+      "count": 8,
+      "interval": 0.28
+    },
+    {
+      "time": 42,
       "type": "auditor",
       "count": 1
     },
     {
-      "time": 119,
-      "type": "teller",
-      "count": 4,
-      "interval": 0.5
-    },
-    {
-      "time": 130,
+      "time": 46,
       "type": "bailiff",
-      "count": 2,
-      "interval": 1.3
+      "count": 4,
+      "interval": 0.8
     },
     {
-      "time": 144,
+      "time": 50,
+      "type": "assessor",
+      "count": 2,
+      "interval": 0.9
+    },
+    {
+      "time": 54,
+      "type": "strongbox",
+      "count": 2,
+      "interval": 2
+    },
+    {
+      "time": 58,
       "type": "notary",
       "count": 3,
-      "interval": 1.2
+      "interval": 1
     },
     {
-      "time": 154,
-      "type": "strongbox",
-      "count": 1
-    },
-    {
-      "time": 160,
+      "time": 62,
       "type": "teller",
-      "count": 7,
-      "interval": 0.36
+      "count": 8,
+      "interval": 0.26
     },
     {
-      "time": 170,
+      "time": 66,
       "type": "bailiff",
-      "count": 3,
-      "interval": 1.1
+      "count": 5,
+      "interval": 0.75
     },
     {
-      "time": 180,
+      "time": 70,
+      "type": "strongbox",
+      "count": 2,
+      "interval": 1.8
+    },
+    {
+      "time": 74,
       "type": "assessor",
       "count": 3,
-      "interval": 1.1
+      "interval": 0.8
     },
     {
-      "time": 190,
+      "time": 78,
       "type": "notary",
-      "count": 3,
-      "interval": 1.1
+      "count": 4,
+      "interval": 0.9
     },
     {
-      "time": 200,
-      "type": "teller",
-      "count": 6,
-      "interval": 0.38
+      "time": 84,
+      "type": "bailiff",
+      "count": 5,
+      "interval": 0.7
     },
     {
-      "time": 208,
+      "time": 88,
       "type": "strongbox",
-      "count": 1
+      "count": 2,
+      "interval": 1.6
     },
     {
-      "time": 220,
+      "time": 92,
+      "type": "notary",
+      "count": 4,
+      "interval": 0.85
+    },
+    {
+      "time": 96,
+      "type": "assessor",
+      "count": 3,
+      "interval": 0.75
+    },
+    {
+      "time": 100,
       "type": "boss",
       "count": 1
+    },
+    {
+      "time": 104,
+      "type": "teller",
+      "count": 8,
+      "interval": 0.25
+    },
+    {
+      "time": 108,
+      "type": "bailiff",
+      "count": 4,
+      "interval": 0.7
+    },
+    {
+      "time": 112,
+      "type": "strongbox",
+      "count": 2,
+      "interval": 1.5
+    },
+    {
+      "time": 116,
+      "type": "notary",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 120,
+      "type": "assessor",
+      "count": 3,
+      "interval": 0.7
     }
   ],
   "pickups": [
     {
-      "time": 27,
-      "type": "salvage",
-      "rarity": "certified",
-      "slotType": "primary",
-      "x": 0.42,
-      "y": -46
-    },
-    {
-      "time": 78,
+      "time": 20,
       "type": "salvage",
       "rarity": "prototype",
-      "slotType": "defense",
-      "x": 0.6,
-      "y": -50
+      "slotType": "primary",
+      "x": 0.5,
+      "y": -48
     },
     {
-      "time": 136,
+      "time": 48,
       "type": "armor_patch",
-      "x": 0.5
+      "x": 0.4
     },
     {
-      "time": 140,
-      "type": "salvage",
-      "rarity": "certified",
-      "slotType": "mini",
-      "x": 0.35,
-      "y": -44
-    },
-    {
-      "time": 212,
-      "type": "shield_booster",
-      "x": 0.48
+      "time": 82,
+      "type": "armor_patch",
+      "x": 0.62
     }
   ],
-  "projectileProfiles": {
-    "tellerDart": {
-      "threatClass": "chip",
-      "damage": 8,
-      "speed": 250,
-      "radius": 3,
-      "image": "enemy_space_warm_chip_dart",
-      "width": 13,
-      "height": 34,
-      "animation": "bolt"
-    },
-    "slugRound": {
-      "threatClass": "standard",
-      "damage": 22,
-      "speed": 205,
-      "radius": 5,
-      "image": "enemy_space_warm_standard_slug",
-      "width": 16,
-      "height": 40,
-      "animation": "bolt"
-    },
-    "flakCore": {
-      "threatClass": "heavy",
-      "damage": 40,
-      "speed": 145,
-      "radius": 8,
-      "image": "enemy_space_warm_heavy_core",
-      "width": 50,
-      "height": 50,
-      "animation": "orb",
-      "spinRate": 2
-    },
-    "escrowCore": {
-      "threatClass": "bossHazard",
-      "damage": 58,
-      "speed": 128,
-      "radius": 12,
-      "image": "enemy_space_warm_boss_core",
-      "width": 70,
-      "height": 70,
-      "animation": "orb",
-      "spinRate": 1.5
-    }
-  },
   "debriefLore": [
-    "Manifest line 2 - containers sealed, beneficiary unreachable.",
-    "Manifest line 3 - arrears assigned to moving claimant.",
-    "Manifest line 4 - delivery route repeats without receiver."
+    "TITLE SEARCH COMPLETE: secured party deceased; collection authority remains.",
+    "The Tithe does not know who is owed. It only knows the debt survived.",
+    "The third claim is not transmitting. It is growing toward the relay."
   ]
 }

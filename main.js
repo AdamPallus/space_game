@@ -4382,6 +4382,7 @@ const activeCampaignLevels = [
   { id: "level8", label: "Mission 8" },
   { id: "act2_dead_air", label: "Crossed Claims", requires: [{ completed: "level8" }] },
   { id: "act2_processional", label: "Processional", requires: [{ completed: "act2_dead_air" }] },
+  { id: "act2_repossession", label: "Repossession", requires: [{ completed: "act2_dead_air" }] },
 ];
 
 // Missions after Last Light were useful mechanics experiments, but they are not
@@ -4393,14 +4394,6 @@ const discardedCampaignLevels = [
   { id: "level11", label: "Mission 11" },
   { id: "act2_antiphon", label: "Act 2: Antiphon", branch: "chorus", requires: [{ completed: "act2_processional" }] },
   { id: "act2_doxology", label: "Act 2: Doxology", branch: "chorus", requires: [{ completed: "act2_antiphon" }] },
-  {
-    id: "act2_repossession",
-    label: "Act 2: Repossession",
-    branch: "tithe",
-    contractTag: "Off-book",
-    contractClass: "offbook",
-    requires: [{ completed: "act2_dead_air" }],
-  },
   { id: "act2_arrears", label: "Act 2: Arrears", branch: "tithe", requires: [{ completed: "act2_repossession" }] },
   { id: "act2_foreclosure", label: "Act 2: Foreclosure", branch: "tithe", requires: [{ completed: "act2_arrears" }] },
   { id: "act2_green_signal", label: "Act 2: The Green Signal", branch: "verdant", requires: [{ keyItem: "deep_registry_shard" }] },

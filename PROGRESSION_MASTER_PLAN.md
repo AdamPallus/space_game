@@ -2,7 +2,8 @@
 
 **Status:** Accepted direction. Slice 1 was implemented and player-validated on
 2026-07-09. Adam then explicitly approved continued execution; Slice 2 is
-player-validated with one miniboss-presentation follow-up. Later slices remain
+player-validated with its miniboss follow-up shipped. Adam approved continuing
+again, so Slice 3 is implemented and awaiting playtest. Later slices remain
 drafts until a playtest or conversation promotes them.
 
 **Creative and playtest authority:** Adam.
@@ -245,13 +246,55 @@ Adam's follow-up replaced the green Canticle Core with the gold Orphan Signal to
 test the intended tier. Processional should remain difficult but fully winnable
 at that gold baseline; a Heirloom clear would not prove the Act 2 gate.
 
-## 7. Later slices — draft backlog, not authorization
+## 7. Slice 3 — Repossession
+
+**Status:** Implemented after Adam approved continued execution; awaiting his
+playtest.
+
+Crossed Claims' second signal is an invoice older than the player's mothership.
+The Tithe recognizes the ship as secured collateral under a debt whose creditor
+is already dead. It does not know who should be paid; it only knows collection
+authority survived. Repossession is the collection attempt, and defeating The
+Escrow reveals that the third claim is not transmitting at all—it is growing
+toward the relay.
+
+Repossession is the gold-tier anti-armor role check:
+
+- low-count formations replace Processional's screen-filling swarm;
+- Bailiffs, Notaries, Strongboxes, the Auditor, and The Escrow step through AC30,
+  AC34, AC42, AC38, and AC40 armor targets so low-per-hit rapid weapons visibly
+  leave the collection stack growing;
+- a prototype primary salvage pod gives Bailiff thieves something tangible to
+  seize and carry away if the player does not secure it;
+- Assessors remain softer priority targets that attach credit-draining liens,
+  preventing the mission from becoming a single undifferentiated armor wall;
+- sparse slug, flak, and escrow-core projectiles reward armor class against the
+  small hits while preserving dangerous heavy notes;
+- the Auditor uses a persistent orbiting hold, and The Escrow is a phased,
+  tractor-equipped armor boss that cannot simply descend out of the fight;
+- two armor patches support recovery without making early collision or heavy-hit
+  mistakes free.
+
+### Repossession playtest questions
+
+- Can a role-appropriate gold armor-break build make visible progress through the
+  plated stack without requiring green Heirlooms?
+- Does a gold rapid/swarm build fall behind for an understandable reason?
+- Are salvage seizure and lien targets legible amid the gunline?
+- Does high armor class erase teller/slug noise while flak and escrow cores remain
+  dangerous?
+- Does the Auditor stay and offer a fair damage window?
+- Is The Escrow demanding rather than tedious, and where does the first run end?
+
+Codex stops after deployment for these answers.
+
+## 8. Later slices — draft backlog, not authorization
 
 These ideas remain available, but none should be implemented automatically after
-Slice 2:
+Slice 3:
 
-1. **Processional revision.** Tune formation density, conductor cadence,
-   collision pressure, boss overlap, and rewards directly from Adam's playtest.
+1. **Repossession revision.** Tune armor class, stack cadence, seizure pressure,
+   heavy-shot output, boss durability, and rewards directly from Adam's playtest.
 2. **Progression rewards.** Decide what clearing Last Light, Crossed Claims, and Processional should
    unlock. Capability rewards, Dual Fire progression, and starter-kit changes are
    candidates, not settled requirements.
@@ -259,13 +302,14 @@ Slice 2:
    act-aware drop tables remain promising once there is content worth farming.
 4. **Item creativity.** Named cloak/bulwark relics, mini-weapon trinket affixes,
    armor packs, and role-specific weapon surges remain a creative backlog.
-5. **Third post–Last Light mission.** Author only after Processional demonstrates
-   that a focused role-check mission is as fun as the hybrid opener.
+5. **Fourth post–Last Light mission.** Follow the growing Verdant claim only after
+   Repossession demonstrates that the gold anti-armor gate is challenging and
+   winnable.
 6. **Act and story structure.** Name or commit to Act 2 only after several missions
    are fun. Then decide how much of the existing lore deserves to be carried by
    them.
 
-## 8. Documentation authority
+## 9. Documentation authority
 
 When documents conflict, use this order:
 

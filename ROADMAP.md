@@ -7,10 +7,11 @@ This is the active planning doc for the next playable changes. Historical specs 
 ## Active execution slice (2026-07-09)
 
 `PROGRESSION_MASTER_PLAN.md` records the player-validated creative direction and
-the development/testing contract. Slice 1, Crossed Claims, is validated. Adam
-explicitly approved continued execution, so Slice 2 re-authors Processional as a
-focused Chorus swarm mission and then stops for another playtest. Progression,
-loot, item, economy, and broader story expansions remain draft backlog.
+the development/testing contract. Crossed Claims and Processional are validated.
+Adam explicitly approved continued execution, so Slice 3 re-authors Repossession
+as the sibling Tithe armor mission and then stops for another playtest.
+Progression, loot, item, economy, and broader story expansions remain draft
+backlog.
 
 ## Player-validated combat direction (2026-07-09)
 
@@ -113,7 +114,10 @@ periodic-movement origin bug was fixed globally. Processional's first playtest
 then validated its pure swarm/formation role check: Needlebloom plus AC30 plate
 survived chip volume while ships and heavy notes remained threats, and conductor
 collapse read clearly. Its first miniboss now holds an orbit instead of descending
-offscreen before the player gets a fair damage window.
+offscreen before the player gets a fair damage window. Repossession is the active
+playtest: a low-count AC30–42 Tithe gunline, persistent Auditor, salvage-seizing
+Bailiffs, lien Assessors, and a phased AC40 Escrow boss, all targeted at
+role-appropriate gold anti-armor gear.
 
 Other tuning candidates—mini output, Dual Fire scaling, loot rolls, economy
 scarcity, cloak payoff, and mobile Armory density—remain valid backlog but are
@@ -134,7 +138,8 @@ backgrounds, projectile profiles, miniboss presentation, graph machinery,
 conductor/mimic/thief/lien/spawner/splitter AIs, tractor patterns, and boss phases
 remain reusable tools. Crossed Claims reuses selected Chorus, Tithe, conductor,
 gunwall, and latch machinery with entirely new enemy stats and wave authoring;
-Processional reuses only Chorus identities in a newly authored swarm mission.
+Processional reuses Chorus identities in a newly authored swarm mission;
+Repossession reuses Tithe identities in a newly authored armor mission.
 
 The discarded mission cards remain available only under `?devActs=1` for
 regression access. Passing validation does not make them campaign content.

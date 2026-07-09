@@ -10,7 +10,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 
 - A flat scene shell for hangar, mission select, armory, Ledger market, profile, item archive, compendium, and combat.
 - Scripted JSON missions in `levels/` with variants, lab encounters, bosses, salvage pods, item drops, enemy projectile profiles/attack patterns, and enemy catalog validation.
-- The player-facing campaign runs from Mission 1 through Mission 8 / Last Light, then continues through two newly authored slices: Crossed Claims (hybrid) and Processional (Chorus swarm). Missions 9–11 and the remaining old Act 2/3 encounter scripts are hidden from the normal board; `?devActs=1` exposes and unlocks them only for agentic regression access.
+- The player-facing campaign runs from Mission 1 through Mission 8 / Last Light, then continues through three newly authored slices: Crossed Claims (hybrid), Processional (Chorus swarm), and Repossession (Tithe armor). Missions 9–11 and the remaining old Act 2/3 encounter scripts are hidden from the normal board; `?devActs=1` exposes and unlocks them only for agentic regression access.
 - The discarded Act 2/3 passes remain a mechanics and art toolbox: graph unlocks, branch tracking, miniboss treatment, lineage AIs, boss phases, tractor pulls, rammer/latch behavior, breach integrity, lien caps, generated fleets/backgrounds, and Heirloom plumbing still exist even though their old missions are not campaign canon.
 - A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
 - Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time or through explicit level-authored projectile profiles.
@@ -30,6 +30,7 @@ These are intentional follow-up targets, not bugs in the docs:
 - Cargo/economy hulls remain deferred.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader design direction rather than current gameplay systems.
 - Crossed Claims' first playtest validated its swarm/armor overlap: a high-AC twin-rapid-plasma ship erased chip fire and small enemies but remained vulnerable to grapplers, heavy projectiles, and armored anchors. Processional's first playtest validated its pure swarm/defense check: Needlebloom plus AC30 Heavy Plate could not clear everything but survived the chip field while ships and heavy projectiles remained dodge threats; conductor collapse read clearly. Its first miniboss now holds an orbit until killed instead of descending offscreen.
+- Repossession is implemented and awaiting its first playtest with role-appropriate gold anti-armor gear; green Heirlooms are explicitly above its target tier.
 - No broader Act 2/3, progression, loot, item, economy, story, or music phase is currently authorized. Those ideas remain draft backlog in `PROGRESSION_MASTER_PLAN.md` and `ROADMAP.md`.
 - The new overhaul systems still need player testing around second-bay damage strain, early hard-mission pickups, cache readability, hull art/readability, phone-sized Armory density, and whether high-rarity defense is now too strong. Recent tuning already made mini rarity matter, made defense rarity matter, gave focused single-shot primaries competitive DPS, clarified item stats, surfaced per-bay effective DPS on the Armory stage, and changed Dual Fire to independent per-weapon cadence.
 
@@ -133,7 +134,7 @@ Active docs in the repo root:
 - `STATE.md`: current source of truth and validation checklist.
 - `CURRENT_SYSTEMS.md`: detailed explanation of implemented systems.
 - `ROADMAP.md`: prioritized next work.
-- `PROGRESSION_MASTER_PLAN.md`: accepted power-first creative direction, campaign-preservation rule, human-playtest contract, validated Slice 1, and active Slice 2 execution spec. Later slices are explicitly draft backlog.
+- `PROGRESSION_MASTER_PLAN.md`: accepted power-first creative direction, campaign-preservation rule, human-playtest contract, validated Slices 1–2, and active Slice 3 execution spec. Later slices are explicitly draft backlog.
 - `ECONOMY_DESIGN.md`: active economy design thesis and long-term direction.
 - `UI_DESIGN.md`: active visual and interaction design rules.
 - `ASSET_GENERATION.md`: current generated-asset workflow and manifest.

@@ -2,8 +2,8 @@
 
 **Status:** Accepted direction. Slice 1 was implemented and player-validated on
 2026-07-09. Adam then explicitly approved continued execution; Slice 2 is
-implemented and awaiting his playtest. Later slices remain drafts until a
-playtest or conversation promotes them.
+player-validated with one miniboss-presentation follow-up. Later slices remain
+drafts until a playtest or conversation promotes them.
 
 **Creative and playtest authority:** Adam.
 
@@ -173,8 +173,7 @@ new mission is authored.
 
 ## 6. Slice 2 — Processional
 
-**Status:** Implemented after Adam approved continued execution; awaiting his
-playtest.
+**Status:** Core encounter player-validated; first-miniboss hold fix implemented.
 
 Crossed Claims separates the three claimant signals. The clearest is the Chorus,
 which does not think it is attacking: it believes a missing voice has returned
@@ -211,6 +210,21 @@ Processional is the first deliberately pure role check:
 - Is the mission fun enough to replay, and where does the first run end?
 
 Codex stops after deployment for these answers.
+
+### First playtest verdict — 2026-07-09
+
+Adam flew a Needlebloom Driver with AC30 Heavy Plate and a Canticle Core. He
+could not clear the entire field, but the plate converted the chip volume into a
+survivable layer while ships and larger projectiles still demanded dodging. The
+formation dispersal after the master died was visible and specifically judged
+cool. This validates Processional's offensive and defensive role check.
+
+The first Vestibule Cantor miniboss inherited a descending lane-shift pattern,
+moved quickly through the arena, and escaped before offering a fair damage
+window. The follow-up gives it a dedicated shield-heavy orbiting hold: it enters,
+establishes position, and remains until killed. Its durability is reduced enough
+that sustained anti-swarm damage can realistically finish it before the second
+miniboss beat.
 
 ## 7. Later slices — draft backlog, not authorization
 

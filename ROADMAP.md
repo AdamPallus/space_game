@@ -105,9 +105,11 @@ Crossed Claims' first playtest validated the encounter thesis: high armor class 
 much of the chip field, grapplers and heavy projectiles still threatened the
 ship, and twin-rapid plasma cleared the swarm while struggling against armored
 anchors. The run ended around one minute and was judged fun. The immediate
-periodic-movement origin bug was fixed globally. Processional is now the active
-playtest: a pure Chorus swarm/formation mission with conductor collapse,
-shield-heavy minibosses, collision pressure, and no armored anchors.
+periodic-movement origin bug was fixed globally. Processional's first playtest
+then validated its pure swarm/formation role check: Needlebloom plus AC30 plate
+survived chip volume while ships and heavy notes remained threats, and conductor
+collapse read clearly. Its first miniboss now holds an orbit instead of descending
+offscreen before the player gets a fair damage window.
 
 Other tuning candidates—mini output, Dual Fire scaling, loot rolls, economy
 scarcity, cloak payoff, and mobile Armory density—remain valid backlog but are

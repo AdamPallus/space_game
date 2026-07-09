@@ -203,11 +203,19 @@
       }
     },
     "vestibule_cantor": {
-      "hull": 420,
-      "shield": 950,
-      "shieldRegen": 30,
+      "hull": 350,
+      "shield": 720,
+      "shieldRegen": 26,
       "armor": 0,
-      "speed": 150,
+      "speed": 108,
+      "pattern": "bossOrbit",
+      "patternParams": {
+        "radiusX": 255,
+        "radiusY": 58,
+        "orbitSpeed": 1.05,
+        "warmupTime": 0.65,
+        "wobble": 10
+      },
       "attackPatterns": [
         {
           "id": "vestibule_fan",

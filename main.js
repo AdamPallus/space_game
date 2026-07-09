@@ -72,6 +72,7 @@ const debugUnlock = document.getElementById("debug-unlock");
 const debugInvincible = document.getElementById("debug-invincible");
 const debugShowCompendium = document.getElementById("debug-show-compendium");
 const debugShowItems = document.getElementById("debug-show-items");
+const debugArsenal = document.getElementById("debug-arsenal");
 const debugShowMath = document.getElementById("debug-show-math");
 const debugSkipOnboarding = document.getElementById("debug-skip-onboarding");
 const musicVolumeSlider = document.getElementById("music-volume");
@@ -3722,7 +3723,6 @@ const devTuning = isDevFlagEnabled("devTuning");
 const devArsenal = isDevFlagEnabled("devArsenal");
 const devPressure = isDevFlagEnabled("devPressure");
 const DEV_ARSENAL_WALLET_CREDITS = 999999999;
-if (ledgerDevArsenalMode) ledgerDevArsenalMode.hidden = !devArsenal;
 // Combat-pressure telemetry (?devPressure=1): records raw incoming threat per
 // mission so encounter tuning can target measured pressure floors instead of
 // guesses. Pair with ?devInvincible=1 for a static worst-case probe; read
@@ -3862,8 +3862,13 @@ if (devGeneratedUiSkin) {
 let state = null;
 let mission = null;
 
+function isDevArsenalEnabled() {
+  return devArsenal || !!state?.debugArsenalEnabled;
+}
+
 function applyDevStateFlags() {
   if (!state) return;
+  if (devArsenal) state.debugArsenalEnabled = true;
   if (devSkipOnboarding || devArsenal) {
     shouldAutoLaunchFreshPilotMission = false;
     state.debugSkipOnboarding = true;
@@ -3875,7 +3880,7 @@ function applyDevStateFlags() {
   if (devInvincible) {
     state.debugInvincible = true;
   }
-  if (devArsenal) {
+  if (isDevArsenalEnabled()) {
     state.credits = Math.max(Number(state.credits) || 0, DEV_ARSENAL_WALLET_CREDITS);
     state.lifetimeCredits = Math.max(Number(state.lifetimeCredits) || 0, DEV_ARSENAL_WALLET_CREDITS);
   }
@@ -5375,7 +5380,7 @@ hangarSceneButtons.forEach((button) => {
 
 function setLedgerMode(mode) {
   const allowedModes = ["market", "investments", "claims"];
-  if (devArsenal) allowedModes.push("arsenal");
+  if (isDevArsenalEnabled()) allowedModes.push("arsenal");
   activeLedgerMode = allowedModes.includes(mode) ? mode : "market";
   ledgerModeButtons.forEach((button) => {
     const active = button.dataset.ledgerMode === activeLedgerMode;
@@ -5728,6 +5733,22 @@ if (debugShowItems) {
   });
 }
 
+if (debugArsenal) {
+  debugArsenal.addEventListener("change", () => {
+    state.debugArsenalEnabled = debugArsenal.checked;
+    if (state.debugArsenalEnabled) {
+      state.credits = DEV_ARSENAL_WALLET_CREDITS;
+      state.lifetimeCredits = Math.max(Number(state.lifetimeCredits) || 0, DEV_ARSENAL_WALLET_CREDITS);
+    } else {
+      devArsenalLots = [];
+      if (activeLedgerMode === "arsenal") activeLedgerMode = "market";
+    }
+    hideItemTooltip();
+    saveState();
+    safeUpdateHangar();
+  });
+}
+
 if (debugShowMath) {
   debugShowMath.addEventListener("change", () => {
     state.devShowMath = debugShowMath.checked;
@@ -5797,6 +5818,7 @@ function loadState() {
       debugInvincible: false,
       debugShowFullCompendium: false,
       debugShowAllItems: false,
+      debugArsenalEnabled: false,
       devShowMath: false,
       encounteredEnemies: {},
       killsByEnemyKey: {},
@@ -5904,6 +5926,7 @@ function loadState() {
     parsed.debugInvincible = parsed.debugInvincible ?? false;
     parsed.debugShowFullCompendium = parsed.debugShowFullCompendium ?? false;
     parsed.debugShowAllItems = parsed.debugShowAllItems ?? false;
+    parsed.debugArsenalEnabled = parsed.debugArsenalEnabled ?? false;
     parsed.devShowMath = parsed.devShowMath ?? false;
     parsed.audio = {
       musicVolume: Number.isFinite(parsed.audio?.musicVolume) ? Math.max(0, Math.min(1, parsed.audio.musicVolume)) : 1,
@@ -6034,6 +6057,7 @@ function loadState() {
       debugInvincible: false,
       debugShowFullCompendium: false,
       debugShowAllItems: false,
+      debugArsenalEnabled: false,
       devShowMath: false,
       encounteredEnemies: {},
       killsByEnemyKey: {},
@@ -6927,6 +6951,16 @@ function updateHangar() {
   }
   if (debugShowItems) {
     debugShowItems.checked = !!state.debugShowAllItems;
+  }
+  const arsenalEnabled = isDevArsenalEnabled();
+  if (debugArsenal) {
+    debugArsenal.checked = arsenalEnabled;
+  }
+  if (ledgerDevArsenalMode) {
+    ledgerDevArsenalMode.hidden = !arsenalEnabled;
+  }
+  if (!arsenalEnabled && activeLedgerMode === "arsenal") {
+    activeLedgerMode = "market";
   }
   if (debugShowMath) {
     debugShowMath.checked = !!state.devShowMath;
@@ -10676,7 +10710,7 @@ function createDevArsenalLot(collection, baseId, baseEntry) {
 }
 
 function rollDevArsenalLots() {
-  if (!devArsenal || !itemPoolCatalog) return [];
+  if (!isDevArsenalEnabled() || !itemPoolCatalog) return [];
   const catalogGroups = [
     ["entries", itemPoolCatalog.entries || {}],
     ["relics", itemPoolCatalog.relics || {}],
@@ -10725,7 +10759,7 @@ function getFilteredDevArsenalLots() {
 }
 
 function renderDevArsenal() {
-  if (!devArsenal || !devArsenalList) return;
+  if (!isDevArsenalEnabled() || !devArsenalList) return;
   if (!devArsenalLots.length && itemPoolCatalog) rollDevArsenalLots();
   const lots = getFilteredDevArsenalLots();
   if (devArsenalStatus) {
@@ -10771,7 +10805,7 @@ function renderDevArsenal() {
 }
 
 function rerollDevArsenal() {
-  if (!devArsenal) return;
+  if (!isDevArsenalEnabled()) return;
   hideItemTooltip();
   ensureItemPoolLoaded()
     .then(() => {
@@ -10784,7 +10818,7 @@ function rerollDevArsenal() {
 }
 
 function refillDevArsenalWallet() {
-  if (!devArsenal || !state) return;
+  if (!isDevArsenalEnabled() || !state) return;
   state.credits = DEV_ARSENAL_WALLET_CREDITS;
   state.lifetimeCredits = Math.max(Number(state.lifetimeCredits) || 0, DEV_ARSENAL_WALLET_CREDITS);
   setLedgerReceipt({
@@ -10799,7 +10833,7 @@ function refillDevArsenalWallet() {
 }
 
 function buyDevArsenalLot(lotId) {
-  if (!devArsenal || !state) return;
+  if (!isDevArsenalEnabled() || !state) return;
   hideItemTooltip();
   const index = devArsenalLots.findIndex((lot) => lot.id === lotId);
   if (index < 0) return;

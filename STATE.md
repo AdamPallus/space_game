@@ -53,7 +53,7 @@ Useful dev query flags:
 - `?devInvincible=1` makes combat survival tests easier.
 - `?devAutoFire=1` keeps the primary weapon firing during manual checks.
 - `?devTuning=1` opens the economy tuning console on non-combat scenes. Sparse local overrides persist in localStorage, show a `TUNING OVERRIDES ACTIVE` badge, and can be exported as merged JSON.
-- `?devArsenal=1` opens the Ledger Test Arsenal, unlocks progression for testing, grants a 999,999,999-credit wallet, and lists one fresh random roll of every standard item, Pre-Founding relic, and Heirloom. Buying a test lot immediately replaces it with another roll of the same item; rarity/search/type controls and a full reroll button support build hunting.
+- The Dev Options menu includes `Test Arsenal + Wallet`; checking it persists the mode in the current save, grants a 999,999,999-credit wallet, and reveals the Ledger Test Arsenal with one fresh random roll of every standard item, Pre-Founding relic, and Heirloom. Unchecking hides the Arsenal but does not undo credits or acquired items. `?devArsenal=1` remains the agent-friendly shortcut and also unlocks progression for automated testing.
 
 ## Validation
 

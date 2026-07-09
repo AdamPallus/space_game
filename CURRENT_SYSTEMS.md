@@ -50,7 +50,7 @@ Ledger market state includes rotating stock, lot purchases, dividends, price mov
 
 `?devTuning=1` opens a compact economy tuning console on non-combat scenes. Numeric fields are grouped by config section, sparse localStorage overrides apply immediately outside combat, and active overrides show `TUNING OVERRIDES ACTIVE` across hangar scenes and the combat HUD. The console can reset all overrides or export the merged live config to download and clipboard.
 
-`?devArsenal=1` is the disposable-save loot-testing path. It unlocks progression, supplies a 999,999,999-credit wallet, and adds a Test Arsenal tab to the Ledger with one randomly rolled listing for every item base. Standard bases can be rerolled at any rarity while Pre-Founding relics and Heirlooms keep their native tiers. Buying a listing uses the real inventory and collection plumbing, then replaces that listing with a new roll of the same base.
+The Dev Options menu exposes a persisted `Test Arsenal + Wallet` toggle for human testing. It supplies a 999,999,999-credit wallet and adds a Test Arsenal tab to the Ledger with one randomly rolled listing for every item base. Standard bases can be rerolled at any rarity while Pre-Founding relics and Heirlooms keep their native tiers. Buying a listing uses the real inventory and collection plumbing, then replaces that listing with a new roll of the same base. Turning the toggle off only hides the testing surface; it intentionally does not repair the contaminated save. `?devArsenal=1` remains the agent-friendly shortcut and additionally unlocks progression for automation.
 
 ## Items, Armory, And Archive
 

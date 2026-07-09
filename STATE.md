@@ -29,7 +29,7 @@ These are intentional follow-up targets, not bugs in the docs:
 - Item durability remains deferred.
 - Cargo/economy hulls remain deferred.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader design direction rather than current gameplay systems.
-- Dead Air is awaiting Adam's first combat playtest. The next implementation decision should come from whether its swarm/armor overlap challenges strong rapid-kinetic and giant-plasma builds without suppressing their spectacle.
+- Dead Air's first playtest validated its swarm/armor overlap: a high-AC twin-rapid-plasma ship erased chip fire and small enemies but remained vulnerable to grapplers, heavy projectiles, and armored anchors. The run ended around one minute and was judged fun. A shared periodic-movement origin snap reported in that run is fixed at the movement layer rather than per enemy.
 - No broader Act 2/3, progression, loot, item, economy, story, or music phase is currently authorized. Those ideas remain draft backlog in `PROGRESSION_MASTER_PLAN.md` and `ROADMAP.md`.
 - The new overhaul systems still need player testing around second-bay damage strain, early hard-mission pickups, cache readability, hull art/readability, phone-sized Armory density, and whether high-rarity defense is now too strong. Recent tuning already made mini rarity matter, made defense rarity matter, gave focused single-shot primaries competitive DPS, clarified item stats, surfaced per-bay effective DPS on the Armory stage, and changed Dual Fire to independent per-weapon cadence.
 

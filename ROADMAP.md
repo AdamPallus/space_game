@@ -102,10 +102,12 @@ The `outdated_docs/implemented_specs/ECONOMY_CONTROL_SPEC.md` Phase 8 prelude ha
 
 ## Next Player-Testing Priorities
 
-The active question is whether the new Dead Air vertical slice is fun with the
-player's strongest kinetic and plasma builds. After focused automated checks,
-Codex deploys and stops for Adam's combat playtest. The next pass changes Dead
-Air from that feedback; it does not automatically expand the act.
+Dead Air's first playtest validated the encounter thesis: high armor class erased
+much of the chip field, grapplers and heavy projectiles still threatened the
+ship, and twin-rapid plasma cleared the swarm while struggling against armored
+anchors. The run ended around one minute and was judged fun. The immediate
+follow-up is the reported shared periodic-movement origin fix; it does not
+automatically expand the act.
 
 Other tuning candidates—mini output, Dual Fire scaling, loot rolls, economy
 scarcity, cloak payoff, and mobile Armory density—remain valid backlog but are

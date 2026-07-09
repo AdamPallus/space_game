@@ -11094,22 +11094,6 @@ function spawnEnemyFromSpec(spec) {
     enemy.vy = enemy.speed;
   }
 
-  if (enemy.pattern === "spiral") {
-    enemy.spawnX = enemy.x;
-    enemy.spawnY = enemy.y;
-  }
-
-  if (enemy.pattern === "spiralIn") {
-    enemy.spawnX = enemy.x;
-    enemy.spawnY = enemy.y;
-  }
-
-  if (enemy.pattern === "laneShift") {
-    enemy.laneTargetX = enemy.x;
-    enemy.laneShiftAt = enemy.patternParams.shiftEvery ?? 1.2;
-    enemy.laneIndex = Math.floor(Math.random() * 3);
-  }
-
   if (enemy.pattern === "bossSweep" || enemy.pattern === "bossAdvanceSweep" || enemy.pattern === "bossOrbit") {
     enemy.x = width / 2;
     enemy.y = -90;
@@ -11128,6 +11112,20 @@ function spawnEnemyFromSpec(spec) {
   if (Number.isFinite(spec.y)) enemy.y = spec.y;
   if (Number.isFinite(spec.vx)) enemy.vx = spec.vx;
   if (Number.isFinite(spec.vy)) enemy.vy = spec.vy;
+
+  // Absolute periodic patterns must anchor after final spawn overrides. Runtime
+  // children can supply explicit x/y positions; capturing the random pre-override
+  // spawn point makes their first movement frame look like a teleport.
+  if (enemy.pattern === "spiral" || enemy.pattern === "spiralIn") {
+    enemy.spawnX = enemy.x;
+    enemy.spawnY = enemy.y;
+  }
+
+  if (enemy.pattern === "laneShift") {
+    enemy.laneTargetX = enemy.x;
+    enemy.laneShiftAt = enemy.patternParams.shiftEvery ?? 1.2;
+    enemy.laneIndex = Math.floor(Math.random() * 3);
+  }
 
   const spriteKey = spec.sprite;
   const spriteLooksLikePath =
@@ -13176,7 +13174,9 @@ function update(delta) {
       const t = enemy.patternTime;
       const cx = enemy.spawnX ?? enemy.x;
       const cy = enemy.spawnY ?? enemy.y;
-      enemy.x = cx + Math.cos(t * frequency) * amplitude;
+      // Sine starts at zero displacement, so the path begins at the actual
+      // spawn position instead of jumping one full radius on its first frame.
+      enemy.x = cx + Math.sin(t * frequency) * amplitude;
       enemy.y = cy + t * enemy.speed * 0.4 * empFactor;
       return;
     }
@@ -13188,7 +13188,7 @@ function update(delta) {
       const cx = enemy.spawnX ?? enemy.x;
       const cy = enemy.spawnY ?? enemy.y;
       const a = amplitude * Math.exp(-decay * t);
-      enemy.x = cx + Math.cos(t * frequency) * a;
+      enemy.x = cx + Math.sin(t * frequency) * a;
       enemy.y = cy + t * enemy.speed * 0.5 * empFactor;
       return;
     }
@@ -13246,7 +13246,10 @@ function update(delta) {
       } else if (enemy.stallState === 1) {
         enemy.stallTimer += empFactor * delta;
         enemy.y = stallY;
-        enemy.x = enemy.stallAnchorX + Math.sin(enemy.patternTime * strafeFreq) * strafeAmp;
+        // stallTimer is time since this movement phase began. Using the enemy's
+        // total pattern lifetime starts the sine wave mid-cycle and snaps the
+        // enemy sideways as soon as it reaches the stall point.
+        enemy.x = enemy.stallAnchorX + Math.sin(enemy.stallTimer * strafeFreq) * strafeAmp;
         if (enemy.x < 60) enemy.x = 60;
         if (enemy.x > width - 60) enemy.x = width - 60;
         if (enemy.stallTimer >= stallDuration) {

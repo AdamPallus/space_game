@@ -141,6 +141,21 @@ Adam's first run should answer:
 Codex stops after deployment for these answers. A failed first version is useful;
 the next pass should change this mission, not generate ten more.
 
+### First playtest verdict — 2026-07-09
+
+Adam flew an unplanned high-armor-class loadout with a twin-rapid plasma primary.
+The armor correctly erased much of the chip field, while grapplers and heavy
+projectiles still demanded movement and did meaningful damage. Rapid plasma
+melted the small screen and struggled against the armored anchors. The run ended
+at roughly one minute, but the challenge was immediately judged fun; the unified
+swarm movement was a specific highlight.
+
+This validates Dead Air's core composition thesis. The playtest also exposed a
+shared periodic-movement continuity bug: enemies entering a stall/oscillation
+could evaluate the cycle using their total lifetime and snap sideways on the
+first pattern frame. The follow-up fixes periodic origins globally before any
+new mission is authored.
+
 ## 6. Later slices — draft backlog, not authorization
 
 These ideas remain available, but none should be implemented automatically after

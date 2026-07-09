@@ -1,23 +1,21 @@
 # Roadmap
 
-Last audited: 2026-07-06
+Last audited: 2026-07-09
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
-## Active master plan (2026-07-06)
+## Active execution slice (2026-07-09)
 
-`PROGRESSION_MASTER_PLAN.md` is now the governing plan for difficulty,
-progression, loot, and all Act 2/Act 3 mission content. It supersedes the Act 2
-combat retune and Act 3 P4-P7 items below: Acts 2 and 3 are hidden and
-re-authored from creative briefs against a measured balance harness, ship
-capabilities become mission-clear unlocks, and loot moves to a skewed roll
-curve with act-aware drop tables. The Story-Economy Arc phases (Family Tier,
-Planet Raids, The Fork) remain queued behind it.
+`PROGRESSION_MASTER_PLAN.md` records the player-validated creative direction and
+the development/testing contract. Only Slice 1 is currently authorized: end the
+normal campaign at Mission 8 / Last Light, hide discarded later experiments, and
+ship one newly authored post-Last-Light mission for Adam to play. Progression,
+loot, item, economy, and story expansions remain draft backlog until that
+playtest produces the next decision.
 
 ## Player-validated combat direction (2026-07-09)
 
-This direction overrides conflicting preservation or balance assumptions in the
-master-plan draft and must be folded into its next revision before implementation:
+This direction is folded into the current master plan and governs Slice 1:
 
 - **Weapon spectacle is the reward.** Emergent combinations such as enormous
   impulse-scaled explosive plasma shots or rank-3 auto-targeted rapid kinetic
@@ -42,6 +40,10 @@ master-plan draft and must be folded into its next revision before implementatio
 - **Prove one mission before generating an act.** Post-Last-Light content should
   begin as a small difficulty vertical slice and expand only after player testing
   shows that its missions are worth replaying for fun.
+- **Human play is the gate.** Codex runs deterministic validators and a focused
+  launch smoke, then deploys and stops. Adam performs the meaningful combat
+  playtest and returns the next fix list; exhaustive agent button-testing is not
+  a shipping requirement for this stage.
 
 ## Player-Testing Overhaul Implemented
 
@@ -100,23 +102,16 @@ The `outdated_docs/implemented_specs/ECONOMY_CONTROL_SPEC.md` Phase 8 prelude ha
 
 ## Next Player-Testing Priorities
 
-These should be tuned with deployed player feedback before adding another broad system:
+The active question is whether the new Dead Air vertical slice is fun with the
+player's strongest kinetic and plasma builds. After focused automated checks,
+Codex deploys and stops for Adam's combat playtest. The next pass changes Dead
+Air from that feedback; it does not automatically expand the act.
 
-- Mini weapon output by targeting arc, especially 360-degree turret damage.
-- Second-primary damage strain versus one-primary damage focus value.
-- Dual-fire compatibility and damage-scaling tiers.
-- Ledger license costs and whether broader daily stock creates too much market noise, now using `?devTuning=1` and the Credit Flow report for rapid config-only iteration.
-- Early hard-mission pickup placement and whether it encourages extraction decisions without making failure farming optimal.
-- Cache readability at combat scale.
-- Armor-class readability across profiled campaign missions, especially chip-fire erasure versus heavy and boss-hazard threat.
-- Armory browser density on phone-sized viewports.
-- Loot roll ranges and the aux potency envelope are first-pass; tune against `balance_report.js` and playtest (god-roll uptime, whether high rolls over-raise the ceiling, whether the value curve keeps credits scarce).
-- Pre-Founding primary relics now cover every spread/ammo pair, and plasma impulse scaling raises the late-game plasma ceiling. Tune the next longer mission set against stronger relic plasma and impulse-heavy kinetic builds rather than immediately nerfing the new top end.
-- Cloak still only hides even at a god roll. Phase 6b candidate: add an offense payoff (e.g. damage on the cloak-breaking shot, or a brief post-cloak Shots per Second spike) if duration/recharge rolls alone feel flat. No combat code yet.
-- Harder campaign content via authored high-damage projectile profiles, only after god rolls measurably raise the player ceiling (kept out of the loot pass deliberately).
-- First-pass economy scarcity tuning has landed (`bountyRate` 0.25 + repriced investment tracks; milestones now spread M1–M7+ in the balance report's Credit Flow section). Playtest whether salvage-first income feels right and whether late tiers feel earned rather than grindy. Known remaining gaps for level authoring, not config: the short-loop farm underpays its ~30% target (front-load more transport/captain salvage sources in early missions), and levels 9–11 pay less than 7–8 (harder missions should pay in loot quality — more and better drop sources — not bounty). Both apply to the Act 2 mission set.
+Other tuning candidates—mini output, Dual Fire scaling, loot rolls, economy
+scarcity, cloak payoff, and mobile Armory density—remain valid backlog but are
+not part of the active slice.
 
-## Story-Economy Arc (next broad systems, in this order)
+## Story-Economy Arc (draft backlog)
 
 Settled direction from the 2026-07-01 story session (`STORY-PREMISE-DEEP-HISTORY.md`). These phases come after the tuning priorities above, and the order is load-bearing: each phase is the setup for the next one's story beat. The economy is the narrative delivery mechanism — receipts, remittances, and manifest lines tell the story; no cutscenes.
 
@@ -124,21 +119,24 @@ Settled direction from the 2026-07-01 story session (`STORY-PREMISE-DEEP-HISTORY
 2. **Phase 9 — Planet Raids (the hidden extraction).** Build the surface-layer sketch (`ECONOMY_DESIGN.md` §9) as a distinct raid mission type. Surface targets are loot, not threats; raids gate the next tier of consumables and the deferred cargo/economy hulls. Every raid debrief carries a **sealed manifest** line — cargo the player delivered, never saw, and is not paid for ("Manifest line 7 — sealed under Ledger seal."). Sealed manifests accumulate visibly in the archive. Pre-Founding relic lore lines begin pointing at what the manifests contain.
 3. **Phase 10 — The Fork (Loyalist / Rebel).** Off-books resistance contracts that never appear on the mission board, versus a Ledger confidence track that eventually makes the true-believer case in full. Rebel path is autonomous drone allies with an escalating drift risk, per the deep-history doc. Do not spec this phase until 8 and 9 are playable — the fork only means something once the leash and the manifests have been felt.
 
-## Act 2 Campaign — The Silent Lineages (content track, runs parallel to the economy phases)
+## Silent Lineages toolbox status
 
-Design in `ACT2_SILENT_LINEAGES_DESIGN.md` (2026-07-02). Eleven longer (3–6 min) missions with named minibosses build the deep-history fiction into playable content: three sibling-lineage factions (Chorus, Tithe, Verdant), a branching Ledger-sanctioned/off-book fork, and a convergence finale at the Origin Hull that hands the player the black-box evidence Phase 10 spends. Status:
+The old Act 2 campaign is not player-facing canon. Its generated fleets,
+backgrounds, projectile profiles, miniboss presentation, graph machinery,
+conductor/mimic/thief/lien/spawner/splitter AIs, tractor patterns, and boss phases
+remain reusable tools. The new Dead Air deliberately reuses selected Chorus,
+Tithe, conductor, gunwall, and latch machinery with entirely new enemy stats and
+wave authoring.
 
-- **Shipped:** all 11 `act2_*` missions, 37 new catalog enemies/minibosses/bosses, graph unlocks and visible fork, Deep Registry Shard gate, miniboss treatment, branch-standing records, conductor/mimic/thief/lien/spawner/splitter AIs, Collections Barge tractor hook, Doxology/Pilgrimage boss phases, and debrief lore lines. Playable now; validated.
-- **Next (art pass, `ACT2_CODEX_SPEC.md`):** Chorus/Tithe/Verdant/Origin generated packs, three backgrounds, projectile variants, sprite swaps, runtime registrations, compendium refresh, and visual QA. Placeholder/fallback art remains until this lands.
-- The Tithe's manifest lore lines are authored to converge with the Phase 9 sealed-manifest thread, and branch standing (sanctioned vs. off-book completions) is tracked as Phase 10 groundwork only.
+The discarded mission cards remain available only under `?devActs=1` for
+regression access. Passing validation does not make them campaign content.
 
-## Act 3 Campaign — Probate (active content track)
+## Probate toolbox status
 
-Playtest verdict on Act 2 (2026-07-03): mechanically complete, not fun — nothing tried to kill the player. `ACT3_PROBATE_DESIGN.md` turns that diagnosis into a combat doctrine with measured pressure floors (`?devPressure=1` telemetry + reference-build simulation), and Act 3 ("They Followed You Home" — all three lineages converge on the player's mothership) is the doctrine's proving ground.
-
-- **Shipped:** pressure telemetry in `main.js`; Act 3 missions P1-P3 (Death Notice / Next of Kin / Death Duties), authored, sim-flown, and tuned to measured floors (P1 ~118 avg incoming DPS, P2 ~94, P3 ~237 vs. Act 1's Gauntlet at ~200 and Act 2's ~15); rammer/latch AIs, breach-integrity defense stake, Heirloom rarity tier and first Heirloom item families, lien attach cap, boss-phase resumption fix, generated `invasion_v1` sprites, and the generated `home_hull` background.
-- **Active follow-up (`ACT3_CODEX_SPEC.md`):** first ACE-Step music pass for the three shipped Act 3 missions, with `act3_heir_apparent.ogg` deferred until the P7 boss exists.
-- **Then:** P4-P7 authored against the same floors after Adam confirms P1-P3 feel right; afterwards Act 2 gets a combat-only retune (event tables and fire rates; art/story/structure unchanged).
+The old Act 3 encounters are also hidden experiments. Pressure telemetry,
+rammer/latch behaviors, breach integrity, lien caps, boss phases, Heirloom
+plumbing, invasion art, and the home-hull background remain reusable systems.
+No Probate mission or music pass is currently authorized as campaign work.
 
 ## Deferred
 

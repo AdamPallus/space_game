@@ -1,6 +1,6 @@
 # Space Shooter Current State
 
-Last audited: 2026-07-04
+Last audited: 2026-07-09
 
 This is the first file to read before changing the game. It summarizes what is implemented now, which docs are still authoritative, which older specs are archived, and which validation commands should pass before committing.
 
@@ -10,8 +10,8 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 
 - A flat scene shell for hangar, mission select, armory, Ledger market, profile, item archive, compendium, and combat.
 - Scripted JSON missions in `levels/` with variants, lab encounters, bosses, salvage pods, item drops, enemy projectile profiles/attack patterns, and enemy catalog validation.
-- Act 2 "Deep Claims" missions now use data-driven graph unlocks, visible sanctioned/off-book branch presentation, miniboss treatment, branch-standing tracking, key-item gates, new lineage AIs, boss phases, tractor pulls, and debrief lore lines.
-- Act 3 "Probate" P1-P3 are playable defense missions around the player's mothership, with rammer/latch invasion AIs, mothership breach integrity, capped lien attachment, generated invasion art, and Heirloom boss/miniboss loot.
+- The player-facing campaign runs from Mission 1 through Mission 8 / Last Light, then exposes one newly authored vertical slice, Dead Air, after Last Light is cleared. Missions 9–11 and the old Act 2/3 encounter scripts are hidden from the normal board; `?devActs=1` exposes and unlocks them only for agentic regression access.
+- The discarded Act 2/3 passes remain a mechanics and art toolbox: graph unlocks, branch tracking, miniboss treatment, lineage AIs, boss phases, tractor pulls, rammer/latch behavior, breach integrity, lien caps, generated fleets/backgrounds, and Heirloom plumbing still exist even though their old missions are not campaign canon.
 - A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
 - Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time or through explicit level-authored projectile profiles.
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
@@ -29,8 +29,8 @@ These are intentional follow-up targets, not bugs in the docs:
 - Item durability remains deferred.
 - Cargo/economy hulls remain deferred.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader design direction rather than current gameplay systems.
-- Act 2 still needs a combat-only intensity retune after the Act 3 P1-P3 feel is confirmed; playtesting found its encounters run at a fraction of Act 1 pressure (see the doctrine and telemetry floors in `ACT3_PROBATE_DESIGN.md`).
-- The Act 3 music pass in `ACT3_CODEX_SPEC.md` is still active until generated `.ogg` tracks are selected, wired, loop-checked, and credited.
+- Dead Air is awaiting Adam's first combat playtest. The next implementation decision should come from whether its swarm/armor overlap challenges strong rapid-kinetic and giant-plasma builds without suppressing their spectacle.
+- No broader Act 2/3, progression, loot, item, economy, story, or music phase is currently authorized. Those ideas remain draft backlog in `PROGRESSION_MASTER_PLAN.md` and `ROADMAP.md`.
 - The new overhaul systems still need player testing around second-bay damage strain, early hard-mission pickups, cache readability, hull art/readability, phone-sized Armory density, and whether high-rarity defense is now too strong. Recent tuning already made mini rarity matter, made defense rarity matter, gave focused single-shot primaries competitive DPS, clarified item stats, surfaced per-bay effective DPS on the Armory stage, and changed Dual Fire to independent per-weapon cadence.
 
 ## Run Locally
@@ -133,16 +133,16 @@ Active docs in the repo root:
 - `STATE.md`: current source of truth and validation checklist.
 - `CURRENT_SYSTEMS.md`: detailed explanation of implemented systems.
 - `ROADMAP.md`: prioritized next work.
-- `PROGRESSION_MASTER_PLAN.md`: governing draft for difficulty, progression, loot, and post-Last-Light re-authoring. Its bulk mission work order requires revision against the player-validated combat direction now recorded in `ROADMAP.md` before implementation.
+- `PROGRESSION_MASTER_PLAN.md`: accepted power-first creative direction, campaign-preservation rule, human-playtest contract, and Slice 1 execution spec. Later slices are explicitly draft backlog.
 - `ECONOMY_DESIGN.md`: active economy design thesis and long-term direction.
 - `UI_DESIGN.md`: active visual and interaction design rules.
 - `ASSET_GENERATION.md`: current generated-asset workflow and manifest.
 - `LEVEL_JSON_FORMAT.md`: active level schema reference.
 - `WEAPON_FRAME_FORMAT.md`: active weapon-frame schema reference.
 - `ITEM_UX_SPEC.md`: active item-communication reference (intrinsic item stats, effective deltas, tooltip/inspector stat block, rarity treatment, roll-quality surfacing).
-- `ACT2_SILENT_LINEAGES_DESIGN.md`: Act 2 campaign design (three sibling-lineage factions, branching mission graph, 11 authored missions); implemented, awaiting a combat-intensity retune.
-- `ACT3_PROBATE_DESIGN.md`: Act 3 invasion campaign design and the combat-pressure doctrine (measured tuning floors via `?devPressure=1`).
-- `ACT3_CODEX_SPEC.md`: Act 3 generated-music pass remains active; engine upgrades and invasion art are implemented.
+- `ACT2_SILENT_LINEAGES_DESIGN.md`: historical campaign design and reusable lineage/mechanics reference; its old encounter set is not player-facing canon.
+- `ACT3_PROBATE_DESIGN.md`: reusable invasion/pressure doctrine and mechanics reference; its old encounter set is not player-facing canon.
+- `ACT3_CODEX_SPEC.md`: historical generated-music and engine/art work order; no music pass is currently authorized.
 - `STORY-PREMISE.md`: active tone and lore source.
 - `STORY-PREMISE-DEEP-HISTORY.md`: deep history and endgame arc extending the story premise; feeds the Story-Economy Arc in `ROADMAP.md`.
 - `CREDITS.md`: asset and tool credits.

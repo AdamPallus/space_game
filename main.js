@@ -3722,6 +3722,7 @@ const devAutoFire = isDevFlagEnabled("devAutoFire");
 const devTuning = isDevFlagEnabled("devTuning");
 const devArsenal = isDevFlagEnabled("devArsenal");
 const devPressure = isDevFlagEnabled("devPressure");
+const devActs = isDevFlagEnabled("devActs");
 const DEV_ARSENAL_WALLET_CREDITS = 999999999;
 // Combat-pressure telemetry (?devPressure=1): records raw incoming threat per
 // mission so encounter tuning can target measured pressure floors instead of
@@ -3869,7 +3870,7 @@ function isDevArsenalEnabled() {
 function applyDevStateFlags() {
   if (!state) return;
   if (devArsenal) state.debugArsenalEnabled = true;
-  if (devSkipOnboarding || devArsenal) {
+  if (devSkipOnboarding || devArsenal || devActs) {
     shouldAutoLaunchFreshPilotMission = false;
     state.debugSkipOnboarding = true;
     state.debugUnlock = true;
@@ -4370,7 +4371,7 @@ function getLevelVisualTheme() {
   return theme ? { ...defaultTheme, ...theme } : defaultTheme;
 }
 
-const availableLevels = [
+const activeCampaignLevels = [
   { id: "level1", label: "Mission 1" },
   { id: "level2", label: "Mission 2" },
   { id: "level3", label: "Mission 3" },
@@ -4379,10 +4380,16 @@ const availableLevels = [
   { id: "level6", label: "Mission 6" },
   { id: "level7", label: "Mission 7" },
   { id: "level8", label: "Mission 8" },
+  { id: "act2_dead_air", label: "Beyond Last Light: Dead Air", requires: [{ completed: "level8" }] },
+];
+
+// Missions after Last Light were useful mechanics experiments, but they are not
+// part of the player-facing campaign. Keep them reachable for agentic regression
+// work with ?devActs=1 while new post-Act-1 content is proven one mission at a time.
+const discardedCampaignLevels = [
   { id: "level9", label: "Mission 9" },
   { id: "level10", label: "Mission 10" },
   { id: "level11", label: "Mission 11" },
-  { id: "act2_dead_air", label: "Act 2: Dead Air", branch: "chorus", requires: [{ completed: "level11" }] },
   {
     id: "act2_processional",
     label: "Act 2: Processional",
@@ -4410,6 +4417,11 @@ const availableLevels = [
   { id: "act3_death_notice", label: "Act 3: Death Notice", requires: [{ completed: "act2_pilgrimage" }] },
   { id: "act3_next_of_kin", label: "Act 3: Next of Kin", requires: [{ completed: "act3_death_notice" }] },
   { id: "act3_death_duties", label: "Act 3: Death Duties", requires: [{ completed: "act3_next_of_kin" }] },
+];
+
+const availableLevels = [
+  ...activeCampaignLevels,
+  ...(devActs ? discardedCampaignLevels : []),
   { id: "overhaul_demo", label: "Overhaul Demo", test: true },
   { id: "patterns_demo", label: "Pattern Lab", test: true },
   { id: "ai_demo", label: "AI Lab", test: true },
@@ -4517,7 +4529,7 @@ const levelFallback = {
 
 let currentLevel = null;
 let levelLoadPromise = null;
-let selectedLevelId = (devSkipOnboarding || devArsenal) && devRequestedLevelId ? devRequestedLevelId : "level1";
+let selectedLevelId = (devSkipOnboarding || devArsenal || devActs) && devRequestedLevelId ? devRequestedLevelId : "level1";
 let lastLoadedLevelId = null;
 let activeHangarTab = devArsenal ? "economy" : devSkipOnboarding ? "mission" : "hub";
 let activeLedgerMode = devArsenal ? "arsenal" : "market";
@@ -7349,8 +7361,10 @@ function normalizeAct2ProgressState(targetState) {
   });
 
   const unlockedCount = Math.max(1, Math.floor(Number(targetState.unlockedLevels) || 1));
-  availableLevels.slice(0, unlockedCount - 1).forEach((entry) => {
+  availableLevels.forEach((entry) => {
     if (!entry || entry.test) return;
+    const sequentialMatch = entry.id.match(/^level(\d+)$/);
+    if (!sequentialMatch || Number(sequentialMatch[1]) >= unlockedCount) return;
     const current = Math.max(0, Math.floor(Number(targetState.completedMissions[entry.id]) || 0));
     targetState.completedMissions[entry.id] = Math.max(1, current);
   });

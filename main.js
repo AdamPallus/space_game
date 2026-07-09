@@ -91,6 +91,15 @@ const ledgerLicenseStatus = document.getElementById("ledger-license-status");
 const ledgerInventorySearch = document.getElementById("ledger-inventory-search");
 const ledgerInventorySort = document.getElementById("ledger-inventory-sort");
 const ledgerInventoryFilter = document.getElementById("ledger-inventory-filter");
+const ledgerDevArsenalMode = document.getElementById("ledger-dev-arsenal-mode");
+const ledgerDevArsenalPanel = document.getElementById("ledger-dev-arsenal-panel");
+const devArsenalSearch = document.getElementById("dev-arsenal-search");
+const devArsenalRarity = document.getElementById("dev-arsenal-rarity");
+const devArsenalFilter = document.getElementById("dev-arsenal-filter");
+const devArsenalRefill = document.getElementById("dev-arsenal-refill");
+const devArsenalReroll = document.getElementById("dev-arsenal-reroll");
+const devArsenalStatus = document.getElementById("dev-arsenal-status");
+const devArsenalList = document.getElementById("dev-arsenal-list");
 const ledgerModeButtons = document.querySelectorAll("[data-ledger-mode]");
 const ledgerModePanels = document.querySelectorAll("[data-ledger-panel]");
 
@@ -3710,7 +3719,10 @@ const devRequestedBackground = getDevParam("bg");
 const devInvincible = isDevFlagEnabled("devInvincible");
 const devAutoFire = isDevFlagEnabled("devAutoFire");
 const devTuning = isDevFlagEnabled("devTuning");
+const devArsenal = isDevFlagEnabled("devArsenal");
 const devPressure = isDevFlagEnabled("devPressure");
+const DEV_ARSENAL_WALLET_CREDITS = 999999999;
+if (ledgerDevArsenalMode) ledgerDevArsenalMode.hidden = !devArsenal;
 // Combat-pressure telemetry (?devPressure=1): records raw incoming threat per
 // mission so encounter tuning can target measured pressure floors instead of
 // guesses. Pair with ?devInvincible=1 for a static worst-case probe; read
@@ -3852,7 +3864,7 @@ let mission = null;
 
 function applyDevStateFlags() {
   if (!state) return;
-  if (devSkipOnboarding) {
+  if (devSkipOnboarding || devArsenal) {
     shouldAutoLaunchFreshPilotMission = false;
     state.debugSkipOnboarding = true;
     state.debugUnlock = true;
@@ -3862,6 +3874,10 @@ function applyDevStateFlags() {
   }
   if (devInvincible) {
     state.debugInvincible = true;
+  }
+  if (devArsenal) {
+    state.credits = Math.max(Number(state.credits) || 0, DEV_ARSENAL_WALLET_CREDITS);
+    state.lifetimeCredits = Math.max(Number(state.lifetimeCredits) || 0, DEV_ARSENAL_WALLET_CREDITS);
   }
   refreshSystemUnlocks();
   syncShipBuildToLegacy();
@@ -4496,11 +4512,12 @@ const levelFallback = {
 
 let currentLevel = null;
 let levelLoadPromise = null;
-let selectedLevelId = devSkipOnboarding && devRequestedLevelId ? devRequestedLevelId : "level1";
+let selectedLevelId = (devSkipOnboarding || devArsenal) && devRequestedLevelId ? devRequestedLevelId : "level1";
 let lastLoadedLevelId = null;
-let activeHangarTab = devSkipOnboarding ? "mission" : "hub";
-let activeLedgerMode = "market";
+let activeHangarTab = devArsenal ? "economy" : devSkipOnboarding ? "mission" : "hub";
+let activeLedgerMode = devArsenal ? "arsenal" : "market";
 let activeCompendiumMode = "drones";
+let devArsenalLots = [];
 let hangarNeedsRefresh = false;
 let openShipNodeId = null;
 let armoryHullPickerOpen = false;
@@ -5357,7 +5374,9 @@ hangarSceneButtons.forEach((button) => {
 });
 
 function setLedgerMode(mode) {
-  activeLedgerMode = ["market", "investments", "claims"].includes(mode) ? mode : "market";
+  const allowedModes = ["market", "investments", "claims"];
+  if (devArsenal) allowedModes.push("arsenal");
+  activeLedgerMode = allowedModes.includes(mode) ? mode : "market";
   ledgerModeButtons.forEach((button) => {
     const active = button.dataset.ledgerMode === activeLedgerMode;
     button.classList.toggle("active", active);
@@ -5415,6 +5434,14 @@ armoryToggleStats?.addEventListener("click", () => {
     if (activeHangarTab === "economy") renderLedgerMarket();
   });
 });
+
+devArsenalSearch?.addEventListener("input", renderDevArsenal);
+devArsenalFilter?.addEventListener("change", renderDevArsenal);
+devArsenalRarity?.addEventListener("change", () => {
+  rerollDevArsenal();
+});
+devArsenalReroll?.addEventListener("click", rerollDevArsenal);
+devArsenalRefill?.addEventListener("click", refillDevArsenalWallet);
 
 async function launchSelectedMission({ showIntro = false } = {}) {
   if (!isLevelUnlocked(selectedLevelId)) return;
@@ -10622,6 +10649,177 @@ function renderLedgerLicenseStatus() {
     : `License ${tier}: ${current.stockLots} lots | max`;
 }
 
+function getDevArsenalStandardRarity() {
+  const requested = devArsenalRarity?.value || "prototype";
+  return ECONOMY.rarityOrder.includes(requested) ? requested : "prototype";
+}
+
+function createDevArsenalLot(collection, baseId, baseEntry) {
+  const rarity =
+    collection === "relics"
+      ? "preFounding"
+      : collection === "heirlooms"
+        ? "heirloom"
+        : getDevArsenalStandardRarity();
+  const item = createRolledItem(baseId, baseEntry, rarity);
+  item.dropSource = "devArsenal";
+  const listValue = getItemListValue(item);
+  return {
+    id: `DEV-${collection}-${baseId}`,
+    collection,
+    baseId,
+    baseEntry,
+    item,
+    listValue,
+    price: Math.max(1, Math.round(listValue * getMarketConfig().buyRate)),
+  };
+}
+
+function rollDevArsenalLots() {
+  if (!devArsenal || !itemPoolCatalog) return [];
+  const catalogGroups = [
+    ["entries", itemPoolCatalog.entries || {}],
+    ["relics", itemPoolCatalog.relics || {}],
+    ["heirlooms", itemPoolCatalog.heirlooms || {}],
+  ];
+  const slotOrder = { primary: 0, mini: 1, defense: 2, aux: 3 };
+  devArsenalLots = catalogGroups
+    .flatMap(([collection, entries]) =>
+      Object.entries(entries)
+        .filter(([, entry]) => ["primary", "mini", "defense", "aux"].includes(normalizeArmorySlotType(entry.slotType)))
+        .map(([baseId, baseEntry]) => createDevArsenalLot(collection, baseId, baseEntry))
+    )
+    .sort((a, b) => {
+      const slotDelta =
+        (slotOrder[normalizeArmorySlotType(a.item.slotType)] ?? 9) -
+        (slotOrder[normalizeArmorySlotType(b.item.slotType)] ?? 9);
+      if (slotDelta) return slotDelta;
+      return String(a.item.baseName || a.item.name).localeCompare(String(b.item.baseName || b.item.name));
+    });
+  return devArsenalLots;
+}
+
+function getFilteredDevArsenalLots() {
+  const query = String(devArsenalSearch?.value || "").trim().toLowerCase();
+  const filter = devArsenalFilter?.value || "all";
+  return devArsenalLots.filter((lot) => {
+    const item = lot.item;
+    const slotType = normalizeArmorySlotType(item.slotType);
+    if (filter === "relic" && lot.collection !== "relics") return false;
+    if (filter === "heirloom" && lot.collection !== "heirlooms") return false;
+    if (!["all", "relic", "heirloom"].includes(filter) && slotType !== filter) return false;
+    if (!query) return true;
+    const haystack = [
+      lot.baseId,
+      item.baseName,
+      item.name,
+      item.subtitle,
+      getDenseItemRoleLabel(item),
+      ...(Array.isArray(item.tags) ? item.tags : []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(query);
+  });
+}
+
+function renderDevArsenal() {
+  if (!devArsenal || !devArsenalList) return;
+  if (!devArsenalLots.length && itemPoolCatalog) rollDevArsenalLots();
+  const lots = getFilteredDevArsenalLots();
+  if (devArsenalStatus) {
+    devArsenalStatus.textContent = `${lots.length} of ${devArsenalLots.length} items | Wallet ${formatLedgerCredits(state.credits)} | standard gear rolls as ${getRarityLabel(getDevArsenalStandardRarity())}`;
+  }
+  devArsenalList.innerHTML = "";
+  if (!lots.length) {
+    devArsenalList.innerHTML = `<div class="ledger-empty">No catalog items match this search.</div>`;
+    return;
+  }
+  lots.forEach((lot) => {
+    const item = lot.item;
+    const rarity = item.rarity || "scrap";
+    const typeKey = getItemTypeKey(item);
+    const collectionLabel =
+      lot.collection === "heirlooms"
+        ? "Heirloom registry"
+        : lot.collection === "relics"
+          ? "Pre-Founding registry"
+          : getDenseItemRoleLabel(item);
+    const quality = Number.isFinite(item.rollQuality)
+      ? `Q${Math.round(item.rollQuality * 100)}`
+      : "Fixed";
+    const entry = document.createElement("div");
+    entry.className = `ledger-market-item dev-arsenal-item type-${typeKey} rarity-${rarity}`;
+    entry.setAttribute("style", getRarityStyle(rarity));
+    entry.tabIndex = 0;
+    entry.innerHTML = `
+      <div class="ledger-item-icon">
+        <img src="${escapeHtml(item.icon || getDefaultItemIcon(rarity))}" alt="" />
+      </div>
+      <div class="ledger-item-main">
+        <div class="ledger-item-kicker">${escapeHtml(collectionLabel)}</div>
+        <div class="ledger-item-name">${escapeHtml(getCompactItemName(item))}</div>
+        <div class="ledger-item-price">${escapeHtml(quality)} · ${formatLedgerCredits(lot.price)}</div>
+      </div>
+      <button type="button" class="ledger-action-button buy">Buy</button>
+    `;
+    entry.querySelector("button")?.addEventListener("click", () => buyDevArsenalLot(lot.id));
+    attachItemTooltip(entry, item, getComparableSlotIdForItem(item));
+    devArsenalList.appendChild(entry);
+  });
+}
+
+function rerollDevArsenal() {
+  if (!devArsenal) return;
+  hideItemTooltip();
+  ensureItemPoolLoaded()
+    .then(() => {
+      rollDevArsenalLots();
+      renderDevArsenal();
+    })
+    .catch((error) => {
+      console.error("Test arsenal reroll failed:", error);
+    });
+}
+
+function refillDevArsenalWallet() {
+  if (!devArsenal || !state) return;
+  state.credits = DEV_ARSENAL_WALLET_CREDITS;
+  state.lifetimeCredits = Math.max(Number(state.lifetimeCredits) || 0, DEV_ARSENAL_WALLET_CREDITS);
+  setLedgerReceipt({
+    title: "Development Credit Writ",
+    lines: [
+      { label: "Testing wallet", amount: DEV_ARSENAL_WALLET_CREDITS, total: true },
+      { label: "Settlement status", text: "NON-CANONICAL", memo: true },
+    ],
+  });
+  saveState();
+  safeUpdateHangar();
+}
+
+function buyDevArsenalLot(lotId) {
+  if (!devArsenal || !state) return;
+  hideItemTooltip();
+  const index = devArsenalLots.findIndex((lot) => lot.id === lotId);
+  if (index < 0) return;
+  const lot = devArsenalLots[index];
+  if (state.credits < lot.price) state.credits = DEV_ARSENAL_WALLET_CREDITS;
+  state.credits = Math.max(0, state.credits - lot.price);
+  addItemsToArmoryInventory([lot.item]);
+  setLedgerReceipt({
+    title: `Test Acquisition ${lot.baseId}`,
+    lines: [
+      { label: "Item", text: lot.item.name },
+      { label: "Catalog price", amount: -lot.price, fee: true },
+      { label: "Testing supply", text: "LOT REPLACED", memo: true },
+    ],
+  });
+  devArsenalLots[index] = createDevArsenalLot(lot.collection, lot.baseId, lot.baseEntry);
+  saveState();
+  safeUpdateHangar();
+}
+
 function renderLedgerStock(ledger) {
   if (!ledgerStockList) return;
   ledgerStockList.innerHTML = "";
@@ -10705,6 +10903,7 @@ async function renderLedgerMarketAsync() {
   renderLedgerStock(ledger);
   renderLedgerInventory(ledger);
   renderLedgerReceiptPanel(ledger);
+  renderDevArsenal();
 }
 
 function renderLedgerMarket() {

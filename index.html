@@ -228,6 +228,7 @@
                 <button class="ledger-mode-button active" type="button" data-ledger-mode="market">Market</button>
                 <button class="ledger-mode-button" type="button" data-ledger-mode="investments">Investments</button>
                 <button class="ledger-mode-button" type="button" data-ledger-mode="claims">Claims</button>
+                <button class="ledger-mode-button dev-arsenal-mode" id="ledger-dev-arsenal-mode" type="button" data-ledger-mode="arsenal" hidden>Test Arsenal</button>
               </div>
               <div class="ledger-screen">
                 <div class="ledger-bulletin" id="ledger-bulletin"></div>
@@ -281,6 +282,42 @@
                 </section>
                 <section class="ledger-mode-panel" data-ledger-panel="claims" hidden>
                   <div class="ledger-receipt" id="ledger-receipt"></div>
+                </section>
+                <section class="ledger-mode-panel" data-ledger-panel="arsenal" id="ledger-dev-arsenal-panel" hidden>
+                  <div class="dev-arsenal-shell">
+                    <div class="dev-arsenal-head">
+                      <div>
+                        <span class="ledger-bulletin-kicker">Unbounded testing supply</span>
+                        <h3>Full Catalog Arsenal</h3>
+                        <p>One live roll per item. Buying a lot immediately replaces it with a fresh roll.</p>
+                      </div>
+                      <div class="dev-arsenal-actions">
+                        <button type="button" class="ledger-action-button" id="dev-arsenal-refill">Refill Wallet</button>
+                        <button type="button" class="ledger-action-button" id="dev-arsenal-reroll">Reroll All</button>
+                      </div>
+                    </div>
+                    <div class="browser-controls dev-arsenal-controls" aria-label="Test arsenal controls">
+                      <input id="dev-arsenal-search" class="browser-search" type="search" placeholder="Search every item" />
+                      <select id="dev-arsenal-rarity" class="browser-select" aria-label="Rarity for standard catalog items">
+                        <option value="scrap">Scrap rolls</option>
+                        <option value="certified">Certified rolls</option>
+                        <option value="prototype" selected>Prototype rolls</option>
+                        <option value="preFounding">Pre-Founding rolls</option>
+                        <option value="heirloom">Heirloom rolls</option>
+                      </select>
+                      <select id="dev-arsenal-filter" class="browser-select" aria-label="Filter test arsenal">
+                        <option value="all">All items</option>
+                        <option value="primary">Primary</option>
+                        <option value="mini">Mini</option>
+                        <option value="defense">Defense</option>
+                        <option value="aux">Aux</option>
+                        <option value="relic">Pre-Founding</option>
+                        <option value="heirloom">Heirloom</option>
+                      </select>
+                    </div>
+                    <div class="dev-arsenal-status" id="dev-arsenal-status"></div>
+                    <div class="ledger-market-list dev-arsenal-list" id="dev-arsenal-list"></div>
+                  </div>
                 </section>
               </div>
             </div>

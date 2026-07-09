@@ -14,6 +14,35 @@ capabilities become mission-clear unlocks, and loot moves to a skewed roll
 curve with act-aware drop tables. The Story-Economy Arc phases (Family Tier,
 Planet Raids, The Fork) remain queued behind it.
 
+## Player-validated combat direction (2026-07-09)
+
+This direction overrides conflicting preservation or balance assumptions in the
+master-plan draft and must be folded into its next revision before implementation:
+
+- **Weapon spectacle is the reward.** Emergent combinations such as enormous
+  impulse-scaled explosive plasma shots or rank-3 auto-targeted rapid kinetic
+  streams are not balance defects merely because they erase older content. Do
+  not flatten, cap, or normalize them just to preserve obsolete encounters.
+- **Raise the opposition; preserve the excess.** At the player's current content
+  tier, encounter composition should make the appropriate weapon role matter:
+  rapid low-per-hit weapons struggle against contemporary armor, while slow
+  overkill plasma struggles to service a contemporary swarm arriving across
+  space and time. Avoid immunity rules and adaptive stat scaling that cancel the
+  build itself.
+- **Power must remain legible across tiers.** A sufficiently advanced plasma
+  explosion may wipe a lower-tier swarm, and a sufficiently advanced kinetic
+  stream may melt lower-tier armor. Outgearing content is intentional evidence
+  that the loot hunt worked.
+- **The known-good campaign ends at Last Light.** Missions 1 through 8 and their
+  armor/swarm/hybrid replay vocabulary are the usable Act 1 foundation. Missions
+  9-11 and the current Act 2/3 mission scripts are disposable experiments, not
+  content future authors are obliged to preserve. Their AI behaviors, art,
+  projectile patterns, boss machinery, and other useful subsystems remain a
+  toolbox.
+- **Prove one mission before generating an act.** Post-Last-Light content should
+  begin as a small difficulty vertical slice and expand only after player testing
+  shows that its missions are worth replaying for fun.
+
 ## Player-Testing Overhaul Implemented
 
 The broad cleanup and loadout overhaul from `outdated_docs/implemented_specs/NEXT_OVERHAUL_SPEC.md` has been implemented for player testing:

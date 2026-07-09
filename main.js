@@ -4380,7 +4380,8 @@ const activeCampaignLevels = [
   { id: "level6", label: "Mission 6" },
   { id: "level7", label: "Mission 7" },
   { id: "level8", label: "Mission 8" },
-  { id: "act2_dead_air", label: "Beyond Last Light: Dead Air", requires: [{ completed: "level8" }] },
+  { id: "act2_dead_air", label: "Crossed Claims", requires: [{ completed: "level8" }] },
+  { id: "act2_processional", label: "Processional", requires: [{ completed: "act2_dead_air" }] },
 ];
 
 // Missions after Last Light were useful mechanics experiments, but they are not
@@ -4390,14 +4391,6 @@ const discardedCampaignLevels = [
   { id: "level9", label: "Mission 9" },
   { id: "level10", label: "Mission 10" },
   { id: "level11", label: "Mission 11" },
-  {
-    id: "act2_processional",
-    label: "Act 2: Processional",
-    branch: "chorus",
-    contractTag: "Ledger-sanctioned",
-    contractClass: "sanctioned",
-    requires: [{ completed: "act2_dead_air" }],
-  },
   { id: "act2_antiphon", label: "Act 2: Antiphon", branch: "chorus", requires: [{ completed: "act2_processional" }] },
   { id: "act2_doxology", label: "Act 2: Doxology", branch: "chorus", requires: [{ completed: "act2_antiphon" }] },
   {

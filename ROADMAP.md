@@ -7,15 +7,14 @@ This is the active planning doc for the next playable changes. Historical specs 
 ## Active execution slice (2026-07-09)
 
 `PROGRESSION_MASTER_PLAN.md` records the player-validated creative direction and
-the development/testing contract. Only Slice 1 is currently authorized: end the
-normal campaign at Mission 8 / Last Light, hide discarded later experiments, and
-ship one newly authored post-Last-Light mission for Adam to play. Progression,
-loot, item, economy, and story expansions remain draft backlog until that
-playtest produces the next decision.
+the development/testing contract. Slice 1, Crossed Claims, is validated. Adam
+explicitly approved continued execution, so Slice 2 re-authors Processional as a
+focused Chorus swarm mission and then stops for another playtest. Progression,
+loot, item, economy, and broader story expansions remain draft backlog.
 
 ## Player-validated combat direction (2026-07-09)
 
-This direction is folded into the current master plan and governs Slice 1:
+This direction is folded into the current master plan and governs the active slices:
 
 - **Weapon spectacle is the reward.** Emergent combinations such as enormous
   impulse-scaled explosive plasma shots or rank-3 auto-targeted rapid kinetic
@@ -102,12 +101,13 @@ The `outdated_docs/implemented_specs/ECONOMY_CONTROL_SPEC.md` Phase 8 prelude ha
 
 ## Next Player-Testing Priorities
 
-Dead Air's first playtest validated the encounter thesis: high armor class erased
+Crossed Claims' first playtest validated the encounter thesis: high armor class erased
 much of the chip field, grapplers and heavy projectiles still threatened the
 ship, and twin-rapid plasma cleared the swarm while struggling against armored
 anchors. The run ended around one minute and was judged fun. The immediate
-follow-up is the reported shared periodic-movement origin fix; it does not
-automatically expand the act.
+periodic-movement origin bug was fixed globally. Processional is now the active
+playtest: a pure Chorus swarm/formation mission with conductor collapse,
+shield-heavy minibosses, collision pressure, and no armored anchors.
 
 Other tuning candidates—mini output, Dual Fire scaling, loot rolls, economy
 scarcity, cloak payoff, and mobile Armory density—remain valid backlog but are
@@ -126,9 +126,9 @@ Settled direction from the 2026-07-01 story session (`STORY-PREMISE-DEEP-HISTORY
 The old Act 2 campaign is not player-facing canon. Its generated fleets,
 backgrounds, projectile profiles, miniboss presentation, graph machinery,
 conductor/mimic/thief/lien/spawner/splitter AIs, tractor patterns, and boss phases
-remain reusable tools. The new Dead Air deliberately reuses selected Chorus,
-Tithe, conductor, gunwall, and latch machinery with entirely new enemy stats and
-wave authoring.
+remain reusable tools. Crossed Claims reuses selected Chorus, Tithe, conductor,
+gunwall, and latch machinery with entirely new enemy stats and wave authoring;
+Processional reuses only Chorus identities in a newly authored swarm mission.
 
 The discarded mission cards remain available only under `?devActs=1` for
 regression access. Passing validation does not make them campaign content.

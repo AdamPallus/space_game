@@ -1,10 +1,10 @@
 {
   "id": "act2_dead_air",
-  "name": "Dead Air",
+  "name": "Crossed Claims",
   "background": "generatedCathedralDrift",
   "music": "space_battle_bpm130.ogg",
   "difficulty": "Beyond Last Light",
-  "description": "Last Light was not the end of the signal. The silence beyond it is crowded with claimants: a fast screen, plated anchors, and something conducting both. Bring two answers.",
+  "description": "Last Light's dying core broadcast your transponder into a dormant succession relay. Three systems answer at once: join, surrender, or be seized. None recognizes the others.",
   "completeOnBoss": true,
   "projectileProfiles": {
     "hymnChip": {
@@ -634,8 +634,8 @@
     }
   ],
   "debriefLore": [
-    "The silence was not empty. It was waiting for someone strong enough to answer.",
-    "Three claim signatures overlap in the wreckage. None acknowledge the others.",
-    "Past Last Light, every signal is addressed to your weapons."
+    "CLAIM ROUTING COMPLETE: CHORUS / TITHE / VERDANT. Asset designation: disputed.",
+    "The Doorkeeper was not guarding the relay. It was deciding which claimant owned you.",
+    "One reply remains coherent: MISSING VOICE, RETURN TO FORMATION."
   ]
 }

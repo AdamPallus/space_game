@@ -32,9 +32,9 @@ Mission scripts live in `levels/*.json`. They define metadata, backgrounds, wave
 
 The player-facing Act 1 campaign has eight core missions ending at Mission 8, Last Light. Each has Standard, Swarm, and Armored carousel entries with profiled projectile damage and weighted attack patterns. Completing any variant of `levelX` unlocks the next base mission through Mission 8, while lab-style encounters remain separate test entries.
 
-Clearing Last Light unlocks one player-facing post-Act-1 vertical slice, Dead Air. Its newly authored waves overlap mobile shielded screens, conductor support, armored gunwalls/strongboxes, latch attackers, and a phased boss to test strong rapid-fire and overkill-plasma builds without changing weapon math. The normal board hides Missions 9–11 and all other old Act 2/3 encounter cards. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox.
+Clearing Last Light unlocks Crossed Claims, the player-validated hybrid slice whose newly authored waves overlap mobile shielded screens, conductor support, armored gunwalls/strongboxes, latch attackers, and a phased boss. Clearing Crossed Claims unlocks Processional, a newly authored Chorus swarm mission with synchronized ranks, lane-callers, collision skirmishers, conductor buffs and collapse, two shield-heavy miniboss beats, and a phased Processional Warden. Neither mission changes weapon math.
 
-No broader Act 2 or Act 3 campaign is currently active. Dead Air is the human-playtest gate: after focused validators and a launch smoke, the deployed build is handed to Adam before any second post-Last-Light mission is authored.
+The normal board hides Missions 9–11 and every remaining old Act 2/3 encounter card. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox. No broader Act 2 or Act 3 campaign is currently active. Processional is the current human-playtest gate.
 
 ## Onboarding
 

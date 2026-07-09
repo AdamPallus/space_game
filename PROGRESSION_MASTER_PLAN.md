@@ -1,8 +1,9 @@
 # Progression Master Plan — Power First, Then Progression
 
-**Status:** Accepted direction. Slice 1 was implemented on 2026-07-09 after Adam
-explicitly approved execution and is awaiting his playtest. Later slices remain
-drafts until a playtest or conversation promotes them.
+**Status:** Accepted direction. Slice 1 was implemented and player-validated on
+2026-07-09. Adam then explicitly approved continued execution; Slice 2 is
+implemented and awaiting his playtest. Later slices remain drafts until a
+playtest or conversation promotes them.
 
 **Creative and playtest authority:** Adam.
 
@@ -81,9 +82,9 @@ are cheaper for the agent than for the player.
   catalog item in the Ledger. Turning it off hides the arsenal; it does not undo
   credits, items, or other damage to the save.
 
-## 5. Slice 1 — one mission beyond Last Light
+## 5. Slice 1 — Crossed Claims
 
-**Status:** Implemented; awaiting Adam's playtest.
+**Status:** Implemented and player-validated.
 
 The goal is not to generate Act 2. The goal is to learn whether one encounter can
 challenge the game's strongest entertaining builds without flattening them.
@@ -91,16 +92,30 @@ challenge the game's strongest entertaining builds without flattening them.
 ### Campaign boundary
 
 - The normal mission board shows Missions 1–8, then one new vertical slice:
-  **Dead Air**.
-- Dead Air requires Last Light to be completed.
+  **Crossed Claims**.
+- Crossed Claims requires Last Light to be completed.
 - Discarded Missions 9–11 and old Act 2/3 mission cards are hidden from the normal
   board.
 - `?devActs=1` exposes and unlocks discarded cards for agentic regression work. Their
   presence behind that flag does not restore them to campaign canon.
 
-### Dead Air encounter thesis
+### Story
 
-Dead Air is a compact hybrid pressure test built from reusable machinery and new
+Destroying Last Light's command core broadcasts the player's ship identity into
+a dormant succession relay. Three old fleet systems recognize the same asset at
+once: the Chorus orders it back into formation, the Tithe asserts a repossession
+claim, and boarding craft attempt physical seizure. These fleets are not allied;
+the Doorkeeper is an authentication machine forcing their incompatible claims
+through one checkpoint. Its defeat identifies three claimant routes and leaves
+one coherent reply: **MISSING VOICE, RETURN TO FORMATION.**
+
+The technical id remains `act2_dead_air` for save stability, but the player-facing
+name is Crossed Claims. "Dead Air" described the approach, not the battle that
+the mission became.
+
+### Crossed Claims encounter thesis
+
+Crossed Claims is a compact hybrid pressure test built from reusable machinery and new
 wave authoring:
 
 - shielded, mobile Chorus screens arrive in dense staggered groups so slow
@@ -121,7 +136,7 @@ loot generation, progression unlocks, economy tuning, or story branches.
 - `main.js` parses.
 - `levels/act2_dead_air.json` passes `validate_levels.js`.
 - The ordinary board contains no discarded campaign cards.
-- Dead Air appears after Last Light and launches.
+- Crossed Claims appears after Last Light and launches.
 - `?devActs=1` still exposes discarded cards for regression access.
 - The standard repo validation stack passes.
 
@@ -150,33 +165,74 @@ melted the small screen and struggled against the armored anchors. The run ended
 at roughly one minute, but the challenge was immediately judged fun; the unified
 swarm movement was a specific highlight.
 
-This validates Dead Air's core composition thesis. The playtest also exposed a
+This validates Crossed Claims' core composition thesis. The playtest also exposed a
 shared periodic-movement continuity bug: enemies entering a stall/oscillation
 could evaluate the cycle using their total lifetime and snap sideways on the
 first pattern frame. The follow-up fixes periodic origins globally before any
 new mission is authored.
 
-## 6. Later slices — draft backlog, not authorization
+## 6. Slice 2 — Processional
+
+**Status:** Implemented after Adam approved continued execution; awaiting his
+playtest.
+
+Crossed Claims separates the three claimant signals. The clearest is the Chorus,
+which does not think it is attacking: it believes a missing voice has returned
+and is attempting reintegration. Its synchronized formations are a distributed
+consensus machine. Conductors make many hulls behave as one; kill the conductor
+and the surviving drones scatter because each copy chooses a different answer.
+
+Processional is the first deliberately pure role check:
+
+- no armored anchors rescue a slow, high-overkill loadout from its service-rate
+  problem;
+- large synchronized ranks reward rapid, spread, auto-targeting, and explosive
+  coverage while continuous staggered arrivals prevent one detonation from
+  solving the whole mission;
+- lane-callers and skittering censers break the formation silhouette and add
+  collision pressure;
+- precentors visibly strengthen linked screens, then trigger formation collapse
+  when the final active conductor dies;
+- two shield-heavy miniboss beats test sustained swarm damage without becoming
+  an armor check;
+- the Processional Warden advances and sweeps while fresh ranks continue behind
+  it. Its danger comes from formation output, heavy notes, and boss hazards—not
+  an armored health wall.
+
+### Processional playtest questions
+
+- Does the synchronized movement feel like an intentional fleet rather than a
+  pile of random enemies?
+- Does rapid/plasma coverage feel gloriously correct here?
+- Do slow giant-plasma or narrow armor-break builds visibly fall behind without
+  being disabled?
+- Is killing conductors and watching the line scatter legible and satisfying?
+- Does collision and heavy-note pressure still threaten a high-armor build?
+- Is the mission fun enough to replay, and where does the first run end?
+
+Codex stops after deployment for these answers.
+
+## 7. Later slices — draft backlog, not authorization
 
 These ideas remain available, but none should be implemented automatically after
-Slice 1:
+Slice 2:
 
-1. **Dead Air revision.** Tune waves, defenses, projectile pressure, and rewards
-   directly from Adam's playtest.
-2. **Progression rewards.** Decide what clearing Last Light and Dead Air should
+1. **Processional revision.** Tune formation density, conductor cadence,
+   collision pressure, boss overlap, and rewards directly from Adam's playtest.
+2. **Progression rewards.** Decide what clearing Last Light, Crossed Claims, and Processional should
    unlock. Capability rewards, Dual Fire progression, and starter-kit changes are
    candidates, not settled requirements.
 3. **Loot chase.** Skewed roll quality, milestone floors, provenance labels, and
    act-aware drop tables remain promising once there is content worth farming.
 4. **Item creativity.** Named cloak/bulwark relics, mini-weapon trinket affixes,
    armor packs, and role-specific weapon surges remain a creative backlog.
-5. **Second post–Last Light mission.** Author only after Dead Air demonstrates a
-   repeatable encounter vocabulary worth developing.
+5. **Third post–Last Light mission.** Author only after Processional demonstrates
+   that a focused role-check mission is as fun as the hybrid opener.
 6. **Act and story structure.** Name or commit to Act 2 only after several missions
    are fun. Then decide how much of the existing lore deserves to be carried by
    them.
 
-## 7. Documentation authority
+## 8. Documentation authority
 
 When documents conflict, use this order:
 

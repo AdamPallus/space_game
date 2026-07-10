@@ -1,9 +1,10 @@
 # Progression Master Plan — Power First, Then Progression
 
 **Status:** Accepted direction. Slices 1–3 are player-validated. Repossession's
-first clear exposed a focused weapon/performance/readability follow-up, which is
-implemented and awaiting a targeted retest. Later slices remain drafts until a
-playtest or conversation promotes them.
+weapon, plasma-performance, and seizure-lock follow-up is accepted; Assessor
+liens remain explicitly unverified. Slice 4, The Green Signal, is implemented
+and awaiting its first playtest. Later slices remain drafts until a playtest or
+conversation promotes them.
 
 **Creative and playtest authority:** Adam.
 
@@ -298,32 +299,92 @@ Repossession is the gold-tier anti-armor role check:
   build to collect. That is recorded as an economy/reward-floor problem rather
   than patched by inflating this mission's drops in isolation.
 
-Codex stops after deploying this focused follow-up for a short kinetic/plasma,
-seizure-shot, and lien-readability retest.
+The focused weapon changes and plasma behavior are player-accepted. The seizure
+lock is also accepted as a cool replacement for the tractor, but its original
+760-speed shot was too easy to avoid relative to the surrounding projectile
+field; the locked slug now travels at 1350. Adam did not remember encountering
+the Assessors during the retest, so lien readability is still unverified rather
+than silently treated as accepted. That open observation is non-blocking for the
+next mission.
 
-## 8. Later slices — draft backlog, not authorization
+## 8. Slice 4 — The Green Signal
+
+**Status:** Implemented and awaiting first player playtest.
+
+Repossession reveals that the third claimant is not sending a message. The
+relay is reflecting a growth schedule: machine-standard replication behaving
+like metabolism. Verdant matter is rooting into the same corridor and growing
+toward the coordinates the other claimant archives orbit. Defeating the
+Gatekeeper should establish that the Verdant are not aliens but an ancient
+machine lineage copied beyond manufacturing and into ecology.
+
+The Green Signal is the gold-tier population-control role check:
+
+- it is an ecology, not a formation, so it must not reproduce Processional's
+  synchronized ranks or conductor-collapse rhythm;
+- Bloomcallers are durable, visibly marked producers that continually bud
+  Sporelings while alive;
+- Seedcarriers split into four Sporelings on death, making kill order and timing
+  matter even when a target is easy to burst;
+- Thornwings bring fast standard thorns and dangerous collisions while slow
+  Brambles become hull-heavy walls that let the population collect behind them;
+- a Broodmother midboss and the Gatekeeper Bloom both keep producing children,
+  turning clear rate into a resource rather than a static DPS check;
+- enemies rely on hull, modest shields, and population rather than contemporary
+  armor class, making explosive and burning plasma the natural answer without
+  granting any weapon-specific bonus or immunity;
+- small spores provide survivable chip pressure for strong armor, while thorns,
+  large bloom cores, and collisions remain meaningful dodge threats;
+- field pickups are repair caches only. The known sub-gold salvage-incentive
+  problem remains reserved for the shared economy/reward pass.
+
+The encounter escalates quickly, introduces the first producer at ten seconds,
+reaches the Broodmother at fifty-eight seconds, and roots the Gatekeeper at one
+hundred ten seconds while the ecology continues to arrive. The mission completes
+on the boss rather than requiring every child to be cleaned up.
+
+### The Green Signal playtest questions
+
+- Do the budding ring and orbiting buds make Bloomcallers obvious priority
+  targets without needing explanatory UI?
+- Does ignoring producers create an alarming population curve, and does killing
+  them feel like regaining control?
+- Are Seedcarrier splits readable and fun rather than arbitrary extra enemies?
+- Do explosive, burn, and wide plasma builds feel delightfully correct for the
+  problem without making the entire mission irrelevant?
+- Can high armor class shrug off small spores while fast thorns, bloom cores,
+  collisions, and accumulated ships remain dangerous?
+- Does the Broodmother remain present and fair, and is the Gatekeeper a satisfying
+  fight at the Pre-Founding baseline?
+- Where does the first run end, and is the answer driven by build choice, target
+  priority, survivability, or raw population?
+
+Codex stops after deploying the candidate so Adam can answer these questions in
+a real combat run.
+
+## 9. Later slices — draft backlog, not authorization
 
 These ideas remain available, but none should be implemented automatically after
-Slice 3:
+Slice 4:
 
-1. **Repossession systems retest.** Confirm focused kinetic feel, plasma frame
-   pacing, seizure-shot fairness, and lien readability before opening a new slice.
-2. **Progression rewards.** Decide what clearing Last Light, Crossed Claims, and Processional should
+1. **Green Signal revision.** Use the first playtest to tune population growth,
+   producer readability, collision pressure, and boss pacing before opening a
+   fifth post-Last-Light mission.
+2. **Assessor verification.** Keep lien readability marked unverified until a
+   future Repossession run actually observes it; this does not block Verdant work.
+3. **Progression rewards.** Decide what clearing Last Light, Crossed Claims, and Processional should
    unlock. Capability rewards, Dual Fire progression, and starter-kit changes are
    candidates, not settled requirements.
-3. **Loot chase.** Act-aware rarity floors, milestone rewards, provenance labels,
+4. **Loot chase.** Act-aware rarity floors, milestone rewards, provenance labels,
    and other ways to make dangerous field salvage relevant to a gold-equipped
    pilot now have a concrete failing case from Repossession.
-4. **Item creativity.** Named cloak/bulwark relics, mini-weapon trinket affixes,
+5. **Item creativity.** Named cloak/bulwark relics, mini-weapon trinket affixes,
    armor packs, and role-specific weapon surges remain a creative backlog.
-5. **Fourth post–Last Light mission.** Follow the growing Verdant claim only after
-   the Repossession systems follow-up confirms that the validated armor gate still
-   feels right with the corrected weapon and threat presentation.
 6. **Act and story structure.** Name or commit to Act 2 only after several missions
    are fun. Then decide how much of the existing lore deserves to be carried by
    them.
 
-## 9. Documentation authority
+## 10. Documentation authority
 
 When documents conflict, use this order:
 

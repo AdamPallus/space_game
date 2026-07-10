@@ -1,18 +1,19 @@
 # Roadmap
 
-Last audited: 2026-07-09
+Last audited: 2026-07-10
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
-## Active execution slice (2026-07-09)
+## Active execution slice (2026-07-10)
 
 `PROGRESSION_MASTER_PLAN.md` records the player-validated creative direction and
 the development/testing contract. Crossed Claims, Processional, and Repossession
-are validated. The active follow-up strengthens focused kinetic weapons, reduces
-plasma rendering cost without shrinking spectacle, replaces Repossession's
-mouse-inert tractor with a telegraphed seizure slug, and makes Assessor liens
-obvious. It then stops for a targeted retest. Progression, loot, item, economy,
-and broader story expansions remain draft backlog.
+are validated. The focused kinetic, plasma-performance, and Escrow lock follow-up
+is accepted, with the locked slug sharpened after it proved too easy and Assessor
+liens still explicitly unverified. The active candidate is The Green Signal, a
+newly authored Verdant population-control mission. It stops for a real playtest
+before any fifth post-Last-Light mission. Progression, loot, item, economy, and
+broader story expansions remain draft backlog.
 
 ## Player-validated combat direction (2026-07-09)
 
@@ -119,7 +120,19 @@ offscreen before the player gets a fair damage window. Repossession then validat
 the low-count AC30–42 Tithe gunline: Starwound Lance cleared it, while rapid-homing
 still lost to armor despite higher listed DPS. The resulting focused pass raises
 single-shot kinetic output, optimizes plasma visuals, replaces the Escrow tractor
-with a dodgeable seizure shot, and makes lien drains visible.
+with a fixed seizure lock and kinetic shot, and makes lien drains visible. The
+weapons and plasma behavior are accepted. The lock presentation is accepted, and
+the shot now travels at 1350 instead of 760 after proving too easy to dodge.
+Assessors were not noticed in that run, so their lien readability remains
+unverified rather than failed or accepted.
+
+The next deployed playtest is The Green Signal. Bloomcallers, a Broodmother, and
+the Gatekeeper visibly bud new ships; Seedcarriers split on death; Brambles hold
+space as hull walls; and continuing waves turn screen population into the main
+failure pressure. The mission is designed for gold-tier crowd-control and plasma
+builds without weapon-specific scaling. The playtest should establish whether
+producer priority is readable, whether ignored growth becomes dangerous quickly
+enough, and whether explosive spectacle feels like the right overpowered answer.
 
 Repossession also exposed a reward mismatch: a pilot who needs gold gear has no
 reason to risk the run for visibly scrap/certified/prototype salvage. Preserve the
@@ -147,6 +160,9 @@ remain reusable tools. Crossed Claims reuses selected Chorus, Tithe, conductor,
 gunwall, and latch machinery with entirely new enemy stats and wave authoring;
 Processional reuses Chorus identities in a newly authored swarm mission;
 Repossession reuses Tithe identities in a newly authored armor mission.
+The Green Signal reuses Verdant biological art and spawner/splitter machinery in
+a newly authored ecology mission with visible budding telegraphs, new gold-tier
+stats, and a new wave schedule.
 
 The discarded mission cards remain available only under `?devActs=1` for
 regression access. Passing validation does not make them campaign content.

@@ -1,351 +1,17 @@
 {
   "id": "act2_green_signal",
   "name": "The Green Signal",
-  "background": "generatedBioNebula",
+  "background": "generatedBioNebulaLooped",
   "visualTheme": "bio_v1",
   "music": "space_battle_bpm130.ogg",
-  "difficulty": "Deep Claims",
-  "description": "The Registry Shard decodes to a maintenance channel older than either fleet. Something is still broadcasting on it. Not words — growth schedules.",
+  "difficulty": "Verdant Ecology",
+  "description": "The third claim is no transmission. It is a growth schedule reflected through a Founding-era maintenance band, and it is taking root in the relay corridor.",
   "completeOnBoss": true,
-  "enemyTypes": {
-    "sporeling": {
-      "attackPatterns": [
-        {
-          "id": "spore_spit",
-          "mode": "aim",
-          "profile": "sporePuff",
-          "fireRate": 2.5,
-          "weight": 1,
-          "speedJitter": 0.12
-        }
-      ]
-    },
-    "thornwing": {
-      "attackPatterns": [
-        {
-          "id": "thorn_volley",
-          "mode": "spread",
-          "profile": "thornVolley",
-          "count": 3,
-          "spreadDeg": 26,
-          "fireRate": 2,
-          "weight": 3
-        },
-        {
-          "id": "thorn_snap",
-          "mode": "aim",
-          "profile": "thornVolley",
-          "fireRate": 1.6,
-          "weight": 1
-        }
-      ]
-    },
-    "bloomcaller": {
-      "attackPatterns": [
-        {
-          "id": "spore_pulse",
-          "mode": "radial",
-          "profile": "sporePuff",
-          "count": 10,
-          "fireRate": 2.4,
-          "weight": 3,
-          "speedJitter": 0.14
-        },
-        {
-          "id": "heavy_bloom",
-          "mode": "aim",
-          "profile": "sporeOrb",
-          "fireRate": 3.4,
-          "weight": 1
-        }
-      ],
-      "ai": "spawner",
-      "aiParams": {
-        "spawnEvery": 7,
-        "spawnType": "sporeling",
-        "maxAlive": 4
-      }
-    },
-    "bramble": {
-      "attackPatterns": [
-        {
-          "id": "bramble_ring",
-          "mode": "radial",
-          "profile": "thornVolley",
-          "count": 6,
-          "fireRate": 3,
-          "weight": 1
-        }
-      ]
-    },
-    "seedcarrier": {
-      "attackPatterns": [
-        {
-          "id": "seed_drip",
-          "mode": "aim",
-          "profile": "sporePuff",
-          "fireRate": 3.6,
-          "weight": 1
-        }
-      ],
-      "ai": "splitter",
-      "aiParams": {
-        "splitCount": 2,
-        "splitType": "sporeling"
-      }
-    },
-    "broodmother": {
-      "attackPatterns": [
-        {
-          "id": "brood_ring",
-          "mode": "radial",
-          "profile": "sporeOrb",
-          "count": 10,
-          "fireRate": 2,
-          "weight": 3,
-          "speedJitter": 0.1
-        },
-        {
-          "id": "brood_burst",
-          "mode": "radial",
-          "profile": "sporePuff",
-          "count": 16,
-          "fireRate": 2.8,
-          "weight": 2,
-          "speedJitter": 0.16
-        }
-      ],
-      "ai": "spawner",
-      "aiParams": {
-        "spawnEvery": 7,
-        "spawnType": "sporeling",
-        "maxAlive": 6
-      }
-    },
-    "boss": {
-      "template": "act2_green_signal:boss",
-      "attackPatterns": [
-        {
-          "id": "bloom_ring",
-          "mode": "radial",
-          "profile": "sporeOrb",
-          "count": 12,
-          "fireRate": 1.6,
-          "weight": 4,
-          "speedJitter": 0.12
-        },
-        {
-          "id": "pollen_burst",
-          "mode": "radial",
-          "profile": "sporePuff",
-          "count": 20,
-          "fireRate": 1.9,
-          "weight": 3,
-          "speedJitter": 0.18
-        },
-        {
-          "id": "thorn_fan",
-          "mode": "spread",
-          "profile": "thornVolley",
-          "count": 7,
-          "spreadDeg": 68,
-          "fireRate": 1.4,
-          "weight": 2
-        },
-        {
-          "id": "gate_core",
-          "mode": "aim",
-          "profile": "bloomCore",
-          "fireRate": 2.4,
-          "weight": 2
-        }
-      ]
-    }
-  },
-  "events": [
-    {
-      "time": 2,
-      "type": "sporeling",
-      "count": 7,
-      "interval": 0.4
-    },
-    {
-      "time": 10,
-      "type": "thornwing",
-      "count": 3,
-      "interval": 0.9
-    },
-    {
-      "time": 18,
-      "type": "sporeling",
-      "count": 8,
-      "interval": 0.36
-    },
-    {
-      "time": 27,
-      "type": "bloomcaller",
-      "count": 2,
-      "interval": 2
-    },
-    {
-      "time": 36,
-      "type": "thornwing",
-      "count": 4,
-      "interval": 0.8
-    },
-    {
-      "time": 45,
-      "type": "sporeling",
-      "count": 8,
-      "interval": 0.34
-    },
-    {
-      "time": 54,
-      "type": "bramble",
-      "count": 2,
-      "interval": 1.6
-    },
-    {
-      "time": 63,
-      "type": "seedcarrier",
-      "count": 1
-    },
-    {
-      "time": 70,
-      "type": "thornwing",
-      "count": 4,
-      "interval": 0.75
-    },
-    {
-      "time": 79,
-      "type": "sporeling",
-      "count": 9,
-      "interval": 0.32
-    },
-    {
-      "time": 88,
-      "type": "bloomcaller",
-      "count": 2,
-      "interval": 1.8
-    },
-    {
-      "time": 97,
-      "type": "bramble",
-      "count": 2,
-      "interval": 1.5
-    },
-    {
-      "time": 106,
-      "type": "seedcarrier",
-      "count": 2,
-      "interval": 4
-    },
-    {
-      "time": 118,
-      "type": "broodmother",
-      "count": 1
-    },
-    {
-      "time": 122,
-      "type": "sporeling",
-      "count": 6,
-      "interval": 0.4
-    },
-    {
-      "time": 134,
-      "type": "thornwing",
-      "count": 3,
-      "interval": 0.85
-    },
-    {
-      "time": 148,
-      "type": "sporeling",
-      "count": 10,
-      "interval": 0.3
-    },
-    {
-      "time": 158,
-      "type": "bloomcaller",
-      "count": 3,
-      "interval": 1.5
-    },
-    {
-      "time": 168,
-      "type": "thornwing",
-      "count": 5,
-      "interval": 0.7
-    },
-    {
-      "time": 178,
-      "type": "bramble",
-      "count": 3,
-      "interval": 1.3
-    },
-    {
-      "time": 188,
-      "type": "seedcarrier",
-      "count": 2,
-      "interval": 3.5
-    },
-    {
-      "time": 196,
-      "type": "sporeling",
-      "count": 10,
-      "interval": 0.3
-    },
-    {
-      "time": 205,
-      "type": "thornwing",
-      "count": 5,
-      "interval": 0.65
-    },
-    {
-      "time": 218,
-      "type": "boss",
-      "count": 1
-    }
-  ],
-  "pickups": [
-    {
-      "time": 31,
-      "type": "salvage",
-      "rarity": "certified",
-      "slotType": "primary",
-      "x": 0.4,
-      "y": -46
-    },
-    {
-      "time": 92,
-      "type": "salvage",
-      "rarity": "prototype",
-      "slotType": "mini",
-      "x": 0.6,
-      "y": -50
-    },
-    {
-      "time": 140,
-      "type": "shield_booster",
-      "x": 0.5
-    },
-    {
-      "time": 184,
-      "type": "salvage",
-      "rarity": "certified",
-      "slotType": "primary",
-      "x": 0.36,
-      "y": -46
-    },
-    {
-      "time": 210,
-      "type": "armor_patch",
-      "x": 0.52
-    }
-  ],
   "projectileProfiles": {
     "sporePuff": {
       "threatClass": "chip",
-      "damage": 8,
-      "speed": 165,
+      "damage": 11,
+      "speed": 170,
       "radius": 5,
       "image": "enemy_bio_spore_puff",
       "width": 26,
@@ -355,8 +21,8 @@
     },
     "thornVolley": {
       "threatClass": "standard",
-      "damage": 19,
-      "speed": 240,
+      "damage": 34,
+      "speed": 335,
       "radius": 4,
       "image": "enemy_bio_thorn_shard",
       "width": 16,
@@ -365,8 +31,8 @@
     },
     "sporeOrb": {
       "threatClass": "heavy",
-      "damage": 36,
-      "speed": 130,
+      "damage": 62,
+      "speed": 145,
       "radius": 9,
       "image": "enemy_bio_spore_orb",
       "width": 46,
@@ -376,8 +42,8 @@
     },
     "bloomCore": {
       "threatClass": "bossHazard",
-      "damage": 56,
-      "speed": 115,
+      "damage": 96,
+      "speed": 125,
       "radius": 12,
       "image": "enemy_bio_spore_orb",
       "width": 72,
@@ -386,9 +52,539 @@
       "spinRate": 1.2
     }
   },
+  "enemyTypes": {
+    "sporeling": {
+      "hull": 70,
+      "shield": 0,
+      "armor": 0,
+      "speed": 170,
+      "collisionDamage": 34,
+      "attackPatterns": [
+        {
+          "id": "spore_spit",
+          "mode": "aim",
+          "profile": "sporePuff",
+          "fireRate": 2.1,
+          "weight": 1,
+          "speedJitter": 0.12
+        }
+      ]
+    },
+    "thornwing": {
+      "hull": 145,
+      "shield": 0,
+      "armor": 0,
+      "speed": 138,
+      "collisionDamage": 44,
+      "attackPatterns": [
+        {
+          "id": "thorn_volley",
+          "mode": "spread",
+          "profile": "thornVolley",
+          "count": 4,
+          "spreadDeg": 34,
+          "fireRate": 1.55,
+          "weight": 3
+        },
+        {
+          "id": "thorn_snap",
+          "mode": "aim",
+          "profile": "thornVolley",
+          "fireRate": 1.15,
+          "weight": 1
+        }
+      ]
+    },
+    "bloomcaller": {
+      "hull": 420,
+      "shield": 180,
+      "shieldRegen": 16,
+      "armor": 0,
+      "speed": 52,
+      "collisionDamage": 40,
+      "attackPatterns": [
+        {
+          "id": "spore_pulse",
+          "mode": "radial",
+          "profile": "sporePuff",
+          "count": 14,
+          "fireRate": 1.8,
+          "weight": 3,
+          "speedJitter": 0.14
+        },
+        {
+          "id": "heavy_bloom",
+          "mode": "aim",
+          "profile": "sporeOrb",
+          "fireRate": 2.7,
+          "weight": 1
+        }
+      ],
+      "ai": "spawner",
+      "aiParams": {
+        "spawnEvery": 4,
+        "spawnType": "sporeling",
+        "maxAlive": 5
+      }
+    },
+    "bramble": {
+      "hull": 900,
+      "shield": 0,
+      "armor": 0,
+      "speed": 28,
+      "collisionDamage": 70,
+      "pattern": "stall",
+      "patternParams": {
+        "stallY": 208,
+        "stallDuration": 22,
+        "strafeAmp": 74,
+        "strafeFreq": 0.55,
+        "postSpeedMult": 0.72
+      },
+      "attackPatterns": [
+        {
+          "id": "bramble_ring",
+          "mode": "radial",
+          "profile": "thornVolley",
+          "count": 8,
+          "fireRate": 2.1,
+          "weight": 3
+        },
+        {
+          "id": "bramble_pods",
+          "mode": "aim",
+          "fireRate": 2.8,
+          "weight": 1,
+          "shots": [
+            {
+              "profile": "sporeOrb",
+              "angleOffsetDeg": -10
+            },
+            {
+              "profile": "sporeOrb",
+              "angleOffsetDeg": 10
+            }
+          ]
+        }
+      ]
+    },
+    "seedcarrier": {
+      "hull": 520,
+      "shield": 0,
+      "armor": 0,
+      "speed": 58,
+      "collisionDamage": 55,
+      "attackPatterns": [
+        {
+          "id": "seed_drip",
+          "mode": "aim",
+          "profile": "sporeOrb",
+          "fireRate": 2.8,
+          "weight": 1
+        }
+      ],
+      "ai": "splitter",
+      "aiParams": {
+        "splitCount": 4,
+        "splitType": "sporeling"
+      }
+    },
+    "broodmother": {
+      "hull": 1700,
+      "shield": 650,
+      "shieldRegen": 18,
+      "armor": 0,
+      "speed": 88,
+      "collisionDamage": 82,
+      "attackPatterns": [
+        {
+          "id": "brood_ring",
+          "mode": "radial",
+          "profile": "sporeOrb",
+          "count": 14,
+          "fireRate": 1.45,
+          "weight": 3,
+          "speedJitter": 0.1
+        },
+        {
+          "id": "brood_burst",
+          "mode": "radial",
+          "profile": "sporePuff",
+          "count": 24,
+          "fireRate": 1.9,
+          "weight": 2,
+          "speedJitter": 0.16
+        },
+        {
+          "id": "brood_thorns",
+          "mode": "spread",
+          "profile": "thornVolley",
+          "count": 7,
+          "spreadDeg": 62,
+          "fireRate": 1.2,
+          "weight": 2
+        }
+      ],
+      "ai": "spawner",
+      "aiParams": {
+        "spawnEvery": 3.8,
+        "spawnType": "sporeling",
+        "maxAlive": 8
+      }
+    },
+    "boss": {
+      "template": "act2_green_signal:boss",
+      "hull": 3200,
+      "shield": 900,
+      "shieldRegen": 18,
+      "armor": 0,
+      "speed": 78,
+      "collisionDamage": 96,
+      "ai": "spawner",
+      "aiParams": {
+        "spawnEvery": 3.3,
+        "spawnType": "sporeling",
+        "maxAlive": 10
+      },
+      "attackPatterns": [
+        {
+          "id": "metabolic_ring",
+          "mode": "radial",
+          "profile": "sporeOrb",
+          "count": 18,
+          "fireRate": 1.5,
+          "weight": 4,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "pollen_burst",
+          "mode": "radial",
+          "profile": "sporePuff",
+          "count": 30,
+          "fireRate": 1.2,
+          "weight": 3,
+          "speedJitter": 0.18
+        },
+        {
+          "id": "thorn_crown",
+          "mode": "spread",
+          "profile": "thornVolley",
+          "count": 9,
+          "spreadDeg": 74,
+          "fireRate": 1.1,
+          "weight": 2
+        },
+        {
+          "id": "bloom_core",
+          "mode": "aim",
+          "fireRate": 1.9,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "bloomCore",
+              "angleOffsetDeg": -12
+            },
+            {
+              "profile": "bloomCore"
+            },
+            {
+              "profile": "bloomCore",
+              "angleOffsetDeg": 12
+            }
+          ]
+        }
+      ],
+      "phases": [
+        {
+          "label": "Germination",
+          "hpFraction": 0.65,
+          "speedMult": 1.12,
+          "attackPatterns": [
+            {
+              "id": "germination_ring",
+              "mode": "radial",
+              "profile": "sporeOrb",
+              "count": 24,
+              "fireRate": 1.15,
+              "weight": 4,
+              "speedJitter": 0.15
+            },
+            {
+              "id": "germination_thorns",
+              "mode": "spread",
+              "profile": "thornVolley",
+              "count": 11,
+              "spreadDeg": 88,
+              "fireRate": 0.9,
+              "weight": 3
+            },
+            {
+              "id": "germination_core",
+              "mode": "aim",
+              "profile": "bloomCore",
+              "fireRate": 1.35,
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "label": "Overgrowth",
+          "hpFraction": 0.28,
+          "speedMult": 1.2,
+          "attackPatterns": [
+            {
+              "id": "overgrowth_pollen",
+              "mode": "radial",
+              "profile": "sporePuff",
+              "count": 40,
+              "fireRate": 0.78,
+              "weight": 4,
+              "speedJitter": 0.2
+            },
+            {
+              "id": "overgrowth_core",
+              "mode": "spread",
+              "profile": "bloomCore",
+              "count": 5,
+              "spreadDeg": 76,
+              "fireRate": 1.05,
+              "weight": 3
+            },
+            {
+              "id": "overgrowth_thorns",
+              "mode": "radial",
+              "profile": "thornVolley",
+              "count": 28,
+              "fireRate": 0.85,
+              "weight": 2,
+              "speedJitter": 0.12
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "time": 1,
+      "type": "sporeling",
+      "count": 10,
+      "interval": 0.28
+    },
+    {
+      "time": 5,
+      "type": "thornwing",
+      "count": 5,
+      "interval": 0.55
+    },
+    {
+      "time": 10,
+      "type": "bloomcaller",
+      "count": 1
+    },
+    {
+      "time": 14,
+      "type": "sporeling",
+      "count": 8,
+      "interval": 0.3
+    },
+    {
+      "time": 18,
+      "type": "seedcarrier",
+      "count": 2,
+      "interval": 1.8
+    },
+    {
+      "time": 22,
+      "type": "bloomcaller",
+      "count": 2,
+      "interval": 2
+    },
+    {
+      "time": 26,
+      "type": "thornwing",
+      "count": 6,
+      "interval": 0.5
+    },
+    {
+      "time": 30,
+      "type": "bramble",
+      "count": 1
+    },
+    {
+      "time": 34,
+      "type": "sporeling",
+      "count": 12,
+      "interval": 0.25
+    },
+    {
+      "time": 38,
+      "type": "bloomcaller",
+      "count": 2,
+      "interval": 1.8
+    },
+    {
+      "time": 42,
+      "type": "seedcarrier",
+      "count": 2,
+      "interval": 1.5
+    },
+    {
+      "time": 46,
+      "type": "thornwing",
+      "count": 7,
+      "interval": 0.45
+    },
+    {
+      "time": 50,
+      "type": "bramble",
+      "count": 2,
+      "interval": 2.5
+    },
+    {
+      "time": 54,
+      "type": "sporeling",
+      "count": 14,
+      "interval": 0.23
+    },
+    {
+      "time": 58,
+      "type": "broodmother",
+      "count": 1
+    },
+    {
+      "time": 62,
+      "type": "bloomcaller",
+      "count": 2,
+      "interval": 1.7
+    },
+    {
+      "time": 66,
+      "type": "thornwing",
+      "count": 6,
+      "interval": 0.45
+    },
+    {
+      "time": 70,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 1.4
+    },
+    {
+      "time": 74,
+      "type": "sporeling",
+      "count": 14,
+      "interval": 0.22
+    },
+    {
+      "time": 78,
+      "type": "bramble",
+      "count": 2,
+      "interval": 2.1
+    },
+    {
+      "time": 82,
+      "type": "bloomcaller",
+      "count": 3,
+      "interval": 1.5
+    },
+    {
+      "time": 86,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.4
+    },
+    {
+      "time": 90,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 1.3
+    },
+    {
+      "time": 94,
+      "type": "sporeling",
+      "count": 16,
+      "interval": 0.2
+    },
+    {
+      "time": 98,
+      "type": "bloomcaller",
+      "count": 3,
+      "interval": 1.4
+    },
+    {
+      "time": 102,
+      "type": "bramble",
+      "count": 2,
+      "interval": 2
+    },
+    {
+      "time": 106,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.38
+    },
+    {
+      "time": 110,
+      "type": "boss",
+      "count": 1
+    },
+    {
+      "time": 114,
+      "type": "sporeling",
+      "count": 12,
+      "interval": 0.22
+    },
+    {
+      "time": 118,
+      "type": "bloomcaller",
+      "count": 2,
+      "interval": 1.5
+    },
+    {
+      "time": 122,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 1.2
+    },
+    {
+      "time": 126,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.36
+    },
+    {
+      "time": 130,
+      "type": "sporeling",
+      "count": 16,
+      "interval": 0.18
+    }
+  ],
+  "pickups": [
+    {
+      "time": 40,
+      "type": "shield_booster",
+      "x": 0.42
+    },
+    {
+      "time": 64,
+      "type": "armor_patch",
+      "x": 0.58
+    },
+    {
+      "time": 88,
+      "type": "shield_booster",
+      "x": 0.38
+    },
+    {
+      "time": 108,
+      "type": "armor_patch",
+      "x": 0.62
+    }
+  ],
   "debriefLore": [
-    "Sample assay: hull alloy match - origin registry, generation zero.",
-    "Sample assay: growth substrate repeats pre-Founding maintenance marks.",
-    "Sample assay: organic drift around machine-standard seed behavior."
+    "There was no transmitter. The signal was a growth rhythm reflected through the Founders' maintenance band.",
+    "Verdant hull matrix matches cradle alloy copied past machining and into metabolism.",
+    "The Gatekeeper was not defending the corridor. It was rooting into it, growing toward the coordinates the other claimant archives orbit."
   ]
 }

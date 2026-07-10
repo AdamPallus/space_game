@@ -4409,6 +4409,11 @@ const activeCampaignLevels = [
   { id: "act2_dead_air", label: "Crossed Claims", requires: [{ completed: "level8" }] },
   { id: "act2_processional", label: "Processional", requires: [{ completed: "act2_dead_air" }] },
   { id: "act2_repossession", label: "Repossession", requires: [{ completed: "act2_dead_air" }] },
+  {
+    id: "act2_green_signal",
+    label: "The Green Signal",
+    requires: [{ completed: "act2_processional" }, { completed: "act2_repossession" }],
+  },
 ];
 
 // Missions after Last Light were useful mechanics experiments, but they are not
@@ -4422,7 +4427,6 @@ const discardedCampaignLevels = [
   { id: "act2_doxology", label: "Act 2: Doxology", branch: "chorus", requires: [{ completed: "act2_antiphon" }] },
   { id: "act2_arrears", label: "Act 2: Arrears", branch: "tithe", requires: [{ completed: "act2_repossession" }] },
   { id: "act2_foreclosure", label: "Act 2: Foreclosure", branch: "tithe", requires: [{ completed: "act2_arrears" }] },
-  { id: "act2_green_signal", label: "Act 2: The Green Signal", branch: "verdant", requires: [{ keyItem: "deep_registry_shard" }] },
   { id: "act2_bloom", label: "Act 2: Bloom", branch: "verdant", requires: [{ completed: "act2_green_signal" }] },
   { id: "act2_old_growth", label: "Act 2: Old Growth", branch: "verdant", requires: [{ completed: "act2_bloom" }] },
   { id: "act2_pilgrimage", label: "Act 2: Pilgrimage", branch: "origin", requires: [{ completed: "act2_old_growth" }] },
@@ -7436,7 +7440,6 @@ function getMissionUnlockRequirementText(levelId) {
   const entry = getMissionEntry(levelId);
   const requires = Array.isArray(entry?.requires) ? entry.requires : [];
   if (!requires.length) return getMissionLockReason(levelId);
-  if (levelId === "act2_green_signal") return "Requires: Deep Registry Shard";
   const labels = requires
     .map((requirement) => {
       if (requirement.completed) {
@@ -12794,7 +12797,7 @@ function updateSpawnerEnemy(enemy, delta) {
     parentSpawnerId: enemy.id,
     aiParams: { parentSpawnerId: enemy.id },
   });
-  if (child) spawnFloatingText(enemy.x, enemy.y - enemy.radius, "SPAWN", "#86efac");
+  if (child) spawnFloatingText(enemy.x, enemy.y - enemy.radius, "BUDDING", "#86efac");
 }
 
 function spawnSplitChildren(enemy) {
@@ -14391,6 +14394,7 @@ function drawEnemy(enemy) {
   }
   drawRammerTelegraph(enemy);
   drawCarriedPod(enemy);
+  drawSpawnerIndicator(enemy);
 
   if (mission && mission.empTimer > 0) {
     const alpha = Math.min(1, mission.empTimer / player.empDuration);
@@ -14414,6 +14418,36 @@ function drawEnemy(enemy) {
   drawPlasmaBurnAura(enemy);
   if (enemy.healthBarTimer > 0) {
     drawEnemyHealth(enemy);
+  }
+  ctx.restore();
+}
+
+function drawSpawnerIndicator(enemy) {
+  if (enemy?.ai !== "spawner" || enemy.hull <= 0) return;
+  const spawnEvery = Math.max(0.1, enemy.aiParams?.spawnEvery ?? 7);
+  const remaining = Number.isFinite(enemy.spawnChildTimer) ? enemy.spawnChildTimer : spawnEvery;
+  const progress = 1 - Math.max(0, Math.min(1, remaining / spawnEvery));
+  const pulse = 0.5 + Math.sin((mission?.elapsed || 0) * 8 + enemy.id) * 0.5;
+  const radius = enemy.radius + 9 + pulse * 3;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.strokeStyle = `rgba(134, 239, 172, ${0.28 + progress * 0.5})`;
+  ctx.lineWidth = 2 + progress * 2;
+  ctx.beginPath();
+  ctx.arc(enemy.x, enemy.y, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+  ctx.stroke();
+  ctx.fillStyle = `rgba(190, 242, 100, ${0.36 + pulse * 0.34})`;
+  for (let index = 0; index < 3; index += 1) {
+    const angle = (Math.PI * 2 * index) / 3 + (mission?.elapsed || 0) * 0.35;
+    ctx.beginPath();
+    ctx.arc(
+      enemy.x + Math.cos(angle) * (radius + 5),
+      enemy.y + Math.sin(angle) * (radius + 5),
+      2.5 + pulse * 1.5,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
   }
   ctx.restore();
 }

@@ -20,6 +20,11 @@ Absolute periodic movement is anchored to an enemy's final spawn position and to
 
 The mechanics toolbox includes lineage-specific enemy behavior originally built for the discarded Act 2 campaign. Chorus conductors buff linked formations until destroyed, then survivors scatter. Mimics replay delayed pilot movement. Tithe bailiffs can seize loose salvage and retreat with it, while assessors can attach a lien drain to live mission credits until killed. Verdant bloomcallers and broodmothers spawn children, and seedcarriers split into sporelings on death. Tractor patterns can pull the player, and bosses can swap authored attack-pattern phases at HP thresholds with a hold-fire tell.
 
+Spawner enemies now draw a green progress ring and three orbiting buds so their
+next child is visible before it appears. A successful child spawn announces
+`BUDDING`. This presentation is shared by Bloomcallers, Broodmothers, and any
+other mission-authored spawner without changing the underlying spawn limits.
+
 The toolbox also retains invasion behaviors and a defense stake originally built for the discarded Act 3 campaign. Rammers telegraph, lock a point, then commit to a straight lunge. Grappler latches use the same commit rhythm but attach to the player hull on contact, dealing damage over time and slowing steering until shot loose or timed out. Missions can opt into `defense.integrity`; enemies that escape below the arena alive damage mothership integrity, and reaching zero ends the sortie with a breach failure settlement. Liens honor `aiParams.maxAttached`, with extras falling back to stalker behavior instead of stacking endlessly.
 
 Named hulls shape loadouts through shield, armor, aux, mini, and second-bay modifiers. One-primary builds receive a visible primary-damage focus bonus, while carrying a second primary applies a visible per-weapon primary-damage strain unless hull choices mitigate it. The Armory main stage shows per-bay Effective DPS, Damage per Shot, and Shots per Second for equipped primary weapons; Dual Fire mode scales those per-weapon DPS and damage values while preserving each weapon's cadence. The Armory stat popup reports a player-facing readout for offense, defense, aux, and loadout, including the actual armor class combat uses and installed modifier explanations. Existing combat UI exposes health layers, mission objective state, cargo, selected support capability, equipped primary weapon icons, active primary bay or Dual Fire state, swap timing, and mini weapon state. Named Act 2 minibosses also show a brief field banner, a compact secondary health bar, guaranteed certified-or-better salvage on death, and a larger non-ending kill blast.
@@ -34,7 +39,18 @@ The player-facing Act 1 campaign has eight core missions ending at Mission 8, La
 
 Clearing Last Light unlocks Crossed Claims, the player-validated hybrid slice whose newly authored waves overlap mobile shielded screens, conductor support, armored gunwalls/strongboxes, latch attackers, and a phased boss. Clearing Crossed Claims unlocks Processional, a player-validated Chorus swarm mission with synchronized ranks, lane-callers, collision skirmishers, conductor buffs and collapse, two shield-heavy miniboss beats, and a phased Processional Warden. The first Vestibule Cantor enters an orbiting hold and remains present until killed rather than following its catalog lane-shift descent offscreen. Their encounter files do not apply weapon-specific scaling.
 
-Crossed Claims also unlocks Repossession as a sibling route. Repossession is a player-validated Tithe armor mission with low-count AC30–42 plated targets, Bailiffs that can seize the scripted salvage pod and retreat, softer lien Assessors, sparse heavy projectiles, a persistent orbiting Auditor miniboss, and an AC40 phased Escrow boss. The Escrow's ineffective mouse-overwritten tractor pattern was replaced by a fixed-position seizure lock followed by a high-speed 130-damage kinetic slug. Attached Assessors now draw a persistent lien tether/rings, label themselves, and show their exact drain rate at the player. The mission is challenging but winnable with role-appropriate Pre-Founding gear.
+Crossed Claims also unlocks Repossession as a sibling route. Repossession is a player-validated Tithe armor mission with low-count AC30–42 plated targets, Bailiffs that can seize the scripted salvage pod and retreat, softer lien Assessors, sparse heavy projectiles, a persistent orbiting Auditor miniboss, and an AC40 phased Escrow boss. The Escrow's ineffective mouse-overwritten tractor pattern was replaced by a fixed-position seizure lock followed by a 1350-speed, 130-damage kinetic slug. Attached Assessors draw a persistent lien tether/rings, label themselves, and show their exact drain rate at the player; that presentation is implemented but still awaiting a playtest in which an Assessor is actually noticed. The mission is challenging but winnable with role-appropriate Pre-Founding gear.
+
+Clearing either Processional or Repossession unlocks The Green Signal. This
+Verdant mission is implemented and awaiting its first playtest. It replaces the
+discarded mission's long weak wave schedule with a compact gold-tier ecology:
+Bloomcallers visibly bud Sporelings, Seedcarriers split into four children on
+death, Thornwings combine fast shots with collision pressure, hull-heavy
+Brambles hold screen space, and a spawning Broodmother introduces the producer
+priority before the phased Gatekeeper Bloom arrives. Continuing waves keep
+population pressure active during the boss. Verdant targets use hull and modest
+shields instead of contemporary armor, making explosive/burning plasma a natural
+role answer without applying weapon-specific scaling or immunity.
 
 Focused kinetic weapons now use their own larger single-shot damage multipliers instead of sharing plasma's focus curve. Base focused kinetics land around 344–372 direct DPS (with Demolition Bore lower at 231) and 94–135 damage per hit, versus Plasma Lance at 447 combined direct-plus-burn DPS and 72 direct damage per hit. This preserves plasma's burn/explosion advantage while making focused kinetic a credible armor answer. `balance_report.js` now feeds the focused-shot and build-damage multipliers into its TTK simulation, matching the Armory/runtime formula.
 
@@ -42,7 +58,7 @@ Plasma performance work preserves weapon size and damage. Screen-sized plasma im
 
 The authored Act 2 target tier is a cohesive, role-appropriate Pre-Founding (gold) loadout. Heirloom (green) equipment is the next power tier: it is not required for Act 2 and should noticeably outgear its early missions. Orphan Signal is a Pre-Founding aux and valid baseline equipment; Canticle Core is a Chorus Heirloom above that baseline.
 
-The normal board hides Missions 9–11 and every remaining old Act 2/3 encounter card. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox. No broader Act 2 or Act 3 campaign is currently active.
+The normal board hides Missions 9–11 and every remaining old Act 2/3 encounter card. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox. The four post-Last-Light slices above are the only active continuation; no fifth mission or broader Act 2/3 campaign is currently active.
 
 ## Onboarding
 

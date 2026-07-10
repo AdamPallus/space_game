@@ -52,7 +52,7 @@
     "seizureSlug": {
       "threatClass": "bossHazard",
       "damage": 130,
-      "speed": 760,
+      "speed": 1350,
       "radius": 7,
       "image": "enemy_space_warm_standard_slug",
       "width": 18,

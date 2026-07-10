@@ -75,12 +75,17 @@ const PROJECTILE_ATTACK_PATTERN_KEYS = new Set([
   "speedJitter",
   "shots",
   "tractor",
+  "lockedShot",
 ]);
 const PROJECTILE_SHOT_KEYS = new Set([
   ...PROJECTILE_PROFILE_KEYS,
   "angleDeg",
   "angleOffsetDeg",
   "speedJitter",
+]);
+const PROJECTILE_LOCKED_SHOT_KEYS = new Set([
+  ...PROJECTILE_PROFILE_KEYS,
+  "delay",
 ]);
 const BOSS_PHASE_KEYS = new Set(["label", "hpFraction", "attackPatterns", "speedMult"]);
 const PROJECTILE_ATTACK_MODES = new Set(["aim", "spread", "radial"]);
@@ -269,6 +274,26 @@ function validateAttackPattern(pattern, index, profiles, errors, context) {
           errors.push(`${label}.tractor.${key} must be a positive number.`);
         }
       });
+    }
+  }
+  if (pattern.lockedShot !== undefined) {
+    if (!isPlainObject(pattern.lockedShot)) {
+      errors.push(`${label}.lockedShot must be an object.`);
+    } else {
+      for (const key of Object.keys(pattern.lockedShot)) {
+        if (!PROJECTILE_LOCKED_SHOT_KEYS.has(key)) {
+          errors.push(`${label}.lockedShot uses unsupported field '${key}'.`);
+        }
+      }
+      validateProjectileProfileRef(pattern.lockedShot.profile, profiles, errors, `${label}.lockedShot.profile`);
+      ["delay", "damage", "speed", "radius", "width", "height", "spinRate"].forEach((key) => {
+        if (pattern.lockedShot[key] !== undefined && !Number.isFinite(pattern.lockedShot[key])) {
+          errors.push(`${label}.lockedShot field '${key}' must be numeric.`);
+        }
+      });
+      if (!Number.isFinite(pattern.lockedShot.delay) || pattern.lockedShot.delay <= 0) {
+        errors.push(`${label}.lockedShot.delay must be a positive number.`);
+      }
     }
   }
 }

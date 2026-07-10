@@ -7,11 +7,12 @@ This is the active planning doc for the next playable changes. Historical specs 
 ## Active execution slice (2026-07-09)
 
 `PROGRESSION_MASTER_PLAN.md` records the player-validated creative direction and
-the development/testing contract. Crossed Claims and Processional are validated.
-Adam explicitly approved continued execution, so Slice 3 re-authors Repossession
-as the sibling Tithe armor mission and then stops for another playtest.
-Progression, loot, item, economy, and broader story expansions remain draft
-backlog.
+the development/testing contract. Crossed Claims, Processional, and Repossession
+are validated. The active follow-up strengthens focused kinetic weapons, reduces
+plasma rendering cost without shrinking spectacle, replaces Repossession's
+mouse-inert tractor with a telegraphed seizure slug, and makes Assessor liens
+obvious. It then stops for a targeted retest. Progression, loot, item, economy,
+and broader story expansions remain draft backlog.
 
 ## Player-validated combat direction (2026-07-09)
 
@@ -114,10 +115,16 @@ periodic-movement origin bug was fixed globally. Processional's first playtest
 then validated its pure swarm/formation role check: Needlebloom plus AC30 plate
 survived chip volume while ships and heavy notes remained threats, and conductor
 collapse read clearly. Its first miniboss now holds an orbit instead of descending
-offscreen before the player gets a fair damage window. Repossession is the active
-playtest: a low-count AC30–42 Tithe gunline, persistent Auditor, salvage-seizing
-Bailiffs, lien Assessors, and a phased AC40 Escrow boss, all targeted at
-role-appropriate gold anti-armor gear.
+offscreen before the player gets a fair damage window. Repossession then validated
+the low-count AC30–42 Tithe gunline: Starwound Lance cleared it, while rapid-homing
+still lost to armor despite higher listed DPS. The resulting focused pass raises
+single-shot kinetic output, optimizes plasma visuals, replaces the Escrow tractor
+with a dodgeable seizure shot, and makes lien drains visible.
+
+Repossession also exposed a reward mismatch: a pilot who needs gold gear has no
+reason to risk the run for visibly scrap/certified/prototype salvage. Preserve the
+drop-and-theft machinery, but solve incentive later through act-aware rarity
+floors, upgrade/crafting value, or milestone rewards in the economy/reward pass.
 
 Other tuning candidates—mini output, Dual Fire scaling, loot rolls, economy
 scarcity, cloak payoff, and mobile Armory density—remain valid backlog but are

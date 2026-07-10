@@ -280,12 +280,17 @@ const PROJECTILE_ATTACK_PATTERN_KEYS = new Set([
   "speedJitter",
   "shots",
   "tractor",
+  "lockedShot",
 ]);
 const PROJECTILE_SHOT_KEYS = new Set([
   ...PROJECTILE_PROFILE_KEYS,
   "angleDeg",
   "angleOffsetDeg",
   "speedJitter",
+]);
+const PROJECTILE_LOCKED_SHOT_KEYS = new Set([
+  ...PROJECTILE_PROFILE_KEYS,
+  "delay",
 ]);
 const BOSS_PHASE_KEYS = new Set(["label", "hpFraction", "attackPatterns", "speedMult"]);
 const PROJECTILE_ATTACK_MODES = new Set(["aim", "spread", "radial"]);
@@ -753,10 +758,15 @@ const DEFENSE_RARITY_TUNING = {
   heirloom: 2.35,
 };
 const BASE_ARMOR_CLASS = 10;
-const FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
+const PLASMA_FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
   small: 1.25,
   medium: 1.6,
   large: 2.25,
+};
+const KINETIC_FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
+  small: 2.6,
+  medium: 3.4,
+  large: 5,
 };
 
 const LEDGER_COPY = {
@@ -3722,7 +3732,23 @@ const devAutoFire = isDevFlagEnabled("devAutoFire");
 const devTuning = isDevFlagEnabled("devTuning");
 const devArsenal = isDevFlagEnabled("devArsenal");
 const devPressure = isDevFlagEnabled("devPressure");
+const devPerf = isDevFlagEnabled("devPerf");
 const devActs = isDevFlagEnabled("devActs");
+
+// Lightweight frame telemetry for agentic plasma/performance checks. This is
+// intentionally URL-only: the human DEV menu should stay focused on gameplay
+// setup, while ?devPerf=1 exposes a rolling two-second sample in the document
+// dataset for browser automation.
+const devPerfState = devPerf
+  ? {
+      windowStart: performance.now(),
+      frames: 0,
+      intervalTotal: 0,
+      maxInterval: 0,
+      workTotal: 0,
+      maxWork: 0,
+    }
+  : null;
 const DEV_ARSENAL_WALLET_CREDITS = 999999999;
 // Combat-pressure telemetry (?devPressure=1): records raw incoming threat per
 // mission so encounter tuning can target measured pressure floors instead of
@@ -4934,6 +4960,26 @@ function validateAttackPattern(pattern, index, profiles, errors, context) {
           errors.push(`${label}.tractor.${key} must be a positive number.`);
         }
       });
+    }
+  }
+  if (pattern.lockedShot !== undefined) {
+    if (!isPlainObject(pattern.lockedShot)) {
+      errors.push(`${label}.lockedShot must be an object.`);
+    } else {
+      Object.keys(pattern.lockedShot).forEach((key) => {
+        if (!PROJECTILE_LOCKED_SHOT_KEYS.has(key)) {
+          errors.push(`${label}.lockedShot uses unsupported field '${key}'.`);
+        }
+      });
+      validateProjectileProfileRef(pattern.lockedShot.profile, profiles, errors, `${label}.lockedShot.profile`);
+      ["delay", "damage", "speed", "radius", "width", "height", "spinRate"].forEach((key) => {
+        if (pattern.lockedShot[key] !== undefined && !Number.isFinite(pattern.lockedShot[key])) {
+          errors.push(`${label}.lockedShot field '${key}' must be numeric.`);
+        }
+      });
+      if (!Number.isFinite(pattern.lockedShot.delay) || pattern.lockedShot.delay <= 0) {
+        errors.push(`${label}.lockedShot.delay must be a positive number.`);
+      }
     }
   }
 }
@@ -11452,9 +11498,12 @@ function getPlasmaBurnDpsCapForBullet(damage, cfg, mountShots = 1) {
   return getPlasmaSustainedBurnDps(Math.max(0, damage) * projectiles / cooldown);
 }
 
-function getFocusedSingleShotDamageMult({ spread, gunDiameter, cooldown }) {
+function getFocusedSingleShotDamageMult({ ammo, spread, gunDiameter, cooldown }) {
   if (spread !== "focused") return 1;
-  const base = FOCUSED_SINGLE_SHOT_DAMAGE_MULT[gunDiameter] || FOCUSED_SINGLE_SHOT_DAMAGE_MULT.medium;
+  const tuning = ammo === "kinetic"
+    ? KINETIC_FOCUSED_SINGLE_SHOT_DAMAGE_MULT
+    : PLASMA_FOCUSED_SINGLE_SHOT_DAMAGE_MULT;
+  const base = tuning[gunDiameter] || tuning.medium;
   const slowBonus = Math.max(0, Math.min(0.75, (cooldown - 0.28) * 1.8));
   return roundTunedStat(base + slowBonus, 2);
 }
@@ -11530,7 +11579,7 @@ function getPrimaryFireConfig(buildOverride = null) {
   if (spread === "burst") cooldown *= 2.15; // 5 shots at once
   if (spread === "wide") cooldown *= 1.15; // still 5 shots, but meant to be spammy
   cooldown = Math.max(0.08, cooldown);
-  const shotDamageMult = getFocusedSingleShotDamageMult({ spread, gunDiameter, cooldown });
+  const shotDamageMult = getFocusedSingleShotDamageMult({ ammo, spread, gunDiameter, cooldown });
 
   const jitter =
     spread === "burst"
@@ -12296,6 +12345,10 @@ function fireEnemyRadial(enemy, count = 16, pattern = null) {
 }
 
 function fireEnemyAttackPattern(enemy, pattern) {
+  if (pattern.lockedShot) {
+    queueLockedShot(enemy, pattern.lockedShot);
+    return;
+  }
   if (pattern.tractor) queueTractorPattern(enemy, pattern.tractor);
   const mode = pattern.mode || pattern.fireMode || enemy.fireMode || "aim";
   if (mode === "spread") {
@@ -12695,6 +12748,9 @@ function updateLienEnemy(enemy, delta, empFactor = 1) {
       return;
     }
     enemy.lienAttached = true;
+    enemy.lienDrainRate = drainPerSecond;
+    enemy.lienPopupTimer = 0;
+    spawnFloatingText(player.x, player.y - 34, `LIEN ATTACHED -${Math.round(drainPerSecond)} cr/s`, "#fbbf24");
   }
   enemy.vx *= 0.88;
   enemy.vy *= 0.88;
@@ -12707,7 +12763,7 @@ function updateLienEnemy(enemy, delta, empFactor = 1) {
     enemy.lienPopupTimer = (enemy.lienPopupTimer || 0) - delta;
     if (enemy.lienPopupTimer <= 0) {
       enemy.lienPopupTimer = 0.35;
-      spawnFloatingText(enemy.x, enemy.y + 18, "-cr", "#f87171");
+      spawnFloatingText(player.x, player.y - 26, `-${Math.max(1, Math.round(drainPerSecond))} cr/s`, "#f87171");
     }
   }
 }
@@ -12794,6 +12850,26 @@ function queueTractorPattern(enemy, tractor) {
   enemy.tractorTelegraphTimer = 1.0;
   enemy.tractorPendingDuration = tractor.duration ?? 1.4;
   enemy.tractorStrength = tractor.strength ?? 220;
+}
+
+function queueLockedShot(enemy, lockedShot) {
+  if (!isPlainObject(lockedShot) || enemy.lockedShotTelegraphTimer > 0) return;
+  enemy.lockedShotTelegraphTimer = Math.max(0.2, lockedShot.delay ?? 0.9);
+  enemy.lockedShotTarget = { x: player.x, y: player.y };
+  enemy.lockedShotSpec = cloneShipBuild(lockedShot);
+  spawnFloatingText(player.x, player.y - 28, "SEIZURE LOCK", "#fbbf24");
+}
+
+function updateLockedShot(enemy, delta) {
+  if (!(enemy.lockedShotTelegraphTimer > 0) || !enemy.lockedShotTarget) return;
+  enemy.lockedShotTelegraphTimer = Math.max(0, enemy.lockedShotTelegraphTimer - delta);
+  if (enemy.lockedShotTelegraphTimer > 0) return;
+  const target = enemy.lockedShotTarget;
+  const angle = Math.atan2(target.y - enemy.y, target.x - enemy.x);
+  fireEnemyBullet(enemy, angle, undefined, { shot: enemy.lockedShotSpec });
+  spawnFloatingText(target.x, target.y - 18, "SEIZURE SHOT", "#f87171");
+  enemy.lockedShotTarget = null;
+  enemy.lockedShotSpec = null;
 }
 
 function updateTractorEffect(enemy, delta) {
@@ -13124,6 +13200,7 @@ function update(delta) {
     }
     updateSpawnerEnemy(enemy, delta);
     updateTractorEffect(enemy, delta);
+    updateLockedShot(enemy, delta);
     if (enemy.pattern === "zigzag") {
       const amplitude = enemy.patternParams.amplitude ?? 90;
       const frequency = enemy.patternParams.frequency ?? 3;
@@ -13817,10 +13894,18 @@ function render() {
     if (!(mission && mission.deathTimer > 0)) {
       drawPlayer();
     }
-    bullets.forEach(drawBullet);
+    const plasmaBulletCount = bullets.reduce((count, bullet) => count + (bullet.plasma ? 1 : 0), 0);
+    let detailedPlasmaBullets = 0;
+    bullets.forEach((bullet) => {
+      const simplifiedPlasma = !!bullet.plasma && plasmaBulletCount > 12 && detailedPlasmaBullets >= 8;
+      if (bullet.plasma) detailedPlasmaBullets += 1;
+      drawBullet(bullet, "#e0f2fe", { simplifiedPlasma });
+    });
     enemyBullets.forEach((bullet) => drawBullet(bullet, "#38bdf8"));
     enemies.forEach(drawEnemy);
     drawTractorBeams();
+    drawLockedShotTelegraphs();
+    drawLienBeams();
     salvagePods.forEach(drawSalvagePod);
     explosions.forEach(drawExplosion);
     floatingTexts.forEach(drawFloatingText);
@@ -13975,7 +14060,7 @@ function drawRmbIndicator() {
   ctx.restore();
 }
 
-function drawBullet(bullet, color = "#e0f2fe") {
+function drawBullet(bullet, color = "#e0f2fe", { simplifiedPlasma = false } = {}) {
   const age = bullet.age || 0;
   const speed = Math.hypot(bullet.vx || 0, bullet.vy || 0) || 1;
   const ux = (bullet.vx || 0) / speed;
@@ -14026,11 +14111,17 @@ function drawBullet(bullet, color = "#e0f2fe") {
     const stretch = animation === "lance" ? 1.09 : 1;
     const sway = animation === "bolt" || animation === "lance" ? Math.sin(age * 32) * 0.025 : 0;
     const rotation = (bullet.rotation || 0) + sway + age * (bullet.spinRate || 0);
-    const trailCount = animation === "lance" ? 4 : animation === "ember" || animation === "orb" ? 2 : 3;
+    const trailCount = simplifiedPlasma
+      ? 1
+      : animation === "lance"
+        ? 4
+        : animation === "ember" || animation === "orb"
+          ? 2
+          : 3;
     const trailStep = Math.max(5, Math.min(16, speed * 0.032));
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    if (bullet.plasma) {
+    if (bullet.plasma && !simplifiedPlasma) {
       const glowRadius = Math.max(width, height) * (0.42 + Math.sin(age * 15) * 0.04);
       const glow = ctx.createRadialGradient(bullet.x, bullet.y, 0, bullet.x, bullet.y, glowRadius);
       glow.addColorStop(0, "rgba(236, 254, 255, 0.3)");
@@ -14196,6 +14287,63 @@ function drawTractorBeams() {
     ctx.moveTo(enemy.x - 8, enemy.y + enemy.radius * 0.2);
     ctx.lineTo(player.x + 8, player.y);
     ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function drawLockedShotTelegraphs() {
+  if (!mission?.active) return;
+  enemies.forEach((enemy) => {
+    if (!(enemy.lockedShotTelegraphTimer > 0) || !enemy.lockedShotTarget) return;
+    const target = enemy.lockedShotTarget;
+    const pulse = 0.5 + Math.sin((mission.elapsed || 0) * 28) * 0.5;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(251, 191, 36, ${0.45 + pulse * 0.35})`;
+    ctx.lineWidth = 2 + pulse * 2;
+    ctx.setLineDash([10, 7]);
+    ctx.beginPath();
+    ctx.moveTo(enemy.x, enemy.y);
+    ctx.lineTo(target.x, target.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = `rgba(248, 113, 113, ${0.58 + pulse * 0.3})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, 18 + pulse * 7, 0, Math.PI * 2);
+    ctx.moveTo(target.x - 28, target.y);
+    ctx.lineTo(target.x + 28, target.y);
+    ctx.moveTo(target.x, target.y - 28);
+    ctx.lineTo(target.x, target.y + 28);
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function drawLienBeams() {
+  if (!mission?.active) return;
+  enemies.forEach((enemy) => {
+    if (enemy.ai !== "lien" || !enemy.lienAttached || enemy.hull <= 0) return;
+    const pulse = 0.5 + Math.sin((mission.elapsed || 0) * 16 + enemy.id) * 0.5;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(248, 113, 113, ${0.38 + pulse * 0.3})`;
+    ctx.lineWidth = 2 + pulse;
+    ctx.setLineDash([5, 6]);
+    ctx.beginPath();
+    ctx.moveTo(enemy.x, enemy.y);
+    ctx.lineTo(player.x, player.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = `rgba(251, 191, 36, ${0.5 + pulse * 0.35})`;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, enemy.radius + 7 + pulse * 3, 0, Math.PI * 2);
+    ctx.arc(player.x, player.y, player.radius + 9 + pulse * 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.font = "700 11px Space Grotesk, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillText("LIEN", enemy.x, enemy.y - enemy.radius - 10);
     ctx.restore();
   });
 }
@@ -14931,12 +15079,23 @@ function tickPlasmaBurn(enemy, delta) {
 function applyPlasmaBurn(enemy, sourceDamage, maxBurnDps = 0, sourceKey = "plasma") {
   if (!enemy || sourceDamage <= 0) return;
   if (!Array.isArray(enemy.dotStacks)) enemy.dotStacks = [];
-  enemy.dotStacks.push({
-    timer: getPlasmaBurnDuration(),
-    dps: sourceDamage * getPlasmaBurnDpsRate(),
-    cap: Number.isFinite(maxBurnDps) && maxBurnDps > 0 ? maxBurnDps : 0,
-    sourceKey,
-  });
+  const duration = getPlasmaBurnDuration();
+  const contribution = sourceDamage * getPlasmaBurnDpsRate();
+  const cap = Number.isFinite(maxBurnDps) && maxBurnDps > 0 ? maxBurnDps : 0;
+  let recent = null;
+  for (let index = enemy.dotStacks.length - 1; index >= 0; index -= 1) {
+    const stack = enemy.dotStacks[index];
+    if (stack?.sourceKey === sourceKey && stack.timer > duration - 0.05) {
+      recent = stack;
+      break;
+    }
+  }
+  if (recent) {
+    recent.dps += contribution;
+    recent.cap = Math.max(recent.cap || 0, cap);
+  } else {
+    enemy.dotStacks.push({ timer: duration, dps: contribution, cap, sourceKey });
+  }
   syncPlasmaBurnState(enemy);
 }
 
@@ -14971,7 +15130,11 @@ function spawnExplosion(
   radius,
   { intensity = 1, blend = "source-over", style = "default", coalesce = true } = {}
 ) {
-  const duration = 0.55 + radius * 0.01;
+  // Plasma blooms keep their full authored radius, but resolve faster so giant
+  // impulse builds do not redraw a screen-sized effect for several seconds.
+  const duration = style === "plasmaImpact"
+    ? Math.min(1.8, 0.5 + Math.sqrt(Math.max(0, radius)) * 0.065)
+    : 0.55 + radius * 0.01;
 
   // Fast-fire explosives can stack into a solid blob; coalesce nearby impacts into one effect.
   if (coalesce) {
@@ -15082,16 +15245,19 @@ function drawExplosion(boom) {
     const ringR = maxRadius * 0.82;
     const ringW = Math.max(2, boom.radius * 0.22);
     const ringAlpha = 0.55 * alpha * intensity;
-    const gradient = ctx.createRadialGradient(boom.x, boom.y, ringR - ringW, boom.x, boom.y, ringR + ringW);
     const ringColor = style === "plasmaImpact" ? "34, 211, 238" : "251, 191, 36";
-    gradient.addColorStop(0, `rgba(${ringColor}, 0)`);
-    gradient.addColorStop(0.5, `rgba(${ringColor}, ${ringAlpha})`);
-    gradient.addColorStop(1, `rgba(${ringColor}, 0)`);
-    ctx.strokeStyle = gradient;
+    ctx.strokeStyle = `rgba(${ringColor}, ${ringAlpha})`;
     ctx.lineWidth = ringW;
     ctx.beginPath();
     ctx.arc(boom.x, boom.y, ringR, 0, Math.PI * 2);
     ctx.stroke();
+    if (style === "plasmaImpact") {
+      ctx.strokeStyle = `rgba(236, 254, 255, ${ringAlpha * 0.72})`;
+      ctx.lineWidth = Math.max(2, ringW * 0.22);
+      ctx.beginPath();
+      ctx.arc(boom.x, boom.y, ringR * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
     const impactSprite = visualTheme?.shieldHitRing?.loaded
       ? visualTheme.shieldHitRing
       : visualTheme?.impactSpark;
@@ -15298,8 +15464,40 @@ function updateBossProgress() {
 }
 
 let lastTime = performance.now();
+function recordDevPerfSample(frameInterval, workTime, now) {
+  if (!devPerfState) return;
+  devPerfState.frames += 1;
+  devPerfState.intervalTotal += frameInterval;
+  devPerfState.maxInterval = Math.max(devPerfState.maxInterval, frameInterval);
+  devPerfState.workTotal += workTime;
+  devPerfState.maxWork = Math.max(devPerfState.maxWork, workTime);
+  const sampleDuration = now - devPerfState.windowStart;
+  if (sampleDuration < 2000) return;
+  const frames = Math.max(1, devPerfState.frames);
+  const sample = {
+    fps: (frames * 1000) / Math.max(1, sampleDuration),
+    averageFrameInterval: devPerfState.intervalTotal / frames,
+    maxFrameInterval: devPerfState.maxInterval,
+    averageWorkTime: devPerfState.workTotal / frames,
+    maxWorkTime: devPerfState.maxWork,
+    bullets: bullets.length,
+    plasmaBullets: bullets.reduce((count, bullet) => count + (bullet.plasma ? 1 : 0), 0),
+    explosions: explosions.length,
+    enemies: enemies.length,
+  };
+  document.documentElement.dataset.devPerf = JSON.stringify(sample);
+  devPerfState.windowStart = now;
+  devPerfState.frames = 0;
+  devPerfState.intervalTotal = 0;
+  devPerfState.maxInterval = 0;
+  devPerfState.workTotal = 0;
+  devPerfState.maxWork = 0;
+}
+
 function gameLoop(now) {
-  const delta = Math.min(0.033, (now - lastTime) / 1000);
+  const frameInterval = Math.max(0, now - lastTime);
+  const workStart = devPerfState ? performance.now() : 0;
+  const delta = Math.min(0.033, frameInterval / 1000);
   lastTime = now;
 
   update(delta);
@@ -15315,6 +15513,8 @@ function gameLoop(now) {
     ctx.fillText("PAUSED", canvas.width / window.devicePixelRatio / 2, canvas.height / window.devicePixelRatio / 2);
     ctx.restore();
   }
+
+  recordDevPerfSample(frameInterval, devPerfState ? performance.now() - workStart : 0, now);
 
   requestAnimationFrame(gameLoop);
 }

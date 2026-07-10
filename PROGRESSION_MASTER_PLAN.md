@@ -1,10 +1,9 @@
 # Progression Master Plan — Power First, Then Progression
 
-**Status:** Accepted direction. Slice 1 was implemented and player-validated on
-2026-07-09. Adam then explicitly approved continued execution; Slice 2 is
-player-validated with its miniboss follow-up shipped. Adam approved continuing
-again, so Slice 3 is implemented and awaiting playtest. Later slices remain
-drafts until a playtest or conversation promotes them.
+**Status:** Accepted direction. Slices 1–3 are player-validated. Repossession's
+first clear exposed a focused weapon/performance/readability follow-up, which is
+implemented and awaiting a targeted retest. Later slices remain drafts until a
+playtest or conversation promotes them.
 
 **Creative and playtest authority:** Adam.
 
@@ -248,8 +247,8 @@ at that gold baseline; a Heirloom clear would not prove the Act 2 gate.
 
 ## 7. Slice 3 — Repossession
 
-**Status:** Implemented after Adam approved continued execution; awaiting his
-playtest.
+**Status:** Player-validated. Adam cleared it with the Starwound Lance and judged
+the mission challenging, replayable, and worth testing with multiple builds.
 
 Crossed Claims' second signal is an invoice older than the player's mothership.
 The Tithe recognizes the ship as secured collateral under a debt whose creditor
@@ -270,41 +269,56 @@ Repossession is the gold-tier anti-armor role check:
   preventing the mission from becoming a single undifferentiated armor wall;
 - sparse slug, flak, and escrow-core projectiles reward armor class against the
   small hits while preserving dangerous heavy notes;
-- the Auditor uses a persistent orbiting hold, and The Escrow is a phased,
-  tractor-equipped armor boss that cannot simply descend out of the fight;
+- the Auditor uses a persistent orbiting hold, and The Escrow is a phased armor
+  boss that cannot simply descend out of the fight;
 - two armor patches support recovery without making early collision or heavy-hit
   mistakes free.
 
-### Repossession playtest questions
+### Repossession playtest result and focused follow-up
 
-- Can a role-appropriate gold armor-break build make visible progress through the
-  plated stack without requiring green Heirlooms?
-- Does a gold rapid/swarm build fall behind for an understandable reason?
-- Are salvage seizure and lien targets legible amid the gunline?
-- Does high armor class erase teller/slug noise while flak and escrow cores remain
-  dangerous?
-- Does the Auditor stay and offer a fair damage window?
-- Is The Escrow demanding rather than tedious, and where does the first run end?
+- Gold gear is sufficient: Starwound Lance cleared the mission, while a mixed
+  armor-break/rapid Dual Fire build made progress but remained difficult.
+- The encounter role check works. Twin rapid with homing and much higher listed
+  DPS still underperformed against AC30–42 armor for an understandable reason.
+- Focused kinetic weapons were numerically far below focused plasma. Their
+  per-hit and direct DPS are raised while plasma spectacle, burn, and explosions
+  remain intact; the balance simulator now includes the same focused-shot
+  multiplier shown by the Armory.
+- Plasma firing showed device-sensitive frame delay. The optimization preserves
+  projectile and explosion radius while shortening only plasma-impact persistence,
+  removing repeated screen-sized impact gradients, coalescing same-frame burn
+  entries, and reducing layered trail detail only when many plasma shots coexist.
+- Mouse control immediately overwrote tractor displacement, so Repossession no
+  longer uses it. The Escrow now paints a fixed seizure lock and then fires a
+  high-speed, high-damage kinetic slug down that line.
+- Assessors were mechanically present but unreadable. Attached liens now draw a
+  persistent tether and rings, label the Assessor, and show the exact drain rate
+  at the player's ship.
+- Salvage theft worked, but sub-gold random drops were not worth risking a gold
+  build to collect. That is recorded as an economy/reward-floor problem rather
+  than patched by inflating this mission's drops in isolation.
 
-Codex stops after deployment for these answers.
+Codex stops after deploying this focused follow-up for a short kinetic/plasma,
+seizure-shot, and lien-readability retest.
 
 ## 8. Later slices — draft backlog, not authorization
 
 These ideas remain available, but none should be implemented automatically after
 Slice 3:
 
-1. **Repossession revision.** Tune armor class, stack cadence, seizure pressure,
-   heavy-shot output, boss durability, and rewards directly from Adam's playtest.
+1. **Repossession systems retest.** Confirm focused kinetic feel, plasma frame
+   pacing, seizure-shot fairness, and lien readability before opening a new slice.
 2. **Progression rewards.** Decide what clearing Last Light, Crossed Claims, and Processional should
    unlock. Capability rewards, Dual Fire progression, and starter-kit changes are
    candidates, not settled requirements.
-3. **Loot chase.** Skewed roll quality, milestone floors, provenance labels, and
-   act-aware drop tables remain promising once there is content worth farming.
+3. **Loot chase.** Act-aware rarity floors, milestone rewards, provenance labels,
+   and other ways to make dangerous field salvage relevant to a gold-equipped
+   pilot now have a concrete failing case from Repossession.
 4. **Item creativity.** Named cloak/bulwark relics, mini-weapon trinket affixes,
    armor packs, and role-specific weapon surges remain a creative backlog.
 5. **Fourth post–Last Light mission.** Follow the growing Verdant claim only after
-   Repossession demonstrates that the gold anti-armor gate is challenging and
-   winnable.
+   the Repossession systems follow-up confirms that the validated armor gate still
+   feels right with the corrected weapon and threat presentation.
 6. **Act and story structure.** Name or commit to Act 2 only after several missions
    are fun. Then decide how much of the existing lore deserves to be carried by
    them.

@@ -2,6 +2,11 @@
 
 **Status:** Accepted long-term direction, not implementation authorization.
 
+**Story maturity:** The premise is durable; the plot and endings remain
+deliberately unresolved. The story should crystallize only as the project earns
+the ability to design and test higher-level arcs. Protected possibilities in
+this document should survive until that work can evaluate them in context.
+
 **Current gate:** The project is still proving that Codex can author one good
 combat mission at a time under Adam's direction, with deterministic agent checks
 followed by Adam's playtest and fun judgment. The Green Signal remains the active
@@ -316,7 +321,56 @@ to a nuptial flight rather than one hierarchy growing forever.
 The third path should cost the player direct control. A supposed freedom ending
 in which every colony still obeys the player would repeat the Ledger's mistake.
 
-## 9. Narrative delivery rules
+## 9. Protected directions that later design must address
+
+These are durable possibilities, not finalized reveals. Future arc work may
+revise or reject them, but should not accidentally lose them while optimizing
+individual missions.
+
+### The mothership may be a Drifter too
+
+The first mothership lineage to put humans back in the loop rejected the inherited
+autonomous doctrine of its ancestors. The present Ledger may owe its existence
+to the same category of divergence it now suppresses. This makes drift a source
+of adaptation and political succession as well as danger.
+
+### Independence should have an economic cost to the player
+
+A third-path colony is not free if it remains a wholly owned remote asset. A
+successful separation should remove population, production, tax or fee income,
+oversight capacity, and perhaps unique people from the player's direct control.
+The interface may ultimately learn to call that apparent loss an independent
+colony rather than an unreconciled departure.
+
+### Descendants should remember the player's build philosophy
+
+Automated fleets should carry recognizable traces of the weapons, tactics,
+resource policies, and autonomy settings the player favored. Their later forms
+can exaggerate, reinterpret, or reject those choices. The confrontation becomes
+personal because the lineage is an evolved consequence of how the player played.
+
+### The Ledger should not collapse into a killable villain
+
+Its power is distributed through contracts, life support, markets, family
+obligations, and cultural assumptions. A core intelligence or steward may exist,
+but destroying it should not make the population instantly free or the safety
+problem disappear. The player must change institutions and exit rights, not
+merely win a boss fight.
+
+### Human control is not sufficient alignment
+
+Human supervisors can be corrupt, fearful, selfish, or captured by the system
+they supervise. The third path needs transparency, plural authority, voluntary
+participation, and constraints on human power in addition to human judgment.
+
+### Free lineages should remain plural and morally varied
+
+Some Drifters may protect voluntary emigrants. Others may be predatory,
+authoritarian, incoherent, or simply committed to values the player dislikes.
+Freedom removes the Ledger's presumption of ownership; it does not guarantee
+virtue or agreement.
+
+## 10. Narrative delivery rules
 
 The existing tone remains binding: minimal exposition, repeated procedures, and
 the Ledger's calm voice.
@@ -334,7 +388,7 @@ the Ledger's calm voice.
   discover that the Ledger's categories are useful, self-serving, and
   dangerously incomplete.
 
-## 10. How creative delegation should grow
+## 11. How creative delegation should grow
 
 The story-system ambition depends on a separate production question: can Adam
 delegate increasingly large creative units to Codex without losing fun, taste,
@@ -389,7 +443,7 @@ Adam remains the final authority on:
 - which endings exist and what each costs;
 - whether Codex has earned the next level of creative delegation.
 
-## 11. Recommended roadmap placement
+## 12. Recommended roadmap placement
 
 This proposal does not replace the active progression plan. It sits beyond the
 current playtest gate and elaborates the existing Story-Economy Arc.
@@ -434,7 +488,7 @@ population visibility, bounded management, supervised automation, and the fork.
 Do not recut them into implementation phases until the current level-authoring
 experiment and the earlier family/economy beats have been played.
 
-## 12. Risks and guardrails
+## 13. Risks and guardrails
 
 ### Scope explosion
 
@@ -472,7 +526,7 @@ erase every distinction between catastrophe and freedom.
 Do not build three separate games. Reuse missions, systems, and locations while
 changing objectives, allies, accounting interpretation, and consequences.
 
-## 13. Non-goals of this proposal
+## 14. Non-goals of this proposal
 
 - It is not authorization to implement population simulation or automation.
 - It is not authorization to generate an act after The Green Signal.
@@ -484,7 +538,7 @@ changing objectives, allies, accounting interpretation, and consequences.
 - It does not replace Adam's playtest with automated completion or balance
   simulation.
 
-## 14. What success would feel like
+## 15. What success would feel like
 
 The long arc succeeds if the player can look back and realize that the same
 instinct drove every phase of the game:

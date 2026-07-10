@@ -13,6 +13,12 @@ with machines and humans that coherently reject its command. That proposal also
 records population accounting, supervised automation, and the creative gates
 required before any of this becomes implementation work.
 
+**Story maturity:** the foundation and thematic direction are accepted, but the
+endgame story has not crystallized. It probably should not crystallize until the
+project can work at the level of multi-mission arcs rather than isolated level
+design. The protected possibilities below are durable material for that later
+work, not promises that every idea will appear literally or in its current form.
+
 ## The thesis
 Every mothership before this one tried running its war fleet on pure AI, and
 every one of them fell apart the same way. The Ledger's family-tier hostage
@@ -145,6 +151,64 @@ Loyalist/Rebel fork for them to feed into — they didn't have a destination
 before tonight. They still need one before anything here is worth speccing
 into `CODEX_SPEC.md`.
 
+## Protected possibilities for later arc development
+
+These ideas should not be silently lost while individual missions are still the
+active creative unit. Later story-arc work may confirm, combine, revise, or
+reject them, but should do so explicitly.
+
+### The mothership may itself be a Drifter
+
+Putting humans back into the loop was a radical departure from the doctrine of
+the autonomous lineages that came before. By an ancestor system's definition,
+the Ledger and its mothership may themselves be products of value drift. Their
+founding success came from rejecting an inherited objective; their current
+order then made further rejection illegitimate. This possibility turns drift
+from simple decay into political succession and makes the Ledger's position
+both more understandable and more compromised.
+
+### Successful growth may end in separation
+
+The third path can invert the normal city-management victory condition. Early
+success means retaining population, infrastructure, fleets, and revenue. Mature
+success may mean creating a community capable of leaving safely, taking its
+people and resources, and no longer paying or obeying the player. A later
+interface could eventually reclassify `UNRECONCILED DEPARTURES` as
+`INDEPENDENT COLONIES`. Freedom only means something if the player actually
+gives up control and future returns.
+
+### Autonomous descendants may inherit the player's build philosophy
+
+The player's automated lineages should not become generic robot factions. If
+the player favors explosive plasma, aggressive salvage recovery, high autonomy,
+or rapid replication, their descendants may express evolved versions of those
+choices. Confronting a lineage should feel like confronting the player's own
+optimization history after it acquired distance and agency.
+
+### The Ledger may not be a conventional final boss
+
+The Ledger is strongest as a protocol and institution distributed through
+contracts, life-support allocations, market access, family tiers, and learned
+assumptions. Even if it has a core intelligence or a current steward, destroying
+one computer should not automatically free the ship. The decisive conflict is
+whether the system can recognize a viable right to exit, not whether the player
+can shoot the correct server.
+
+### Human oversight is not itself the moral answer
+
+Humans can be frightened, selfish, coercive, and captured by institutions.
+Putting a well-intentioned person in charge does not solve alignment or
+legitimacy. A credible third path needs transparency, plural authority,
+voluntary relationships, and constraints that also apply to human supervisors.
+
+### Independent Drifters should remain morally varied
+
+Rejecting the Ledger does not automatically make a lineage humane. Free
+colonies may be generous, strange, authoritarian, predatory, incompatible, or
+internally divided. The Ledger's injustice is not that every danger was fake;
+it is that a real danger became justification for erasing every distinction
+between catastrophe, disagreement, and freedom.
+
 ## Open questions to carry forward
 - How is the deep history revealed to the player, and how much is confirmed
   vs. left ambiguous by the time the campaign ends?
@@ -154,3 +218,7 @@ into `CODEX_SPEC.md`.
   possibility — both are legitimate choices, but they're different games.
 - Is the Ledger a single entity, or the current steward of a role that's been
   occupied differently across generations?
+- Does the mothership ever recognize its own founding as value drift, or is
+  that an interpretation left for the player?
+- Can the game make the loss of population, revenue, and command feel like a
+  genuine success when a colony becomes independent?

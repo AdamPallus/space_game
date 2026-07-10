@@ -1,10 +1,9 @@
 # Progression Master Plan — Power First, Then Progression
 
 **Status:** Accepted direction. Slices 1–4 are player-validated. Repossession's
-Assessor liens remain explicitly unverified. The Green Signal's boss-phase
-follow-up is implemented, and Slice 5, Return Address, is awaiting its first
-playtest. Later slices remain drafts until a playtest or conversation promotes
-them.
+Assessor liens remain explicitly unverified. Slice 5, Return Address, has
+validated its interception concept and is in a focused ramp revision. Later
+slices remain drafts until a playtest or conversation promotes them.
 
 **Creative and playtest authority:** Adam.
 
@@ -49,6 +48,16 @@ builds something worthy to hit.
 - Tier does not erase role. A gold swarm weapon may fail an armor check and a
   gold armor breaker may drown in Processional. That is a loadout problem, not a
   reason to raise the required rarity.
+- Beginning with Return Address, authored hybrid checks may assume that the
+  Tier 2 Dual-Fire Coupler is available. At its 70% per-weapon scaling, an
+  ordinary two-bay hull produces about 119% of one weapon's base output after
+  second-bay strain, compared with 110% for a focused single-primary build.
+  Pairing complementary weapon roles is an intended solution, not a cheese.
+- Do not balance around Tier 3 or Tier 4 Dual Fire. Those investments are power
+  rewards that may outgear the target. A role-appropriate gold single primary
+  should remain a harder viable route, but every gold primary does not need to
+  solve every mission alone. If single-primary identity later needs help, add a
+  stronger specialist payoff rather than reducing the spectacle of Dual Fire.
 - Orphan Signal is a gold Pre-Founding aux and is valid Act 2 equipment. Canticle
   Core is a green Chorus Heirloom and therefore sits above the intended baseline.
 
@@ -381,7 +390,8 @@ AI parameters instead of losing them to the parent link.
 
 ## 9. Slice 5 — Return Address
 
-**Status:** Implemented and awaiting first player playtest.
+**Status:** Core encounter validated; first ramp revision implemented for
+playtest.
 
 Destroying the Gatekeeper does not silence the maintenance band. It stamps the
 player's flight telemetry into it. Verdant seedships follow that route back to
@@ -406,14 +416,24 @@ Return Address is a gold-tier interception and triage check:
 - a Seedcrown miniboss continually buds paired Bursters, forcing the player to
   decide whether to clear the harassment or keep servicing transports;
 - the Verdant Matriarch launches Seedcarriers during the boss fight. Its final
-  Nuptial Flight phase immediately releases three carriers and six Bursters,
-  then buds carrier pairs every 1.4 seconds;
+  Nuptial Flight phase immediately releases two carriers and five Bursters,
+  then buds carrier pairs every 1.8 seconds;
 - killing the boss ends the containment emergency. Integrity cannot fail during
   the short boss-death sequence after player fire has been disabled.
 
 This is neither Processional's formation swarm nor The Green Signal's producer
 snowball. The pressure is scheduled traffic: choose what must die now, what can
 wait, and whether body-blocking a carrier is worth taking the collision.
+
+The first playtests established that the concept is clear and worth replaying.
+The opening was easy, Rootwards could be isolated and focused down, and the
+final carrier pileup arrived as a cliff. A Needlebloom Driver serviced the main
+field well but could not cover the boss and roughly ten carriers alone; pairing
+it with Starwound Lance in Dual Fire handled that mixed demand much better. The
+revision moves each Rootward into the preceding threat wave, at 36 and 84
+seconds, so split-attention pressure develops earlier. It trims only the
+Nuptial Flight's immediate summons and budding cadence, preserving the finale as
+the mission's hardest problem.
 
 ### Return Address playtest questions
 
@@ -438,13 +458,15 @@ Codex stops after deployment for this combat and objective playtest.
 These ideas remain available, but none should be implemented automatically after
 Slice 5:
 
-1. **Return Address revision.** Tune integrity, carrier durability, escort
-   pressure, and Matriarch pacing from the first real playtest.
+1. **Return Address revision.** Validate the new mid-mission overlap and smoother
+   Matriarch ramp with both a gold single-primary build and a complementary
+   Tier 2 Dual Fire build.
 2. **Assessor verification.** Keep lien readability marked unverified until a
    future Repossession run actually observes it; this does not block Verdant work.
-3. **Progression rewards.** Decide what clearing Last Light, Crossed Claims, and Processional should
-   unlock. Capability rewards, Dual Fire progression, and starter-kit changes are
-   candidates, not settled requirements.
+3. **Progression rewards.** Decide what clearing Last Light, Crossed Claims, and
+   Processional should unlock. The combat target now assumes Tier 2 Dual Fire is
+   available by Return Address, but its exact campaign award or economy path is
+   not yet settled.
 4. **Loot chase.** Act-aware rarity floors, milestone rewards, provenance labels,
    and other ways to make dangerous field salvage relevant to a gold-equipped
    pilot now have a concrete failing case from Repossession.

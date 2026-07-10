@@ -314,7 +314,7 @@
           "hpFraction": 0.3,
           "speedMult": 1.24,
           "aiParams": {
-            "spawnEvery": 1.4,
+            "spawnEvery": 1.8,
             "spawnType": "seedcarrier",
             "spawnCount": 2,
             "maxAlive": 8
@@ -322,12 +322,12 @@
           "summons": [
             {
               "type": "seedcarrier",
-              "count": 3,
+              "count": 2,
               "radius": 152
             },
             {
               "type": "burster",
-              "count": 6,
+              "count": 5,
               "radius": 198
             }
           ],
@@ -426,7 +426,7 @@
       "interval": 0.9
     },
     {
-      "time": 40,
+      "time": 36,
       "type": "rootward",
       "count": 1
     },
@@ -496,7 +496,7 @@
       "interval": 0.62
     },
     {
-      "time": 88,
+      "time": 84,
       "type": "rootward",
       "count": 1
     },

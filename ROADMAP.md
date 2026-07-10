@@ -9,10 +9,10 @@ This is the active planning doc for the next playable changes. Historical specs 
 `PROGRESSION_MASTER_PLAN.md` records the player-validated creative direction and
 the development/testing contract. Crossed Claims, Processional, and Repossession
 are validated, and The Green Signal has now validated the Verdant population
-check at the intended gold tier. Its boss-phase follow-up fixes phase progression
-and adds phase-specific brood escalation. Assessor liens remain explicitly
-unverified. The active candidate is Return Address, a newly authored mothership
-interception mission. It stops for a real playtest before any sixth
+check at the intended gold tier. Assessor liens remain explicitly unverified.
+Return Address has validated its mothership-interception concept and is in one
+focused ramp revision: move its Rootward crises into active waves and smooth the
+final carrier cliff. It stops for a real playtest before any sixth
 post-Last-Light mission. Progression, loot, item, economy, and broader story
 expansions remain draft backlog.
 
@@ -143,21 +143,27 @@ trapped it in repeated Germination transitions and prevented Overgrowth. Boss
 phases now advance correctly, can change spawn parameters, and can summon an
 immediate brood; the Gatekeeper's two transitions now rebuild the ecology.
 
-The next deployed playtest is Return Address. Non-firing Seedcarriers and slow
-Rootward masses attempt to breach mothership integrity while Thornwings,
-telegraphed Burster rammers, Strangler hunters, and a spawning Seedcrown disrupt
-interception. The Verdant Matriarch continues launching carriers during the boss
-fight and escalates into a carrier-and-rammer Nuptial Flight. The playtest should
-establish whether objective triage is readable and fun, whether several weapon
-roles remain useful, and whether behavior-led story adds intrigue without
-flattening the Verdant into either innocent victims or simple invaders.
+Return Address's first playtests established that its objective triage is clear,
+interesting, and worth replaying. Its opening was too easy, Rootwards arrived in
+windows where they could be focused down, and the finale jumped to roughly ten
+carriers plus the boss. The revision overlaps Rootwards with earlier active
+waves, then slightly reduces the Matriarch's immediate final brood and carrier
+cadence. The next playtest should establish whether that creates a real ramp
+without taking away the final mixed-role loadout check.
+
+Beginning here, the combat baseline may assume the Tier 2 Dual-Fire Coupler is
+available, not mandatory. Needlebloom plus Starwound is an intended solution:
+one weapon services the fast field and the other supplies splash against the
+carrier/boss knot. A role-appropriate gold single primary should remain a harder
+viable route, while Tier 3/4 Dual Fire is allowed to outgear the target rather
+than becoming the assumed floor.
 
 Repossession also exposed a reward mismatch: a pilot who needs gold gear has no
 reason to risk the run for visibly scrap/certified/prototype salvage. Preserve the
 drop-and-theft machinery, but solve incentive later through act-aware rarity
 floors, upgrade/crafting value, or milestone rewards in the economy/reward pass.
 
-Other tuning candidates—mini output, Dual Fire scaling, loot rolls, economy
+Other tuning candidates—mini output, single-primary specialist payoff, loot rolls, economy
 scarcity, cloak payoff, and mobile Armory density—remain valid backlog but are
 not part of the active slice.
 

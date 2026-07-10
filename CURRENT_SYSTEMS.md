@@ -1,6 +1,6 @@
 # Current Systems
 
-Last audited: 2026-07-09
+Last audited: 2026-07-10
 
 This file explains how the game works today. It is intentionally descriptive rather than aspirational; new plans should start in `ROADMAP.md` and only graduate into this file after implementation.
 
@@ -65,14 +65,23 @@ non-firing Seedcarriers and slow Rootward masses deal breach damage; escorts can
 exit harmlessly. Bursters use telegraphed collision lunges, Stranglers hunt the
 player, a Seedcrown buds paired Bursters, and the Verdant Matriarch spawns
 Seedcarriers throughout a phased boss fight. Its final Nuptial Flight transition
-immediately summons three carriers and six Bursters, then buds carrier pairs
-every 1.4 seconds. The mission is implemented and awaiting its first playtest.
+immediately summons two carriers and five Bursters, then buds carrier pairs
+every 1.8 seconds. The two Rootwards overlap preceding active threat waves rather
+than arriving in isolated cleanup windows. The encounter concept is
+player-validated; this ramp revision is awaiting its next playtest.
 
 Focused kinetic weapons now use their own larger single-shot damage multipliers instead of sharing plasma's focus curve. Base focused kinetics land around 344–372 direct DPS (with Demolition Bore lower at 231) and 94–135 damage per hit, versus Plasma Lance at 447 combined direct-plus-burn DPS and 72 direct damage per hit. This preserves plasma's burn/explosion advantage while making focused kinetic a credible armor answer. `balance_report.js` now feeds the focused-shot and build-damage multipliers into its TTK simulation, matching the Armory/runtime formula.
 
 Plasma performance work preserves weapon size and damage. Screen-sized plasma impacts keep their full radius but resolve within 1.8 seconds, use two inexpensive luminous rings instead of rebuilding a large radial gradient every frame, and same-frame burn contributions from one source share a stack entry. When more than twelve plasma projectiles coexist, the first eight retain full glow/trails and the remainder use a reduced one-trail treatment until pressure falls. `?devPerf=1` exposes rolling frame/work counts for agentic browser comparisons without adding another human DEV-menu control.
 
 The authored Act 2 target tier is a cohesive, role-appropriate Pre-Founding (gold) loadout. Heirloom (green) equipment is the next power tier: it is not required for Act 2 and should noticeably outgear its early missions. Orphan Signal is a Pre-Founding aux and valid baseline equipment; Canticle Core is a Chorus Heirloom above that baseline.
+
+Beginning with Return Address, hybrid encounter balance may assume the Tier 2
+Dual-Fire Coupler is available. After ordinary second-bay strain, its 70%
+per-weapon scaling produces about 119% of one weapon's base output across two
+weapons, versus 110% for a focused single-primary build. Complementary weapon
+roles are an intended solution. Tier 3/4 Dual Fire is not an encounter baseline,
+and a suitable gold single primary remains a deliberately harder route.
 
 The normal board hides Missions 9–11 and every remaining old Act 2/3 encounter card. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox. The five post-Last-Light slices above are the only active continuation; no sixth mission or broader Act 2/3 campaign is currently active.
 

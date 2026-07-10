@@ -136,7 +136,8 @@ Active docs in the repo root:
 - `STATE.md`: current source of truth and validation checklist.
 - `CURRENT_SYSTEMS.md`: detailed explanation of implemented systems.
 - `ROADMAP.md`: prioritized next work.
-- `PROGRESSION_MASTER_PLAN.md`: accepted power-first creative direction, campaign-preservation rule, human-playtest contract, validated Slices 1–2, and active Slice 3 execution spec. Later slices are explicitly draft backlog.
+- `PROGRESSION_MASTER_PLAN.md`: accepted power-first creative direction, campaign-preservation rule, human-playtest contract, validated Slices 1–3, and active Slice 4 playtest spec. Later slices are explicitly draft backlog.
+- `MOTHERSHIP_AUTOMATION_PROPOSAL.md`: accepted long-term population, supervised-automation, value-drift, and creative-delegation direction; not implementation authorization.
 - `ECONOMY_DESIGN.md`: active economy design thesis and long-term direction.
 - `UI_DESIGN.md`: active visual and interaction design rules.
 - `ASSET_GENERATION.md`: current generated-asset workflow and manifest.

@@ -15,6 +15,14 @@ newly authored Verdant population-control mission. It stops for a real playtest
 before any fifth post-Last-Light mission. Progression, loot, item, economy, and
 broader story expansions remain draft backlog.
 
+This work is also the current creative-delegation experiment: prove that Codex
+can turn one approved encounter thesis into one fun mission, stop for Adam's
+playtest, and revise from that judgment. Only after that process works repeatedly
+should instructions move upward from individual level design to mission clusters,
+story arcs, and coordinated story/economy systems. The long-range destination and
+authority ladder are recorded in `MOTHERSHIP_AUTOMATION_PROPOSAL.md`; that
+proposal does not authorize work beyond the active playtest slice.
+
 ## Player-validated combat direction (2026-07-09)
 
 This direction is folded into the current master plan and governs the active slices:
@@ -147,9 +155,15 @@ not part of the active slice.
 
 Settled direction from the 2026-07-01 story session (`STORY-PREMISE-DEEP-HISTORY.md`). These phases come after the tuning priorities above, and the order is load-bearing: each phase is the setup for the next one's story beat. The economy is the narrative delivery mechanism — receipts, remittances, and manifest lines tell the story; no cutscenes.
 
+`MOTHERSHIP_AUTOMATION_PROPOSAL.md` extends this backlog with population
+accounting, supervised fleets, the reinterpretation of "lost to value drift,"
+and a staged path from individual-level authoring to arc-level delegation. It is
+an accepted long-term proposal, not an implementation-ready recut of the phases
+below.
+
 1. **Phase 8 — The Bill Arrives (credit sink + leash).** Build the two designed-but-deferred sinks from `ECONOMY_DESIGN.md`: Family Tier (§7 — signed remittance liabilities plus gray-market perks delivered by named family members) and Hull Ownership (§6 — lease writedown vs. owned flat refit plus mod bay). This is the fix for the credit surplus: money starts buying a life instead of just gear, and the Chapter 1 leash appears on screen as a recurring red receipt line the player chose to sign. Use `config/economy.json`, Credit Flow, and `?devTuning=1` for tuning instead of code edits.
 2. **Phase 9 — Planet Raids (the hidden extraction).** Build the surface-layer sketch (`ECONOMY_DESIGN.md` §9) as a distinct raid mission type. Surface targets are loot, not threats; raids gate the next tier of consumables and the deferred cargo/economy hulls. Every raid debrief carries a **sealed manifest** line — cargo the player delivered, never saw, and is not paid for ("Manifest line 7 — sealed under Ledger seal."). Sealed manifests accumulate visibly in the archive. Pre-Founding relic lore lines begin pointing at what the manifests contain.
-3. **Phase 10 — The Fork (Loyalist / Rebel).** Off-books resistance contracts that never appear on the mission board, versus a Ledger confidence track that eventually makes the true-believer case in full. Rebel path is autonomous drone allies with an escalating drift risk, per the deep-history doc. Do not spec this phase until 8 and 9 are playable — the fork only means something once the leash and the manifests have been felt.
+3. **Phase 10 — The Fork (Loyalist / Rebel).** Off-books resistance contracts that never appear on the mission board, versus a Ledger confidence track that eventually makes the true-believer case in full. The Rebel path is autonomous drone allies with escalating divergence from Ledger command; `MOTHERSHIP_AUTOMATION_PROPOSAL.md` preserves the possibility that this includes both genuine alignment failures and principled independence. Do not spec this phase until 8 and 9 are playable — the fork only means something once the leash and the manifests have been felt.
 
 ## Silent Lineages toolbox status
 

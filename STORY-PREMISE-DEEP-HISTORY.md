@@ -7,6 +7,12 @@ building toward once the player learns the truth). Read `STORY-PREMISE.md`
 first for the Chapter 1 hook and tone target; this file assumes that as the
 opening state and adds what's underneath it and where it goes.
 
+The later `MOTHERSHIP_AUTOMATION_PROPOSAL.md` refines the long-term meaning of
+value drift: the Ledger's category may combine genuinely dangerous divergence
+with machines and humans that coherently reject its command. That proposal also
+records population accounting, supervised automation, and the creative gates
+required before any of this becomes implementation work.
+
 ## The thesis
 Every mothership before this one tried running its war fleet on pure AI, and
 every one of them fell apart the same way. The Ledger's family-tier hostage

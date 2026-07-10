@@ -292,7 +292,8 @@ const PROJECTILE_LOCKED_SHOT_KEYS = new Set([
   ...PROJECTILE_PROFILE_KEYS,
   "delay",
 ]);
-const BOSS_PHASE_KEYS = new Set(["label", "hpFraction", "attackPatterns", "speedMult"]);
+const BOSS_PHASE_KEYS = new Set(["label", "hpFraction", "attackPatterns", "speedMult", "aiParams", "summons"]);
+const BOSS_PHASE_SUMMON_KEYS = new Set(["type", "count", "radius"]);
 const PROJECTILE_ATTACK_MODES = new Set(["aim", "spread", "radial"]);
 const PROJECTILE_THREAT_CLASSES = new Set(["chip", "standard", "heavy", "bossHazard"]);
 const PROJECTILE_RUNTIME_PROFILE_KEYS = new Set([
@@ -4414,6 +4415,7 @@ const activeCampaignLevels = [
     label: "The Green Signal",
     requires: [{ completed: "act2_processional" }, { completed: "act2_repossession" }],
   },
+  { id: "act2_return_address", label: "Return Address", requires: [{ completed: "act2_green_signal" }] },
 ];
 
 // Missions after Last Light were useful mechanics experiments, but they are not
@@ -5013,6 +5015,36 @@ function validateBossPhases(phases, profiles, errors, context) {
     }
     if (phase.speedMult !== undefined && (!Number.isFinite(phase.speedMult) || phase.speedMult <= 0)) {
       errors.push(`${label}.speedMult must be a positive number.`);
+    }
+    if (phase.aiParams !== undefined && !isPlainObject(phase.aiParams)) {
+      errors.push(`${label}.aiParams must be an object.`);
+    }
+    if (phase.summons !== undefined) {
+      if (!Array.isArray(phase.summons) || !phase.summons.length) {
+        errors.push(`${label}.summons must be a non-empty array.`);
+      } else {
+        phase.summons.forEach((summon, summonIndex) => {
+          const summonLabel = `${label}.summons[${summonIndex}]`;
+          if (!isPlainObject(summon)) {
+            errors.push(`${summonLabel} must be an object.`);
+            return;
+          }
+          Object.keys(summon).forEach((key) => {
+            if (!BOSS_PHASE_SUMMON_KEYS.has(key)) {
+              errors.push(`${summonLabel} uses unsupported field '${key}'.`);
+            }
+          });
+          if (typeof summon.type !== "string" || !summon.type.trim()) {
+            errors.push(`${summonLabel}.type must be a non-empty string.`);
+          }
+          if (!Number.isInteger(summon.count) || summon.count <= 0 || summon.count > 24) {
+            errors.push(`${summonLabel}.count must be an integer from 1 to 24.`);
+          }
+          if (summon.radius !== undefined && (!Number.isFinite(summon.radius) || summon.radius <= 0)) {
+            errors.push(`${summonLabel}.radius must be a positive number.`);
+          }
+        });
+      }
     }
     if (!Array.isArray(phase.attackPatterns) || !phase.attackPatterns.length) {
       errors.push(`${label}.attackPatterns must be a non-empty array.`);
@@ -12786,18 +12818,24 @@ function updateSpawnerEnemy(enemy, delta) {
   enemy.spawnChildTimer = spawnEvery;
   const spawnType = enemy.aiParams.spawnType || "sporeling";
   const maxAlive = enemy.aiParams.maxAlive ?? (enemy.type === "broodmother" ? 6 : 4);
-  const alive = enemies.filter((candidate) => candidate.parentSpawnerId === enemy.id && candidate.hull > 0).length;
-  if (alive >= maxAlive) return;
-  const angle = Math.random() * Math.PI * 2;
-  const child = spawnRuntimeEnemy(spawnType, {
-    x: enemy.x + Math.cos(angle) * Math.max(18, enemy.radius * 0.55),
-    y: enemy.y + Math.sin(angle) * Math.max(18, enemy.radius * 0.55),
-    vx: Math.cos(angle) * 38,
-    vy: 50 + Math.sin(angle) * 24,
-    parentSpawnerId: enemy.id,
-    aiParams: { parentSpawnerId: enemy.id },
-  });
-  if (child) spawnFloatingText(enemy.x, enemy.y - enemy.radius, "BUDDING", "#86efac");
+  const spawnCount = Math.max(1, Math.min(12, Math.round(enemy.aiParams.spawnCount ?? 1)));
+  let spawned = 0;
+  for (let index = 0; index < spawnCount; index += 1) {
+    const alive = enemies.filter((candidate) => candidate.parentSpawnerId === enemy.id && candidate.hull > 0).length;
+    if (alive >= maxAlive) break;
+    const angle = Math.random() * Math.PI * 2;
+    const child = spawnRuntimeEnemy(spawnType, {
+      x: enemy.x + Math.cos(angle) * Math.max(18, enemy.radius * 0.55),
+      y: enemy.y + Math.sin(angle) * Math.max(18, enemy.radius * 0.55),
+      vx: Math.cos(angle) * 38,
+      vy: 50 + Math.sin(angle) * 24,
+      parentSpawnerId: enemy.id,
+    });
+    if (child) spawned += 1;
+  }
+  if (spawned > 0) {
+    spawnFloatingText(enemy.x, enemy.y - enemy.radius, spawned > 1 ? `BUDDING x${spawned}` : "BUDDING", "#86efac");
+  }
 }
 
 function spawnSplitChildren(enemy) {
@@ -12815,6 +12853,25 @@ function spawnSplitChildren(enemy) {
   }
 }
 
+function spawnBossPhaseSummons(enemy, summons) {
+  if (!Array.isArray(summons) || !summons.length) return;
+  const width = canvas.width / window.devicePixelRatio;
+  const height = canvas.height / window.devicePixelRatio;
+  summons.forEach((summon, groupIndex) => {
+    const count = Math.max(1, Math.min(24, Math.round(summon.count ?? 1)));
+    const radius = Math.max(enemy.radius + 24, summon.radius ?? enemy.radius + 58);
+    for (let index = 0; index < count; index += 1) {
+      const angle = (Math.PI * 2 * index) / count + groupIndex * 0.47;
+      spawnRuntimeEnemy(summon.type, {
+        x: Math.max(45, Math.min(width - 45, enemy.x + Math.cos(angle) * radius)),
+        y: Math.max(58, Math.min(height * 0.48, enemy.y + Math.sin(angle) * radius * 0.6)),
+        vx: Math.cos(angle) * 58,
+        vy: 48 + Math.max(0, Math.sin(angle)) * 34,
+      });
+    }
+  });
+}
+
 function updateBossPhase(enemy, delta) {
   if (!enemy.isBoss || !Array.isArray(enemy.phases) || !enemy.phases.length) return;
   if (enemy.bossPhaseTransitionTimer > 0) {
@@ -12824,7 +12881,7 @@ function updateBossPhase(enemy, delta) {
     }
     return;
   }
-  const nextIndex = (enemy.bossPhaseIndex || -1) + 1;
+  const nextIndex = (enemy.bossPhaseIndex ?? -1) + 1;
   const nextPhase = enemy.phases[nextIndex];
   if (!nextPhase) return;
   const totalMax = (enemy.maxShield || 0) + (enemy.maxArmor || 0) + (enemy.maxHull || 0);
@@ -12837,6 +12894,16 @@ function updateBossPhase(enemy, delta) {
     ? nextPhase.attackPatterns.map((pattern) => cloneShipBuild(pattern))
     : enemy.attackPatterns;
   enemy.speed = (enemy.baseSpeed || enemy.speed || 70) * (nextPhase.speedMult || 1);
+  if (isPlainObject(nextPhase.aiParams)) {
+    enemy.aiParams = { ...(enemy.aiParams || {}), ...cloneShipBuild(nextPhase.aiParams) };
+    if (enemy.ai === "spawner") {
+      enemy.spawnChildTimer = Math.min(
+        Number.isFinite(enemy.spawnChildTimer) ? enemy.spawnChildTimer : Infinity,
+        0.15
+      );
+    }
+  }
+  spawnBossPhaseSummons(enemy, nextPhase.summons);
   const hold = mission?.level?.id === "act2_pilgrimage" ? 1.0 : 0.8;
   enemy.bossPhaseTransitionTimer = hold;
   enemy.fireCooldown = Math.min(enemy.fireCooldown || 0, 0.05);
@@ -12915,13 +12982,14 @@ function triggerBreachFailure() {
 }
 
 function handleDefenseBreaches(height) {
-  if (!mission?.active || !Number.isFinite(mission.defenseIntegrity)) return;
+  if (!mission?.active || mission.bossDefeated || !Number.isFinite(mission.defenseIntegrity)) return;
   enemies.forEach((enemy) => {
     if (!enemy || enemy.escaped || enemy.breachedDefense || enemy.hull <= 0 || enemy.isBoss) return;
     if (enemy.y <= height + Math.min(enemy.radius || 0, 55)) return;
     enemy.breachedDefense = true;
     enemy.escaped = true;
     const damage = getEnemyBreachDamage(enemy);
+    if (damage <= 0) return;
     mission.defenseIntegrity = Math.max(0, mission.defenseIntegrity - damage);
     spawnFloatingText(enemy.x, height - 34, `BREACH -${Math.round(damage)}`, "#f87171");
     if (mission.defenseIntegrity <= 0) {

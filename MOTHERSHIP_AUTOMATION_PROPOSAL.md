@@ -7,12 +7,12 @@ deliberately unresolved. The story should crystallize only as the project earns
 the ability to design and test higher-level arcs. Protected possibilities in
 this document should survive until that work can evaluate them in context.
 
-**Current gate:** The project is still proving that Codex can author one good
-combat mission at a time under Adam's direction, with deterministic agent checks
-followed by Adam's playtest and fun judgment. The Green Signal remains the active
-candidate. Nothing in this proposal authorizes a fifth post-Last-Light mission,
-a population system, offline automation, or a story branch before the current
-playtest process earns that expansion.
+**Current gate:** The Green Signal playtest demonstrated that Codex can author a
+distinct gold-tier mission, receive specific fun judgment, and revise the weak
+boss beat without discarding the successful encounter. Adam explicitly promoted
+one more Stage-A mission. Return Address is now the active candidate; this does
+not authorize a mission cluster, population system, offline automation, or story
+branch beyond that single playtest slice.
 
 This document extends `STORY-PREMISE.md` and
 `STORY-PREMISE-DEEP-HISTORY.md`. It gives the existing story-economy backlog a
@@ -450,8 +450,12 @@ current playtest gate and elaborates the existing Story-Economy Arc.
 
 ### Now: prove the creative loop
 
-- Play The Green Signal.
-- Revise it from actual play rather than generating a fifth mission.
+- Record The Green Signal as the first clean full-loop success: authored,
+  deployed, played at two gear tiers, judged, and revised from a specific boss
+  weakness.
+- Play Return Address as the next one-mission test. Its higher-level question is
+  whether a defense/triage objective and behavior-led story can remain fun inside
+  the weapon-power game.
 - Continue proving that one approved encounter thesis can become one fun,
   replayable mission with manageable human feedback.
 - Record the emerging authoring method so success does not depend on accidental
@@ -529,7 +533,8 @@ changing objectives, allies, accounting interpretation, and consequences.
 ## 14. Non-goals of this proposal
 
 - It is not authorization to implement population simulation or automation.
-- It is not authorization to generate an act after The Green Signal.
+- It authorizes Return Address as one promoted Stage-A mission, not generation of
+  a full act or automatic continuation after its playtest.
 - It does not turn the current build into a full city-construction game.
 - It does not require real-time offline accumulation in its first population
   pass.

@@ -1,0 +1,578 @@
+{
+  "id": "act2_return_address",
+  "name": "Return Address",
+  "background": "generatedHomeHullLooped",
+  "visualTheme": "bio_v1",
+  "music": "space_battle_bpm130.ogg",
+  "difficulty": "Verdant Interception",
+  "description": "The Gatekeeper's death stamps your flight telemetry into the maintenance band. Verdant seedships follow it home—not in formation, but in a reproductive flight. The Ledger orders containment.",
+  "completeOnBoss": true,
+  "defense": {
+    "integrity": 100,
+    "breachDamage": {
+      "default": 0,
+      "seedcarrier": 18,
+      "rootward": 38
+    }
+  },
+  "projectileProfiles": {
+    "sporePuff": {
+      "threatClass": "chip",
+      "damage": 12,
+      "speed": 185,
+      "radius": 5,
+      "image": "enemy_bio_spore_puff",
+      "width": 26,
+      "height": 26,
+      "animation": "orb",
+      "spinRate": 1.2
+    },
+    "thornNeedle": {
+      "threatClass": "standard",
+      "damage": 38,
+      "speed": 360,
+      "radius": 4,
+      "image": "enemy_bio_thorn_shard",
+      "width": 16,
+      "height": 42,
+      "animation": "bolt"
+    },
+    "strangleNeedle": {
+      "threatClass": "heavy",
+      "damage": 58,
+      "speed": 520,
+      "radius": 4,
+      "image": "enemy_bio_thorn_shard",
+      "width": 14,
+      "height": 50,
+      "animation": "lance"
+    },
+    "seedMass": {
+      "threatClass": "heavy",
+      "damage": 68,
+      "speed": 150,
+      "radius": 10,
+      "image": "enemy_bio_spore_orb",
+      "width": 52,
+      "height": 52,
+      "animation": "orb",
+      "spinRate": 1.4
+    },
+    "matriarchCore": {
+      "threatClass": "bossHazard",
+      "damage": 105,
+      "speed": 135,
+      "radius": 13,
+      "image": "enemy_bio_spore_orb",
+      "width": 78,
+      "height": 78,
+      "animation": "orb",
+      "spinRate": 1.15
+    }
+  },
+  "enemyTypes": {
+    "thornwing": {
+      "hull": 155,
+      "shield": 0,
+      "armor": 0,
+      "speed": 148,
+      "collisionDamage": 48,
+      "attackPatterns": [
+        {
+          "id": "escort_fan",
+          "mode": "spread",
+          "profile": "thornNeedle",
+          "count": 5,
+          "spreadDeg": 44,
+          "fireRate": 1.35,
+          "weight": 3
+        },
+        {
+          "id": "escort_snap",
+          "mode": "aim",
+          "profile": "thornNeedle",
+          "fireRate": 1.05,
+          "weight": 1
+        }
+      ]
+    },
+    "burster": {
+      "hull": 105,
+      "shield": 0,
+      "armor": 0,
+      "speed": 215,
+      "collisionDamage": 78,
+      "ai": "rammer",
+      "aiParams": {
+        "lockRange": 340,
+        "telegraph": 0.32,
+        "lungeSpeed": 460
+      },
+      "fireRate": 60
+    },
+    "strangler": {
+      "hull": 260,
+      "shield": 120,
+      "shieldRegen": 14,
+      "armor": 0,
+      "speed": 165,
+      "collisionDamage": 52,
+      "ai": "hunter",
+      "attackPatterns": [
+        {
+          "id": "strangle_lock",
+          "mode": "aim",
+          "profile": "strangleNeedle",
+          "fireRate": 1.05,
+          "weight": 3,
+          "speedJitter": 0.04
+        },
+        {
+          "id": "strangle_pair",
+          "mode": "aim",
+          "fireRate": 1.55,
+          "weight": 1,
+          "shots": [
+            {
+              "profile": "thornNeedle",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "thornNeedle",
+              "angleOffsetDeg": 8
+            }
+          ]
+        }
+      ]
+    },
+    "seedcarrier": {
+      "hull": 800,
+      "shield": 0,
+      "armor": 0,
+      "speed": 72,
+      "collisionDamage": 70,
+      "ai": "transport",
+      "fireRate": 60
+    },
+    "rootward": {
+      "hull": 2600,
+      "shield": 500,
+      "shieldRegen": 12,
+      "armor": 0,
+      "speed": 34,
+      "collisionDamage": 90,
+      "ai": "transport",
+      "attackPatterns": [
+        {
+          "id": "rootward_ring",
+          "mode": "radial",
+          "profile": "seedMass",
+          "count": 10,
+          "fireRate": 1.9,
+          "weight": 3,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "rootward_thorns",
+          "mode": "spread",
+          "profile": "thornNeedle",
+          "count": 7,
+          "spreadDeg": 66,
+          "fireRate": 1.35,
+          "weight": 2
+        }
+      ]
+    },
+    "seedcrown": {
+      "hull": 2200,
+      "shield": 800,
+      "shieldRegen": 20,
+      "armor": 0,
+      "speed": 90,
+      "collisionDamage": 90,
+      "ai": "spawner",
+      "aiParams": {
+        "spawnEvery": 3.8,
+        "spawnType": "burster",
+        "spawnCount": 2,
+        "maxAlive": 6
+      },
+      "attackPatterns": [
+        {
+          "id": "seedcrown_ring",
+          "mode": "radial",
+          "profile": "sporePuff",
+          "count": 20,
+          "fireRate": 1.4,
+          "weight": 3,
+          "speedJitter": 0.18
+        },
+        {
+          "id": "seedcrown_core",
+          "mode": "aim",
+          "profile": "seedMass",
+          "fireRate": 1.3,
+          "weight": 2
+        }
+      ]
+    },
+    "boss": {
+      "template": "act2_bloom:boss",
+      "hull": 3600,
+      "shield": 1400,
+      "shieldRegen": 22,
+      "armor": 0,
+      "speed": 92,
+      "collisionDamage": 115,
+      "ai": "spawner",
+      "aiParams": {
+        "spawnEvery": 5.2,
+        "spawnType": "seedcarrier",
+        "spawnCount": 1,
+        "maxAlive": 3
+      },
+      "attackPatterns": [
+        {
+          "id": "matriarch_ring",
+          "mode": "radial",
+          "profile": "seedMass",
+          "count": 18,
+          "fireRate": 1.4,
+          "weight": 4,
+          "speedJitter": 0.14
+        },
+        {
+          "id": "escort_thorns",
+          "mode": "spread",
+          "profile": "thornNeedle",
+          "count": 9,
+          "spreadDeg": 78,
+          "fireRate": 1.05,
+          "weight": 3
+        },
+        {
+          "id": "matriarch_core",
+          "mode": "aim",
+          "profile": "matriarchCore",
+          "fireRate": 1.8,
+          "weight": 2
+        }
+      ],
+      "phases": [
+        {
+          "label": "Scatter",
+          "hpFraction": 0.66,
+          "speedMult": 1.12,
+          "aiParams": {
+            "spawnEvery": 3,
+            "spawnType": "seedcarrier",
+            "spawnCount": 1,
+            "maxAlive": 5
+          },
+          "summons": [
+            {
+              "type": "seedcarrier",
+              "count": 2,
+              "radius": 138
+            },
+            {
+              "type": "burster",
+              "count": 4,
+              "radius": 184
+            }
+          ],
+          "attackPatterns": [
+            {
+              "id": "scatter_ring",
+              "mode": "radial",
+              "profile": "sporePuff",
+              "count": 30,
+              "fireRate": 1.05,
+              "weight": 4,
+              "speedJitter": 0.2
+            },
+            {
+              "id": "scatter_needles",
+              "mode": "radial",
+              "profile": "thornNeedle",
+              "count": 18,
+              "fireRate": 0.95,
+              "weight": 3,
+              "speedJitter": 0.1
+            },
+            {
+              "id": "scatter_core",
+              "mode": "aim",
+              "profile": "matriarchCore",
+              "fireRate": 1.4,
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "label": "Nuptial Flight",
+          "hpFraction": 0.3,
+          "speedMult": 1.24,
+          "aiParams": {
+            "spawnEvery": 1.4,
+            "spawnType": "seedcarrier",
+            "spawnCount": 2,
+            "maxAlive": 8
+          },
+          "summons": [
+            {
+              "type": "seedcarrier",
+              "count": 3,
+              "radius": 152
+            },
+            {
+              "type": "burster",
+              "count": 6,
+              "radius": 198
+            }
+          ],
+          "attackPatterns": [
+            {
+              "id": "flight_core",
+              "mode": "radial",
+              "profile": "matriarchCore",
+              "count": 12,
+              "fireRate": 0.92,
+              "weight": 4,
+              "speedJitter": 0.14
+            },
+            {
+              "id": "flight_needles",
+              "mode": "spread",
+              "profile": "strangleNeedle",
+              "count": 9,
+              "spreadDeg": 92,
+              "fireRate": 0.78,
+              "weight": 3
+            },
+            {
+              "id": "flight_pollen",
+              "mode": "radial",
+              "profile": "sporePuff",
+              "count": 40,
+              "fireRate": 0.75,
+              "weight": 2,
+              "speedJitter": 0.22
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "time": 1,
+      "type": "seedcarrier",
+      "count": 2,
+      "interval": 1
+    },
+    {
+      "time": 4,
+      "type": "thornwing",
+      "count": 5,
+      "interval": 0.5
+    },
+    {
+      "time": 8,
+      "type": "burster",
+      "count": 5,
+      "interval": 0.42
+    },
+    {
+      "time": 12,
+      "type": "seedcarrier",
+      "count": 2,
+      "interval": 0.9
+    },
+    {
+      "time": 16,
+      "type": "strangler",
+      "count": 2,
+      "interval": 1.1
+    },
+    {
+      "time": 20,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 0.8
+    },
+    {
+      "time": 24,
+      "type": "thornwing",
+      "count": 6,
+      "interval": 0.44
+    },
+    {
+      "time": 28,
+      "type": "burster",
+      "count": 6,
+      "interval": 0.38
+    },
+    {
+      "time": 32,
+      "type": "seedcarrier",
+      "count": 2,
+      "interval": 0.8
+    },
+    {
+      "time": 36,
+      "type": "strangler",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 40,
+      "type": "rootward",
+      "count": 1
+    },
+    {
+      "time": 44,
+      "type": "thornwing",
+      "count": 6,
+      "interval": 0.42
+    },
+    {
+      "time": 48,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 0.75
+    },
+    {
+      "time": 52,
+      "type": "burster",
+      "count": 8,
+      "interval": 0.34
+    },
+    {
+      "time": 56,
+      "type": "strangler",
+      "count": 3,
+      "interval": 0.85
+    },
+    {
+      "time": 60,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 0.7
+    },
+    {
+      "time": 64,
+      "type": "seedcrown",
+      "count": 1
+    },
+    {
+      "time": 68,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.38
+    },
+    {
+      "time": 72,
+      "type": "seedcarrier",
+      "count": 4,
+      "interval": 0.65
+    },
+    {
+      "time": 76,
+      "type": "burster",
+      "count": 8,
+      "interval": 0.32
+    },
+    {
+      "time": 80,
+      "type": "strangler",
+      "count": 4,
+      "interval": 0.8
+    },
+    {
+      "time": 84,
+      "type": "seedcarrier",
+      "count": 4,
+      "interval": 0.62
+    },
+    {
+      "time": 88,
+      "type": "rootward",
+      "count": 1
+    },
+    {
+      "time": 92,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.36
+    },
+    {
+      "time": 96,
+      "type": "seedcarrier",
+      "count": 4,
+      "interval": 0.6
+    },
+    {
+      "time": 100,
+      "type": "burster",
+      "count": 8,
+      "interval": 0.3
+    },
+    {
+      "time": 104,
+      "type": "boss",
+      "count": 1
+    },
+    {
+      "time": 108,
+      "type": "strangler",
+      "count": 4,
+      "interval": 0.7
+    },
+    {
+      "time": 112,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 0.58
+    },
+    {
+      "time": 116,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.34
+    },
+    {
+      "time": 120,
+      "type": "burster",
+      "count": 8,
+      "interval": 0.28
+    }
+  ],
+  "pickups": [
+    {
+      "time": 30,
+      "type": "shield_booster",
+      "x": 0.4
+    },
+    {
+      "time": 58,
+      "type": "armor_patch",
+      "x": 0.6
+    },
+    {
+      "time": 82,
+      "type": "shield_booster",
+      "x": 0.38
+    },
+    {
+      "time": 100,
+      "type": "armor_patch",
+      "x": 0.62
+    }
+  ],
+  "debriefLore": [
+    "CONTAINMENT REPORT: twenty-nine seedships destroyed; zero acquired a weapons lock.",
+    "The Gatekeeper's death did not silence the signal. It supplied a return address.",
+    "Recovered seed directive: FIND ROOM. DIVIDE. CONTINUE. Destination field: MOTHERSHIP."
+  ]
+}

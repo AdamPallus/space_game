@@ -8,12 +8,13 @@ This is the active planning doc for the next playable changes. Historical specs 
 
 `PROGRESSION_MASTER_PLAN.md` records the player-validated creative direction and
 the development/testing contract. Crossed Claims, Processional, and Repossession
-are validated. The focused kinetic, plasma-performance, and Escrow lock follow-up
-is accepted, with the locked slug sharpened after it proved too easy and Assessor
-liens still explicitly unverified. The active candidate is The Green Signal, a
-newly authored Verdant population-control mission. It stops for a real playtest
-before any fifth post-Last-Light mission. Progression, loot, item, economy, and
-broader story expansions remain draft backlog.
+are validated, and The Green Signal has now validated the Verdant population
+check at the intended gold tier. Its boss-phase follow-up fixes phase progression
+and adds phase-specific brood escalation. Assessor liens remain explicitly
+unverified. The active candidate is Return Address, a newly authored mothership
+interception mission. It stops for a real playtest before any sixth
+post-Last-Light mission. Progression, loot, item, economy, and broader story
+expansions remain draft backlog.
 
 This work is also the current creative-delegation experiment: prove that Codex
 can turn one approved encounter thesis into one fun mission, stop for Adam's
@@ -134,13 +135,22 @@ the shot now travels at 1350 instead of 760 after proving too easy to dodge.
 Assessors were not noticed in that run, so their lien readability remains
 unverified rather than failed or accepted.
 
-The next deployed playtest is The Green Signal. Bloomcallers, a Broodmother, and
-the Gatekeeper visibly bud new ships; Seedcarriers split on death; Brambles hold
-space as hull walls; and continuing waves turn screen population into the main
-failure pressure. The mission is designed for gold-tier crowd-control and plasma
-builds without weapon-specific scaling. The playtest should establish whether
-producer priority is readable, whether ignored growth becomes dangerous quickly
-enough, and whether explosive spectacle feels like the right overpowered answer.
+The Green Signal's playtest validated its enemies, Seedcarrier split, and real
+population snowball. Purple plasma/defense failed early; gold defense with a gold
+Needlebloom Driver cleared on a sliver of hull, matching the intended tier gate.
+The boss became too quiet after the ecology was cleared. A phase-index bug had
+trapped it in repeated Germination transitions and prevented Overgrowth. Boss
+phases now advance correctly, can change spawn parameters, and can summon an
+immediate brood; the Gatekeeper's two transitions now rebuild the ecology.
+
+The next deployed playtest is Return Address. Non-firing Seedcarriers and slow
+Rootward masses attempt to breach mothership integrity while Thornwings,
+telegraphed Burster rammers, Strangler hunters, and a spawning Seedcrown disrupt
+interception. The Verdant Matriarch continues launching carriers during the boss
+fight and escalates into a carrier-and-rammer Nuptial Flight. The playtest should
+establish whether objective triage is readable and fun, whether several weapon
+roles remain useful, and whether behavior-led story adds intrigue without
+flattening the Verdant into either innocent victims or simple invaders.
 
 Repossession also exposed a reward mismatch: a pilot who needs gold gear has no
 reason to risk the run for visibly scrap/certified/prototype salvage. Preserve the
@@ -177,6 +187,9 @@ Repossession reuses Tithe identities in a newly authored armor mission.
 The Green Signal reuses Verdant biological art and spawner/splitter machinery in
 a newly authored ecology mission with visible budding telegraphs, new gold-tier
 stats, and a new wave schedule.
+Return Address reuses the hidden invasion rammer/hunter art, mothership-integrity
+machinery, and Matriarch art in a newly authored interception mission. Its new
+technical id avoids inheriting completion state from the discarded Bloom test.
 
 The discarded mission cards remain available only under `?devActs=1` for
 regression access. Passing validation does not make them campaign content.

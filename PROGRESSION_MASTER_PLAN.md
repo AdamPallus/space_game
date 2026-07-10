@@ -1,10 +1,10 @@
 # Progression Master Plan — Power First, Then Progression
 
-**Status:** Accepted direction. Slices 1–3 are player-validated. Repossession's
-weapon, plasma-performance, and seizure-lock follow-up is accepted; Assessor
-liens remain explicitly unverified. Slice 4, The Green Signal, is implemented
-and awaiting its first playtest. Later slices remain drafts until a playtest or
-conversation promotes them.
+**Status:** Accepted direction. Slices 1–4 are player-validated. Repossession's
+Assessor liens remain explicitly unverified. The Green Signal's boss-phase
+follow-up is implemented, and Slice 5, Return Address, is awaiting its first
+playtest. Later slices remain drafts until a playtest or conversation promotes
+them.
 
 **Creative and playtest authority:** Adam.
 
@@ -309,7 +309,7 @@ next mission.
 
 ## 8. Slice 4 — The Green Signal
 
-**Status:** Implemented and awaiting first player playtest.
+**Status:** Player-validated; boss-phase escalation follow-up implemented.
 
 Repossession reveals that the third claimant is not sending a message. The
 relay is reflecting a growth schedule: machine-standard replication behaving
@@ -359,17 +359,87 @@ on the boss rather than requiring every child to be cleaned up.
 - Where does the first run end, and is the answer driven by build choice, target
   priority, survivability, or raw population?
 
-Codex stops after deploying the candidate so Adam can answer these questions in
-a real combat run.
+### The Green Signal playtest verdict — 2026-07-10
 
-## 9. Later slices — draft backlog, not authorization
+- Purple defense with a purple Plasma Lance was overwhelmed early, establishing
+  that sub-target-tier equipment does not coast through the mission.
+- Gold defense with a gold Needlebloom Driver cleared with only a sliver of hull
+  remaining. That is the intended Act 2 contract: a coherent gold build wins,
+  but the mission still reaches it.
+- The enemies were judged strong, the population snowball was real, and the
+  Seedcarrier split was both readable and visually satisfying.
+- Once the rest of the field was cleared, the Gatekeeper's later fight became
+  too quiet. The audit found that phase index zero was treated as false, causing
+  Germination to retrigger forever and preventing Overgrowth entirely.
+
+The phase index now advances correctly. Boss phases can also merge new spawn
+parameters and summon an immediate brood. Germination opens with Seedcarriers
+and Sporelings, then buds paired Seedcarriers; Overgrowth opens with
+Bloomcallers and Thornwings, then produces paired Bloomcallers fast enough to
+rebuild an ecology around the boss. Spawned producers retain their own authored
+AI parameters instead of losing them to the parent link.
+
+## 9. Slice 5 — Return Address
+
+**Status:** Implemented and awaiting first player playtest.
+
+Destroying the Gatekeeper does not silence the maintenance band. It stamps the
+player's flight telemetry into it. Verdant seedships follow that route back to
+the mothership in a reproductive flight, and the Ledger issues a containment
+order. The seedships mostly do not shoot; their behavior carries the question
+before the story answers it. They may be invading, migrating, propagating, or
+incapable of recognizing a difference.
+
+Return Address is a gold-tier interception and triage check:
+
+- mothership integrity replaces screen survival as the only objective that can
+  fail independently of the player's hull;
+- only Seedcarriers and Rootward masses damage integrity when they cross the
+  bottom edge, while ordinary escorts can leave without producing fake
+  `BREACH -0` warnings;
+- Seedcarriers are hull-heavy, non-firing transports. Six breaches end the run,
+  so the player can make a few mistakes but cannot ignore the migration;
+- Burster Seedpods lock the player's current position and commit to dangerous
+  collision lunges, while Stranglers pursue and fire fast heavy needles;
+- Thornwing escorts fill firing lanes, and two slow Rootward masses create
+  high-durability interception emergencies worth thirty-eight integrity each;
+- a Seedcrown miniboss continually buds paired Bursters, forcing the player to
+  decide whether to clear the harassment or keep servicing transports;
+- the Verdant Matriarch launches Seedcarriers during the boss fight. Its final
+  Nuptial Flight phase immediately releases three carriers and six Bursters,
+  then buds carrier pairs every 1.4 seconds;
+- killing the boss ends the containment emergency. Integrity cannot fail during
+  the short boss-death sequence after player fire has been disabled.
+
+This is neither Processional's formation swarm nor The Green Signal's producer
+snowball. The pressure is scheduled traffic: choose what must die now, what can
+wait, and whether body-blocking a carrier is worth taking the collision.
+
+### Return Address playtest questions
+
+- Is the Mothership integrity objective immediately legible without a tutorial?
+- Do non-firing Seedcarriers read as the important escaping targets amid the
+  escorts, or do they disappear into the visual noise?
+- Does the integrity budget create interesting triage rather than an arbitrary
+  second health bar?
+- Do focused weapons feel powerful against Rootwards and carriers while
+  rapid/homing or wide weapons remain useful against Bursters and hunters?
+- Are Burster locks threatening but fair, especially with gold defense?
+- Does the Seedcrown create a good mid-mission priority crisis?
+- Does the Matriarch's Nuptial Flight phase unmistakably escalate even after the
+  rest of the field has been cleared?
+- Does the debrief fact that none of the seedships acquired a weapons lock make
+  the encounter more interesting without prematurely declaring the Verdant good?
+
+Codex stops after deployment for this combat and objective playtest.
+
+## 10. Later slices — draft backlog, not authorization
 
 These ideas remain available, but none should be implemented automatically after
-Slice 4:
+Slice 5:
 
-1. **Green Signal revision.** Use the first playtest to tune population growth,
-   producer readability, collision pressure, and boss pacing before opening a
-   fifth post-Last-Light mission.
+1. **Return Address revision.** Tune integrity, carrier durability, escort
+   pressure, and Matriarch pacing from the first real playtest.
 2. **Assessor verification.** Keep lien readability marked unverified until a
    future Repossession run actually observes it; this does not block Verdant work.
 3. **Progression rewards.** Decide what clearing Last Light, Crossed Claims, and Processional should
@@ -384,7 +454,7 @@ Slice 4:
    are fun. Then decide how much of the existing lore deserves to be carried by
    them.
 
-## 10. Documentation authority
+## 11. Documentation authority
 
 When documents conflict, use this order:
 

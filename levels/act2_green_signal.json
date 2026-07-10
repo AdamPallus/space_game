@@ -299,6 +299,24 @@
           "label": "Germination",
           "hpFraction": 0.65,
           "speedMult": 1.12,
+          "aiParams": {
+            "spawnEvery": 1.6,
+            "spawnType": "seedcarrier",
+            "spawnCount": 2,
+            "maxAlive": 12
+          },
+          "summons": [
+            {
+              "type": "seedcarrier",
+              "count": 2,
+              "radius": 118
+            },
+            {
+              "type": "sporeling",
+              "count": 6,
+              "radius": 164
+            }
+          ],
           "attackPatterns": [
             {
               "id": "germination_ring",
@@ -331,6 +349,24 @@
           "label": "Overgrowth",
           "hpFraction": 0.28,
           "speedMult": 1.2,
+          "aiParams": {
+            "spawnEvery": 0.9,
+            "spawnType": "bloomcaller",
+            "spawnCount": 2,
+            "maxAlive": 14
+          },
+          "summons": [
+            {
+              "type": "bloomcaller",
+              "count": 2,
+              "radius": 126
+            },
+            {
+              "type": "thornwing",
+              "count": 6,
+              "radius": 176
+            }
+          ],
           "attackPatterns": [
             {
               "id": "overgrowth_pollen",

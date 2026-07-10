@@ -87,7 +87,8 @@ const PROJECTILE_LOCKED_SHOT_KEYS = new Set([
   ...PROJECTILE_PROFILE_KEYS,
   "delay",
 ]);
-const BOSS_PHASE_KEYS = new Set(["label", "hpFraction", "attackPatterns", "speedMult"]);
+const BOSS_PHASE_KEYS = new Set(["label", "hpFraction", "attackPatterns", "speedMult", "aiParams", "summons"]);
+const BOSS_PHASE_SUMMON_KEYS = new Set(["type", "count", "radius"]);
 const PROJECTILE_ATTACK_MODES = new Set(["aim", "spread", "radial"]);
 const PROJECTILE_THREAT_CLASSES = new Set(["chip", "standard", "heavy", "bossHazard"]);
 const ROTATING_PROJECTILE_MAX_ASPECT = 1.5;
@@ -325,6 +326,36 @@ function validateBossPhases(phases, profiles, errors, context) {
     }
     if (phase.speedMult !== undefined && (!Number.isFinite(phase.speedMult) || phase.speedMult <= 0)) {
       errors.push(`${label}.speedMult must be a positive number.`);
+    }
+    if (phase.aiParams !== undefined && !isPlainObject(phase.aiParams)) {
+      errors.push(`${label}.aiParams must be an object.`);
+    }
+    if (phase.summons !== undefined) {
+      if (!Array.isArray(phase.summons) || !phase.summons.length) {
+        errors.push(`${label}.summons must be a non-empty array.`);
+      } else {
+        phase.summons.forEach((summon, summonIndex) => {
+          const summonLabel = `${label}.summons[${summonIndex}]`;
+          if (!isPlainObject(summon)) {
+            errors.push(`${summonLabel} must be an object.`);
+            return;
+          }
+          for (const key of Object.keys(summon)) {
+            if (!BOSS_PHASE_SUMMON_KEYS.has(key)) {
+              errors.push(`${summonLabel} uses unsupported field '${key}'.`);
+            }
+          }
+          if (typeof summon.type !== "string" || !summon.type.trim()) {
+            errors.push(`${summonLabel}.type must be a non-empty string.`);
+          }
+          if (!Number.isInteger(summon.count) || summon.count <= 0 || summon.count > 24) {
+            errors.push(`${summonLabel}.count must be an integer from 1 to 24.`);
+          }
+          if (summon.radius !== undefined && (!Number.isFinite(summon.radius) || summon.radius <= 0)) {
+            errors.push(`${summonLabel}.radius must be a positive number.`);
+          }
+        });
+      }
     }
     if (!Array.isArray(phase.attackPatterns) || !phase.attackPatterns.length) {
       errors.push(`${label}.attackPatterns must be a non-empty array.`);

@@ -12,8 +12,9 @@ are validated, and The Green Signal has now validated the Verdant population
 check at the intended gold tier. Assessor liens remain explicitly unverified.
 Return Address has validated its mothership-interception concept and is in one
 focused ramp revision: move its Rootward crises into active waves and smooth the
-final carrier cliff. It stops for a real playtest before any sixth
-post-Last-Light mission. Progression, loot, item, economy, and broader story
+final carrier cliff. Dual Fire progression is now campaign-earned so that
+retest has an enforceable Tier 2 baseline. It stops for a real playtest before
+any sixth post-Last-Light mission. Loot, item, economy, and broader story
 expansions remain draft backlog.
 
 This work is also the current creative-delegation experiment: prove that Codex
@@ -73,6 +74,23 @@ The broad cleanup and loadout overhaul from `outdated_docs/implemented_specs/NEX
 - Weapon stats show per-shot damage, volley output, and sustained DPS.
 - Mini weapons, named hulls, second-primary swapping, one-primary focus bonuses, aux engineering, and compatible dual-fire tiers are implemented.
 
+## Capability Progression Implemented
+
+Dual Fire is now direct campaign progression instead of a credit-purchased
+Ship Capabilities ladder. Last Light awards Tier 1; either Processional or
+Repossession awards Tier 2; Return Address or both claimant clears awards Tier
+3; and Return Address plus both claimant clears awards Tier 4. This guarantees
+the combat vocabulary assumed by later missions while preserving Tier 4 as an
+absurd completionist replay reward. Ledger Investments displays the four earned
+nodes but cannot sell them.
+
+Broadside may boost earned Tier 1 to 2 or Tier 2 to 3. It cannot bootstrap Dual
+Fire from Tier 0 or grant Tier 4. Existing capability purchases migrate once,
+receive a credit based on the retired ladder's final listed prices, and then
+defer to campaign records. Test Arsenal
+adds a separate effective Tier 0–4 selector that never changes the pilot save;
+agent tests can use `?devArsenal=1&devDualFire=2`.
+
 ## Enemy Projectile Variety Implemented
 
 The `outdated_docs/implemented_specs/ENEMY_PROJECTILE_VARIETY_SPEC.md` pass has been implemented for player testing:
@@ -90,7 +108,7 @@ The `outdated_docs/implemented_specs/LOOT_DEPTH_SPEC.md` Phase 6 pass has been i
 - Per-instance affix magnitude rolls (`roll` ranges in `item_pool.json`) plus effect-trace potency tiers give same-base, same-rarity items a real strength spread.
 - Items store a `rollQuality` that scales value (`0.85 + 0.45 * rollQuality`) and drives a rarity-tinted roll-quality bar in tooltips/inspector; affix lines show the real rolled magnitude.
 - Pre-Founding items roll three affixes where the pool allows.
-- Aux abilities roll a per-item potency (cloak/EMP/bulwark knobs) plus offense and defense passives; the `auxPower` investment is retired and old saves migrate (capabilities ladder remapped to dual-fire-only, spent aux credits refunded).
+- Aux abilities roll a per-item potency (cloak/EMP/bulwark knobs) plus offense and defense passives; the `auxPower` investment is retired and old saves migrate. The temporary dual-fire-only credit ladder that replaced it is now also retired in favor of campaign awards.
 - `balance_report.js` gained a magnitude-roll DPS-spread section (~17–21% across same base + rarity, was ~0).
 
 ## Item Clarity Implemented
@@ -151,12 +169,12 @@ waves, then slightly reduces the Matriarch's immediate final brood and carrier
 cadence. The next playtest should establish whether that creates a real ramp
 without taking away the final mixed-role loadout check.
 
-Beginning here, the combat baseline may assume the Tier 2 Dual-Fire Coupler is
-available, not mandatory. Needlebloom plus Starwound is an intended solution:
+Beginning with The Green Signal, the campaign guarantees the Tier 2 Dual-Fire
+Coupler. Needlebloom plus Starwound is an intended solution:
 one weapon services the fast field and the other supplies splash against the
 carrier/boss knot. A role-appropriate gold single primary should remain a harder
-viable route, while Tier 3/4 Dual Fire is allowed to outgear the target rather
-than becoming the assumed floor.
+viable route. A completionist can earn Tier 3 before Return Address, and Tier 4
+after it; both are allowed to outgear the target rather than becoming its floor.
 
 Repossession also exposed a reward mismatch: a pilot who needs gold gear has no
 reason to risk the run for visibly scrap/certified/prototype salvage. Preserve the

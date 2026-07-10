@@ -73,6 +73,8 @@ const debugInvincible = document.getElementById("debug-invincible");
 const debugShowCompendium = document.getElementById("debug-show-compendium");
 const debugShowItems = document.getElementById("debug-show-items");
 const debugArsenal = document.getElementById("debug-arsenal");
+const debugDualFireControl = document.getElementById("debug-dual-fire-control");
+const debugDualFireTier = document.getElementById("debug-dual-fire-tier");
 const debugShowMath = document.getElementById("debug-show-math");
 const debugSkipOnboarding = document.getElementById("debug-skip-onboarding");
 const musicVolumeSlider = document.getElementById("music-volume");
@@ -635,7 +637,31 @@ function validateRuntimeEconomyConfig(config) {
 function loadEconomyOverrideDiff() {
   try {
     const parsed = JSON.parse(localStorage.getItem(ECONOMY_OVERRIDE_STORAGE_KEY) || "{}");
-    return isPlainObject(parsed) ? parsed : {};
+    if (!isPlainObject(parsed)) return {};
+    let sanitized = false;
+    // Capability purchases were retired in economy config v2. Old tuning
+    // diffs replace tier arrays wholesale, so strip that obsolete branch before
+    // it can resurrect the credit-purchased ladder over campaign awards.
+    if (isPlainObject(parsed.investments) && parsed.investments.capabilities !== undefined) {
+      delete parsed.investments.capabilities;
+      if (!Object.keys(parsed.investments).length) delete parsed.investments;
+      sanitized = true;
+    }
+    if (Array.isArray(parsed.legacyCreditGates?.shipUpgrades)) {
+      const filtered = parsed.legacyCreditGates.shipUpgrades.filter((upgrade) => upgrade?.id !== "dualFire");
+      if (filtered.length !== parsed.legacyCreditGates.shipUpgrades.length) {
+        parsed.legacyCreditGates.shipUpgrades = filtered;
+        sanitized = true;
+      }
+    }
+    if (sanitized) {
+      if (Object.keys(parsed).length) {
+        localStorage.setItem(ECONOMY_OVERRIDE_STORAGE_KEY, JSON.stringify(parsed));
+      } else {
+        localStorage.removeItem(ECONOMY_OVERRIDE_STORAGE_KEY);
+      }
+    }
+    return parsed;
   } catch (error) {
     console.warn("Ignoring invalid economy tuning overrides.", error);
     return {};
@@ -657,10 +683,13 @@ function hasEconomyOverrides() {
 
 function applyEconomyConfigDerivedData() {
   const config = getEconomyConfig();
-  upgrades = deepClone(config.legacyCreditGates?.shipUpgrades || []);
+  upgrades = deepClone(config.legacyCreditGates?.shipUpgrades || []).filter(
+    (upgrade) => upgrade?.id !== "dualFire"
+  );
   consumables = deepClone(config.consumables || []);
   consumablesById = Object.fromEntries(consumables.map((item) => [item.id, item]));
   investments = deepClone(config.investments || {});
+  delete investments.capabilities;
   rmbWeapons = deepClone(config.legacyCreditGates?.supportUnlocks || []);
   weaponComponents = deepClone(config.legacyCreditGates?.weaponComponents || {});
 }
@@ -967,7 +996,7 @@ const investmentTreeBranches = {
   },
   capabilities: {
     iconPath: overhaulKit.capabilities.dualFire,
-    subtitle: "Permanent ship systems: aux tuning and dual-fire.",
+    subtitle: "Campaign-earned dual-fire coupling.",
     accent: "cyan",
     nodes: [
       { x: 56, y: 58 },
@@ -1028,6 +1057,18 @@ function applyInvestmentTierReward(targetState, tierConfig) {
 function migrateRetiredAuxPower(targetState) {
   if (!targetState || targetState.auxPowerRetired) return;
   const oldCount = Math.max(0, Math.floor(targetState.investments?.capabilities || 0));
+  const currentDualTier = Math.max(0, Math.floor(targetState.upgrades?.dualFire || 0));
+  const hasRetiredAuxUpgrade = Object.prototype.hasOwnProperty.call(
+    targetState.upgrades || {},
+    "auxPower"
+  );
+  // Fresh saves from the dual-fire-only ladder originally omitted the migration
+  // marker. A matching 1-4 purchase/upgrade pair is current data, not the old
+  // interleaved aux ladder, and must not be remapped on its first reload.
+  if (!hasRetiredAuxUpgrade && oldCount >= 1 && oldCount <= 4 && currentDualTier >= oldCount) {
+    targetState.auxPowerRetired = true;
+    return;
+  }
   const dualFireByOldCount = [0, 0, 1, 1, 2, 2, 3, 4];
   const auxRefundByOldCount = [0, 420, 420, 1720, 1720, 4320, 4320, 4320];
   const idx = Math.min(oldCount, dualFireByOldCount.length - 1);
@@ -1040,6 +1081,37 @@ function migrateRetiredAuxPower(targetState) {
   }
   if (targetState.upgrades) delete targetState.upgrades.auxPower;
   targetState.auxPowerRetired = true;
+}
+
+const DUAL_FIRE_CAMPAIGN_PROGRESSION_VERSION = 1;
+// Exact historical spend cannot be reconstructed across the two retired
+// capability ladders. Use the final dual-fire-only list prices as a generous,
+// deterministic migration credit.
+const RETIRED_DUAL_FIRE_PURCHASE_COSTS = [900, 2200, 4500, 8000];
+
+function migrateDualFirePurchasesToCampaignAwards(targetState) {
+  if (
+    !targetState ||
+    Math.floor(targetState.dualFireCampaignProgressionVersion || 0) >=
+      DUAL_FIRE_CAMPAIGN_PROGRESSION_VERSION
+  ) {
+    return;
+  }
+  const purchasedCount = Math.max(
+    0,
+    Math.floor(targetState.investments?.capabilities || 0),
+    Math.floor(targetState.upgrades?.dualFire || 0)
+  );
+  const refund = RETIRED_DUAL_FIRE_PURCHASE_COSTS
+    .slice(0, Math.min(RETIRED_DUAL_FIRE_PURCHASE_COSTS.length, purchasedCount))
+    .reduce((sum, cost) => sum + cost, 0);
+  targetState.credits = Math.max(0, Math.round(Number(targetState.credits) || 0) + refund);
+  targetState.investments = targetState.investments || {};
+  targetState.investments.capabilities = 0;
+  targetState.upgrades = targetState.upgrades || {};
+  targetState.upgrades.dualFire = 0;
+  targetState.dualFireCampaignProgressionVersion = DUAL_FIRE_CAMPAIGN_PROGRESSION_VERSION;
+  targetState.dualFireCampaignRefund = refund;
 }
 
 function applyPurchasedInvestmentRewards(targetState = state) {
@@ -1264,8 +1336,13 @@ function normalizePrimaryFireMode(value) {
   return value === "dual" ? "dual" : "swap";
 }
 
+function getPrimaryFireModeForTier(targetState, dualFireTier) {
+  const selected = normalizePrimaryFireMode(targetState.primaryFireMode);
+  return selected === "dual" && dualFireTier <= 0 ? "swap" : selected;
+}
+
 function getPrimaryFireMode(targetState = state) {
-  return normalizePrimaryFireMode(targetState.primaryFireMode);
+  return getPrimaryFireModeForTier(targetState, getDualFireTier(targetState));
 }
 
 function setPrimaryFireMode(mode) {
@@ -3735,6 +3812,18 @@ const devArsenal = isDevFlagEnabled("devArsenal");
 const devPressure = isDevFlagEnabled("devPressure");
 const devPerf = isDevFlagEnabled("devPerf");
 const devActs = isDevFlagEnabled("devActs");
+const DEV_DUAL_FIRE_OVERRIDE_STORAGE_KEY = "mini-fighter-dev-dual-fire-tier";
+
+function normalizeDevDualFireTier(value) {
+  if (value === null || value === undefined || value === "" || value === "progression") return null;
+  const tier = Math.floor(Number(value));
+  return Number.isFinite(tier) && tier >= 0 && tier <= 4 ? tier : null;
+}
+
+const requestedDevDualFireValue = getDevParam("devDualFire");
+let devDualFireTierOverride = requestedDevDualFireValue
+  ? normalizeDevDualFireTier(requestedDevDualFireValue)
+  : normalizeDevDualFireTier(localStorage.getItem(DEV_DUAL_FIRE_OVERRIDE_STORAGE_KEY));
 
 // Lightweight frame telemetry for agentic plasma/performance checks. This is
 // intentionally URL-only: the human DEV menu should stay focused on gameplay
@@ -3892,6 +3981,10 @@ let mission = null;
 
 function isDevArsenalEnabled() {
   return devArsenal || !!state?.debugArsenalEnabled;
+}
+
+function getDevDualFireTierOverride() {
+  return isDevArsenalEnabled() ? devDualFireTierOverride : null;
 }
 
 function applyDevStateFlags() {
@@ -4416,6 +4509,40 @@ const activeCampaignLevels = [
     requires: [{ completed: "act2_processional" }, { completed: "act2_repossession" }],
   },
   { id: "act2_return_address", label: "Return Address", requires: [{ completed: "act2_green_signal" }] },
+];
+
+// Dual Fire is core combat vocabulary, so its base tiers are direct campaign
+// awards rather than missable credit purchases. Each requirement group is AND;
+// multiple groups are OR. Tier 3 therefore rewards either Return Address or the
+// completionist claimant route, while Tier 4 requires both achievements.
+const DUAL_FIRE_CAMPAIGN_MILESTONES = [
+  {
+    tier: 1,
+    damagePercent: 60,
+    requirements: [["level8"]],
+    requirementLabel: "Clear Last Light",
+  },
+  {
+    tier: 2,
+    damagePercent: 70,
+    requirements: [["act2_processional"], ["act2_repossession"]],
+    requirementLabel: "Clear Processional or Repossession",
+  },
+  {
+    tier: 3,
+    damagePercent: 85,
+    requirements: [
+      ["act2_return_address"],
+      ["act2_processional", "act2_repossession"],
+    ],
+    requirementLabel: "Clear Return Address or both claimant missions",
+  },
+  {
+    tier: 4,
+    damagePercent: 100,
+    requirements: [["act2_return_address", "act2_processional", "act2_repossession"]],
+    requirementLabel: "Clear Return Address, Processional, and Repossession",
+  },
 ];
 
 // Missions after Last Light were useful mechanics experiments, but they are not
@@ -5823,8 +5950,36 @@ if (debugArsenal) {
       devArsenalLots = [];
       if (activeLedgerMode === "arsenal") activeLedgerMode = "market";
     }
+    if (devDualFireTierOverride !== null) {
+      setHangarStatusMessage(
+        state.debugArsenalEnabled || devArsenal
+          ? `DEV Dual Fire override reactivated: effective Tier ${devDualFireTierOverride}.`
+          : `DEV Dual Fire override stored but inactive. Progression is effective Tier ${getProgressionDualFireTier()}.`
+      );
+    }
     hideItemTooltip();
     saveState();
+    safeUpdateHangar();
+  });
+}
+
+if (debugDualFireTier) {
+  debugDualFireTier.addEventListener("change", () => {
+    devDualFireTierOverride = normalizeDevDualFireTier(debugDualFireTier.value);
+    if (devDualFireTierOverride === null) {
+      localStorage.removeItem(DEV_DUAL_FIRE_OVERRIDE_STORAGE_KEY);
+      const earnedTier = getCampaignDualFireTier();
+      const effectiveTier = getProgressionDualFireTier();
+      setHangarStatusMessage(
+        earnedTier === effectiveTier
+          ? `Dual Fire follows campaign progression: Tier ${effectiveTier}.`
+          : `Dual Fire progression: Tier ${earnedTier} earned, Tier ${effectiveTier} with hull bonus.`
+      );
+    } else {
+      localStorage.setItem(DEV_DUAL_FIRE_OVERRIDE_STORAGE_KEY, String(devDualFireTierOverride));
+      setHangarStatusMessage(`DEV Dual Fire override: effective Tier ${devDualFireTierOverride}. Pilot progression unchanged.`);
+    }
+    hideItemTooltip();
     safeUpdateHangar();
   });
 }
@@ -5900,6 +6055,8 @@ function loadState() {
       debugShowAllItems: false,
       debugArsenalEnabled: false,
       devShowMath: false,
+      auxPowerRetired: true,
+      dualFireCampaignProgressionVersion: DUAL_FIRE_CAMPAIGN_PROGRESSION_VERSION,
       encounteredEnemies: {},
       killsByEnemyKey: {},
       relicCollection: {},
@@ -5977,17 +6134,21 @@ function loadState() {
   try {
     const parsed = JSON.parse(stored);
     shouldAutoLaunchFreshPilotMission = false;
+    const storedUpgrades = isPlainObject(parsed.upgrades) ? parsed.upgrades : {};
     parsed.upgrades = {
-      hull: parsed.upgrades?.hull ?? 0,
-      shield: parsed.upgrades?.shield ?? 0,
-      damage: parsed.upgrades?.damage ?? 0,
-      fireRate: parsed.upgrades?.fireRate ?? 0,
-      spread: parsed.upgrades?.spread ?? 0,
-      auxDamage: parsed.upgrades?.auxDamage ?? 0,
-      auxCooldown: parsed.upgrades?.auxCooldown ?? 0,
-      cloakDuration: parsed.upgrades?.cloakDuration ?? 0,
-      dualFire: parsed.upgrades?.dualFire ?? 0,
+      hull: storedUpgrades.hull ?? 0,
+      shield: storedUpgrades.shield ?? 0,
+      damage: storedUpgrades.damage ?? 0,
+      fireRate: storedUpgrades.fireRate ?? 0,
+      spread: storedUpgrades.spread ?? 0,
+      auxDamage: storedUpgrades.auxDamage ?? 0,
+      auxCooldown: storedUpgrades.auxCooldown ?? 0,
+      cloakDuration: storedUpgrades.cloakDuration ?? 0,
+      dualFire: storedUpgrades.dualFire ?? 0,
     };
+    if (storedUpgrades.auxPower !== undefined) {
+      parsed.upgrades.auxPower = storedUpgrades.auxPower;
+    }
     parsed.investments = {
       engineering: parsed.investments?.engineering ?? 0,
       operations: parsed.investments?.operations ?? 0,
@@ -6001,6 +6162,7 @@ function loadState() {
     }
     parsed.unlockedLevels = parsed.unlockedLevels ?? 1;
     normalizeAct2ProgressState(parsed);
+    migrateDualFirePurchasesToCampaignAwards(parsed);
     normalizeOnboardingState(parsed);
     parsed.debugUnlock = parsed.debugUnlock ?? false;
     parsed.debugInvincible = parsed.debugInvincible ?? false;
@@ -6139,6 +6301,8 @@ function loadState() {
       debugShowAllItems: false,
       debugArsenalEnabled: false,
       devShowMath: false,
+      auxPowerRetired: true,
+      dualFireCampaignProgressionVersion: DUAL_FIRE_CAMPAIGN_PROGRESSION_VERSION,
       encounteredEnemies: {},
       killsByEnemyKey: {},
       relicCollection: {},
@@ -6383,11 +6547,106 @@ function getEmpClearRadiusForState(targetState = state) {
   return getAuxRuntimeStats("emp", targetState).clearRadius;
 }
 
-function getDualFireTier(targetState = state) {
-  const base = Math.max(0, Math.min(4, Math.floor(targetState.upgrades?.dualFire || 0)));
-  const hullBonus = Math.max(0, Math.floor(getHullBonuses(targetState).dualFireTierBonus || 0));
-  return Math.max(0, Math.min(4, base + hullBonus));
+function isDualFireCampaignMilestoneEarned(milestone, targetState = state) {
+  return (milestone?.requirements || []).some((requiredMissionIds) =>
+    requiredMissionIds.every((missionId) => hasCompletedMission(missionId, targetState))
+  );
 }
+
+function getCampaignDualFireTier(targetState = state) {
+  return DUAL_FIRE_CAMPAIGN_MILESTONES.reduce(
+    (highest, milestone) =>
+      isDualFireCampaignMilestoneEarned(milestone, targetState)
+        ? Math.max(highest, milestone.tier)
+        : highest,
+    0
+  );
+}
+
+function getProgressionDualFireTier(targetState = state) {
+  const base = getCampaignDualFireTier(targetState);
+  if (base <= 0 || base >= 4) return base;
+  const hullBonus = Math.max(0, Math.floor(getHullBonuses(targetState).dualFireTierBonus || 0));
+  // Broadside is allowed to accelerate the middle of the ladder, but it cannot
+  // create coupling from Tier 0 or counterfeit the completion-only Tier 4.
+  return Math.max(1, Math.min(3, base + hullBonus));
+}
+
+function getDualFireTier(targetState = state) {
+  const devOverride = getDevDualFireTierOverride();
+  return devOverride === null ? getProgressionDualFireTier(targetState) : devOverride;
+}
+
+window.__dualFireProgressionReport = () => {
+  const targetFor = (missionIds, hullId = "starter") => ({
+    ...state,
+    completedMissions: Object.fromEntries(missionIds.map((missionId) => [missionId, 1])),
+    hulls: { ownedIds: ["starter", hullId], equippedId: hullId },
+  });
+  const rows = {
+    none: targetFor([]),
+    lastLight: targetFor(["level8"]),
+    processional: targetFor(["level8", "act2_processional"]),
+    repossession: targetFor(["level8", "act2_repossession"]),
+    bothClaimants: targetFor(["level8", "act2_processional", "act2_repossession"]),
+    returnAddressOneRoute: targetFor(["level8", "act2_processional", "act2_return_address"]),
+    completionist: targetFor(["level8", "act2_processional", "act2_repossession", "act2_return_address"]),
+  };
+  const migrateCase = (input) => {
+    const target = deepClone(input);
+    migrateRetiredAuxPower(target);
+    migrateDualFirePurchasesToCampaignAwards(target);
+    return {
+      credits: target.credits,
+      refund: target.dualFireCampaignRefund,
+      purchaseCount: target.investments?.capabilities,
+      upgradeTier: target.upgrades?.dualFire,
+      version: target.dualFireCampaignProgressionVersion,
+      auxPowerRetired: target.auxPowerRetired,
+    };
+  };
+  return {
+    milestones: Object.fromEntries(
+      Object.entries(rows).map(([key, targetState]) => [key, getCampaignDualFireTier(targetState)])
+    ),
+    broadside: {
+      none: getProgressionDualFireTier(targetFor([], "broadside")),
+      tier1: getProgressionDualFireTier(targetFor(["level8"], "broadside")),
+      tier2: getProgressionDualFireTier(targetFor(["level8", "act2_processional"], "broadside")),
+      tier3: getProgressionDualFireTier(targetFor(["level8", "act2_processional", "act2_repossession"], "broadside")),
+      tier4: getProgressionDualFireTier(targetFor(["level8", "act2_processional", "act2_repossession", "act2_return_address"], "broadside")),
+    },
+    migrationCases: {
+      freshCurrentTier1: migrateCase({
+        credits: 100,
+        upgrades: { dualFire: 1 },
+        investments: { capabilities: 1 },
+      }),
+      currentTier4: migrateCase({
+        credits: 100,
+        upgrades: { dualFire: 4 },
+        investments: { capabilities: 4 },
+        auxPowerRetired: true,
+      }),
+      oldInterleavedTier4: migrateCase({
+        credits: 100,
+        upgrades: { auxPower: 3, dualFire: 4 },
+        investments: { capabilities: 7 },
+      }),
+    },
+    modeFallback: {
+      storedDualAtTier0: getPrimaryFireModeForTier({ primaryFireMode: "dual" }, 0),
+      storedDualAtTier2: getPrimaryFireModeForTier({ primaryFireMode: "dual" }, 2),
+      storedSwapAtTier4: getPrimaryFireModeForTier({ primaryFireMode: "swap" }, 4),
+    },
+    live: {
+      campaignTier: getCampaignDualFireTier(),
+      progressionTier: getProgressionDualFireTier(),
+      effectiveTier: getDualFireTier(),
+      overrideTier: getDevDualFireTierOverride(),
+    },
+  };
+};
 
 function getDualFireDamageMult(targetState = state) {
   return DUAL_FIRE_DAMAGE_MULTS[getDualFireTier(targetState)] || 0;
@@ -6700,6 +6959,7 @@ function endMission({ ejected = false, completed = false } = {}) {
   const ledgerMissionSummary = settleLedgerAfterMission(outcome);
   let completedEntry = null;
   const keyItemLines = [];
+  const campaignDualFireTierBefore = getCampaignDualFireTier(state);
   const debriefLoreLine = completed ? pickDebriefLoreLine(mission.level) : "";
   if (completed && mission.level?.id) {
     const completedBaseId = missionProgressionBaseIdFor(mission.level);
@@ -6723,6 +6983,15 @@ function endMission({ ejected = false, completed = false } = {}) {
       }
     }
   }
+  const campaignDualFireTierAfter = getCampaignDualFireTier(state);
+  const capabilityUnlockLines = campaignDualFireTierAfter > campaignDualFireTierBefore
+    ? [
+        {
+          label: "Dual-Fire Coupler",
+          text: `Tier ${campaignDualFireTierAfter} earned · ${DUAL_FIRE_DAMAGE_MULTS[campaignDualFireTierAfter] * 100}% per weapon`,
+        },
+      ]
+    : [];
   let onboardingMessage = "";
   let continueTrainingAfterDebrief = false;
   const directive = getCurrentOnboardingMission();
@@ -6783,6 +7052,7 @@ function endMission({ ejected = false, completed = false } = {}) {
     consecutiveEarlyRecalls: ledgerMissionSummary.consecutiveEarlyRecalls,
     onboardingMessage,
     keyItemLines,
+    capabilityUnlockLines,
     debriefLoreLine,
     repossessedCount: mission.repossessedCount || 0,
     breachFailed: !!mission.breachFailed,
@@ -6883,6 +7153,13 @@ function renderDebriefSummary(summary) {
       rows.push({
         label: item.label || getKeyItemLabel(item.id),
         text: item.newlyGranted ? "decoded" : "decoded previously",
+        memo: true,
+      });
+    });
+    (summary.capabilityUnlockLines || []).forEach((item) => {
+      rows.push({
+        label: item.label,
+        text: item.text,
         memo: true,
       });
     });
@@ -7036,6 +7313,17 @@ function updateHangar() {
   if (debugArsenal) {
     debugArsenal.checked = arsenalEnabled;
   }
+  if (debugDualFireControl) {
+    debugDualFireControl.hidden = !arsenalEnabled;
+  }
+  if (debugDualFireTier) {
+    const overrideTier = getDevDualFireTierOverride();
+    const progressionOption = debugDualFireTier.querySelector('option[value="progression"]');
+    if (progressionOption) {
+      progressionOption.textContent = `Progression · Tier ${getProgressionDualFireTier()}`;
+    }
+    debugDualFireTier.value = overrideTier === null ? "progression" : String(overrideTier);
+  }
   if (ledgerDevArsenalMode) {
     ledgerDevArsenalMode.hidden = !arsenalEnabled;
   }
@@ -7047,6 +7335,30 @@ function updateHangar() {
   }
   if (debugSkipOnboarding) {
     debugSkipOnboarding.checked = !!state.debugSkipOnboarding;
+  }
+  document.body.dataset.dualFireCampaignTier = String(getCampaignDualFireTier());
+  document.body.dataset.dualFireEffectiveTier = String(getDualFireTier());
+  document.body.dataset.dualFireOverride = getDevDualFireTierOverride() === null ? "" : String(getDevDualFireTierOverride());
+  document.body.dataset.primaryFireModeSelected = normalizePrimaryFireMode(state.primaryFireMode);
+  document.body.dataset.primaryFireModeEffective = getPrimaryFireMode();
+  if (arsenalEnabled) {
+    const dualFireProgressionAudit = window.__dualFireProgressionReport?.();
+    document.body.dataset.dualFireMilestoneAudit = JSON.stringify(dualFireProgressionAudit?.milestones || {});
+    document.body.dataset.dualFireBroadsideAudit = JSON.stringify(dualFireProgressionAudit?.broadside || {});
+    document.body.dataset.dualFireMigrationCaseAudit = JSON.stringify(dualFireProgressionAudit?.migrationCases || {});
+    document.body.dataset.dualFireModeAudit = JSON.stringify(dualFireProgressionAudit?.modeFallback || {});
+    document.body.dataset.dualFireMigrationAudit = JSON.stringify({
+      version: state.dualFireCampaignProgressionVersion || 0,
+      retiredPurchaseCount: state.investments?.capabilities || 0,
+      retiredUpgradeTier: state.upgrades?.dualFire || 0,
+      refund: state.dualFireCampaignRefund || 0,
+    });
+  } else {
+    delete document.body.dataset.dualFireMilestoneAudit;
+    delete document.body.dataset.dualFireBroadsideAudit;
+    delete document.body.dataset.dualFireMigrationCaseAudit;
+    delete document.body.dataset.dualFireModeAudit;
+    delete document.body.dataset.dualFireMigrationAudit;
   }
   syncAudioControls();
   if (hangarStatus) {
@@ -7160,14 +7472,26 @@ function getLedgerLicenseInvestmentConfig() {
 }
 
 function getInvestmentEntries() {
+  const dualFireMilestones = {
+    name: "Ship Capabilities",
+    milestone: true,
+    tiers: DUAL_FIRE_CAMPAIGN_MILESTONES.map((milestone) => ({
+      benefit: `Dual-Fire Coupler tier ${milestone.tier} · ${milestone.damagePercent}% per weapon`,
+      requirementLabel: milestone.requirementLabel,
+    })),
+  };
   return [
-    ...Object.entries(investments).map(([key, data]) => ({ key, data })),
+    ...Object.entries(investments)
+      .filter(([key]) => key !== "capabilities")
+      .map(([key, data]) => ({ key, data })),
+    { key: "capabilities", data: dualFireMilestones },
     { key: "marketLicense", data: getLedgerLicenseInvestmentConfig() },
   ];
 }
 
 function getInvestmentCurrentTier(key) {
   if (key === "marketLicense") return getLedgerLicenseTier();
+  if (key === "capabilities") return getCampaignDualFireTier();
   return Math.max(0, Math.floor(state.investments?.[key] || 0));
 }
 
@@ -7213,20 +7537,27 @@ function renderInvestmentNode(key, data, tierConfig, index, currentTier) {
   const position = getInvestmentNodePosition(branch, index, data.tiers.length);
   const purchased = index < currentTier;
   const next = index === currentTier;
-  const affordable = next && state.credits >= tierConfig.cost;
+  const milestone = !!data.milestone;
+  const affordable = !milestone && next && state.credits >= tierConfig.cost;
   const color = getInvestmentAccentColor(branch.accent);
   const iconHtml = branch.iconPath
     ? `<img src="${escapeHtml(branch.iconPath)}" alt="" />`
     : `<span>${escapeHtml(branch.icon || String(index + 1))}</span>`;
+  const title = milestone
+    ? purchased
+      ? `${tierConfig.benefit}: earned`
+      : `${tierConfig.benefit}: ${tierConfig.requirementLabel}`
+    : `${data.name} tier ${index + 1}: ${tierConfig.benefit}`;
   return `
     <button
       type="button"
-      class="investment-tree-node${purchased ? " is-purchased" : ""}${next ? " is-next" : ""}${affordable ? " is-affordable" : ""}"
+      class="investment-tree-node${purchased ? " is-purchased" : ""}${next ? " is-next" : ""}${affordable ? " is-affordable" : ""}${milestone ? " is-milestone" : ""}"
       data-invest-key="${escapeHtml(key)}"
       data-invest-tier="${index}"
       style="left:${position.x}%; top:${position.y}%; --invest-accent:${color};"
-      ${affordable ? "" : "disabled"}
-      title="${escapeHtml(`${data.name} tier ${index + 1}: ${tierConfig.benefit}`)}"
+      ${milestone ? 'aria-disabled="true"' : affordable ? "" : "disabled"}
+      aria-label="${escapeHtml(title)}"
+      title="${escapeHtml(title)}"
     >
       ${iconHtml}
       <small>${index + 1}</small>
@@ -7245,7 +7576,11 @@ function renderInvestmentReceipt(entries) {
         <div class="investment-receipt-line" style="--invest-accent:${getInvestmentAccentColor(branch.accent)};">
           <span>${escapeHtml(data.name)}</span>
           <strong>${currentTier}/${maxTier}</strong>
-          <em>${escapeHtml(nextTier ? `${nextTier.benefit} | ${formatCredits(nextTier.cost)}` : "Complete")}</em>
+          <em>${escapeHtml(nextTier
+            ? data.milestone
+              ? `${nextTier.benefit} | ${nextTier.requirementLabel}`
+              : `${nextTier.benefit} | ${formatCredits(nextTier.cost)}`
+            : "Complete")}</em>
         </div>
       `;
     })
@@ -7288,6 +7623,7 @@ function renderInvestments() {
 }
 
 async function handleInvestment(key) {
+  if (key === "capabilities") return;
   if (key === "marketLicense") {
     await purchaseLedgerLicense();
     return;
@@ -9589,7 +9925,7 @@ function getItemDisplayStats(item, slotId = null) {
       { label: "Mini Control", value: `${Math.round((bonuses.miniDamageMult ?? 1) * 100)}% dmg | ${Math.round((1 / (bonuses.miniCooldownMult ?? 1)) * 100)}% Shots/sec`, math: "Hull mini control modifies mini firing speed." },
       { label: "Aux Potency", value: bonuses.auxPowerBonus ? `+${Math.round(bonuses.auxPowerBonus * 8)}% ability roll` : "—", math: "Hull identity perk lifts the equipped aux item's rolled potency." },
       { label: "Second Bay", value: `${Math.round((bonuses.secondBayStrainReduction || 0) * 100)}% strain mitigation`, math: `Baseline second-bay strain is ${Math.round(SECOND_PRIMARY_STRAIN_RATE * 100)}% primary damage per weapon.` },
-      { label: "Dual-Fire", value: `+${bonuses.dualFireTierBonus || 0} tier`, math: "Hull bonus stacks with Armory dual-fire upgrades." },
+      { label: "Dual-Fire", value: `+${bonuses.dualFireTierBonus || 0} tier`, math: "Hull bonus augments the campaign-earned tier within its progression limits." },
     ];
   } else {
     const support = intrinsic.support || previewStats.support;
@@ -10025,6 +10361,9 @@ function renderShipStatsPanel() {
   ];
   const dualReady = canUseDualFireCurrentLoadout();
   const dualSelected = canDualFireCurrentLoadout();
+  const campaignDualFireTier = getCampaignDualFireTier();
+  const effectiveDualFireTier = getDualFireTier();
+  const devDualFireOverride = getDevDualFireTierOverride();
   const loadoutRows = [
     { label: "Hull", value: getEquippedHull().name, math: getEquippedHull().description },
     { label: "Bay State", value: loadout.label, math: loadout.description },
@@ -10042,8 +10381,14 @@ function renderShipStatsPanel() {
   const capabilityRows = [
     {
       label: "Dual-Fire Tier",
-      value: `${state.upgrades?.dualFire || 0}/4`,
-      math: "Dual-fire coupling is purchased in Ledger Investments.",
+      value: devDualFireOverride !== null
+        ? `DEV T${effectiveDualFireTier} · earned T${campaignDualFireTier}`
+        : effectiveDualFireTier === campaignDualFireTier
+          ? `${campaignDualFireTier}/4 earned`
+          : `${effectiveDualFireTier} effective · ${campaignDualFireTier} earned`,
+      math: devDualFireOverride !== null
+        ? "Save-safe Test Arsenal override; campaign progress is unchanged."
+        : "Dual-fire coupling is awarded by campaign milestones shown in Ledger Investments.",
     },
   ];
   shipStats.innerHTML = `
@@ -10505,16 +10850,21 @@ function renderShipUpgradesPanel() {
     const fireMode = getPrimaryFireMode();
     const dualReady = canUseDualFireCurrentLoadout();
     const dualTier = getDualFireTier();
+    const devDualTier = getDevDualFireTierOverride();
     const hasSecondPrimary = !!getSecondPrimaryArmoryItem();
-    const dualStatus = getDualFireTier() <= 0
-      ? ""
+    const dualStatus = dualTier <= 0
+      ? devDualTier === 0
+        ? "DEV T0 · Off"
+        : ""
       : !hasSecondPrimary
         ? "Install Primary B"
         : dualReady
-          ? `${Math.round(getDualFireDamageMult() * 100)}% per weapon`
+          ? `${devDualTier !== null ? `DEV T${dualTier} · ` : ""}${Math.round(getDualFireDamageMult() * 100)}% per weapon`
           : "Swap-only frame";
     const dualTitle = dualTier <= 0
-      ? "Unlock Dual Fire in Ledger Investments."
+      ? devDualTier === 0
+        ? "DEV Tier 0 override disables Dual Fire; campaign progress is unchanged."
+        : "Clear Last Light to earn Dual Fire tier 1."
       : !hasSecondPrimary
         ? "Install a Primary B weapon to enable Dual Fire."
         : dualReady
@@ -15625,6 +15975,12 @@ async function bootstrapGame() {
   try {
     await loadEconomyConfig();
     state = loadState();
+    if (state.dualFireCampaignRefund > 0 && !state.dualFireCampaignRefundAcknowledged) {
+      setHangarStatusMessage(
+        `Ship Capabilities moved to campaign awards. ${formatCredits(state.dualFireCampaignRefund)} migration credit returned.`
+      );
+      state.dualFireCampaignRefundAcknowledged = true;
+    }
     applyDevStateFlags();
     updateTuningBadge();
     renderTuningPanel();

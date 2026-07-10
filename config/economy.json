@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "market": {
     "buyRate": 1,
     "sellRate": 0.4,
@@ -139,15 +139,6 @@
         { "cost": 1500, "benefit": "Unlock Relay tech/control hull", "hullId": "relay" },
         { "cost": 3200, "benefit": "Unlock Broadside gunship hull", "hullId": "broadside" }
       ]
-    },
-    "capabilities": {
-      "name": "Ship Capabilities",
-      "tiers": [
-        { "cost": 900, "benefit": "Dual-Fire Coupler tier 1", "upgradeId": "dualFire", "upgradeLevel": 1 },
-        { "cost": 2200, "benefit": "Dual-Fire Coupler tier 2", "upgradeId": "dualFire", "upgradeLevel": 2 },
-        { "cost": 4500, "benefit": "Dual-Fire Coupler tier 3", "upgradeId": "dualFire", "upgradeLevel": 3 },
-        { "cost": 8000, "benefit": "Dual-Fire Coupler tier 4", "upgradeId": "dualFire", "upgradeLevel": 4 }
-      ]
     }
   },
   "consumables": [
@@ -198,8 +189,7 @@
       { "id": "damage", "name": "Coil Blaster", "desc": "+10% primary damage per level.", "baseCost": 160 },
       { "id": "fireRate", "name": "Fire Control", "desc": "+7% primary Shots per Second per level.", "baseCost": 150 },
       { "id": "auxCooldown", "name": "Ability Recharge", "desc": "-8% ability recharge time per level.", "baseCost": 180 },
-      { "id": "cloakDuration", "name": "Ability Duration", "desc": "+12% ability duration per level.", "baseCost": 200 },
-      { "id": "dualFire", "name": "Dual-Fire Coupler", "desc": "Unlock simultaneous compatible primary fire at 60%, 70%, 85%, then 100% damage.", "baseCost": 900, "maxLevel": 4 }
+      { "id": "cloakDuration", "name": "Ability Duration", "desc": "+12% ability duration per level.", "baseCost": 200 }
     ],
     "supportUnlocks": [
       { "id": "cloak", "name": "Cloaking Device", "desc": "Break enemy lock-on and reposition.", "unlockAt": 0, "cost": 0 },

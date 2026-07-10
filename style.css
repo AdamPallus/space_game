@@ -625,6 +625,21 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   padding: 12px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
 }
+.dev-tier-row {
+  display: grid;
+  grid-template-columns: 1fr 116px;
+  align-items: center;
+  gap: 8px;
+  padding-left: 20px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.dev-tier-row[hidden] { display: none; }
+.dev-tier-row .browser-select {
+  min-width: 0;
+  padding: 4px 6px;
+  font-size: 10px;
+}
 
 .audio-station { position: relative; }
 .audio-station summary {
@@ -1997,6 +2012,8 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   cursor: default;
   opacity: 0.52;
 }
+.investment-tree-node.is-milestone { cursor: default; opacity: 0.68; }
+.investment-tree-node.is-milestone.is-purchased { opacity: 0.96; }
 @keyframes investmentPulse {
   0%, 100% { box-shadow: 0 0 10px color-mix(in srgb, var(--invest-accent) 22%, transparent); }
   50% { box-shadow: 0 0 22px color-mix(in srgb, var(--invest-accent) 42%, transparent); }

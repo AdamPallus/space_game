@@ -2,8 +2,9 @@
 
 **Status:** Accepted direction. Slices 1–4 are player-validated. Repossession's
 Assessor liens remain explicitly unverified. Slice 5, Return Address, has
-validated its interception concept and is in a focused ramp revision. Later
-slices remain drafts until a playtest or conversation promotes them.
+validated its interception concept and is in a focused ramp revision. The Dual
+Fire campaign ladder is implemented for that retest. Later slices remain drafts
+until a playtest or conversation promotes them.
 
 **Creative and playtest authority:** Adam.
 
@@ -48,18 +49,41 @@ builds something worthy to hit.
 - Tier does not erase role. A gold swarm weapon may fail an armor check and a
   gold armor breaker may drown in Processional. That is a loadout problem, not a
   reason to raise the required rarity.
-- Beginning with Return Address, authored hybrid checks may assume that the
-  Tier 2 Dual-Fire Coupler is available. At its 70% per-weapon scaling, an
+- Beginning with The Green Signal, authored hybrid checks may assume that the
+  Tier 2 Dual-Fire Coupler has been earned. At its 70% per-weapon scaling, an
   ordinary two-bay hull produces about 119% of one weapon's base output after
   second-bay strain, compared with 110% for a focused single-primary build.
   Pairing complementary weapon roles is an intended solution, not a cheese.
-- Do not balance around Tier 3 or Tier 4 Dual Fire. Those investments are power
-  rewards that may outgear the target. A role-appropriate gold single primary
+- Do not balance Return Address around Tier 3 or Tier 4 Dual Fire. Those campaign
+  rewards may outgear the target. A role-appropriate gold single primary
   should remain a harder viable route, but every gold primary does not need to
   solve every mission alone. If single-primary identity later needs help, add a
   stronger specialist payoff rather than reducing the spectacle of Dual Fire.
 - Orphan Signal is a gold Pre-Founding aux and is valid Act 2 equipment. Canticle
   Core is a green Chorus Heirloom and therefore sits above the intended baseline.
+
+### Dual Fire progression contract
+
+Dual Fire is combat vocabulary, not a missable credit sink. Its base tiers are
+awarded directly from campaign records and displayed as earned nodes in Ledger
+Investments:
+
+1. **Tier 1 / 60%:** clear Last Light. This makes complementary coverage
+   available for Crossed Claims without exceeding single-primary focus in raw
+   output.
+2. **Tier 2 / 70%:** clear Processional or Repossession. Every valid path into
+   The Green Signal and Return Address therefore owns the intended hybrid
+   baseline.
+3. **Tier 3 / 85%:** clear Return Address, or clear both Processional and
+   Repossession. The latter is an optional completionist advantage before the
+   interception mission.
+4. **Tier 4 / 100%:** clear Return Address, Processional, and Repossession. This
+   is an intentionally excessive replay reward, not a Return Address baseline.
+
+Broadside's hull bonus cannot create Tier 1 from no campaign award and cannot
+manufacture the completion-only Tier 4; it can accelerate Tier 1 to Tier 2 or
+Tier 2 to Tier 3. The Test Arsenal exposes a separate effective-tier override
+from 0–4 so playtests never need to mutate or reset campaign progress.
 
 ## 2. Campaign truth and preservation policy
 
@@ -463,16 +487,12 @@ Slice 5:
    Tier 2 Dual Fire build.
 2. **Assessor verification.** Keep lien readability marked unverified until a
    future Repossession run actually observes it; this does not block Verdant work.
-3. **Progression rewards.** Decide what clearing Last Light, Crossed Claims, and
-   Processional should unlock. The combat target now assumes Tier 2 Dual Fire is
-   available by Return Address, but its exact campaign award or economy path is
-   not yet settled.
-4. **Loot chase.** Act-aware rarity floors, milestone rewards, provenance labels,
+3. **Loot chase.** Act-aware rarity floors, milestone rewards, provenance labels,
    and other ways to make dangerous field salvage relevant to a gold-equipped
    pilot now have a concrete failing case from Repossession.
-5. **Item creativity.** Named cloak/bulwark relics, mini-weapon trinket affixes,
+4. **Item creativity.** Named cloak/bulwark relics, mini-weapon trinket affixes,
    armor packs, and role-specific weapon surges remain a creative backlog.
-6. **Act and story structure.** Name or commit to Act 2 only after several missions
+5. **Act and story structure.** Name or commit to Act 2 only after several missions
    are fun. Then decide how much of the existing lore deserves to be carried by
    them.
 

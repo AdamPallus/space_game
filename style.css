@@ -308,6 +308,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .hud-right { justify-self: end; }
 .hud-row { display: flex; justify-content: space-between; gap: 12px; }
 .hud-row span:first-child { color: var(--muted); }
+.is-debt { color: #fb7185 !important; text-shadow: 0 0 10px rgba(251, 113, 133, 0.3); }
 .hud-action { pointer-events: auto; cursor: pointer; color: var(--accent); }
 .hud-action.disabled { opacity: 0.45; cursor: default; }
 
@@ -1259,6 +1260,77 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .ledger-consumable-item span { color: var(--muted); font-size: 8px; }
 .ledger-consumable-item button { grid-column: 1 / -1; }
 .ledger-consumable-item.is-locked { opacity: 0.48; border-style: dashed; }
+.armory-main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.armory-stage-panel { flex: 1 1 auto; min-height: 420px; }
+.armory-command-strip {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: stretch;
+}
+.armory-command-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-left: 1px solid var(--line);
+}
+.armory-compare-toggle { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; white-space: nowrap; }
+.armory-consumables { position: relative; padding: 7px 9px; gap: 5px; }
+.armory-consumable-head h3 { font-size: 11px; }
+.armory-consumable-bays { justify-content: flex-start; }
+.armory-consumable-bay { flex: 0 1 240px; grid-template-columns: 26px minmax(0, 1fr); padding: 5px 7px; cursor: pointer; }
+.armory-consumable-bay img { width: 24px; height: 24px; }
+.armory-consumable-bay small { display: block; color: var(--amber); font: 700 8px var(--mono); text-transform: uppercase; }
+.armory-consumable-picker {
+  position: absolute;
+  z-index: 14;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: min(760px, calc(100vw - 48px));
+  padding: 10px;
+  border: 1px solid rgba(240, 180, 41, 0.42);
+  border-radius: var(--radius);
+  background: rgba(7, 11, 18, 0.98);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.58);
+}
+.armory-consumable-picker > div:first-child { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: 10px; }
+.armory-consumable-picker > div:first-child span { color: var(--muted); }
+.armory-consumable-stock { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.armory-consumable-choice { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; text-align: left; padding: 8px; }
+.armory-consumable-choice img { width: 28px; height: 28px; object-fit: contain; }
+.armory-consumable-choice span,
+.armory-consumable-choice strong,
+.armory-consumable-choice small { display: block; }
+.armory-consumable-choice span span { margin-top: 2px; color: var(--muted); line-height: 1.3; }
+.armory-consumable-choice small { margin-top: 5px; color: var(--amber); font-family: var(--mono); }
+.armory-drawer {
+  position: absolute;
+  z-index: 12;
+  top: 0;
+  right: 0;
+  bottom: 92px;
+  width: min(500px, 48%);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 12px;
+  border-left: 1px solid rgba(125, 210, 255, 0.32);
+  background: rgba(7, 11, 18, 0.97);
+  box-shadow: -18px 0 40px rgba(0, 0, 0, 0.48);
+  animation: armory-drawer-in 150ms ease-out both;
+}
+.armory-drawer[hidden] { display: none; }
+.armory-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.armory-drawer-head h3 { margin-top: 2px; }
+.armory-drawer .armory-inventory-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+@keyframes armory-drawer-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
 .armory-inspector-head { display: flex; align-items: center; gap: 10px; }
 .armory-inspector-title { font-weight: 700; font-size: 14px; }
 .armory-inspector-stats {
@@ -1488,6 +1560,10 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   pointer-events: none;
   filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.55));
 }
+.item-tooltip.is-comparison { width: min(680px, calc(100vw - 24px)); }
+.item-tooltip-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.item-tooltip-label { display: block; margin: 0 0 4px 4px; color: var(--amber); font: 700 9px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.ui-tooltip-copy { border: 1px solid var(--line); border-radius: var(--radius-sm); background: rgba(7, 11, 18, 0.98); color: var(--ink); padding: 8px 10px; font-size: 11px; line-height: 1.35; }
 .item-display-block {
   --rarity-color: var(--ink);
   --rarity-glow: rgba(232, 238, 252, 0.18);
@@ -2755,7 +2831,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .hangar-stats { gap: 14px; }
   .hub-hotspots { grid-template-columns: 1fr 1fr; }
   .hub-drone { width: min(200px, 55vw); }
-  .armory-main { grid-template-columns: 1fr; overflow-y: auto; }
+  .armory-main { display: flex; flex-direction: column; overflow-y: auto; }
   .armory-stage-panel { min-height: 430px; flex: 0 0 auto; }
   .armory-inspector { flex: 0 0 auto; max-height: 210px; }
   .armory-rack { min-height: 320px; }
@@ -2780,6 +2856,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .stat-big { font-size: 15px; }
   #controls { display: none; }
   .scene-head { flex-wrap: wrap; }
+  .armory-drawer { position: absolute; width: min(560px, 86%); bottom: 104px; }
 }
 
 @media (max-width: 640px) {
@@ -2793,6 +2870,15 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .mobile-btn { flex: 1; min-width: 52px; min-height: 48px; padding: 4px; font-size: 10px; }
   .mobile-btn.swap { min-width: 72px; }
   .mobile-btn.item { min-width: 58px; }
+  .armory-command-strip { grid-template-columns: 1fr; }
+  .armory-command-actions { border-left: 0; border-top: 1px solid var(--line); justify-content: flex-end; }
+  .armory-compare-toggle { display: none; }
+  .armory-consumable-bays { display: grid; grid-template-columns: 1fr 1fr; }
+  .armory-consumable-bay { width: 100%; }
+  .armory-consumable-picker { width: calc(100vw - 36px); }
+  .armory-consumable-stock { grid-template-columns: 1fr; max-height: 280px; overflow-y: auto; }
+  .armory-drawer { width: 100%; bottom: 142px; }
+  .item-tooltip-compare { grid-template-columns: 1fr; }
   .hud-center { grid-column: 1 / -1; grid-row: 1; }
   .hud-left { grid-row: 2; }
   .hud-right { grid-row: 2; }

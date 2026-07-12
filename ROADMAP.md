@@ -1,6 +1,6 @@
 # Roadmap
 
-Last audited: 2026-07-11
+Last audited: 2026-07-12
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
@@ -16,9 +16,9 @@ four ordered implementation slices cover:
 1. campaign-earned capability milestones from Mission 1 through Last Light;
 2. a single deliberately weak Cadet starter frame, followed by earned weapon
    choices instead of free swarm/armor role coverage;
-3. early stocked consumables with shield overcharge, armor overplate, and a
-   damage window; premium stock is loss-leading progression insurance, not part
-   of the normal difficulty baseline;
+3. early mission supplies with shield/armor recovery and two real impulse
+   windows; activation fees are loss-leading progression insurance, not part of
+   the normal difficulty baseline;
 4. guaranteed, role-aware gold commissioning rewards and act-aware drop tables;
 5. a fresh-save balance pass through Act 1 and the five validated missions.
 
@@ -26,14 +26,14 @@ No new campaign mission should be authored before that progression spine is
 playable. Assessor lien readability remains an explicitly unverified but
 non-blocking observation.
 
-Slice A has received its first player correction and is awaiting a revised
-chapter-pacing checkpoint. Act 1 now advances Hybrid -> choose Swarm or Armored
+Slices A and B are implemented. Act 1 advances Hybrid -> choose Swarm or Armored
 -> next Hybrid, so every capability requires two clears and the role variants
-create demand before alternate weapon systems arrive. Mission profiles record
-best destruction grades, Pilot Rank is rating-derived, Mission 2 uses a visible
-Certified mini choice, and Mission 4 retains its Certified primary choice. Slice
-B remains the next code pass after that playtest and owns the complete consumable
-stock, purchase, overcharge/overplate, cooldown, and preparation UI contract.
+create demand before alternate weapon systems arrive. Mission supplies are free
+to equip and charged per activation at run settlement, with debt permitted,
+first-clear fee waivers, independent trust-based bay authorization, exact full
+armor repair, persistent 125% shield overcharge, and short/long impulse options.
+The next implementation slice after the focused supply playtest is Slice C's
+guaranteed, role-aware gold acquisition path.
 
 ## Player-validated combat direction (2026-07-09)
 

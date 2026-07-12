@@ -48,12 +48,13 @@ const rtbCancelButton = document.getElementById("rtb-cancel");
 const shipNodeButtons = document.querySelectorAll("[data-ship-node]");
 const shipStats = document.getElementById("ship-stats");
 const armoryBench = document.getElementById("armory-bench");
-const armoryInspector = document.getElementById("armory-inspector");
 const armoryConsumables = document.getElementById("armory-consumables");
+const armoryDrawer = document.getElementById("armory-drawer");
+const armoryDrawerClose = document.getElementById("armory-drawer-close");
+const armoryCompareMode = document.getElementById("armory-compare-mode");
 const weaponInventory = document.getElementById("weapon-inventory");
 const armoryRackTitle = document.getElementById("armory-rack-title");
 const armoryRackCopy = document.getElementById("armory-rack-copy");
-const armoryRackTip = document.getElementById("armory-rack-tip");
 const armoryToggleStats = document.getElementById("armory-toggle-stats");
 const armoryBrowserSearch = document.getElementById("armory-browser-search");
 const armoryBrowserSort = document.getElementById("armory-browser-sort");
@@ -90,7 +91,6 @@ const hangarSceneButtons = document.querySelectorAll("[data-scene-target]");
 const hangarTabPanels = document.querySelectorAll("[data-tab-panel]");
 const ledgerBulletin = document.getElementById("ledger-bulletin");
 const ledgerStockList = document.getElementById("ledger-stock-list");
-const ledgerConsumableList = document.getElementById("ledger-consumable-list");
 const ledgerInventoryList = document.getElementById("ledger-inventory-list");
 const ledgerReceipt = document.getElementById("ledger-receipt");
 const ledgerLicenseStatus = document.getElementById("ledger-license-status");
@@ -145,6 +145,7 @@ const STORAGE_KEY = "mini-fighter-save";
 const ECONOMY_CONFIG_PATH = "config/economy.json";
 const PROGRESSION_CONFIG_PATH = "config/progression.json";
 const CAMPAIGN_VARIANT_PROGRESSION_VERSION = 1;
+const SUPPLY_CREDIT_MODEL_VERSION = 1;
 const ECONOMY_OVERRIDE_STORAGE_KEY = "mini-fighter-economy-overrides";
 const ECONOMY_PANEL_MINIMIZED_STORAGE_KEY = "mini-fighter-economy-panel-minimized";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
@@ -524,6 +525,7 @@ function normalizeEconomyConfig(config) {
   if (!isPlainObject(normalized.dropTables)) throw new Error("Economy config missing dropTables.");
   if (!isPlainObject(normalized.investments)) throw new Error("Economy config missing investments.");
   if (!Array.isArray(normalized.consumables)) throw new Error("Economy config missing consumables.");
+  if (!isPlainObject(normalized.supplyAuthorization)) throw new Error("Economy config missing supplyAuthorization.");
   const sellRate = Number(normalized.market.sellRate);
   const buyRate = Number(normalized.market.buyRate);
   const stockLots = Number(normalized.market.stockLots);
@@ -862,6 +864,70 @@ function isAct1StageComplete(baseId, targetState = state) {
     getAct1RoleVariantIds(baseId).some((variantId) => hasCompletedExactMission(variantId, targetState));
 }
 
+function getCompletedCampaignChapterCount(targetState = state) {
+  const act1Ids = new Set((progressionConfig?.act1Stages || []).map((stage) => stage.id));
+  const act1Count = Array.from(act1Ids).filter((id) => isAct1StageComplete(id, targetState)).length;
+  const laterCount = availableLevels.filter((entry) =>
+    entry &&
+    !entry.test &&
+    !act1Ids.has(entry.id) &&
+    Math.max(0, Number(targetState?.completedMissions?.[entry.id]) || 0) > 0
+  ).length;
+  return act1Count + laterCount;
+}
+
+function getSupplyAuthorizationConfig() {
+  return economyConfig?.supplyAuthorization || {};
+}
+
+function getConsumableBayUseLimit(slotIndex, targetState = state) {
+  const capabilityId = slotIndex === 1 ? "consumableBay2" : "consumableBay1";
+  if (!isCapabilityAvailable(capabilityId, targetState)) return 0;
+  const config = getSupplyAuthorizationConfig();
+  const maxCharges = Math.max(1, Math.floor(Number(config.maxChargesPerBay) || 3));
+  if (targetState?.debugArsenalEnabled || devArsenal) return maxCharges;
+  const unlockBaseline = slotIndex === 1 ? 7 : 1;
+  const completedAfterUnlock = Math.max(0, getCompletedCampaignChapterCount(targetState) - unlockBaseline);
+  const chaptersPerCharge = Math.max(1, Math.floor(Number(config.chaptersPerCharge) || 4));
+  return Math.min(maxCharges, 1 + Math.floor(completedAfterUnlock / chaptersPerCharge));
+}
+
+function getConsumableBayTrustText(slotIndex, targetState = state) {
+  const uses = getConsumableBayUseLimit(slotIndex, targetState);
+  if (!uses) return "Unauthorized";
+  const config = getSupplyAuthorizationConfig();
+  const maxCharges = Math.max(1, Math.floor(Number(config.maxChargesPerBay) || 3));
+  if (uses >= maxCharges) return `Trust ${uses} · maximum authorization`;
+  const unlockBaseline = slotIndex === 1 ? 7 : 1;
+  const progress = Math.max(0, getCompletedCampaignChapterCount(targetState) - unlockBaseline);
+  const cadence = Math.max(1, Math.floor(Number(config.chaptersPerCharge) || 4));
+  const remaining = cadence - (progress % cadence);
+  return `Trust ${uses} · ${remaining} chapter${remaining === 1 ? "" : "s"} to next charge`;
+}
+
+function migrateSupplyCreditModel(targetState) {
+  targetState.supplyWaivers = isPlainObject(targetState.supplyWaivers) ? targetState.supplyWaivers : {};
+  if (Math.floor(Number(targetState.supplyCreditModelVersion) || 0) < SUPPLY_CREDIT_MODEL_VERSION) {
+    const legacyOwned = isPlainObject(targetState.consumablesOwned) ? targetState.consumablesOwned : {};
+    targetState.supplyWaivers.shieldBoost =
+      (Number(targetState.supplyWaivers.shieldBoost) || 0) +
+      (Number(legacyOwned.shieldBoost) || 0) +
+      (Number(legacyOwned.bomb) || 0);
+    targetState.supplyWaivers.armorSealant =
+      (Number(targetState.supplyWaivers.armorSealant) || 0) + (Number(legacyOwned.armorSealant) || 0);
+    targetState.supplyWaivers.sustainedImpulse =
+      (Number(targetState.supplyWaivers.sustainedImpulse) || 0) + (Number(legacyOwned.overcharge) || 0);
+    if (Array.isArray(targetState.consumableSlots)) {
+      targetState.consumableSlots = targetState.consumableSlots.map((id) => id === "overcharge" ? "sustainedImpulse" : id);
+    }
+    targetState.consumablesOwned = {};
+    targetState.supplyCreditModelVersion = SUPPLY_CREDIT_MODEL_VERSION;
+  }
+  consumables.forEach((item) => {
+    targetState.supplyWaivers[item.id] = Math.max(0, Math.floor(Number(targetState.supplyWaivers[item.id]) || 0));
+  });
+}
+
 function migrateLegacyAct1Progression(targetState) {
   if (
     Math.floor(Number(targetState.campaignVariantProgressionVersion) || 0) >=
@@ -931,15 +997,7 @@ function normalizeCampaignProgressionState(targetState) {
     ? targetState.consumableSlots.slice(0, 2)
     : ["none", "none"];
   while (targetState.consumableSlots.length < 2) targetState.consumableSlots.push("none");
-  targetState.consumablesOwned = isPlainObject(targetState.consumablesOwned)
-    ? targetState.consumablesOwned
-    : {};
-  consumables.forEach((item) => {
-    targetState.consumablesOwned[item.id] = Math.max(
-      0,
-      Math.min(Number(item.stockCap) || 1, Math.floor(Number(targetState.consumablesOwned[item.id]) || 0))
-    );
-  });
+  migrateSupplyCreditModel(targetState);
 
   if (!isCapabilityAvailable("primaryBay2", targetState) && targetState.armory) {
     targetState.armory.equippedSecondLoadoutId = null;
@@ -3567,12 +3625,8 @@ function ensureCampaignFirstClearRewards(targetState = state, onlyMissionId = nu
     getFirstClearRewards(missionId).forEach((reward) => {
       if (targetState.claimedFirstClearRewards[reward.id]) return;
       if (reward.type === "consumable") {
-        const rewardItem = consumablesById[reward.consumableId];
-        targetState.consumablesOwned[reward.consumableId] =
-          Math.min(
-            Number(rewardItem?.stockCap) || Infinity,
-            Math.max(0, Number(targetState.consumablesOwned[reward.consumableId]) || 0) + reward.quantity
-          );
+        targetState.supplyWaivers[reward.consumableId] =
+          Math.max(0, Number(targetState.supplyWaivers[reward.consumableId]) || 0) + reward.quantity;
         if (
           Number.isInteger(reward.autoEquipSlot) &&
           isCapabilityAvailable(reward.autoEquipSlot === 1 ? "consumableBay2" : "consumableBay1", targetState) &&
@@ -3581,7 +3635,7 @@ function ensureCampaignFirstClearRewards(targetState = state, onlyMissionId = nu
           targetState.consumableSlots[reward.autoEquipSlot] = reward.consumableId;
         }
         targetState.claimedFirstClearRewards[reward.id] = true;
-        rewardLines.push({ label: reward.label, text: `${reward.quantity} issued` });
+        rewardLines.push({ label: reward.label, text: `${reward.quantity} activation fee waived` });
         return;
       }
       if (reward.type === "requisition") {
@@ -4335,7 +4389,7 @@ function applyDevStateFlags() {
   if (!state) return;
   if (devArsenal) {
     state.debugArsenalEnabled = true;
-    fillConsumableStock(state);
+    grantDevSupplyWaivers(state);
   }
   if (devSkipOnboarding || devArsenal || devActs) {
     shouldAutoLaunchFreshPilotMission = false;
@@ -4489,7 +4543,7 @@ function renderTuningPanel() {
   if (minimizeButton) {
     minimizeButton.textContent = tuningPanelMinimized ? "Open" : "Minimize";
     minimizeButton.setAttribute("aria-pressed", tuningPanelMinimized ? "true" : "false");
-    minimizeButton.title = tuningPanelMinimized ? "Open economy tuning panel" : "Minimize economy tuning panel";
+    minimizeButton.dataset.uiTip = tuningPanelMinimized ? "Open economy tuning panel" : "Minimize economy tuning panel";
   }
   const statusEl = tuningPanel.querySelector("[data-tuning-status]");
   if (statusEl) {
@@ -4515,7 +4569,7 @@ function renderTuningInput(field) {
   const pathName = tuningPathToInputName(field.path);
   return `
     <label class="tuning-field">
-      <span title="${escapeHtml(field.path.join("."))}">${escapeHtml(formatTuningPath(field.path))}</span>
+      <span data-ui-tip="${escapeHtml(field.path.join("."))}">${escapeHtml(formatTuningPath(field.path))}</span>
       <input
         type="number"
         data-tuning-path="${escapeHtml(pathName)}"
@@ -4643,12 +4697,7 @@ const player = {
   bulwarkTimer: 0,
   damageBoostTimer: 0,
   damageBoostMult: 1,
-  shieldOverchargeTimer: 0,
-  shieldOverchargeDecay: 0,
-  armorOverplateTimer: 0,
-  armorOverplateDecay: 0,
-  hullOverplateTimer: 0,
-  hullOverplateDecay: 0,
+  impulseBoostEffects: [],
   empCooldownTime: 8,
   empDuration: 1.6,
   empClearRadius: EMP_CLEAR_BASE_RADIUS,
@@ -5037,6 +5086,9 @@ let hangarNeedsRefresh = false;
 let openShipNodeId = null;
 let armoryHullPickerOpen = false;
 let selectedConsumableBay = 0;
+let armoryDrawerOpen = false;
+let armoryComparisonEnabled = false;
+let supplyPickerOpen = false;
 let openMissionInfoBaseId = null;
 let missionIntroActive = false;
 let rtbConfirmActive = false;
@@ -5723,6 +5775,12 @@ window.addEventListener("keydown", (event) => {
   enableAudio();
   keyState.add(event.key.toLowerCase());
   if (event.key === "Escape" && (!mission || !mission.active) && overlay && !overlay.hidden) {
+    if (armoryDrawerOpen) {
+      armoryDrawerOpen = false;
+      hideItemTooltip();
+      safeUpdateHangar();
+      return;
+    }
     if (armoryHullPickerOpen) {
       armoryHullPickerOpen = false;
       if (activeHangarTab === "loadout") safeUpdateHangar();
@@ -5881,7 +5939,7 @@ function refreshHangarTabLocks() {
     const unlocked = availability[tab] ?? true;
     button.disabled = !unlocked;
     button.classList.toggle("locked", !unlocked);
-    button.title = unlocked ? "" : getTabLockReason(tab);
+    button.dataset.uiTip = unlocked ? "" : getTabLockReason(tab);
   });
   hangarSceneButtons.forEach((button) => {
     const scene = button.dataset.sceneTarget;
@@ -5889,7 +5947,7 @@ function refreshHangarTabLocks() {
     const unlocked = availability[scene] ?? true;
     button.disabled = !unlocked;
     button.classList.toggle("locked", !unlocked);
-    button.title = unlocked ? "" : getTabLockReason(scene);
+    button.dataset.uiTip = unlocked ? "" : getTabLockReason(scene);
   });
 }
 
@@ -5987,6 +6045,17 @@ compendiumModeButtons.forEach((button) => {
   control?.addEventListener(control.tagName === "INPUT" ? "input" : "change", () => {
     if (activeHangarTab === "loadout") renderShipUpgradesPanel();
   });
+});
+
+armoryDrawerClose?.addEventListener("click", () => {
+  armoryDrawerOpen = false;
+  hideItemTooltip();
+  safeUpdateHangar();
+});
+
+armoryCompareMode?.addEventListener("change", () => {
+  armoryComparisonEnabled = armoryCompareMode.checked;
+  hideItemTooltip();
 });
 
 armoryToggleStats?.addEventListener("click", () => {
@@ -6301,7 +6370,7 @@ if (debugArsenal) {
     if (state.debugArsenalEnabled) {
       state.credits = DEV_ARSENAL_WALLET_CREDITS;
       state.lifetimeCredits = Math.max(Number(state.lifetimeCredits) || 0, DEV_ARSENAL_WALLET_CREDITS);
-      fillConsumableStock(state);
+      grantDevSupplyWaivers(state);
     } else {
       devArsenalLots = [];
       if (activeLedgerMode === "arsenal") activeLedgerMode = "market";
@@ -6464,11 +6533,9 @@ function loadState() {
         modifier: { none: true },
         aux: { cloak: true },
       },
-      consumablesOwned: {
-        shieldBoost: 0,
-        armorSealant: 0,
-        overcharge: 0,
-      },
+      supplyCreditModelVersion: SUPPLY_CREDIT_MODEL_VERSION,
+      supplyWaivers: {},
+      consumablesOwned: {},
       consumableSlots: ["none", "none"],
       upgrades: {
         hull: 0,
@@ -6633,14 +6700,7 @@ function loadState() {
     parsed.unlocked.modifier = parsed.unlocked.modifier || { none: true };
     parsed.unlocked.aux = parsed.unlocked.aux || { cloak: true };
     parsed.consumablesOwned = parsed.consumablesOwned || {};
-    if ((parsed.consumablesOwned.bomb || 0) > 0) {
-      parsed.consumablesOwned.shieldBoost =
-        (parsed.consumablesOwned.shieldBoost || 0) + parsed.consumablesOwned.bomb;
-      delete parsed.consumablesOwned.bomb;
-    }
-    consumables.forEach((item) => {
-      parsed.consumablesOwned[item.id] = parsed.consumablesOwned[item.id] ?? 0;
-    });
+    migrateSupplyCreditModel(parsed);
     parsed.consumableSlots = parsed.consumableSlots || ["none", "none"];
     if (!Array.isArray(parsed.consumableSlots) || parsed.consumableSlots.length < 2) {
       parsed.consumableSlots = ["none", "none"];
@@ -6727,11 +6787,9 @@ function loadState() {
         modifier: { none: true },
         aux: { cloak: true },
       },
-      consumablesOwned: {
-        shieldBoost: 0,
-        armorSealant: 0,
-        overcharge: 0,
-      },
+      supplyCreditModelVersion: SUPPLY_CREDIT_MODEL_VERSION,
+      supplyWaivers: {},
+      consumablesOwned: {},
       consumableSlots: ["none", "none"],
       upgrades: {
         hull: 0,
@@ -7144,15 +7202,11 @@ function initConsumablesForMission() {
     const item = consumablesById[slotId];
     if (slotId !== "none" && (!item || !isConsumableUnlocked(item))) slots[index] = "none";
   });
-  const remainingOwned = { ...state.consumablesOwned };
-  const uses = slots.map((slotId) => {
+  const uses = slots.map((slotId, index) => {
     if (!slotId || slotId === "none") return 0;
     const item = consumablesById[slotId];
     if (!item) return 0;
-    const owned = remainingOwned[slotId] ?? 0;
-    const allocated = Math.min(item.usesPerMission ?? 0, owned);
-    remainingOwned[slotId] = Math.max(0, owned - allocated);
-    return allocated;
+    return getConsumableBayUseLimit(index);
   });
   const cooldowns = slots.map(() => 0);
   return { slots, uses, cooldowns };
@@ -7240,7 +7294,9 @@ async function startMission({ showIntro = false } = {}) {
     consumableSlots: consumablesState.slots,
     consumableUses: consumablesState.uses,
     consumableCooldowns: consumablesState.cooldowns,
-    consumablesSpent: {},
+    supplyCharges: {},
+    supplyWaiversUsed: {},
+    recoveredSupplies: {},
     cargo: state.cargo,
     bossSalvage: [],
     onboardingStage: state.onboardingStage,
@@ -7271,12 +7327,7 @@ async function startMission({ showIntro = false } = {}) {
   player.bulwarkShield = 0;
   player.damageBoostTimer = 0;
   player.damageBoostMult = 1;
-  player.shieldOverchargeTimer = 0;
-  player.shieldOverchargeDecay = 0;
-  player.armorOverplateTimer = 0;
-  player.armorOverplateDecay = 0;
-  player.hullOverplateTimer = 0;
-  player.hullOverplateDecay = 0;
+  player.impulseBoostEffects = [];
   paused = false;
   setHangarStatusMessage("");
 
@@ -7322,7 +7373,30 @@ function endMission({ ejected = false, completed = false } = {}) {
   const bountyKept = grossBounty - hullWritedown;
   const subtotal = bountyKept + recoveryBonus;
   const dividends = calculateDividends(subtotal);
-  const finalReward = subtotal + dividends;
+  const missionReward = subtotal + dividends;
+  const outcome = completed ? "boss" : ejected ? "rtb" : "death";
+  const supplyChargeSummary = Object.entries(mission.supplyCharges || {}).map(([id, count]) => ({
+    id,
+    count,
+    name: consumablesById[id]?.name || id,
+    cost: (consumablesById[id]?.cost || 0) * count,
+  }));
+  const supplyWaiverSummary = Object.entries(mission.supplyWaiversUsed || {}).map(([id, count]) => ({
+    id,
+    count,
+    name: consumablesById[id]?.name || id,
+  }));
+  const recoveredSupplyEntries = Object.entries(mission.recoveredSupplies || {}).map(([id, count]) => ({
+    id,
+    count,
+    name: consumablesById[id]?.name || id,
+    value: (consumablesById[id]?.cost || 0) * count,
+  }));
+  const recoveredSupplySummary = completed || ejected ? recoveredSupplyEntries : [];
+  const lostRecoveredSupplySummary = completed || ejected ? [] : recoveredSupplyEntries;
+  const supplyChargeTotal = supplyChargeSummary.reduce((sum, entry) => sum + entry.cost, 0);
+  const recoveredSupplyTotal = recoveredSupplySummary.reduce((sum, entry) => sum + entry.value, 0);
+  const finalReward = missionReward - supplyChargeTotal + recoveredSupplyTotal;
   const cargoAtEnd = Array.isArray(state.cargo) ? state.cargo.map(cloneItem) : [];
   if (completed && !mission.bossSalvage?.length) {
     const fallbackBossDrop = rollSalvageDrop(
@@ -7350,22 +7424,14 @@ function endMission({ ejected = false, completed = false } = {}) {
   state.cargo = [];
 
   state.credits += finalReward;
-  state.lifetimeCredits += finalReward;
+  state.lifetimeCredits += Math.max(0, missionReward + recoveredSupplyTotal);
   state.missionCount += 1;
   let missionRating = completed
     ? calculateMissionRating(mission.kills, mission.spawnedEnemies)
     : null;
   state.lastMissionSummary = `${formatTime(mission.elapsed)} | ${mission.kills} kills${missionRating ? ` | ${missionRating.grade} ${missionRating.percent}%` : ""}`;
-  const outcome = completed ? "boss" : ejected ? "rtb" : "death";
   const bulletinSaleSummary = capturePendingBulletinSaleSummary();
   const ledgerMissionSummary = settleLedgerAfterMission(outcome);
-  const consumableUseSummary = Object.entries(mission.consumablesSpent || {})
-    .map(([id, count]) => ({
-      id,
-      count,
-      name: consumablesById[id]?.name || id,
-      replacementCost: (consumablesById[id]?.cost || 0) * count,
-    }));
   let completedEntry = null;
   const keyItemLines = [];
   const campaignDualFireTierBefore = getCampaignDualFireTier(state);
@@ -7485,7 +7551,10 @@ function endMission({ ejected = false, completed = false } = {}) {
     debriefLoreLine,
     repossessedCount: mission.repossessedCount || 0,
     breachFailed: !!mission.breachFailed,
-    consumableUseSummary,
+    supplyChargeSummary,
+    supplyWaiverSummary,
+    recoveredSupplySummary,
+    lostRecoveredSupplySummary,
   });
   playUiSfx("stamp");
   debriefTime.textContent = formatTime(mission.elapsed);
@@ -7611,22 +7680,25 @@ function renderDebriefSummary(summary) {
         memo: true,
       });
     }
-    if (summary.consumableUseSummary?.length) {
-      const replacementCost = summary.consumableUseSummary.reduce(
-        (sum, item) => sum + item.replacementCost,
-        0
-      );
-      rows.push({
-        label: "Supplies expended",
-        text: summary.consumableUseSummary.map((item) => `${item.name} x${item.count}`).join(" · "),
-        memo: true,
-      });
-      rows.push({
-        label: "Boosted-clear net",
-        text: `${formatLedgerCredits(summary.finalReward - replacementCost)} after replacement`,
-        memo: true,
-      });
-    }
+    (summary.supplyChargeSummary || []).forEach((item) => rows.push({
+      label: `${item.name} activation${item.count === 1 ? "" : ` x${item.count}`}`,
+      amount: -item.cost,
+      fee: true,
+    }));
+    (summary.supplyWaiverSummary || []).forEach((item) => rows.push({
+      label: `${item.name} activation${item.count === 1 ? "" : ` x${item.count}`}`,
+      text: "FEE WAIVED",
+      memo: true,
+    }));
+    (summary.recoveredSupplySummary || []).forEach((item) => rows.push({
+      label: `Sealed ${item.name}${item.count === 1 ? "" : ` x${item.count}`}`,
+      amount: item.value,
+    }));
+    (summary.lostRecoveredSupplySummary || []).forEach((item) => rows.push({
+      label: `Unredeemed ${item.name}${item.count === 1 ? "" : ` x${item.count}`}`,
+      text: "LOST WITH DRONE",
+      fee: true,
+    }));
     (summary.keyItemLines || []).forEach((item) => {
       rows.push({
         label: item.label || getKeyItemLabel(item.id),
@@ -7783,14 +7855,15 @@ function updateHangar() {
   if (pilotRank) {
     const ratingScore = getPilotRatingScore(state);
     pilotRank.textContent = getPilotRank(state);
-    pilotRank.title = `Best mission-rating total: ${ratingScore}`;
+    pilotRank.dataset.uiTip = `Best mission-rating total: ${ratingScore}`;
   }
   if (availableCreditsEl) {
     setCountedNumber(availableCreditsEl, state.credits);
+    availableCreditsEl.classList.toggle("is-debt", state.credits < 0);
   }
   if (branchStandingEl) {
     branchStandingEl.textContent = getBranchStandingLabel();
-    branchStandingEl.title = "Sanctioned record / Off-book record";
+    branchStandingEl.dataset.uiTip = "Sanctioned record / Off-book record";
   }
   if (lifetimeCreditsEl) {
     setCountedNumber(lifetimeCreditsEl, state.lifetimeCredits);
@@ -8061,7 +8134,7 @@ function renderInvestmentNode(key, data, tierConfig, index, currentTier) {
       style="left:${position.x}%; top:${position.y}%; --invest-accent:${color};"
       ${milestone || progressionLocked ? 'aria-disabled="true" disabled' : affordable ? "" : "disabled"}
       aria-label="${escapeHtml(title)}"
-      title="${escapeHtml(title)}"
+      data-ui-tip="${escapeHtml(title)}"
     >
       ${iconHtml}
       <small>${index + 1}</small>
@@ -8498,7 +8571,7 @@ async function renderLevelSelectAsync() {
       : "";
     const bestResult = getMissionBestResult(slideId);
     const ratingStampHtml = bestResult?.completions > 0
-      ? `<div class="mission-grade-stamp grade-${escapeHtml((bestResult.bestGrade || "D").toLowerCase())}" title="Best completion: ${bestResult.bestPercent}% destroyed"><strong>${escapeHtml(bestResult.bestGrade || "D")}</strong><span>${bestResult.bestPercent}%</span></div>`
+      ? `<div class="mission-grade-stamp grade-${escapeHtml((bestResult.bestGrade || "D").toLowerCase())}" data-ui-tip="Best completion: ${bestResult.bestPercent}% destroyed"><strong>${escapeHtml(bestResult.bestGrade || "D")}</strong><span>${bestResult.bestPercent}%</span></div>`
       : "";
     const stageNumber = getAct1StageNumber(level.id);
     const hybridDone = stageNumber ? hasCompletedExactMission(level.id) : false;
@@ -8576,8 +8649,8 @@ async function renderLevelSelectAsync() {
         ${ratingStampHtml}
         ${
           groupIds.length > 1
-            ? `<button type="button" class="mission-arrow left${needsRoleChoice ? " attention" : ""}" data-action="prev" aria-label="Previous variant" title="Previous variant"></button>
-               <button type="button" class="mission-arrow right${needsRoleChoice ? " attention" : ""}" data-action="next" aria-label="Next variant" title="Next variant"></button>`
+            ? `<button type="button" class="mission-arrow left${needsRoleChoice ? " attention" : ""}" data-action="prev" aria-label="Previous variant" data-ui-tip="Previous variant"></button>
+               <button type="button" class="mission-arrow right${needsRoleChoice ? " attention" : ""}" data-action="next" aria-label="Next variant" data-ui-tip="Next variant"></button>`
             : ""
         }
         <div class="mission-top">
@@ -10574,7 +10647,7 @@ function renderRollQualityBar(rollQuality, rarity) {
   const pct = Math.max(0, Math.min(100, Math.round(rollQuality * 100)));
   const color = getRarityConfig(rarity)?.color || "#9aa3b2";
   return `
-    <div class="item-roll-quality" title="Affix roll quality">
+    <div class="item-roll-quality" data-ui-tip="Affix roll quality">
       <span class="item-roll-quality-label">Roll ${pct}%</span>
       <span class="item-roll-quality-track">
         <span class="item-roll-quality-fill" style="width:${pct}%;background:${color};"></span>
@@ -10712,13 +10785,41 @@ function hideItemTooltip() {
 function showItemTooltip(item, slotId, anchor) {
   if (!item || !anchor || !shouldShowFloatingItemTooltip()) return;
   if (itemTooltipTimer) clearTimeout(itemTooltipTimer);
-  itemTooltipTimer = setTimeout(() => {
-    const tooltip = ensureItemTooltip();
-    tooltip.innerHTML = renderItemDisplayBlock(getItemDisplayStats(item, slotId));
-    tooltip.hidden = false;
-    positionItemTooltip(anchor);
-  }, 80);
+  const tooltip = ensureItemTooltip();
+  const installed = getInstalledArmoryItem(slotId);
+  const compare = !!armoryComparisonEnabled && activeHangarTab === "loadout" && installed && installed.id !== item.id;
+  tooltip.classList.toggle("is-comparison", compare);
+  tooltip.innerHTML = compare
+    ? `<div class="item-tooltip-compare"><section><span class="item-tooltip-label">Equipped</span>${renderItemDisplayBlock(getItemDisplayStats(installed, slotId))}</section><section><span class="item-tooltip-label">Candidate</span>${renderItemDisplayBlock(getItemDisplayStats(item, slotId))}</section></div>`
+    : renderItemDisplayBlock(getItemDisplayStats(item, slotId));
+  tooltip.hidden = false;
+  positionItemTooltip(anchor);
 }
+
+function showUiTooltip(text, anchor) {
+  if (!text || !anchor || !shouldShowFloatingItemTooltip()) return;
+  const tooltip = ensureItemTooltip();
+  tooltip.classList.remove("is-comparison");
+  tooltip.innerHTML = `<div class="ui-tooltip-copy">${escapeHtml(text)}</div>`;
+  tooltip.hidden = false;
+  positionItemTooltip(anchor);
+}
+
+document.addEventListener("mouseover", (event) => {
+  const anchor = event.target.closest?.("[data-ui-tip]");
+  if (anchor && !anchor.contains(event.relatedTarget)) showUiTooltip(anchor.dataset.uiTip, anchor);
+});
+document.addEventListener("focusin", (event) => {
+  const anchor = event.target.closest?.("[data-ui-tip]");
+  if (anchor) showUiTooltip(anchor.dataset.uiTip, anchor);
+});
+document.addEventListener("mouseout", (event) => {
+  const anchor = event.target.closest?.("[data-ui-tip]");
+  if (anchor && !anchor.contains(event.relatedTarget)) hideItemTooltip();
+});
+document.addEventListener("focusout", (event) => {
+  if (event.target.closest?.("[data-ui-tip]")) hideItemTooltip();
+});
 
 function attachItemTooltip(element, item, slotId) {
   if (!element || !item) return;
@@ -11437,34 +11538,6 @@ function handleArmorySlotInstall(slotId, itemId) {
   }
 }
 
-function renderArmoryInspector(slotId) {
-  if (!armoryInspector || !slotId) return;
-  const item = getInstalledArmoryItem(slotId);
-  const slotLabel = getArmorySlotLabel(slotId);
-  if (!item) {
-    armoryInspector.innerHTML = `
-      <div class="armory-inspector-head">
-        <div class="armory-inspector-title">
-          <p class="armory-kicker">${slotLabel}</p>
-        </div>
-        <span class="armory-chip">Open</span>
-      </div>
-      <div class="armory-installed-empty">No module installed</div>
-    `;
-    return;
-  }
-  const display = getItemDisplayStats(item, slotId);
-  armoryInspector.innerHTML = `
-    <div class="armory-inspector-head">
-      <div class="armory-inspector-title">
-        <p class="armory-kicker">${slotLabel}</p>
-      </div>
-      <span class="armory-chip">Installed</span>
-    </div>
-    ${renderItemDisplayBlock(display, { inline: true })}
-  `;
-}
-
 function renderShipUpgradesPanel() {
   const equipped = getEquippedStarterLoadout();
   if (!equipped) return;
@@ -11511,7 +11584,7 @@ function renderShipUpgradesPanel() {
             class="armory-hull-option${active ? " is-active" : ""}${owned ? "" : " is-locked"}"
             data-hull-id="${hull.id}"
             ${owned ? "" : "disabled"}
-            title="${owned ? "Equip hull" : licensed ? "Unlock in Ledger Investments" : getCapabilityRequirement("hullLicenses") }"
+            data-ui-tip="${owned ? "Equip hull" : licensed ? "Unlock in Ledger Investments" : getCapabilityRequirement("hullLicenses") }"
           >
             <img src="${escapeHtml(hull.icon)}" alt="" />
             <span>${escapeHtml(hull.id === "starter" ? "Base" : getCompactItemName(hull).replace(" Hull", ""))}</span>
@@ -11526,7 +11599,7 @@ function renderShipUpgradesPanel() {
           class="armory-hull-trigger"
           data-hull-toggle="true"
           aria-expanded="${armoryHullPickerOpen ? "true" : "false"}"
-          title="Select hull"
+          data-ui-tip="Select hull"
         >
           <img src="${escapeHtml(equippedHull.icon || equippedHull.sprite)}" alt="" />
           <span>${escapeHtml(equippedHull.id === "starter" ? "Base" : getCompactItemName(equippedHull).replace(" Hull", ""))}</span>
@@ -11541,7 +11614,7 @@ function renderShipUpgradesPanel() {
         <div class="armory-fire-mode" aria-label="Primary fire mode">
           <span class="armory-fire-mode-label">Fire Mode</span>
           <button type="button" class="${fireMode === "swap" ? "is-active" : ""}" data-fire-mode="swap">Swap</button>
-          <button type="button" class="${fireMode === "dual" ? "is-active" : ""}" data-fire-mode="dual" title="${escapeHtml(dualTitle)}" ${dualReady ? "" : "disabled"}>Dual Fire</button>
+          <button type="button" class="${fireMode === "dual" ? "is-active" : ""}" data-fire-mode="dual" data-ui-tip="${escapeHtml(dualTitle)}" ${dualReady ? "" : "disabled"}>Dual Fire</button>
           ${dualStatus ? `<span>${escapeHtml(dualStatus)}</span>` : ""}
         </div>
         <div class="armory-hardpoints">
@@ -11555,7 +11628,7 @@ function renderShipUpgradesPanel() {
               type="button"
               class="armory-slot ${slot.className} type-${typeKey} is-clickable${slot.locked ? " is-progression-locked" : ""}${visualRarity ? ` rarity-${visualRarity}` : ""}${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
               data-armory-slot="${slot.id}"
-              title="${slot.locked ? escapeHtml(slot.requirement) : "Open compatible inventory"}"
+              data-ui-tip="${slot.locked ? escapeHtml(slot.requirement) : "Open compatible inventory"}"
               ${visualRarity ? `style="${getRarityStyle(visualRarity)}"` : ""}
             >
               <span class="armory-slot-label">${slot.label}</span>
@@ -11598,8 +11671,13 @@ function renderShipUpgradesPanel() {
     });
     armoryBench.querySelectorAll("[data-armory-slot]").forEach((slotButton) => {
       const slotId = slotButton.dataset.armorySlot || null;
+      const slot = slotDefs.find((entry) => entry.id === slotId);
+      if (slot?.item) attachItemTooltip(slotButton, slot.item, slotId);
       slotButton.addEventListener("click", () => {
+        if (slot?.locked) return;
+        hideItemTooltip();
         armorySelectedSlotId = slotId;
+        armoryDrawerOpen = true;
         safeUpdateHangar();
       });
     });
@@ -11613,8 +11691,6 @@ function renderShipUpgradesPanel() {
   const rackMeta = getArmorySlotMeta(armorySelectedSlotId);
   if (armoryRackTitle) armoryRackTitle.textContent = rackMeta.title;
   if (armoryRackCopy) armoryRackCopy.textContent = rackMeta.copy;
-  if (armoryRackTip) armoryRackTip.textContent = rackMeta.tip;
-  renderArmoryInspector(armorySelectedSlotId);
   if (armoryToggleStats) {
     armoryToggleStats.hidden = false;
     armoryToggleStats.textContent = "Show Stats";
@@ -11623,8 +11699,13 @@ function renderShipUpgradesPanel() {
     shipStats.hidden = true;
   }
   renderArmoryConsumables();
+  if (armoryCompareMode) armoryCompareMode.checked = armoryComparisonEnabled;
+  if (armoryDrawer) {
+    armoryDrawer.hidden = !armoryDrawerOpen;
+    armoryDrawer.classList.toggle("is-open", armoryDrawerOpen);
+  }
 
-  if (!weaponInventory) return;
+  if (!weaponInventory || !armoryDrawerOpen) return;
   weaponInventory.innerHTML = "";
   const pendingRequisition = getPendingCampaignRequisition();
   if (pendingRequisition) {
@@ -11671,11 +11752,9 @@ function renderShipUpgradesPanel() {
     attachItemTooltip(button, item, armorySelectedSlotId);
     button.addEventListener("click", () => {
       if (item.installed) {
-        renderArmoryInspector(armorySelectedSlotId);
         return;
       }
       if (!canInstallArmoryItem(item, armorySelectedSlotId)) {
-        renderArmoryInspector(armorySelectedSlotId);
         return;
       }
       handleArmorySlotInstall(armorySelectedSlotId, item.id);
@@ -11704,20 +11783,18 @@ function isConsumableUnlocked(item, targetState = state) {
   return !item.capabilityId || isCapabilityAvailable(item.capabilityId, targetState);
 }
 
-function fillConsumableStock(targetState = state) {
-  targetState.consumablesOwned = targetState.consumablesOwned || {};
+function grantDevSupplyWaivers(targetState = state) {
+  targetState.supplyWaivers = targetState.supplyWaivers || {};
+  const count = Math.max(0, Math.floor(Number(getSupplyAuthorizationConfig().devWaiversPerType) || 9));
   consumables.forEach((item) => {
-    targetState.consumablesOwned[item.id] = Math.max(
-      Number(targetState.consumablesOwned[item.id]) || 0,
-      Number(item.stockCap) || 1
-    );
+    targetState.supplyWaivers[item.id] = Math.max(Number(targetState.supplyWaivers[item.id]) || 0, count);
   });
 }
 
 function refillDevConsumables() {
   if (!state) return;
-  fillConsumableStock(state);
-  setHangarStatusMessage("DEV supply locker refilled. Campaign progress is unchanged.");
+  grantDevSupplyWaivers(state);
+  setHangarStatusMessage("DEV supply fee waivers granted. Campaign progress is unchanged.");
   saveState();
   safeUpdateHangar();
 }
@@ -11749,77 +11826,43 @@ function renderArmoryConsumables() {
     const name = unlocked ? item?.name || "Empty Bay" : `Bay ${index + 1} Locked`;
     const meta = unlocked
       ? item
-        ? `${state.consumablesOwned?.[item.id] || 0} in stock · press ${index + 1} in flight`
-        : "Select a supply below"
+        ? `${getConsumableBayUseLimit(index)} charge${getConsumableBayUseLimit(index) === 1 ? "" : "s"} · ${formatLedgerCredits(item.cost)}/use`
+        : getConsumableBayTrustText(index)
       : getCapabilityRequirement(capabilityId);
     return `
-      <button type="button" class="armory-consumable-bay${selectedConsumableBay === index ? " is-selected" : ""}${unlocked ? "" : " is-locked"}" data-consumable-bay="${index}" ${unlocked ? "" : "disabled"} title="${escapeHtml(meta)}">
+      <button type="button" class="armory-consumable-bay${supplyPickerOpen && selectedConsumableBay === index ? " is-selected" : ""}${unlocked ? "" : " is-locked"}" data-consumable-bay="${index}" ${unlocked ? "" : "disabled"} aria-label="Supply bay ${index + 1}: ${escapeHtml(name)}. ${escapeHtml(meta)}">
         <img src="${escapeHtml(item ? getConsumableIcon(item) : overhaulKit.capabilities.ledgerLicense)}" alt="" />
-        <span><strong>${escapeHtml(name)}</strong><span>${escapeHtml(meta)}</span></span>
+        <span><small>Bay ${index + 1}</small><strong>${escapeHtml(name)}</strong><span>${escapeHtml(meta)}</span></span>
       </button>`;
   }).join("");
-  const choiceHtml = consumables.map((item) => {
+  const choiceHtml = supplyPickerOpen ? consumables.map((item) => {
     const unlocked = isConsumableUnlocked(item);
-    const equipped = slots.includes(item.id);
-    const count = Math.max(0, Number(state.consumablesOwned?.[item.id]) || 0);
+    const equipped = slots[selectedConsumableBay] === item.id;
+    const waivers = Math.max(0, Number(state.supplyWaivers?.[item.id]) || 0);
     const requirement = item.capabilityId ? getCapabilityRequirement(item.capabilityId) : "Campaign authorization required";
     return `
-      <button type="button" class="armory-consumable-choice${equipped ? " is-equipped" : ""}" data-consumable-id="${escapeHtml(item.id)}" ${unlocked ? "" : "disabled"} title="${escapeHtml(unlocked ? item.desc : requirement)}">
-        ${escapeHtml(getConsumableLabel(item))} · ${count}/${item.stockCap}
+      <button type="button" class="armory-consumable-choice${equipped ? " is-equipped" : ""}" data-consumable-id="${escapeHtml(item.id)}" ${unlocked ? "" : "disabled"}>
+        <img src="${escapeHtml(getConsumableIcon(item))}" alt="" />
+        <span><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(unlocked ? item.desc : requirement)}</span><small>${formatLedgerCredits(item.cost)} per activation${waivers ? ` · ${waivers} fee waiver${waivers === 1 ? "" : "s"}` : ""}</small></span>
       </button>`;
-  }).join("");
+  }).join("") : "";
   armoryConsumables.innerHTML = `
-    <div class="armory-consumable-head"><h3>Mission Supplies</h3><span>Choose bay, then supply · click again to clear</span></div>
+    <div class="armory-consumable-head"><h3>Mission Supplies</h3><span>Charged only when activated</span></div>
     <div class="armory-consumable-bays">${bayHtml}</div>
-    <div class="armory-consumable-stock">${choiceHtml}</div>`;
+    ${supplyPickerOpen ? `<div class="armory-consumable-picker"><div><strong>Choose Bay ${selectedConsumableBay + 1}</strong><span>${escapeHtml(getConsumableBayTrustText(selectedConsumableBay))}</span></div><div class="armory-consumable-stock">${choiceHtml}</div></div>` : ""}`;
   armoryConsumables.querySelectorAll("[data-consumable-bay]").forEach((button) => {
     button.addEventListener("click", () => {
-      selectedConsumableBay = Number(button.dataset.consumableBay) === 1 ? 1 : 0;
+      const nextBay = Number(button.dataset.consumableBay) === 1 ? 1 : 0;
+      supplyPickerOpen = selectedConsumableBay === nextBay ? !supplyPickerOpen : true;
+      selectedConsumableBay = nextBay;
       renderArmoryConsumables();
     });
   });
   armoryConsumables.querySelectorAll("[data-consumable-id]").forEach((button) => {
-    button.addEventListener("click", () => equipConsumable(selectedConsumableBay, button.dataset.consumableId));
-  });
-}
-
-function buyLedgerConsumable(consumableId) {
-  const item = consumablesById[consumableId];
-  if (!item || !isConsumableUnlocked(item)) return;
-  const owned = Math.max(0, Number(state.consumablesOwned?.[item.id]) || 0);
-  if (owned >= item.stockCap || state.credits < item.cost) return;
-  state.credits -= item.cost;
-  state.consumablesOwned[item.id] = owned + 1;
-  setLedgerReceipt({
-    title: "Mission Supply Purchase",
-    lines: [
-      { label: "Supply", text: item.name },
-      { label: "Locker stock", text: `${owned + 1}/${item.stockCap}`, memo: true },
-      { label: "Credits paid", amount: -item.cost, total: true, fee: true },
-    ],
-  });
-  saveState();
-  safeUpdateHangar();
-}
-
-function renderLedgerConsumables() {
-  if (!ledgerConsumableList) return;
-  ledgerConsumableList.innerHTML = consumables.map((item) => {
-    const unlocked = isConsumableUnlocked(item);
-    const owned = Math.max(0, Number(state.consumablesOwned?.[item.id]) || 0);
-    const atCap = owned >= item.stockCap;
-    const canAfford = state.credits >= item.cost;
-    const buttonLabel = !unlocked ? "Locked" : atCap ? "Full" : canAfford ? `Buy ${formatLedgerCredits(item.cost)}` : "Short";
-    const requirement = item.capabilityId ? getCapabilityRequirement(item.capabilityId) : "Campaign authorization required";
-    return `
-      <div class="ledger-consumable-item${unlocked ? "" : " is-locked"}" title="${escapeHtml(unlocked ? item.desc : requirement)}">
-        <img src="${escapeHtml(getConsumableIcon(item))}" alt="" />
-        <span><strong>${escapeHtml(item.name)}</strong><span>${owned}/${item.stockCap} stocked</span></span>
-        <button type="button" class="ledger-action-button buy" data-buy-consumable="${escapeHtml(item.id)}" ${unlocked && !atCap && canAfford ? "" : "disabled"}>${escapeHtml(buttonLabel)}</button>
-      </div>`;
-  }).join("");
-  ledgerConsumableList.querySelectorAll("[data-buy-consumable]").forEach((button) => {
-    button.addEventListener("click", () => buyLedgerConsumable(button.dataset.buyConsumable));
+    button.addEventListener("click", () => {
+      equipConsumable(selectedConsumableBay, button.dataset.consumableId);
+      supplyPickerOpen = false;
+    });
   });
 }
 
@@ -12025,12 +12068,12 @@ function refillDevArsenalWallet() {
   if (!isDevArsenalEnabled() || !state) return;
   state.credits = DEV_ARSENAL_WALLET_CREDITS;
   state.lifetimeCredits = Math.max(Number(state.lifetimeCredits) || 0, DEV_ARSENAL_WALLET_CREDITS);
-  fillConsumableStock(state);
+  grantDevSupplyWaivers(state);
   setLedgerReceipt({
     title: "Development Credit Writ",
     lines: [
       { label: "Testing wallet", amount: DEV_ARSENAL_WALLET_CREDITS, total: true },
-      { label: "Mission supplies", text: "ALL LOCKERS FULL", memo: true },
+      { label: "Mission supplies", text: "FEE WAIVERS GRANTED", memo: true },
       { label: "Settlement status", text: "NON-CANONICAL", memo: true },
     ],
   });
@@ -12140,7 +12183,6 @@ async function renderLedgerMarketAsync() {
   const ledger = await ensureLedgerMarketReady();
   renderLedgerBulletinPanel(ledger);
   renderLedgerLicenseStatus();
-  renderLedgerConsumables();
   renderLedgerStock(ledger);
   renderLedgerInventory(ledger);
   renderLedgerReceiptPanel(ledger);
@@ -12534,69 +12576,69 @@ function applyConsumableEffect(item, { x = player.x, y = player.y, announce = tr
   const effect = item?.effect || {};
   if (effect.kind === "shieldOvercharge") {
     if (player.maxShield <= 0) return false;
-    const restore = player.maxShield * effect.restoreRate;
-    const cap = player.maxShield * (1 + effect.overflowRate);
-    player.shield = Math.min(cap, player.shield + restore);
+    const target = player.maxShield * effect.targetRate;
+    if (player.shield >= target - 0.01) return false;
+    player.shield = target;
     player.shieldCooldown = 0;
-    if (player.shield > player.maxShield) {
-      player.shieldOverchargeTimer = effect.holdDuration;
-      player.shieldOverchargeDecay = (player.maxShield * effect.overflowRate) / Math.max(0.1, effect.decayDuration);
-    }
     if (announce) spawnFloatingText(x, y, `SHIELD ${Math.round(player.shield)}/${Math.round(player.maxShield)}`, "#7dd3fc");
     revealPlayerHealth();
     playSfx("boost", 0.34);
     return true;
   }
   if (effect.kind === "armorSealant") {
-    let applied = false;
-    if (player.maxArmor > 0) {
-      const restore = player.maxArmor * effect.restoreRate;
-      const cap = player.maxArmor * (1 + effect.overflowRate);
-      player.armor = Math.min(cap, player.armor + restore);
-      if (player.armor > player.maxArmor) {
-        player.armorOverplateTimer = effect.holdDuration;
-        player.armorOverplateDecay = (player.maxArmor * effect.overflowRate) / Math.max(0.1, effect.decayDuration);
-      }
-      applied = true;
-    }
-    if (player.hull < player.maxHull || player.maxArmor <= 0) {
-      const hullCap = player.maxArmor <= 0
-        ? player.maxHull * (1 + effect.overflowRate)
-        : player.maxHull;
-      player.hull = Math.min(hullCap, player.hull + player.maxHull * effect.hullRepairRate);
-      if (player.hull > player.maxHull) {
-        player.hullOverplateTimer = effect.holdDuration;
-        player.hullOverplateDecay = (player.maxHull * effect.overflowRate) / Math.max(0.1, effect.decayDuration);
-      }
-      applied = true;
-    }
-    if (!applied) return false;
-    const label = player.maxArmor > 0
-      ? `ARMOR ${Math.round(player.armor)}/${Math.round(player.maxArmor)}`
-      : `HULL ${Math.round(player.hull)}/${Math.round(player.maxHull)}`;
-    if (announce) spawnFloatingText(x, y, label, "#facc15");
+    if (player.maxArmor <= 0 || player.armor >= player.maxArmor - 0.01) return false;
+    player.armor = player.maxArmor * effect.targetRate;
+    if (announce) spawnFloatingText(x, y, `ARMOR ${Math.round(player.armor)}/${Math.round(player.maxArmor)}`, "#facc15");
     revealPlayerHealth();
     playSfx("boost", 0.32);
     return true;
   }
-  if (effect.kind === "damageOvercharge") {
-    player.damageBoostMult = Math.max(player.damageBoostMult, effect.damageMult);
-    player.damageBoostTimer = Math.max(player.damageBoostTimer, effect.duration);
-    if (announce) spawnFloatingText(x, y, `DAMAGE +${Math.round((effect.damageMult - 1) * 100)}%`, "#fb7185");
+  if (effect.kind === "impulseBoost") {
+    player.impulseBoostEffects = Array.isArray(player.impulseBoostEffects) ? player.impulseBoostEffects : [];
+    player.impulseBoostEffects.push({ id: item.id, bonus: effect.impulseBonus, remaining: effect.duration });
+    if (announce) spawnFloatingText(x, y, `IMPULSE +${Math.round(effect.impulseBonus * 100)}%`, "#fb7185");
     playSfx("boost", 0.4);
     return true;
   }
   return false;
 }
 
+function getActiveImpulseBonus() {
+  return (Array.isArray(player.impulseBoostEffects) ? player.impulseBoostEffects : [])
+    .reduce((max, entry) => Math.max(max, Number(entry?.bonus) || 0), 0);
+}
+
+function isFieldSupplyEffectMeaningful(item) {
+  const threshold = Math.max(0, Number(getSupplyAuthorizationConfig().fieldActivationThreshold) || 0.1);
+  const effect = item?.effect || {};
+  if (effect.kind === "armorSealant") {
+    return player.maxArmor > 0 && (player.maxArmor - player.armor) / player.maxArmor >= threshold;
+  }
+  if (effect.kind === "shieldOvercharge") {
+    if (player.maxShield <= 0) return false;
+    return (player.maxShield - Math.min(player.shield, player.maxShield)) / player.maxShield >= threshold;
+  }
+  return true;
+}
+
+function recoverUnusedFieldSupply(item, x, y) {
+  if (!mission || !item) return false;
+  mission.recoveredSupplies = mission.recoveredSupplies || {};
+  mission.recoveredSupplies[item.id] = (mission.recoveredSupplies[item.id] || 0) + 1;
+  spawnFloatingText(x, y, `SEALED · ${formatLedgerCredits(item.cost)}`, "#4ade80");
+  playSfx("boost", 0.24);
+  return true;
+}
+
 function collectFieldCache(pod) {
-  if (pod.kind === "shield_booster") {
-    return applyConsumableEffect(consumablesById.shieldBoost, { x: pod.x, y: pod.y });
-  }
-  if (pod.kind === "armor_patch") {
-    return applyConsumableEffect(consumablesById.armorSealant, { x: pod.x, y: pod.y });
-  }
-  return false;
+  const item = pod.kind === "shield_booster"
+    ? consumablesById.shieldBoost
+    : pod.kind === "armor_patch"
+      ? consumablesById.armorSealant
+      : null;
+  if (!item) return false;
+  if (!isFieldSupplyEffectMeaningful(item)) return recoverUnusedFieldSupply(item, pod.x, pod.y);
+  return applyConsumableEffect(item, { x: pod.x, y: pod.y });
 }
 
 function handleSalvagePodCollisions() {
@@ -12875,7 +12917,15 @@ function computePrimaryDamage({ ammo, speed, radius, damageBoostMult = null, bui
 }
 
 function firePlayerBullet({ build = null, damageScale = 1, xOffset = 0, sourceKey = "primary" } = {}) {
-  const cfg = getPrimaryFireConfig(build);
+  const baseBuild = build || getShipBuild();
+  const impulseBonus = getActiveImpulseBonus();
+  const boostedBuild = impulseBonus > 0
+    ? {
+        ...baseBuild,
+        kineticImpulseBudget: (Number(baseBuild?.kineticImpulseBudget) || 0) + impulseBonus,
+      }
+    : baseBuild;
+  const cfg = getPrimaryFireConfig(boostedBuild);
   const mount = state.weapon.mount || "front";
   const mountShots = mount === "rear" ? 2 : 1;
   const visualTheme = getLevelVisualTheme();
@@ -12901,7 +12951,7 @@ function firePlayerBullet({ build = null, damageScale = 1, xOffset = 0, sourceKe
         ammo: cfg.ammo,
         speed,
         radius,
-        buildDamageMult: build?.primaryDamageMult,
+        buildDamageMult: baseBuild?.primaryDamageMult,
         shotDamageMult: cfg.shotDamageMult,
       }) * damageScale,
       image: extra.image || image,
@@ -12925,6 +12975,7 @@ function firePlayerBullet({ build = null, damageScale = 1, xOffset = 0, sourceKe
       armorChipFloorRate: cfg.armorChipFloorRate,
       minArmorChipDamage: cfg.minArmorChipDamage,
       age: 0,
+      temporaryImpulseBonus: impulseBonus,
       animation:
         extra.animation ||
         (cfg.effect === "pierce"
@@ -13236,9 +13287,15 @@ function useConsumable(slotIndex) {
   if (!applyConsumableEffect(item)) return;
   mission.consumableUses[slotIndex] = uses - 1;
   mission.consumableCooldowns[slotIndex] = item.cooldown ?? 0;
-  mission.consumablesSpent = mission.consumablesSpent || {};
-  mission.consumablesSpent[slotId] = (mission.consumablesSpent[slotId] || 0) + 1;
-  state.consumablesOwned[slotId] = Math.max(0, (state.consumablesOwned[slotId] ?? 0) - 1);
+  state.supplyWaivers = state.supplyWaivers || {};
+  if ((state.supplyWaivers[slotId] || 0) > 0) {
+    state.supplyWaivers[slotId] -= 1;
+    mission.supplyWaiversUsed = mission.supplyWaiversUsed || {};
+    mission.supplyWaiversUsed[slotId] = (mission.supplyWaiversUsed[slotId] || 0) + 1;
+  } else {
+    mission.supplyCharges = mission.supplyCharges || {};
+    mission.supplyCharges[slotId] = (mission.supplyCharges[slotId] || 0) + 1;
+  }
   saveState();
 }
 
@@ -14198,33 +14255,9 @@ function update(delta) {
       player.damageBoostMult = 1;
     }
   }
-  if (player.shield > player.maxShield) {
-    if (player.shieldOverchargeTimer > 0) {
-      player.shieldOverchargeTimer = Math.max(0, player.shieldOverchargeTimer - delta);
-    } else {
-      player.shield = Math.max(player.maxShield, player.shield - player.shieldOverchargeDecay * delta);
-    }
-  } else {
-    player.shieldOverchargeTimer = 0;
-  }
-  if (player.armor > player.maxArmor) {
-    if (player.armorOverplateTimer > 0) {
-      player.armorOverplateTimer = Math.max(0, player.armorOverplateTimer - delta);
-    } else {
-      player.armor = Math.max(player.maxArmor, player.armor - player.armorOverplateDecay * delta);
-    }
-  } else {
-    player.armorOverplateTimer = 0;
-  }
-  if (player.hull > player.maxHull) {
-    if (player.hullOverplateTimer > 0) {
-      player.hullOverplateTimer = Math.max(0, player.hullOverplateTimer - delta);
-    } else {
-      player.hull = Math.max(player.maxHull, player.hull - player.hullOverplateDecay * delta);
-    }
-  } else {
-    player.hullOverplateTimer = 0;
-  }
+  player.impulseBoostEffects = (Array.isArray(player.impulseBoostEffects) ? player.impulseBoostEffects : [])
+    .map((entry) => ({ ...entry, remaining: Math.max(0, (Number(entry.remaining) || 0) - delta) }))
+    .filter((entry) => entry.remaining > 0);
   if (mission.empTimer > 0) {
     mission.empTimer = Math.max(0, mission.empTimer - delta);
   }
@@ -15871,7 +15904,7 @@ function renderWeaponStripHtml({ compact = false, cooldown = 0, showEmpty = true
           const icon = slot.item ? getArmoryFrameVisual(slot.item).icon : defenseVisuals.none.icon;
           const typeKey = getItemTypeKey(slot.item, "primary");
           return `
-            <span class="weapon-token type-${typeKey}${slot.active ? " is-active" : ""}${slot.item ? "" : " is-empty"}" title="${escapeHtml(`${slot.label}: ${name}`)}">
+            <span class="weapon-token type-${typeKey}${slot.active ? " is-active" : ""}${slot.item ? "" : " is-empty"}" data-ui-tip="${escapeHtml(`${slot.label}: ${name}`)}">
               <span class="weapon-token-label">${slot.label}</span>
               <span class="weapon-token-icon"><img src="${escapeHtml(icon)}" alt="" /></span>
               <span class="weapon-token-name">${escapeHtml(name)}</span>
@@ -15885,6 +15918,7 @@ function renderWeaponStripHtml({ compact = false, cooldown = 0, showEmpty = true
 }
 
 function updateHud() {
+  hudCredits?.classList.toggle("is-debt", state.credits < 0);
   if (!mission) {
     hudHull.textContent = "-";
     if (hudArmor) hudArmor.textContent = "-";
@@ -15914,7 +15948,8 @@ function updateHud() {
         : "0/0";
     if (hudScore) hudScore.textContent = Math.round(mission.score).toString();
     hudTime.textContent = formatTime(mission.elapsed);
-    hudCredits.textContent = `${state.credits} (+${runCredits})`;
+    const pendingSupplyCharges = getPendingSupplyChargeTotal(mission);
+    hudCredits.textContent = `${state.credits} (+${runCredits}${pendingSupplyCharges ? ` · supplies -${pendingSupplyCharges}` : ""})`;
     if (hudMini) {
       const mini = getSelectedMiniWeapon();
       hudMini.textContent = mini
@@ -15942,10 +15977,10 @@ function updateCargoHud() {
     const pip = document.createElement("span");
     pip.className = `cargo-pip${rarity ? ` filled rarity-${rarity}` : ""}`;
     if (rarity) {
-      pip.title = getRarityLabel(rarity);
+      pip.dataset.uiTip = getRarityLabel(rarity);
       pip.setAttribute("style", getRarityStyle(rarity));
     } else {
-      pip.title = "Empty cargo slot";
+      pip.dataset.uiTip = "Empty cargo slot";
     }
     hudCargoPips.appendChild(pip);
   }
@@ -16003,8 +16038,10 @@ function updateConsumableHud() {
     const label = getConsumableLabel(item);
     const remaining = uses[index] ?? 0;
     const cooldown = cooldowns[index] ?? 0;
-    const maxUses = item?.usesPerMission ?? remaining;
-    let hudText = `${label} (${index + 1}) ${remaining}/${maxUses}`;
+    const maxUses = getConsumableBayUseLimit(index);
+    const waivers = Math.max(0, Number(state.supplyWaivers?.[slotId]) || 0);
+    const costText = waivers > 0 ? `${waivers} waived` : `${formatLedgerCredits(item.cost)}/use`;
+    let hudText = `${label} (${index + 1}) ${remaining}/${maxUses} · ${costText}`;
     if (cooldown > 0) {
       hudText += ` | ${Math.ceil(cooldown)}s`;
     }
@@ -16019,7 +16056,7 @@ function updateConsumableHud() {
       if (cooldown > 0) {
         mobileBtn.textContent = `${label} ${Math.ceil(cooldown)}s`;
       } else {
-        mobileBtn.textContent = `${label} (${remaining})`;
+        mobileBtn.textContent = `${label} ${remaining}/${maxUses} · ${waivers > 0 ? "waived" : formatLedgerCredits(item.cost)}`;
       }
       mobileBtn.disabled = cooldown > 0 || remaining <= 0 || !inMission;
     }
@@ -16589,6 +16626,13 @@ function creditForEnemy(enemy) {
 
 function creditRewardFor(missionState) {
   return Math.round((missionState.killCredits || 0) + (missionState.objectiveCredits || 0));
+}
+
+function getPendingSupplyChargeTotal(missionState = mission) {
+  return Object.entries(missionState?.supplyCharges || {}).reduce(
+    (sum, [id, count]) => sum + (consumablesById[id]?.cost || 0) * count,
+    0
+  );
 }
 
 function objectiveCreditRewardFor(missionState, completed = false) {

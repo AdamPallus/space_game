@@ -1,9 +1,9 @@
 # Campaign Progression Spine
 
-Status: **implementation-ready; next authorized player-facing work**
+Status: **in execution; Slices A and B implemented**
 
-Approved direction: 2026-07-11. This commit documents the work only; gameplay
-implementation begins in the next execution pass.
+Approved direction: 2026-07-11. Slice A is player-approved. Slice B now reflects
+the post-playtest supply-credit redesign and awaits a focused human playtest.
 
 ## 1. Why this pass exists
 
@@ -74,11 +74,11 @@ an all-unlocked starter state.
 | Milestone | Campaign award | Purpose |
 | --- | --- | --- |
 | Fresh save | Weak Cadet Kinetic Frame in Primary A, two defense bays, starter hull, Cloak, full hangar navigation | Immediately playable without supplying free swarm, armor, and alternate-ammo answers. |
-| Mission 1 chapter | Consumable Bay 1, one Shield Overcharge, Ledger consumable stock | Introduce preparation after the player has cleared Hybrid plus one role contract. |
+| Mission 1 chapter | Consumable Bay 1, one Shield Overcharge activation-fee waiver | Introduce preparation after the player has cleared Hybrid plus one role contract. |
 | Mission 2 chapter | Mini weapon slot plus a choose-one Certified mini requisition | Make passive coverage a visible choice rather than a silent automatic install. |
 | Mission 3 chapter | EMP support authorization and one Armor Sealant | Introduce projectile control and armor recovery before dense mid-act pressure. |
 | Mission 4 chapter | Primary B in **Swap** mode plus a choose-one Certified role requisition | Introduce role switching after role pressure has already made alternate weapons desirable. |
-| Mission 5 chapter | Damage Overcharge consumable | Add offensive tempo for bosses and dangerous overlaps. |
+| Mission 5 chapter | Redline and Sustained Impulse authorizations, with one fee waiver each | Add two offensive-tempo choices for bosses and dangerous overlaps. |
 | Mission 6 chapter | Named-hull licenses and Bulwark support authorization | Hull identity and the third aux role arrive after core gear loops are familiar; chassis still cost credits. |
 | Mission 7 chapter | Consumable Bay 2 | Let the player compose recovery and offense before Last Light. |
 | Last Light chapter | Dual Fire Tier 1 and the first Pre-Founding commissioning package | Finish Act 1 with the complete loadout vocabulary and a viable entry build for harder content. |
@@ -134,49 +134,52 @@ the existing rules; it does not bypass campaign authorization.
 - `balance_report.js` must print the Cadet against Certified and Prototype
   primary medians and warn if it reaches or exceeds the Certified median.
 
-## 4. Consumable and pickup contract
+## 4. Mission supply and pickup contract
 
-The first implementation uses three stocked consumables and two equipped bays.
-Inventory stock is persistent; launching a mission does not regenerate spent
-units for free.
+Mission supplies are a credit commitment, not persistent inventory. A pilot may
+equip any authorized supply for free, including the same supply in both bays.
+Credits are charged only for activations, when the run settles on victory, RTB,
+or death. Settlement may put the pilot into debt. A first-clear sample is one
+activation-fee waiver, not a stocked object.
+
+Each bay has its own authorized charge count. It begins at one use and earns one
+additional use per four completed campaign chapters after that bay unlocks, to
+a provisional maximum of three. Cooldowns pace the combat input; the authorized
+count and price create the strategic limit. Test Arsenal grants maximum bay
+authorization and DEV fee waivers without altering campaign records.
 
 ### Shield Overcharge
 
-- Restore approximately 40% of maximum shields.
-- Recovery may overflow into a temporary shield buffer up to approximately 25%
-  of maximum shields.
-- The buffer expires or decays after a short combat window; exact duration is a
-  tuning knob.
-- Using it at full shields is valid preparation for an incoming wave, not a
-  wasted input.
+- Set shields to 125% of maximum capacity.
+- The extra shield does not decay; it remains until damage consumes it.
+- A manually equipped supply can be used whenever it would increase shields.
 
 ### Armor Sealant
 
-- Restore approximately 35% of maximum armor.
-- If armor is full, overflow creates temporary **overplate** up to approximately
-  20% of maximum armor capacity. Overplate adds capacity but does not raise
-  armor class.
-- If the ship has no armor, or full armor with damaged hull, part of the effect
-  repairs hull as the current cache behavior intends.
-- Full armor and full hull still receive overplate, so the item is never dead
-  merely because it was collected at a good moment.
+- Restore installed armor to 100%.
+- It cannot overplate, repair hull, or be used by a ship without an armor module.
+- It cannot be activated when armor is already full.
 
-### Damage Overcharge
+### Impulse supplies
 
-- Grant a visible primary-damage increase for roughly six to eight seconds.
-- It is a boss-window and crisis-clearing tool, not a permanent build modifier.
-- The exact bonus belongs in validated economy/config data and must appear in
-  the item description.
+- **Redline Impulse** adds 100% primary projectile impulse for 10 seconds. It is
+  the short boss-window and crisis-clearing option.
+- **Sustained Impulse** adds 40% primary projectile impulse for 30 seconds. It is
+  the lower, longer pressure option.
+- Both modify the existing `kineticImpulseBudget` shot construction rather than
+  applying a generic damage multiplier. Kinetic shots become faster and gain
+  speed-fed damage; plasma shots become larger, slower, and more explosive.
 
-Scripted shield and armor pickups use the same overflow rules as the stocked
-consumables. A pickup may activate immediately while a purchased item consumes
-stock from an equipped bay, but identical names must produce identical combat
-effects.
+Scripted shield and armor pickups are the exact same supplies. If at least 10%
+of the applicable base layer is missing, the pickup activates immediately for
+free. Otherwise it becomes a sealed recovery claim: victory or RTB credits the
+full supply price at settlement, while death loses it. This preserves one item,
+one behavior without adding temporary third and fourth combat buttons.
 
 Consumables should be intentionally expensive enough that routine use is not
-part of a profitable baseline clear. Each newly unlocked type grants a free
-sample so the mechanic can be learned, but ordinary replacement prices are
-tuned later with the full economy. The target contract is:
+part of a profitable baseline clear. Each newly unlocked type grants an
+activation-fee waiver so the mechanic can be learned, but final fee tuning
+remains part of the full economy pass. The target contract is:
 
 - an appropriately geared clear without consumables produces positive expected
   credits;
@@ -185,9 +188,10 @@ tuned later with the full economy. The target contract is:
 - repeated consumable use is a definite loss justified by a progression unlock
   or rare-drop gamble.
 
-Equipped slots, stock caps, and cooldowns prevent in-mission spam, while price is
-the long-term strategic limit. The Credit Flow report must include
-representative replenishment costs and boosted-clear net outcomes.
+Per-bay authorization and cooldowns pace in-mission use, while settlement price
+is the long-term strategic limit. The Credit Flow report includes one- and
+two-activation net outcomes plus the maximum value of sealed field supplies;
+that contingent recovery value is not counted in baseline mission income.
 
 ### Aux integration
 
@@ -294,16 +298,21 @@ Stop for a short fresh-save chapter-pacing playtest before proceeding to Slice B
 
 ### Slice B — consumables and pickup utility
 
-**Implemented; awaiting the late-Act-1 consumable playtest.** Final replacement-price tuning remains intentionally deferred to the focused economy pass.
+**Implemented; awaiting the revised late-Act-1 supply playtest.** Final fee and
+economy tuning remains intentionally deferred to the focused economy pass.
 
-1. Route Shield Overcharge, Armor Sealant, and Damage Overcharge through
-   validated config.
-2. Implement persistent stock, Ledger purchase, two equipped bays, cooldowns,
-   descriptions, and debrief/receipt accounting.
-3. Add shield overflow and armor overplate to both inventory consumables and
-   matching field pickups.
-4. Add first-unlock samples and dev stock controls.
-5. Use conservative provisional prices, then defer final replacement pricing to
+1. Route Shield Overcharge, Armor Sealant, Redline Impulse, and Sustained
+   Impulse through validated config.
+2. Equip supplies without prepayment; charge each activation at run settlement,
+   permit debt, and grant per-bay uses through completed-chapter trust.
+3. Give Shield Overcharge a non-decaying 125% target and Armor Sealant an exact
+   full-armor repair. Route matching field pickups to free activation when at
+   least 10% is missing or a sealed full-price recovery claim otherwise.
+4. Replace samples with fee waivers and stock refills with DEV waivers.
+5. Redesign the Armory as a ship-first workspace with compact supply bays, a
+   temporary inventory drawer, immediate item popups, and optional comparison.
+   Native delayed `title` tooltips are forbidden and validator-enforced.
+6. Use conservative provisional prices, then defer final fee tuning to
    the focused economy pass. Extend Credit Flow and deterministic validation so
    the loss-leading contract is measurable.
 
@@ -327,7 +336,7 @@ every possible random roll appeared.
 1. Review Missions 1–8 in unlock order with the real acquisition path.
 2. Add difficulty only after the matching tool is introduced.
 3. Recheck all five post-Last-Light missions with earned gold equipment and
-   stocked consumables.
+   authorized mission supplies.
 4. Preserve validated encounter identities; change only failures revealed by
    the real progression run.
 
@@ -350,7 +359,10 @@ the progression foundation.
 - Every locked capability states the mission that awards it.
 - Each newly authorized aux/consumable can be tried immediately through a free
   baseline sample.
-- Full-shield and full-armor recovery effects still provide temporary value.
+- Shield Overcharge reaches a persistent 125%; Armor Sealant repairs installed
+  armor to exactly 100% and does not overplate or repair hull.
+- Field recovery supplies auto-activate only when at least 10% of the base layer
+  is missing; otherwise a successful extraction receives their full credit value.
 - Every mission remains clearable at its intended gear tier and role without
   consumables. Premium consumables can enable a deliberately loss-leading early
   clear but are not included in the normal difficulty baseline.
@@ -358,10 +370,10 @@ the progression foundation.
 - A normal player can assemble multiple gold role combinations across the five
   post-Last-Light missions without Test Arsenal.
 - No current mission requires Heirloom gear.
-- Test Arsenal can still expose all items, infinite wallet/stock, and exact
+- Test Arsenal can still expose all items, infinite wallet/fee waivers, and exact
   capability/Dual Fire states for human testing.
 - Automated validation covers milestone derivation, first-clear idempotence,
-  role-aware offer coverage, consumable overflow caps, save migration, and dev
+  role-aware offer coverage, supply effects, save migration, and dev
   bypass behavior.
 - Codex runs deterministic validation and focused smoke tests. Adam performs the
   meaningful combat and full fresh-save playtest.

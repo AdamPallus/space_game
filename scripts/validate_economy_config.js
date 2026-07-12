@@ -273,28 +273,33 @@ function validateConfig(config) {
       stringAt(item.name, `${itemPath}.name`);
       stringAt(item.desc, `${itemPath}.desc`);
       validatePositiveCost(item.cost, `${itemPath}.cost`);
-      numberAt(item.usesPerMission, `${itemPath}.usesPerMission`, { min: 1, integer: true });
       numberAt(item.cooldown, `${itemPath}.cooldown`, { min: 0 });
-      numberAt(item.stockCap, `${itemPath}.stockCap`, { min: 1, integer: true });
       stringAt(item.capabilityId, `${itemPath}.capabilityId`);
       stringAt(item.hudLabel, `${itemPath}.hudLabel`);
       const effect = item.effect;
       if (objectAt(effect, `${itemPath}.effect`)) {
         stringAt(effect.kind, `${itemPath}.effect.kind`);
-        if (!['shieldOvercharge', 'armorSealant', 'damageOvercharge'].includes(effect.kind)) {
+        if (!['shieldOvercharge', 'armorSealant', 'impulseBoost'].includes(effect.kind)) {
           fail(`${itemPath}.effect.kind is unsupported.`);
         }
-        ['restoreRate', 'overflowRate', 'hullRepairRate'].forEach((field) => {
-          if (effect[field] !== undefined) validateFraction(effect[field], `${itemPath}.effect.${field}`);
+        ['targetRate'].forEach((field) => {
+          if (effect[field] !== undefined) numberAt(effect[field], `${itemPath}.effect.${field}`, { min: 0, max: 2 });
         });
-        ['holdDuration', 'decayDuration', 'duration'].forEach((field) => {
+        ['duration'].forEach((field) => {
           if (effect[field] !== undefined) numberAt(effect[field], `${itemPath}.effect.${field}`, { min: 0 });
         });
-        if (effect.damageMult !== undefined) numberAt(effect.damageMult, `${itemPath}.effect.damageMult`, { min: 1 });
+        if (effect.impulseBonus !== undefined) numberAt(effect.impulseBonus, `${itemPath}.effect.impulseBonus`, { min: 0 });
       }
       if (seenIds.has(item.id)) fail(`${itemPath}.id duplicates ${item.id}.`);
       seenIds.add(item.id);
     });
+  }
+
+  if (objectAt(config.supplyAuthorization, "supplyAuthorization")) {
+    numberAt(config.supplyAuthorization.chaptersPerCharge, "supplyAuthorization.chaptersPerCharge", { min: 1, integer: true });
+    numberAt(config.supplyAuthorization.maxChargesPerBay, "supplyAuthorization.maxChargesPerBay", { min: 1, integer: true });
+    validateFraction(config.supplyAuthorization.fieldActivationThreshold, "supplyAuthorization.fieldActivationThreshold");
+    numberAt(config.supplyAuthorization.devWaiversPerType, "supplyAuthorization.devWaiversPerType", { min: 0, integer: true });
   }
 
   const targets = config.reportTargets;

@@ -38,7 +38,7 @@
     },
     "damageOvercharge": {
       "stageId": "level5",
-      "label": "Damage Overcharge",
+      "label": "Impulse Supply Authorization",
       "requirement": "Clear Mission 5 Hybrid and either its Swarm or Armored contract"
     },
     "hullLicenses": {
@@ -109,11 +109,18 @@
     ],
     "level5": [
       {
-        "id": "mission-5-damage-overcharge-sample",
+        "id": "mission-5-redline-impulse-sample",
         "type": "consumable",
-        "consumableId": "overcharge",
+        "consumableId": "redlineImpulse",
         "quantity": 1,
-        "label": "Damage Overcharge sample"
+        "label": "Redline Impulse fee waiver"
+      },
+      {
+        "id": "mission-5-sustained-impulse-sample",
+        "type": "consumable",
+        "consumableId": "sustainedImpulse",
+        "quantity": 1,
+        "label": "Sustained Impulse fee waiver"
       }
     ]
   }

@@ -1,6 +1,6 @@
 # Space Shooter Current State
 
-Last audited: 2026-07-11
+Last audited: 2026-07-12
 
 This is the first file to read before changing the game. It summarizes what is implemented now, which docs are still authoritative, which older specs are archived, and which validation commands should pass before committing.
 
@@ -16,7 +16,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 - Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time or through explicit level-authored projectile profiles.
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
 - A Ledger market with rotating stock, daily lots, pricing, dividends, bulletins, volatility, sponsored listings, and license tiers that increase visible stock through Ledger Investments. Active economy tuning lives in `config/economy.json` and is validated before startup.
-- Search, sort, and filter controls for armory inventory, item archive, and Ledger sell views. The Armory main stage aligns Primary A/B with Defense A/B and shows each equipped primary's Effective DPS, Damage per Shot, and Shots per Second. The `Show Stats` control opens a player-facing popup with Offense, Defense, Aux, and Loadout readouts without shrinking the inventory rack.
+- Search, sort, and filter controls for armory inventory, item archive, and Ledger sell views. The Armory is a ship-first workspace: compact hardpoints and supply bays remain visible, clicking a hardpoint opens a temporary inventory drawer, immediate item popups replace delayed browser tooltips, and optional comparison shows installed and candidate items together. `Show Stats` remains a separate player-facing popup.
 - Mini weapons with rarity-scaled output/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, one-primary primary-damage focus bonuses, aux engineering upgrades, and campaign-earned dual-fire tiers for compatible loadouts. Last Light grants Tier 1; either claimant mission grants Tier 2; Return Address or both claimants grants Tier 3; Return Address plus both claimants grants Tier 4. Carrying a second primary applies a visible per-weapon primary-damage strain. Impulse budget now benefits kinetic and plasma weapons through different tradeoffs: kinetic turns impulse into speed-fed damage, while plasma turns impulse into larger, slower, higher-damage orbs. Shield layers take raw projectile damage before armor; armor class mitigates only hits that reach armor, uses the best installed armor class, and does not add duplicate armor-class values from multiple plates. Plasma burn stacks for three seconds from repeated hits and ignores armor-class subtraction while burning armor, but it still drains shields, armor, and hull in order and armor takes reduced burn.
 - Item cards/tooltips now split intrinsic item stats from effective install deltas. Weapon cards include kinetic/plasma damage breakdowns, installed modifier lines, unified Shots per Second terminology, and bottom-position roll-quality bars.
 - Generated salvage/UI chrome, mission background art, item icons, and combat fleet art promoted into the live UI, with Kenney assets still available as fallback or comparison art.
@@ -35,9 +35,9 @@ These are intentional follow-up targets, not bugs in the docs:
 - The Green Signal is player-validated. Purple plasma/defense failed early, while gold defense plus a gold Needlebloom Driver cleared with almost no hull remaining; its enemies, population snowball, and Seedcarrier split all worked. The Gatekeeper follow-up fixes a phase-index bug that prevented Overgrowth and gives both transitions immediate summons plus faster, phase-specific budding.
 - Return Address is player-validated after its focused ramp revision. Rootwards now overlap active threat waves, while the Matriarch's final transition releases two carriers and five Bursters and buds carrier pairs every 1.8 seconds. A gold Needlebloom/Starwound Tier 2 Dual Fire pairing found the revised mission challenging and fair.
 - Repossession also proved that random sub-gold salvage is not worth combat risk once gold gear is required. Reward rarity floors/progression remain deferred to the economy pass rather than being special-cased in one level.
-- The revised chapter pacing is awaiting a fresh Mission 1 Hybrid plus Swarm/Armored playtest. Consumable behavior and stocking are still provisional until Slice B: the Mission 1 shield sample uses the existing booster behavior, while Armor Sealant/overplate and full preparation UI have not landed yet.
+- The revised chapter pacing is player-approved. The supply-credit redesign now awaits a focused late-Act-1 playtest: repeated bay activations, per-use settlement/debt, defense recovery, both impulse windows, and sealed field-pickup claims need human combat judgment.
 - The campaign has no guaranteed normal-play route to a coherent gold build before the post-Last-Light missions begin balancing around gold equipment. Last Light and the five validated missions need idempotent first-clear commissioning rewards, act-aware rarity tables, and role-aware offer coverage.
-- Shield and armor pickups are often redundant at full capacity. The active progression spec introduces stocked Shield Overcharge, Armor Sealant/overplate, and Damage Overcharge in Act 1. Purchased consumables are expensive, loss-leading progression insurance; intended-tier, intended-role builds remain the zero-consumable difficulty baseline.
+- Mission supplies are expensive, loss-leading progression insurance; intended-tier, intended-role builds remain the zero-supply difficulty baseline. Shield/armor field pickups auto-activate only when at least 10% of the base layer is missing; otherwise victory/RTB redeems them at full supply price and death loses them.
 - No sixth post-Last-Light mission is authorized until the progression spine is playable. The old Act 3 missions remain hidden experiments; the future canonical Act 3 must be re-authored mission by mission after the story/economy setup and The Fork. The Fork is a story choice and bridge, not Act 3 itself.
 - Other overhaul systems still need player testing around cache readability, hull art/readability, phone-sized Armory density, high-rarity defense, mini output, single-primary payoff, and cloak usefulness.
 
@@ -73,6 +73,8 @@ node --check scripts/balance_report.js
 node scripts/validate_economy_config.js
 node scripts/validate_progression_config.js
 node scripts/validate_campaign_progression.js
+node scripts/validate_supply_contract.js
+node scripts/validate_ui_contract.js
 node scripts/validate_levels.js
 python3 scripts/validate_generated_assets.py
 node scripts/validate_weapon_frames.js
@@ -109,6 +111,8 @@ alpha processing described in `ASSET_GENERATION.md`.
 - `scripts/validate_economy_config.js`: structural validation for the economy config.
 - `scripts/validate_progression_config.js`: capability/reward mission, item, and consumable validation.
 - `scripts/validate_campaign_progression.js`: Act 1 Hybrid/role graph and rating-threshold validation.
+- `scripts/validate_supply_contract.js`: exact supply effects, fees, trust authorization, and first-clear waiver validation.
+- `scripts/validate_ui_contract.js`: immediate custom-popup contract; rejects native `title` tooltips.
 - `scripts/validate_levels.js`: level and item-pool structural validation.
 - `scripts/validate_generated_assets.py`: campaign projectile-key and broadside boss sprite audit.
 - `scripts/generate_projectile_threat_levels.js`: generator for the profiled 11-mission, 3-variant campaign set.
@@ -135,7 +139,7 @@ Recent history shows these major pieces have already landed:
 - Plasma armor pressure pass: plasma burn now stacks from repeated hits, ramps to sustained burn DPS over three seconds, ignores armor-class subtraction while damaging armor, applies reduced burn to the armor layer, and is mirrored in the Armory stat math and `scripts/balance_report.js`.
 - Combat HUD clarity pass: enemy, boss, and player layered health bars now read hull, armor, shields left to right, and active plasma burn shows green future-loss previews on affected enemy and boss bars.
 - Economy control layer pass (Phase 8 prelude): active economy numbers moved from `main.js` into validated `config/economy.json`; runtime startup now blocks on missing/invalid economy config; market prices and sell quotes read current config at render/purchase/sale time; `scripts/balance_report.js` prints Credit Flow expected-credit and affordability rows; `?devTuning=1` provides sparse local overrides, reset, badge, and merged JSON export.
-- Campaign consumable pass: three config-driven, persistent mission supplies now unlock with Act 1 samples; the Ledger sells expensive replacement stock; the Armory exposes two preparation bays; combat HUD keys/buttons consume stock; shield overflow, armor overplate, and hull-only sealant overflow are shared with scripted pickups; debrief and Credit Flow report replacement-cost net; DEV controls refill stock.
+- Campaign supply-credit pass: four config-driven mission supplies unlock through Act 1; they are free to equip and charged only when activated, settle after every outcome, and may create debt. Each bay earns independent charge authorization through completed chapters. Shield Overcharge sets a persistent 125%, Armor Sealant restores installed armor to 100%, and Redline/Sustained Impulse use the real projectile-impulse model. First-clear samples and DEV refills are fee waivers; redundant field pickups become extraction-only credit claims. The Ledger no longer sells supplies. The Armory is ship-first with a temporary inventory drawer, immediate custom popups, optional comparison, and validator-enforced removal of native delayed tooltips.
 - Act 2 engine pass: graph unlocks and Deep Claims board presentation, Deep Registry Shard gating, branch-standing records, miniboss banner/health/drop treatment, conductor/mimic/thief/lien/spawner/splitter AIs, Collections Barge tractor pattern, Doxology/Pilgrimage boss phases, and debrief lore rows.
 - Act 2 independent art pass: Chorus, Tithe, Verdant, and First Warden generated sprite packs, Cathedral Drift / Arrears Field / Origin Hull backgrounds, and Act 2 Chorus/Verdant projectile additions are wired through catalog, level data, runtime registries, compendium source data, and generated-asset validation.
 - Act 3 Probate engine/art pass: rammer and latch AIs, mothership breach-integrity fail state/HUD, capped lien attachment, fixed boss phase resumption, Heirloom rarity/item/drop support, generated `invasion_v1` sprites, and the generated `home_hull` background are wired into P1-P3.

@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=consumables-1" />
+    <link rel="stylesheet" href="style.css?v=supply-credit-2" />
   </head>
   <body>
     <div id="app">
@@ -144,7 +144,7 @@
                   <input type="checkbox" id="debug-skip-onboarding" />
                   <span>Skip Onboarding</span>
                 </label>
-                <button id="debug-refill-consumables" class="btn ghost small">Refill Consumables</button>
+                <button id="debug-refill-consumables" class="btn ghost small">Grant Supply Waivers</button>
                 <button id="reset-btn" class="btn ghost small">Reset Progress</button>
               </div>
             </details>
@@ -194,43 +194,47 @@
               <div class="armory-stage-panel art-slot" data-art="armory-bench">
                 <div class="armory-bench" id="armory-bench" aria-label="Drone assembly bench"></div>
               </div>
-              <div class="armory-side">
-                <div class="armory-inspector" id="armory-inspector" aria-label="Selected module"></div>
+              <div class="armory-command-strip">
                 <section class="armory-consumables" id="armory-consumables" aria-label="Mission supplies"></section>
-                <div class="armory-rack">
-                  <div class="armory-rack-head">
-                    <div>
-                      <h3 id="armory-rack-title">Module Inventory</h3>
-                      <p class="muted" id="armory-rack-copy">Click a hardpoint to browse gear.</p>
-                    </div>
-                    <div class="armory-rack-actions">
-                      <button type="button" class="btn ghost small" id="armory-toggle-stats">Show Stats</button>
-                      <span class="armory-rack-tip muted" id="armory-rack-tip">Click icon to install</span>
-                    </div>
-                  </div>
-                  <div class="browser-controls" id="armory-browser-controls" aria-label="Armory browser controls">
-                    <input id="armory-browser-search" class="browser-search" type="search" placeholder="Search gear" />
-                    <select id="armory-browser-sort" class="browser-select" aria-label="Sort armory gear">
-                      <option value="recent">Recent</option>
-                      <option value="rarity">Rarity</option>
-                      <option value="slot">Type</option>
-                      <option value="value">Value</option>
-                      <option value="role">Role</option>
-                    </select>
-                    <select id="armory-browser-filter" class="browser-select" aria-label="Filter armory gear">
-                      <option value="all">All</option>
-                      <option value="equipped">Installed</option>
-                      <option value="primary">Primary</option>
-                      <option value="mini">Mini</option>
-                      <option value="defense">Defense</option>
-                      <option value="aux">Aux</option>
-                      <option value="relic">Relics</option>
-                    </select>
-                  </div>
-                  <div class="armory-inventory-grid" id="weapon-inventory"></div>
-                  <div class="ship-stats" id="ship-stats" aria-label="Ship stats" hidden></div>
+                <div class="armory-command-actions">
+                  <label class="armory-compare-toggle">
+                    <input type="checkbox" id="armory-compare-mode" />
+                    <span>Compare popups</span>
+                  </label>
+                  <button type="button" class="btn ghost small" id="armory-toggle-stats">Show Stats</button>
                 </div>
               </div>
+              <aside class="armory-drawer" id="armory-drawer" hidden aria-label="Compatible inventory">
+                <div class="armory-drawer-head">
+                  <div>
+                    <span class="kicker">Compatible Inventory</span>
+                    <h3 id="armory-rack-title">Module Inventory</h3>
+                    <p class="muted" id="armory-rack-copy">Hover to inspect. Click to install.</p>
+                  </div>
+                  <button type="button" class="btn ghost small" id="armory-drawer-close" aria-label="Close compatible inventory">Close</button>
+                </div>
+                <div class="browser-controls" id="armory-browser-controls" aria-label="Armory browser controls">
+                  <input id="armory-browser-search" class="browser-search" type="search" placeholder="Search gear" />
+                  <select id="armory-browser-sort" class="browser-select" aria-label="Sort armory gear">
+                    <option value="recent">Recent</option>
+                    <option value="rarity">Rarity</option>
+                    <option value="slot">Type</option>
+                    <option value="value">Value</option>
+                    <option value="role">Role</option>
+                  </select>
+                  <select id="armory-browser-filter" class="browser-select" aria-label="Filter armory gear">
+                    <option value="all">All</option>
+                    <option value="equipped">Installed</option>
+                    <option value="primary">Primary</option>
+                    <option value="mini">Mini</option>
+                    <option value="defense">Defense</option>
+                    <option value="aux">Aux</option>
+                    <option value="relic">Relics</option>
+                  </select>
+                </div>
+                <div class="armory-inventory-grid" id="weapon-inventory"></div>
+              </aside>
+              <div class="ship-stats" id="ship-stats" aria-label="Ship stats" hidden></div>
             </div>
           </div>
 
@@ -261,11 +265,6 @@
                           <span class="ledger-pane-note license" id="ledger-license-status"></span>
                         </div>
                       </div>
-                      <div class="ledger-pane-head compact">
-                        <h4>Mission Supplies</h4>
-                        <span class="ledger-pane-note">Persistent stock · consumed on use</span>
-                      </div>
-                      <div class="ledger-consumable-list" id="ledger-consumable-list"></div>
                       <div class="ledger-pane-head compact">
                         <h4>Exchange Lots</h4>
                         <span class="ledger-pane-note">Rotating stock</span>
@@ -420,7 +419,7 @@
               <div class="stat-big" id="debrief-kills">0</div>
             </div>
             <div>
-              <div class="label">Credits Earned</div>
+              <div class="label">Net Settlement</div>
               <div class="stat-big" id="debrief-credits">0</div>
             </div>
           </div>
@@ -504,6 +503,6 @@
       </div>
     </div>
 
-  <script src="main.js?v=consumables-1"></script>
+  <script src="main.js?v=supply-credit-2"></script>
   </body>
 </html>

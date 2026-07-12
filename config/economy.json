@@ -145,57 +145,64 @@
     {
       "id": "shieldBoost",
       "name": "Shield Overcharge",
-      "desc": "Restores 40% shields and holds up to 25% temporary overflow before it decays.",
+      "desc": "Sets shields to 125% capacity. The overcharge remains until damage consumes it.",
       "cost": 900,
-      "usesPerMission": 1,
-      "cooldown": 12,
-      "stockCap": 6,
+      "cooldown": 10,
       "capabilityId": "consumableBay1",
       "hudLabel": "Shield",
       "effect": {
         "kind": "shieldOvercharge",
-        "restoreRate": 0.4,
-        "overflowRate": 0.25,
-        "holdDuration": 8,
-        "decayDuration": 3
+        "targetRate": 1.25
       }
     },
     {
       "id": "armorSealant",
       "name": "Armor Sealant",
-      "desc": "Restores 35% armor and holds up to 20% temporary overplate; repairs hull when armor cannot.",
+      "desc": "Restores installed armor to 100%. Cannot be used without an armor module.",
       "cost": 1400,
-      "usesPerMission": 1,
-      "cooldown": 12,
-      "stockCap": 6,
+      "cooldown": 10,
       "capabilityId": "armorSealant",
       "hudLabel": "Sealant",
       "effect": {
         "kind": "armorSealant",
-        "restoreRate": 0.35,
-        "overflowRate": 0.2,
-        "hullRepairRate": 0.18,
-        "holdDuration": 10,
-        "decayDuration": 4
+        "targetRate": 1
       }
     },
     {
-      "id": "overcharge",
-      "name": "Damage Overcharge",
-      "desc": "Increases primary damage by 40% for 7 seconds.",
-      "cost": 2000,
-      "usesPerMission": 1,
-      "cooldown": 15,
-      "stockCap": 6,
+      "id": "redlineImpulse",
+      "name": "Redline Impulse",
+      "desc": "Doubles primary projectile impulse for 10 seconds. Built for bosses and crisis windows.",
+      "cost": 2200,
+      "cooldown": 16,
       "capabilityId": "damageOvercharge",
-      "hudLabel": "Damage",
+      "hudLabel": "Redline",
       "effect": {
-        "kind": "damageOvercharge",
-        "damageMult": 1.4,
-        "duration": 7
+        "kind": "impulseBoost",
+        "impulseBonus": 1,
+        "duration": 10
+      }
+    },
+    {
+      "id": "sustainedImpulse",
+      "name": "Sustained Impulse",
+      "desc": "Adds 40% primary projectile impulse for 30 seconds. Built for prolonged pressure.",
+      "cost": 1600,
+      "cooldown": 20,
+      "capabilityId": "damageOvercharge",
+      "hudLabel": "Sustain",
+      "effect": {
+        "kind": "impulseBoost",
+        "impulseBonus": 0.4,
+        "duration": 30
       }
     }
   ],
+  "supplyAuthorization": {
+    "chaptersPerCharge": 4,
+    "maxChargesPerBay": 3,
+    "fieldActivationThreshold": 0.1,
+    "devWaiversPerType": 9
+  },
   "reportTargets": {
     "certifiedAffordableMission": 3,
     "firstInvestmentAffordableMission": 5,

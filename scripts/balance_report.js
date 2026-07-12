@@ -1023,6 +1023,19 @@ function expectedPickupSalvageSaleValue(level, cutoff = Infinity) {
     }, 0);
 }
 
+function fieldSupplyCreditCeiling(level, cutoff = Infinity) {
+  const supplyByPickupType = {
+    shield_booster: (economyConfig.consumables || []).find((item) => item.id === "shieldBoost"),
+    armor_patch: (economyConfig.consumables || []).find((item) => item.id === "armorSealant"),
+  };
+  return (Array.isArray(level?.pickups) ? level.pickups : [])
+    .filter((pickup) => supplyByPickupType[pickup.type] && (Number(pickup.time) || 0) <= cutoff)
+    .reduce((sum, pickup) => {
+      const count = Math.max(1, Math.round(Number(pickup.count) || 1));
+      return sum + count * Math.max(0, Number(supplyByPickupType[pickup.type].cost) || 0);
+    }, 0);
+}
+
 function objectiveCreditRewardForLevel(level) {
   const explicit = level?.objectiveCredits ?? level?.objectiveCredit ?? level?.creditReward;
   return Number.isFinite(explicit) ? Math.max(0, Math.round(explicit)) : 0;
@@ -1062,6 +1075,7 @@ function buildCreditFlowRow(levelId, index, mode, failures) {
     });
   }, 0);
   const pickupSalvageSale = expectedPickupSalvageSaleValue(level, cutoff);
+  const sealedSupplyCeiling = fieldSupplyCreditCeiling(level, cutoff);
   const objectiveCredits = mode === "full" ? objectiveCreditRewardForLevel(level) : 0;
   const completionCredits = mode === "full" ? missionCompletionCreditForLevel(levelId, index) : 0;
   const grossCredits = killCredits + objectiveCredits + completionCredits;
@@ -1085,6 +1099,7 @@ function buildCreditFlowRow(levelId, index, mode, failures) {
     objectiveCompletionCredits: objectiveCredits + completionCredits,
     expectedRecoveryBonus,
     expectedSalvageSale,
+    sealedSupplyCeiling,
     total,
   };
   Object.entries(row).forEach(([key, value]) => {
@@ -1183,7 +1198,7 @@ function printCreditFlowReport() {
 
   console.log("\nCredit Flow");
   console.log(
-    `${"Mission".padEnd(8)} ${"Loop".padEnd(5)} ${"Kills".padStart(7)} ${"Obj+Comp".padStart(8)} ${"Recovery".padStart(8)} ${"Salvage".padStart(8)} ${"Total".padStart(8)} ${"Cumulative".padStart(10)}`
+    `${"Mission".padEnd(8)} ${"Loop".padEnd(5)} ${"Kills".padStart(7)} ${"Obj+Comp".padStart(8)} ${"Recovery".padStart(8)} ${"Salvage".padStart(8)} ${"Sealed max".padStart(10)} ${"Total".padStart(8)} ${"Cumulative".padStart(10)}`
   );
   fullRows.forEach((fullRow, index) => {
     const shortRow = shortRows[index];
@@ -1194,6 +1209,7 @@ function printCreditFlowReport() {
           `${formatCreditAmount(row.objectiveCompletionCredits).padStart(8)} ` +
           `${formatCreditAmount(row.expectedRecoveryBonus).padStart(8)} ` +
           `${formatCreditAmount(row.expectedSalvageSale).padStart(8)} ` +
+          `${formatCreditAmount(row.sealedSupplyCeiling).padStart(10)} ` +
           `${formatCreditAmount(row.total).padStart(8)} ` +
           `${formatCreditAmount(row.cumulative).padStart(10)}`
       );
@@ -1218,13 +1234,14 @@ function printCreditFlowReport() {
     );
   });
 
-  console.log("\nCredit Flow consumable insurance");
+  console.log("\nCredit Flow supply insurance (fees settle after the run)");
   (economyConfig.consumables || []).forEach((item) => {
     const stageId = progressionConfig.capabilities?.[item.capabilityId]?.stageId;
     const row = fullRows.find((entry) => entry.levelId === stageId) || fullRows[0];
-    const replacementNet = row ? row.total - item.cost : -item.cost;
+    const oneUseNet = row ? row.total - item.cost : -item.cost;
+    const twoUseNet = row ? row.total - item.cost * 2 : -item.cost * 2;
     console.log(
-      `${(item.name || item.id).slice(0, 24).padEnd(24)} unlock ${(stageId || "n/a").replace("level", "M").padEnd(4)} | replenish ${formatCreditAmount(item.cost).padStart(5)} | boosted-clear net ${formatCreditAmount(replacementNet).padStart(6)}`
+      `${(item.name || item.id).slice(0, 24).padEnd(24)} unlock ${(stageId || "n/a").replace("level", "M").padEnd(4)} | fee/use ${formatCreditAmount(item.cost).padStart(5)} | 1-use net ${formatCreditAmount(oneUseNet).padStart(6)} | 2-use net ${formatCreditAmount(twoUseNet).padStart(6)}`
     );
   });
 

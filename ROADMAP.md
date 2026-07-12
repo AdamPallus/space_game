@@ -10,14 +10,17 @@ All five newly authored post-Last-Light missions are player-validated. That
 proves the mission-design loop; the next problem is making a normal fresh save
 earn the builds that the Test Arsenal proved can clear them.
 
-`CAMPAIGN_PROGRESSION_SPEC.md` is the next authorized player-facing work. It
-defines four ordered implementation slices:
+`CAMPAIGN_PROGRESSION_SPEC.md` is the next authorized player-facing work. Its
+four ordered implementation slices cover:
 
 1. campaign-earned capability milestones from Mission 1 through Last Light;
-2. early stocked consumables with shield overcharge, armor overplate, and a
-   damage window, followed by difficulty integration;
-3. guaranteed, role-aware gold commissioning rewards and act-aware drop tables;
-4. a fresh-save balance pass through Act 1 and the five validated missions.
+2. a single deliberately weak Cadet starter frame, followed by earned weapon
+   choices instead of free swarm/armor role coverage;
+3. early stocked consumables with shield overcharge, armor overplate, and a
+   damage window; premium stock is loss-leading progression insurance, not part
+   of the normal difficulty baseline;
+4. guaranteed, role-aware gold commissioning rewards and act-aware drop tables;
+5. a fresh-save balance pass through Act 1 and the five validated missions.
 
 No new campaign mission should be authored before that progression spine is
 playable. Assessor lien readability remains an explicitly unverified but

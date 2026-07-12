@@ -13,12 +13,15 @@ can beat the five validated post-Last-Light missions. The missing game is the
 journey that lets a fresh pilot assemble those combinations without developer
 tools.
 
-A fresh save currently exposes nearly every major loadout capability at once.
-Random drops can produce a powerful purple or gold item early, but there is no
-reliable capability ladder and no guaranteed route to a coherent gold build
-before the campaign begins balancing around gold equipment. Heirloom gear is
-implemented as an Act 3 reward tier even though no current Act 3 mission is
-player-facing canon.
+A fresh save currently exposes nearly every major loadout capability at once
+and grants three permanent starter primaries covering focused kinetic,
+anti-swarm plasma, and armor breaking. The Cadet Kinetic Frame itself reports
+approximately 344 DPS, higher than many blue and purple weapons that should
+feel like upgrades. Random drops can produce a powerful purple or gold item
+early, but there is no reliable capability ladder and no guaranteed route to a
+coherent gold build before the campaign begins balancing around gold equipment.
+Heirloom gear is implemented as an Act 3 reward tier even though no current Act
+3 mission is player-facing canon.
 
 This pass fixes that progression spine before any new mission is authored.
 
@@ -31,9 +34,10 @@ used Act 2 labels.
 ## 2. Binding product rules
 
 1. **Start playable, not fully equipped.** A fresh pilot begins in the hangar
-   with one useful primary, baseline defense, a starter hull, and Cloak. There
-   is no mandatory Flight School, but major ship capabilities arrive through
-   campaign first clears.
+   with one deliberately weak Cadet kinetic primary, baseline defense, a
+   starter hull, and Cloak. There is no mandatory Flight School, but real
+   weapon choices and major ship capabilities arrive through campaign first
+   clears.
 2. **Show the future.** Locked slots and capabilities remain visible with a
    plain mission requirement. Do not hide enough of the Armory that players
    cannot understand what they are working toward.
@@ -48,10 +52,10 @@ used Act 2 labels.
    remain above that baseline and must not be required before canonical Act 3.
 6. **Consumables arrive in Act 1.** They are part of the combat vocabulary used
    to tune late Act 1 and Act 2, not an Act 3 feature.
-7. **Consumables create decisions, not chores.** They may be expensive and
-   stockpiled, but equipped capacity and per-sortie limits prevent hoarding from
-   flattening a mission. A skilled coherent build can still win without the
-   exact consumable the encounter showcases.
+7. **Consumables are expensive progression insurance, not baseline power.** A
+   pilot may deliberately lose money boosting through a mission before the
+   ideal gear arrives, gambling on a rare drop or permanent unlock. Correct
+   role-appropriate gear at the intended tier clears without consumables.
 8. **Raise authored pressure, not a global scalar.** After tools unlock, use
    simultaneous threats, heavy notes, collision intent, and shorter accidental
    quiet windows to make those tools matter. Do not globally multiply every
@@ -69,11 +73,11 @@ an all-unlocked starter state.
 
 | Milestone | Campaign award | Purpose |
 | --- | --- | --- |
-| Fresh save | Primary A, two defense bays, starter hull, Cloak, full hangar navigation | Immediately playable; inventory and mission choice remain understandable. |
+| Fresh save | Weak Cadet Kinetic Frame in Primary A, two defense bays, starter hull, Cloak, full hangar navigation | Immediately playable without supplying free swarm, armor, and alternate-ammo answers. |
 | Mission 1 clear | Consumable Bay 1, one Shield Overcharge, Ledger consumable stock | Introduce preparation and emergency timing immediately. |
 | Mission 2 clear | Mini weapon slot and Tick Autogun | Add passive coverage only after primary fire is understood. |
 | Mission 3 clear | EMP support authorization and one Armor Sealant | Introduce projectile control and armor recovery before dense mid-act pressure. |
-| Mission 4 clear | Primary B in **Swap** mode | Introduce role switching well before Dual Fire. |
+| Mission 4 clear | Primary B in **Swap** mode plus a choose-one Certified role requisition | Introduce role switching well before Dual Fire and guarantee a second weapon worth swapping to. |
 | Mission 5 clear | Damage Overcharge consumable | Add offensive tempo for bosses and dangerous overlaps. |
 | Mission 6 clear | Named-hull licenses and Bulwark support authorization | Hull identity and the third aux role arrive after core gear loops are familiar; chassis still cost credits. |
 | Mission 7 clear | Consumable Bay 2 | Let the player compose recovery and offense before Last Light. |
@@ -95,6 +99,24 @@ Named hulls use the same two-part contract: the Mission 6 clear authorizes hull
 licenses, while Ledger Investments and credit prices determine which chassis
 the player actually owns. Broadside may improve eligible Dual Fire tiers under
 the existing rules; it does not bypass campaign authorization.
+
+### Starter weapon contract
+
+- A fresh save owns only the non-sellable **Cadet Kinetic Frame**. Area Control
+  and Armor Break remain normal weapon bases that must be earned, found, or
+  purchased; they are not free starter inventory.
+- The Cadet is a focused kinetic trainer with no effect, no rare affix, and no
+  hidden late-game scaling. In the starter hull its displayed effective DPS
+  should begin around **150–180**, subject to the Mission 1 playtest.
+- The target is roughly the lower quartile of ordinary primary output and at
+  least 25% below the median Certified primary. A typical blue weapon should
+  offer an obvious improvement in output, role coverage, effect, or more than
+  one of those axes.
+- The Cadet must clear Missions 1–2 with reasonable aim. It should feel
+  increasingly inadequate rather than remaining a competitive Act 1 endgame
+  weapon.
+- `balance_report.js` must print the Cadet against Certified and Prototype
+  primary medians and warn if it reaches or exceeds the Certified median.
 
 ## 4. Consumable and pickup contract
 
@@ -135,10 +157,21 @@ consumables. A pickup may activate immediately while a purchased item consumes
 stock from an equipped bay, but identical names must produce identical combat
 effects.
 
-Consumables should be meaningfully expensive without becoming too precious to
-use. Each newly unlocked type grants a free sample. Stock caps, equipped slots,
-and per-sortie cooldowns are preferred to punitive prices as the primary limit.
-The Credit Flow report must include representative replenishment costs.
+Consumables should be intentionally expensive enough that routine use is not
+part of a profitable baseline clear. Each newly unlocked type grants a free
+sample so the mechanic can be learned, but ordinary replacement prices are
+tuned later with the full economy. The target contract is:
+
+- an appropriately geared clear without consumables produces positive expected
+  credits;
+- a clear using one premium consumable is near break-even or negative before
+  valuable item drops;
+- repeated consumable use is a definite loss justified by a progression unlock
+  or rare-drop gamble.
+
+Equipped slots, stock caps, and cooldowns prevent in-mission spam, while price is
+the long-term strategic limit. The Credit Flow report must include
+representative replenishment costs and boosted-clear net outcomes.
 
 ### Aux integration
 
@@ -159,6 +192,9 @@ The Credit Flow report must include representative replenishment costs.
 
 - Act 1 remains clearable with ordinary and Prototype gear. A lucky high-roll
   item may make it easier; that is a reward, not a balance defect.
+- Area Control and Armor Break are not automatically owned. Mission rewards,
+  field drops, and Ledger stock build role coverage over time, with the Mission
+  4 requisition guaranteeing the first deliberate choice.
 - Mid/late Act 1 first clears should deliberately provide Prototype weapon and
   defense coverage instead of relying exclusively on random field salvage.
 - Last Light's first clear grants a **Pre-Founding commissioning package**:
@@ -204,6 +240,10 @@ fresh-save route.
   Address baseline; Tier 3/4 may outgear it.
 - Consumables should improve survival or shorten a crisis, but no mission may
   require one exact consumable to avoid an otherwise unavoidable failure.
+- The intended tier plus the intended weapon/defense role must clear with zero
+  consumables. One expensive consumable may compensate temporarily for being
+  under-tiered **or** missing one role; it should not rescue a build that is both
+  badly under-tiered and fundamentally wrong for the encounter.
 
 After the progression and consumable systems are playable, run a fresh-save
 balance pass through Act 1 and the five validated missions. Raise pressure only
@@ -219,11 +259,14 @@ role-based counters; do not normalize exceptional builds.
    `scripts/validate_progression_config.js`; do not hide campaign requirements
    among mutable economy prices.
 2. Gate mini, Primary B, consumable bays, aux authorizations, and hull licenses.
-3. Keep locked controls visible with exact requirements and newly earned awards
+3. Replace the three-frame fresh inventory with the single weak Cadet contract;
+   add the Mission 4 Certified role requisition and starter-vs-rarity balance
+   report checks.
+4. Keep locked controls visible with exact requirements and newly earned awards
    visible in debrief.
-4. Make Test Arsenal bypass all capability gates while enabled without changing
+5. Make Test Arsenal bypass all capability gates while enabled without changing
    earned milestones.
-5. Migrate old saves safely. Existing advanced saves derive awards from
+6. Migrate old saves safely. Existing advanced saves derive awards from
    completion records, keep collected inventory, and unequip newly locked slots
    unless Test Arsenal is active; no legacy-player preservation work should
    compromise the fresh-save design.
@@ -239,7 +282,9 @@ Stop for a short fresh-save UI and Mission 1–4 playtest.
 3. Add shield overflow and armor overplate to both inventory consumables and
    matching field pickups.
 4. Add first-unlock samples and dev stock controls.
-5. Extend Credit Flow and deterministic validation.
+5. Use conservative provisional prices, then defer final replacement pricing to
+   the focused economy pass. Extend Credit Flow and deterministic validation so
+   the loss-leading contract is measurable.
 
 Stop for a late-Act-1 consumable playtest before raising mission pressure.
 
@@ -272,10 +317,16 @@ the progression foundation.
 
 - A fresh pilot can launch Mission 1 immediately but cannot use mini, Primary B,
   advanced aux modules, named hulls, consumable Bay 2, or Dual Fire early.
+- A fresh pilot owns only the Cadet Kinetic Frame; its effective starter-hull DPS
+  is approximately 150–180 and remains below the Certified primary median.
+- Mission 4 grants a real Certified weapon choice when Primary B unlocks.
 - Every locked capability states the mission that awards it.
 - Each newly authorized aux/consumable can be tried immediately through a free
   baseline sample.
 - Full-shield and full-armor recovery effects still provide temporary value.
+- Every mission remains clearable at its intended gear tier and role without
+  consumables. Premium consumables can enable a deliberately loss-leading early
+  clear but are not included in the normal difficulty baseline.
 - Last Light produces a coherent gold primary plus defense/aux starting point.
 - A normal player can assemble multiple gold role combinations across the five
   post-Last-Light missions without Test Arsenal.

@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "capabilities": {
+    "consumableBay1": {
+      "missionId": "level1",
+      "label": "Consumable Bay 1",
+      "requirement": "Clear Mission 1"
+    },
+    "miniWeapon": {
+      "missionId": "level2",
+      "label": "Mini Weapon",
+      "requirement": "Clear Mission 2"
+    },
+    "empSupport": {
+      "missionId": "level3",
+      "label": "EMP Support",
+      "requirement": "Clear Mission 3"
+    },
+    "primaryBay2": {
+      "missionId": "level4",
+      "label": "Primary B (Swap)",
+      "requirement": "Clear Mission 4"
+    },
+    "damageOvercharge": {
+      "missionId": "level5",
+      "label": "Damage Overcharge",
+      "requirement": "Clear Mission 5"
+    },
+    "hullLicenses": {
+      "missionId": "level6",
+      "label": "Named Hull Licenses",
+      "requirement": "Clear Mission 6"
+    },
+    "bulwarkSupport": {
+      "missionId": "level6",
+      "label": "Bulwark Support",
+      "requirement": "Clear Mission 6"
+    },
+    "consumableBay2": {
+      "missionId": "level7",
+      "label": "Consumable Bay 2",
+      "requirement": "Clear Mission 7"
+    }
+  },
+  "firstClearRewards": {
+    "level1": [
+      {
+        "id": "mission-1-shield-overcharge-sample",
+        "type": "consumable",
+        "consumableId": "shieldBoost",
+        "quantity": 1,
+        "autoEquipSlot": 0,
+        "label": "Shield Overcharge sample"
+      }
+    ],
+    "level2": [
+      {
+        "id": "mission-2-tick-autogun",
+        "type": "starterMini",
+        "starterMiniId": "mini_tick_autogun",
+        "autoEquip": true,
+        "label": "Tick Autogun"
+      }
+    ],
+    "level4": [
+      {
+        "id": "mission-4-certified-role-requisition",
+        "type": "requisition",
+        "rarity": "certified",
+        "label": "Certified role requisition",
+        "offers": [
+          { "role": "Swarm", "baseId": "needle_storm" },
+          { "role": "Armor", "baseId": "slug_cannon" },
+          { "role": "Plasma", "baseId": "plasma_lance" }
+        ]
+      }
+    ]
+  }
+}

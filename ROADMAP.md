@@ -26,6 +26,14 @@ No new campaign mission should be authored before that progression spine is
 playable. Assessor lien readability remains an explicitly unverified but
 non-blocking observation.
 
+Slice A is now implemented and awaiting the fresh-save Mission 1–4 player
+checkpoint. It supplies the weak single Cadet start, visible mission-gated
+hardpoints, Mission 1/2 baseline samples, EMP authorization, Mission 4 Primary
+B plus a three-role Certified requisition, named-hull and later consumable-bay
+gates, old-save derivation, and Test Arsenal bypass. Slice B remains the next
+code pass after that playtest and owns the complete consumable stock, purchase,
+overcharge/overplate, cooldown, and preparation UI contract.
+
 ## Player-validated combat direction (2026-07-09)
 
 This direction is folded into the current master plan and governs the active slices:

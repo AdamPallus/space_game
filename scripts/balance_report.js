@@ -110,6 +110,7 @@ function createDefaultShipBuild() {
     armorClassLevel: 0,
     armorDragLevel: 0,
     kineticImpulseBudget: 0,
+    frameDamageMult: 1,
   };
 }
 
@@ -493,7 +494,7 @@ function summarizePrimaryBuild(build) {
     speed: cfg.bulletSpeed,
     radius: cfg.projectileRadius,
     shotDamageMult: cfg.shotDamageMult,
-    buildDamageMult: build.primaryDamageMult ?? 1,
+    buildDamageMult: build.primaryDamageMult ?? build.frameDamageMult ?? 1,
   });
   const projectiles = projectileCountForSpread(cfg.spread);
   const volley = perShot * projectiles;
@@ -676,7 +677,7 @@ function simulateTtk(build, enemyBase) {
     speed: cfg.bulletSpeed,
     radius: cfg.projectileRadius,
     shotDamageMult: cfg.shotDamageMult,
-    buildDamageMult: build.primaryDamageMult ?? 1,
+    buildDamageMult: build.primaryDamageMult ?? build.frameDamageMult ?? 1,
   });
   let elapsed = 0;
   let dotStacks = [];
@@ -872,6 +873,13 @@ matrix
 
 function average(values) {
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+}
+
+function median(values) {
+  const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (!sorted.length) return 0;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
 function numericMissionIndex(levelId) {
@@ -1265,6 +1273,17 @@ const loadoutTradeoff = {
   strainedPerWeaponAvg: average(basePrimaryDpsValues.map((dps) => dps * secondBayStrainMult)),
   twoWeaponCoverageAvg: average(basePrimaryDpsValues.map((dps) => dps * secondBayStrainMult * 2)),
 };
+const cadetRow = matrix.find((row) => row.id === "frame:fundamentals");
+const certifiedPrimaryMedian = median(
+  matrix.filter((row) => row.id.startsWith("certified:")).map((row) => row.offense.dps)
+);
+const prototypePrimaryMedian = median(
+  matrix.filter((row) => row.id.startsWith("prototype:")).map((row) => row.offense.dps)
+);
+const cadetDisplayedDps = cadetRow?.offense.dps || 0;
+console.log(
+  `Starter progression: Cadet ${cadetDisplayedDps.toFixed(1)} DPS | Certified median ${certifiedPrimaryMedian.toFixed(1)} | Prototype median ${prototypePrimaryMedian.toFixed(1)}`
+);
 console.log(
   `Loadout focus/strain: one primary ${Math.round(singlePrimaryFocusMult * 100)}% damage avg ${loadoutTradeoff.singleAvg.toFixed(1)} DPS | ` +
     `two primaries ${Math.round(secondBayStrainMult * 100)}% per weapon avg ${loadoutTradeoff.strainedPerWeaponAvg.toFixed(1)} DPS each, ${loadoutTradeoff.twoWeaponCoverageAvg.toFixed(1)} combined coverage`
@@ -1349,6 +1368,15 @@ const toughestPlated = enemies
   )[0];
 
 const failures = [];
+if (cadetDisplayedDps < 150 || cadetDisplayedDps > 180) {
+  failures.push(`Cadet displayed DPS ${cadetDisplayedDps.toFixed(1)} is outside the 150-180 starter target.`);
+}
+if (certifiedPrimaryMedian > 0 && cadetDisplayedDps >= certifiedPrimaryMedian) {
+  failures.push(`Cadet DPS ${cadetDisplayedDps.toFixed(1)} reaches or exceeds Certified median ${certifiedPrimaryMedian.toFixed(1)}.`);
+}
+if (certifiedPrimaryMedian > 0 && cadetDisplayedDps > certifiedPrimaryMedian * 0.75) {
+  failures.push(`Cadet DPS ${cadetDisplayedDps.toFixed(1)} is not at least 25% below Certified median ${certifiedPrimaryMedian.toFixed(1)}.`);
+}
 const creditFlowReport = printCreditFlowReport();
 failures.push(...creditFlowReport.failures);
 if (!(singlePrimaryFocusMult > 1 && secondBayStrainMult > 0 && secondBayStrainMult < 1)) {

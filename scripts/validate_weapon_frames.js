@@ -35,6 +35,10 @@ ids.forEach((id) => {
   assert(entry.build && typeof entry.build === "object" && !Array.isArray(entry.build), `${id} is missing build`);
 
   const build = entry.build;
+  if (build.frameDamageMult !== undefined) {
+    assert(Number.isFinite(build.frameDamageMult), `${id} frameDamageMult must be finite`);
+    assert(build.frameDamageMult >= 0.1 && build.frameDamageMult <= 1, `${id} frameDamageMult must be between 0.1 and 1`);
+  }
   assert(allowedGunDiameters.has(build.gunDiameter), `${id} has invalid gunDiameter`);
   assert(allowedSpreads.has(build.spread), `${id} has invalid spread`);
   assert(allowedAmmo.has(build.ammo), `${id} has invalid ammo`);

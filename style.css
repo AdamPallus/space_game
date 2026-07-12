@@ -1037,6 +1037,19 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   border-color: var(--rarity-color, var(--accent));
   box-shadow: 0 0 0 1px var(--rarity-color, var(--accent)), 0 0 14px var(--rarity-glow, rgba(63, 208, 255, 0.25));
 }
+.armory-slot.is-progression-locked {
+  border-style: dashed;
+  border-color: rgba(148, 163, 184, 0.48);
+  box-shadow: inset 0 0 18px rgba(15, 23, 42, 0.7);
+}
+.armory-slot.is-progression-locked .armory-slot-icon-frame,
+.armory-slot.is-progression-locked .armory-slot-type {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+.armory-slot.is-progression-locked .armory-slot-meta {
+  color: var(--amber);
+}
 .armory-slot-primary { left: 4%; top: 6%; transform: none; }
 .armory-slot-primary-secondary { right: 4%; top: 6%; }
 .armory-slot-mini { left: 50%; bottom: 6%; transform: translateX(-50%); }
@@ -2470,6 +2483,68 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .salvage-empty, .salvage-lost { color: var(--muted); font-size: 12px; }
 .salvage-lost { color: var(--danger); }
 .salvage-relic-lore { font-family: var(--mono); font-style: italic; font-size: 10px; color: var(--amber); }
+.campaign-requisition {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--amber);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--panel) 86%, var(--amber) 14%);
+}
+.campaign-requisition p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.campaign-requisition-offers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.campaign-requisition-offer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 6px;
+  border: 1px solid var(--rarity-color, var(--amber));
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: center;
+  box-shadow: inset 0 0 10px var(--rarity-glow, transparent);
+}
+.campaign-requisition-offer:hover,
+.campaign-requisition-offer:focus-visible {
+  box-shadow: 0 0 12px var(--rarity-glow, rgba(240, 180, 41, 0.25));
+  outline: none;
+}
+.campaign-requisition-offer img { width: 38px; height: 38px; object-fit: contain; }
+.campaign-requisition-offer strong { color: var(--rarity-color, var(--amber)); font-size: 11px; }
+.campaign-requisition-offer > span:last-child { color: var(--muted); font-size: 9px; }
+.campaign-requisition-role {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.campaign-requisition-claimed {
+  padding: 10px;
+  border: 1px solid var(--good);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--good);
+  font-size: 11px;
+}
+.armory-pending-requisition {
+  grid-column: 1 / -1;
+}
+.armory-pending-requisition .campaign-requisition {
+  margin-bottom: 4px;
+}
 
 /* ==========================================================================
    MODALS

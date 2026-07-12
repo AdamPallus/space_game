@@ -18,6 +18,7 @@
         "flowRateLevel": 0,
         "flowVelocityLevel": 0,
         "flowSizeLevel": 0,
+        "frameDamageMult": 0.47,
         "kineticImpulseBudget": 0.6,
         "defenseSlots": ["shield", "none"],
         "shieldMaxLevel": 0,

@@ -20,6 +20,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 - Mini weapons with rarity-scaled output/effects, defense loot with rarity-scaled armor-class/shield strength, named hulls, second-primary swapping, one-primary primary-damage focus bonuses, aux engineering upgrades, and campaign-earned dual-fire tiers for compatible loadouts. Last Light grants Tier 1; either claimant mission grants Tier 2; Return Address or both claimants grants Tier 3; Return Address plus both claimants grants Tier 4. Carrying a second primary applies a visible per-weapon primary-damage strain. Impulse budget now benefits kinetic and plasma weapons through different tradeoffs: kinetic turns impulse into speed-fed damage, while plasma turns impulse into larger, slower, higher-damage orbs. Shield layers take raw projectile damage before armor; armor class mitigates only hits that reach armor, uses the best installed armor class, and does not add duplicate armor-class values from multiple plates. Plasma burn stacks for three seconds from repeated hits and ignores armor-class subtraction while burning armor, but it still drains shields, armor, and hull in order and armor takes reduced burn.
 - Item cards/tooltips now split intrinsic item stats from effective install deltas. Weapon cards include kinetic/plasma damage breakdowns, installed modifier lines, unified Shots per Second terminology, and bottom-position roll-quality bars.
 - Generated salvage/UI chrome, mission background art, item icons, and combat fleet art promoted into the live UI, with Kenney assets still available as fallback or comparison art.
+- The first fresh-save progression slice is implemented for player testing. `config/progression.json` now derives capability awards from Mission 1–7 completion records; fresh pilots own only a 177.9-effective-DPS Cadet, Mission 2 grants the Tick Autogun, Mission 4 unlocks Primary B and a choose-one Certified role requisition, and locked Armory controls state their exact clear requirement. Test Arsenal bypasses capability gates without adding campaign clears.
 
 ## Known Current Gaps
 
@@ -34,8 +35,7 @@ These are intentional follow-up targets, not bugs in the docs:
 - The Green Signal is player-validated. Purple plasma/defense failed early, while gold defense plus a gold Needlebloom Driver cleared with almost no hull remaining; its enemies, population snowball, and Seedcarrier split all worked. The Gatekeeper follow-up fixes a phase-index bug that prevented Overgrowth and gives both transitions immediate summons plus faster, phase-specific budding.
 - Return Address is player-validated after its focused ramp revision. Rootwards now overlap active threat waves, while the Matriarch's final transition releases two carriers and five Bursters and buds carrier pairs every 1.8 seconds. A gold Needlebloom/Starwound Tier 2 Dual Fire pairing found the revised mission challenging and fair.
 - Repossession also proved that random sub-gold salvage is not worth combat risk once gold gear is required. Reward rarity floors/progression remain deferred to the economy pass rather than being special-cased in one level.
-- Fresh-save progression is the active gap. Major loadout capabilities are exposed too early, `isSystemUnlocked` currently bypasses gating, and the campaign does not teach mini weapons, Primary B, consumables, advanced aux modules, and hull licenses through first-clear milestones. `CAMPAIGN_PROGRESSION_SPEC.md` is the next authorized implementation work.
-- Fresh saves also own all three legacy starter frames, and the Cadet Kinetic Frame reports roughly 344 DPS—high enough to outperform many blue and purple weapons. The active spec replaces that inventory with one deliberately weak 150–180 DPS Cadet and moves the first guaranteed Certified role choice to Mission 4.
+- Fresh-save capability Slice A is awaiting a Mission 1–4 player test. Consumable behavior and stocking are still provisional until Slice B: the Mission 1 shield sample uses the existing booster behavior, while Armor Sealant/overplate and full preparation UI have not landed yet.
 - The campaign has no guaranteed normal-play route to a coherent gold build before the post-Last-Light missions begin balancing around gold equipment. Last Light and the five validated missions need idempotent first-clear commissioning rewards, act-aware rarity tables, and role-aware offer coverage.
 - Shield and armor pickups are often redundant at full capacity. The active progression spec introduces stocked Shield Overcharge, Armor Sealant/overplate, and Damage Overcharge in Act 1. Purchased consumables are expensive, loss-leading progression insurance; intended-tier, intended-role builds remain the zero-consumable difficulty baseline.
 - No sixth post-Last-Light mission is authorized until the progression spine is playable. The old Act 3 missions remain hidden experiments; the future canonical Act 3 must be re-authored mission by mission after the story/economy setup and The Fork. The Fork is a story choice and bridge, not Act 3 itself.
@@ -71,6 +71,7 @@ Run these after changes that touch gameplay data, item generation, combat math, 
 node --check main.js
 node --check scripts/balance_report.js
 node scripts/validate_economy_config.js
+node scripts/validate_progression_config.js
 node scripts/validate_levels.js
 python3 scripts/validate_generated_assets.py
 node scripts/validate_weapon_frames.js
@@ -103,7 +104,9 @@ alpha processing described in `ASSET_GENERATION.md`.
 - `items/item_pool.json`: generated item archetypes, affixes, relics, and support items.
 - `items/weapon_frames.json`: guaranteed and generated weapon-frame definitions.
 - `config/economy.json`: active economy knobs for market, extraction, item value, drop tables, mission rewards, investments, consumables, report targets, and legacy credit gates.
+- `config/progression.json`: campaign capability milestones and idempotent first-clear reward definitions.
 - `scripts/validate_economy_config.js`: structural validation for the economy config.
+- `scripts/validate_progression_config.js`: capability/reward mission, item, and consumable validation.
 - `scripts/validate_levels.js`: level and item-pool structural validation.
 - `scripts/validate_generated_assets.py`: campaign projectile-key and broadside boss sprite audit.
 - `scripts/generate_projectile_threat_levels.js`: generator for the profiled 11-mission, 3-variant campaign set.

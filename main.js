@@ -140,6 +140,7 @@ const relicArchive = document.getElementById("relic-archive");
 
 const STORAGE_KEY = "mini-fighter-save";
 const ECONOMY_CONFIG_PATH = "config/economy.json";
+const PROGRESSION_CONFIG_PATH = "config/progression.json";
 const ECONOMY_OVERRIDE_STORAGE_KEY = "mini-fighter-economy-overrides";
 const ECONOMY_PANEL_MINIMIZED_STORAGE_KEY = "mini-fighter-economy-panel-minimized";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
@@ -390,6 +391,7 @@ const ECONOMY = {
 
 let baseEconomyConfig = null;
 let economyConfig = null;
+let progressionConfig = null;
 let economyOverrideDiff = {};
 let upgrades = [];
 let consumables = [];
@@ -726,6 +728,116 @@ async function loadEconomyConfig() {
   applyEconomyConfigDerivedData();
 }
 
+function validateRuntimeProgressionConfig(config) {
+  if (!isPlainObject(config) || config.version !== 1) {
+    throw new Error("Progression config must be a version 1 object.");
+  }
+  if (!isPlainObject(config.capabilities) || !Object.keys(config.capabilities).length) {
+    throw new Error("Progression config missing capabilities.");
+  }
+  if (!isPlainObject(config.firstClearRewards)) {
+    throw new Error("Progression config missing firstClearRewards.");
+  }
+  Object.entries(config.capabilities).forEach(([id, entry]) => {
+    if (!isPlainObject(entry) || typeof entry.missionId !== "string") {
+      throw new Error(`Invalid progression capability ${id}.`);
+    }
+    if (typeof entry.label !== "string" || typeof entry.requirement !== "string") {
+      throw new Error(`Progression capability ${id} needs label and requirement.`);
+    }
+  });
+  return deepClone(config);
+}
+
+async function loadProgressionConfig() {
+  const response = await fetch(PROGRESSION_CONFIG_PATH, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Could not load ${PROGRESSION_CONFIG_PATH} (${response.status}).`);
+  }
+  progressionConfig = validateRuntimeProgressionConfig(await response.json());
+}
+
+function getProgressionCapability(capabilityId) {
+  return progressionConfig?.capabilities?.[capabilityId] || null;
+}
+
+function getCompletedMissionCount(missionId, targetState = state) {
+  return Math.max(0, Math.floor(Number(targetState?.completedMissions?.[missionId]) || 0));
+}
+
+function isCapabilityEarned(capabilityId, targetState = state) {
+  const capability = getProgressionCapability(capabilityId);
+  return !!capability && getCompletedMissionCount(capability.missionId, targetState) > 0;
+}
+
+function isCapabilityAvailable(capabilityId, targetState = state) {
+  return !!targetState?.debugArsenalEnabled || devArsenal || isCapabilityEarned(capabilityId, targetState);
+}
+
+function getCapabilityRequirement(capabilityId) {
+  return getProgressionCapability(capabilityId)?.requirement || "Campaign authorization required";
+}
+
+function getNewCapabilityUnlockLines(beforeState, afterState) {
+  return Object.entries(progressionConfig?.capabilities || {})
+    .filter(([id]) => !isCapabilityEarned(id, beforeState) && isCapabilityEarned(id, afterState))
+    .map(([, capability]) => ({
+      label: capability.label,
+      text: `Authorized · ${capability.requirement}`,
+    }));
+}
+
+function getSupportCapabilityId(ability) {
+  if (ability === "emp") return "empSupport";
+  if (ability === "bulwark") return "bulwarkSupport";
+  return null;
+}
+
+function isSupportAbilityAvailable(ability, targetState = state) {
+  const capabilityId = getSupportCapabilityId(ability);
+  return !capabilityId || isCapabilityAvailable(capabilityId, targetState);
+}
+
+function normalizeCampaignProgressionState(targetState) {
+  targetState.completedMissions = isPlainObject(targetState.completedMissions)
+    ? targetState.completedMissions
+    : {};
+  targetState.claimedFirstClearRewards = isPlainObject(targetState.claimedFirstClearRewards)
+    ? targetState.claimedFirstClearRewards
+    : {};
+  targetState.pendingRequisitions = Array.isArray(targetState.pendingRequisitions)
+    ? targetState.pendingRequisitions.filter((entry) => entry?.rewardId && Array.isArray(entry.offers))
+    : [];
+  targetState.consumableSlots = Array.isArray(targetState.consumableSlots)
+    ? targetState.consumableSlots.slice(0, 2)
+    : ["none", "none"];
+  while (targetState.consumableSlots.length < 2) targetState.consumableSlots.push("none");
+
+  if (!isCapabilityAvailable("primaryBay2", targetState) && targetState.armory) {
+    targetState.armory.equippedSecondLoadoutId = null;
+    targetState.armory.equippedSecondPrimaryItemId = null;
+    targetState.activePrimaryBay = 0;
+    targetState.primaryFireMode = "swap";
+  }
+  if (!isCapabilityAvailable("miniWeapon", targetState) && targetState.armory) {
+    targetState.armory.equippedMiniItemId = null;
+  }
+  if (!isCapabilityAvailable("hullLicenses", targetState)) {
+    targetState.hulls = normalizeHullState(targetState.hulls);
+    targetState.hulls.equippedId = "starter";
+  }
+  if (!isCapabilityAvailable("consumableBay1", targetState)) targetState.consumableSlots[0] = "none";
+  if (!isCapabilityAvailable("consumableBay2", targetState)) targetState.consumableSlots[1] = "none";
+
+  const supportItem = findInventoryItem(targetState.armory?.equippedSupportItemId, targetState);
+  const supportAbility = supportItem?.ability || supportItem?.sourceId || targetState.rmbWeapon || "cloak";
+  if (!isSupportAbilityAvailable(supportAbility, targetState)) {
+    if (targetState.armory) targetState.armory.equippedSupportItemId = null;
+    targetState.rmbWeapon = "cloak";
+  }
+  return targetState;
+}
+
 function showStartupError(error) {
   console.error(error);
   const panel = document.createElement("div");
@@ -847,6 +959,7 @@ function createDefaultShipBuild() {
     armorClassLevel: 0,
     armorDragLevel: 0,
     kineticImpulseBudget: 0,
+    frameDamageMult: 1,
     hullMult: 1,
     shieldMaxMult: 1,
     shieldRegenMult: 1,
@@ -873,6 +986,7 @@ const defaultStarterWeaponLoadouts = [
       ammo: "kinetic",
       effect: "none",
       flowRateLevel: 0,
+      frameDamageMult: 0.47,
       flowVelocityLevel: 0,
       flowSizeLevel: 0,
       kineticImpulseBudget: 0.6,
@@ -1280,10 +1394,7 @@ function getOnboardingTrainingMissions() {
 }
 
 function getStarterLoadoutIdsForStage(stage, skipOnboarding = false) {
-  const starterFrames = starterWeaponLoadouts.filter((item) =>
-    Number.isFinite(item.starterUnlockStage)
-  );
-  return starterFrames.map((item) => item.id);
+  return starterWeaponLoadoutsById.fundamentals ? ["fundamentals"] : [];
 }
 
 function getStarterDefenseModuleIdsForStage(stage, skipOnboarding = false) {
@@ -1292,20 +1403,24 @@ function getStarterDefenseModuleIdsForStage(stage, skipOnboarding = false) {
 
 function getSupportModuleEntries() {
   ensureAuxSelection();
-  const unlockedAux = state.unlocked?.aux || {};
-  return rmbWeapons.map((weapon) => ({
-    id: weapon.id,
-    slotType: "support",
-    name: weapon.name,
-    subtitle: weapon.unlockAt ? `Rank ${weapon.unlockAt}` : "Support",
-    description: weapon.desc,
-    notes: weapon.cost ? `Unlock cost: ${weapon.cost} credits.` : "Available to every pilot.",
-    icon: mobileAltIcons[weapon.id] || getDefaultItemIcon("certified"),
-    tags: ["support"],
-    unlockAt: weapon.unlockAt ?? 0,
-    cost: weapon.cost ?? 0,
-    owned: !!(state.debugUnlock || unlockedAux[weapon.id]),
-  }));
+  return rmbWeapons.map((weapon) => {
+    const owned = isSupportAbilityAvailable(weapon.id);
+    const capabilityId = getSupportCapabilityId(weapon.id);
+    return {
+      id: weapon.id,
+      slotType: "support",
+      name: weapon.name,
+      subtitle: owned ? "Authorized support" : getCapabilityRequirement(capabilityId),
+      description: weapon.desc,
+      notes: owned ? "Campaign-authorized baseline module." : getCapabilityRequirement(capabilityId),
+      icon: mobileAltIcons[weapon.id] || getDefaultItemIcon("certified"),
+      tags: ["support"],
+      unlockAt: weapon.unlockAt ?? 0,
+      cost: weapon.cost ?? 0,
+      owned,
+      progressionRequirement: capabilityId ? getCapabilityRequirement(capabilityId) : "",
+    };
+  });
 }
 
 function getOwnedDefenseModuleIds(targetState = state) {
@@ -1370,6 +1485,7 @@ function getPrimaryArmoryItem(targetState = state, bayIndex = null) {
 }
 
 function getSecondPrimaryArmoryItem(targetState = state) {
+  if (!isCapabilityAvailable("primaryBay2", targetState)) return null;
   const equippedItem = findInventoryItem(targetState.armory?.equippedSecondPrimaryItemId, targetState);
   if (equippedItem?.slotType === "primary") return equippedItem;
   const equippedId = targetState.armory?.equippedSecondLoadoutId;
@@ -1415,7 +1531,10 @@ function applyHullAndLoadoutModifiers(build, targetState = state) {
   build.shieldRegenMult = hullBonuses.shieldRegenMult ?? 1;
   build.armorCapacityMult = hullBonuses.armorCapacityMult ?? 1;
   build.armorDragMult = hullBonuses.armorDragMult ?? 1;
-  build.primaryDamageMult = (hullBonuses.primaryDamageMult ?? 1) * loadout.primaryDamageMult;
+  build.primaryDamageMult =
+    (build.frameDamageMult ?? 1) *
+    (hullBonuses.primaryDamageMult ?? 1) *
+    loadout.primaryDamageMult;
   build.loadoutPrimaryDamageMult = loadout.primaryDamageMult;
   build.loadoutPrimaryDamageDelta = loadout.primaryDamageDelta;
   build.loadoutModifierLabel = loadout.label;
@@ -1644,10 +1763,14 @@ function normalizeStarterArmoryState(targetState) {
   const ownedMiniWeaponIds = Array.from(
     new Set([
       ...(Array.isArray(existingArmory.ownedMiniWeaponIds) ? existingArmory.ownedMiniWeaponIds : []),
-      ...starterMiniWeapons.map((item) => item.id),
+      ...(isCapabilityEarned("miniWeapon", targetState)
+        ? starterMiniWeapons.map((item) => item.id)
+        : []),
     ])
   ).filter((id) => !!starterMiniWeaponsById[id]);
-  const equippedMiniItemId = existingInventory.some(
+  const equippedMiniItemId = !isCapabilityAvailable("miniWeapon", targetState)
+    ? null
+    : existingInventory.some(
     (item) => item.id === existingMiniItemId && normalizeArmorySlotType(item.slotType) === "mini"
   )
     ? existingMiniItemId
@@ -1685,6 +1808,7 @@ function equipStarterLoadout(loadoutId, bayIndex = 0) {
   const item = starterWeaponLoadoutsById[loadoutId];
   if (!item) return;
   if (!getOwnedStarterLoadoutIds().includes(loadoutId)) return;
+  if (bayIndex === 1 && !isCapabilityAvailable("primaryBay2")) return;
   state.armory = state.armory || {
     ownedLoadoutIds: [],
     ownedDefenseModuleIds: [],
@@ -1711,6 +1835,7 @@ function equipStarterLoadout(loadoutId, bayIndex = 0) {
 function equipPrimaryInventoryItem(itemId, bayIndex = 0) {
   const item = findInventoryItem(itemId);
   if (!item || item.slotType !== "primary") return;
+  if (bayIndex === 1 && !isCapabilityAvailable("primaryBay2")) return;
   state.armory = state.armory || {
     ownedLoadoutIds: [],
     ownedDefenseModuleIds: [],
@@ -1746,6 +1871,7 @@ function clearSecondPrimaryBay() {
 }
 
 function equipMiniWeapon(itemId) {
+  if (!isCapabilityAvailable("miniWeapon")) return;
   if (!state.armory) return;
   const inventoryItem = findInventoryItem(itemId);
   if (inventoryItem && normalizeArmorySlotType(inventoryItem.slotType) === "mini") {
@@ -1761,6 +1887,7 @@ function equipMiniWeapon(itemId) {
 function equipHull(hullId) {
   const hull = hullsById[hullId];
   if (!hull) return;
+  if (hullId !== "starter" && !isCapabilityAvailable("hullLicenses")) return;
   state.hulls = normalizeHullState(state.hulls);
   if (!state.hulls.ownedIds.includes(hullId)) {
     if (!state.debugUnlock) return;
@@ -2118,7 +2245,8 @@ function getOwnedHullIds(targetState = state) {
 
 function getEquippedHull(targetState = state) {
   const owned = getOwnedHullIds(targetState);
-  const equippedId = owned.includes(targetState.hulls?.equippedId) ? targetState.hulls.equippedId : "starter";
+  const authorized = isCapabilityAvailable("hullLicenses", targetState);
+  const equippedId = authorized && owned.includes(targetState.hulls?.equippedId) ? targetState.hulls.equippedId : "starter";
   return hullsById[equippedId] || hullsById.starter;
 }
 
@@ -3286,6 +3414,96 @@ function addItemsToArmoryInventory(items, { recordRelics = true } = {}) {
     inventory.push(normalizedItem);
     existingIds.add(normalizedItem.id);
   });
+}
+
+function getFirstClearRewards(missionId) {
+  return progressionConfig?.firstClearRewards?.[missionId] || [];
+}
+
+function getPendingCampaignRequisition(targetState = state) {
+  return Array.isArray(targetState?.pendingRequisitions)
+    ? targetState.pendingRequisitions[0] || null
+    : null;
+}
+
+function ensureCampaignFirstClearRewards(targetState = state, onlyMissionId = null) {
+  normalizeCampaignProgressionState(targetState);
+  const rewardLines = [];
+  const missionIds = onlyMissionId
+    ? [onlyMissionId]
+    : Object.keys(progressionConfig?.firstClearRewards || {});
+
+  missionIds.forEach((missionId) => {
+    if (getCompletedMissionCount(missionId, targetState) <= 0) return;
+    getFirstClearRewards(missionId).forEach((reward) => {
+      if (targetState.claimedFirstClearRewards[reward.id]) return;
+      if (reward.type === "consumable") {
+        targetState.consumablesOwned[reward.consumableId] =
+          Math.max(0, Number(targetState.consumablesOwned[reward.consumableId]) || 0) + reward.quantity;
+        if (
+          isCapabilityAvailable(reward.autoEquipSlot === 1 ? "consumableBay2" : "consumableBay1", targetState) &&
+          (!targetState.consumableSlots[reward.autoEquipSlot] || targetState.consumableSlots[reward.autoEquipSlot] === "none")
+        ) {
+          targetState.consumableSlots[reward.autoEquipSlot] = reward.consumableId;
+        }
+        targetState.claimedFirstClearRewards[reward.id] = true;
+        rewardLines.push({ label: reward.label, text: `${reward.quantity} issued` });
+        return;
+      }
+      if (reward.type === "starterMini") {
+        targetState.armory.ownedMiniWeaponIds = Array.from(
+          new Set([...(targetState.armory.ownedMiniWeaponIds || []), reward.starterMiniId])
+        );
+        const installed =
+          reward.autoEquip &&
+          isCapabilityAvailable("miniWeapon", targetState) &&
+          !targetState.armory.equippedMiniItemId;
+        if (installed) {
+          targetState.armory.equippedMiniItemId = reward.starterMiniId;
+        }
+        targetState.claimedFirstClearRewards[reward.id] = true;
+        rewardLines.push({ label: reward.label, text: installed ? "Issued and installed" : "Issued to Armory" });
+        return;
+      }
+      if (reward.type === "requisition") {
+        const alreadyPending = targetState.pendingRequisitions.some(
+          (entry) => entry.rewardId === reward.id
+        );
+        if (alreadyPending || !itemPoolCatalog?.entries) return;
+        const offers = reward.offers.map((offer) => {
+          const item = createRolledItem(offer.baseId, itemPoolCatalog.entries[offer.baseId], reward.rarity);
+          item.dropSource = "campaignRequisition";
+          item.campaignRewardId = reward.id;
+          return { role: offer.role, item };
+        });
+        targetState.pendingRequisitions.push({
+          rewardId: reward.id,
+          missionId,
+          label: reward.label,
+          offers,
+        });
+        rewardLines.push({ label: reward.label, text: "Choose one weapon below" });
+      }
+    });
+  });
+  return rewardLines;
+}
+
+function claimCampaignRequisition(rewardId, itemId) {
+  const requisition = (state.pendingRequisitions || []).find((entry) => entry.rewardId === rewardId);
+  const offer = requisition?.offers?.find((entry) => entry.item?.id === itemId);
+  if (!requisition || !offer || state.claimedFirstClearRewards?.[rewardId]) return null;
+  addItemsToArmoryInventory([offer.item]);
+  state.claimedFirstClearRewards[rewardId] = true;
+  state.pendingRequisitions = state.pendingRequisitions.filter((entry) => entry.rewardId !== rewardId);
+  if (isCapabilityAvailable("primaryBay2") && !getSecondPrimaryArmoryItem()) {
+    state.armory.equippedSecondPrimaryItemId = offer.item.id;
+    state.armory.equippedSecondLoadoutId = null;
+  }
+  state.shipBuild = composeShipBuildFromArmory(state);
+  syncShipBuildToLegacy();
+  saveState();
+  return offer.item;
 }
 
 function createDefaultLedgerMarketState() {
@@ -5950,6 +6168,8 @@ if (debugArsenal) {
       devArsenalLots = [];
       if (activeLedgerMode === "arsenal") activeLedgerMode = "market";
     }
+    normalizeCampaignProgressionState(state);
+    state.shipBuild = composeShipBuildFromArmory(state);
     if (devDualFireTierOverride !== null) {
       setHangarStatusMessage(
         state.debugArsenalEnabled || devArsenal
@@ -6044,6 +6264,8 @@ function loadState() {
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
       completedMissions: {},
+      claimedFirstClearRewards: {},
+      pendingRequisitions: [],
       keyItems: [],
       branchStanding: createDefaultBranchStanding(),
       onboardingStage: ONBOARDING_STAGE_COMPLETE,
@@ -6063,7 +6285,7 @@ function loadState() {
       itemCollection: {},
       cargo: [],
       armory: {
-        ownedLoadoutIds: ["fundamentals", "area_control", "armor_break"],
+        ownedLoadoutIds: ["fundamentals"],
         equippedLoadoutId: "fundamentals",
         equippedPrimaryItemId: null,
         equippedSecondLoadoutId: null,
@@ -6071,8 +6293,8 @@ function loadState() {
         ownedDefenseModuleIds: ["shield_module", "armor_module"],
         equippedDefenseSlotIds: ["shield_module", "none"],
         equippedSupportItemId: null,
-        ownedMiniWeaponIds: ["mini_tick_autogun"],
-        equippedMiniItemId: "mini_tick_autogun",
+        ownedMiniWeaponIds: [],
+        equippedMiniItemId: null,
         inventory: [],
       },
       activePrimaryBay: 0,
@@ -6279,6 +6501,8 @@ function loadState() {
     if (parsed.weapon?.modifier) parsed.unlocked.modifier[parsed.weapon.modifier] = true;
     if (parsed.rmbWeapon) parsed.unlocked.aux[parsed.rmbWeapon] = true;
     normalizeLedgerMarketState(parsed);
+    normalizeCampaignProgressionState(parsed);
+    parsed.shipBuild = composeShipBuildFromArmory(parsed);
     return parsed;
   } catch (error) {
     console.warn("Failed to parse save, resetting.");
@@ -6290,6 +6514,8 @@ function loadState() {
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
       completedMissions: {},
+      claimedFirstClearRewards: {},
+      pendingRequisitions: [],
       keyItems: [],
       branchStanding: createDefaultBranchStanding(),
       onboardingStage: ONBOARDING_STAGE_COMPLETE,
@@ -6309,7 +6535,7 @@ function loadState() {
       itemCollection: {},
       cargo: [],
       armory: {
-        ownedLoadoutIds: ["fundamentals", "area_control", "armor_break"],
+        ownedLoadoutIds: ["fundamentals"],
         equippedLoadoutId: "fundamentals",
         equippedPrimaryItemId: null,
         equippedSecondLoadoutId: null,
@@ -6317,8 +6543,8 @@ function loadState() {
         ownedDefenseModuleIds: ["shield_module", "armor_module"],
         equippedDefenseSlotIds: ["shield_module", "none"],
         equippedSupportItemId: null,
-        ownedMiniWeaponIds: ["mini_tick_autogun"],
-        equippedMiniItemId: "mini_tick_autogun",
+        ownedMiniWeaponIds: [],
+        equippedMiniItemId: null,
         inventory: [],
       },
       activePrimaryBay: 0,
@@ -6753,6 +6979,11 @@ function initConsumablesForMission() {
     ? state.consumableSlots.slice(0, 2)
     : ["none", "none"];
   while (slots.length < 2) slots.push("none");
+  if (!isCapabilityAvailable("consumableBay1")) slots[0] = "none";
+  if (!isCapabilityAvailable("consumableBay2")) slots[1] = "none";
+  slots.forEach((slotId, index) => {
+    if (slotId === "overcharge" && !isCapabilityAvailable("damageOvercharge")) slots[index] = "none";
+  });
   const remainingOwned = { ...state.consumablesOwned };
   const uses = slots.map((slotId) => {
     if (!slotId || slotId === "none") return 0;
@@ -6960,6 +7191,10 @@ function endMission({ ejected = false, completed = false } = {}) {
   let completedEntry = null;
   const keyItemLines = [];
   const campaignDualFireTierBefore = getCampaignDualFireTier(state);
+  const campaignProgressionBefore = {
+    completedMissions: { ...(state.completedMissions || {}) },
+  };
+  let firstClearRewardLines = [];
   const debriefLoreLine = completed ? pickDebriefLoreLine(mission.level) : "";
   if (completed && mission.level?.id) {
     const completedBaseId = missionProgressionBaseIdFor(mission.level);
@@ -6983,15 +7218,25 @@ function endMission({ ejected = false, completed = false } = {}) {
       }
     }
   }
+  if (completed && mission.level?.id) {
+    const completedBaseId = missionProgressionBaseIdFor(mission.level);
+    firstClearRewardLines = ensureCampaignFirstClearRewards(state, completedBaseId);
+    normalizeCampaignProgressionState(state);
+    state.shipBuild = composeShipBuildFromArmory(state);
+  }
   const campaignDualFireTierAfter = getCampaignDualFireTier(state);
-  const capabilityUnlockLines = campaignDualFireTierAfter > campaignDualFireTierBefore
-    ? [
+  const capabilityUnlockLines = [
+    ...getNewCapabilityUnlockLines(campaignProgressionBefore, state),
+    ...firstClearRewardLines,
+    ...(campaignDualFireTierAfter > campaignDualFireTierBefore
+      ? [
         {
           label: "Dual-Fire Coupler",
           text: `Tier ${campaignDualFireTierAfter} earned · ${DUAL_FIRE_DAMAGE_MULTS[campaignDualFireTierAfter] * 100}% per weapon`,
         },
       ]
-    : [];
+      : []),
+  ];
   let onboardingMessage = "";
   let continueTrainingAfterDebrief = false;
   const directive = getCurrentOnboardingMission();
@@ -7027,6 +7272,7 @@ function endMission({ ejected = false, completed = false } = {}) {
   debriefLaunchMode = continueTrainingAfterDebrief ? "training" : null;
   if (returnBtn) {
     returnBtn.textContent = continueTrainingAfterDebrief ? "Continue" : "Return to Hangar";
+    returnBtn.disabled = !!getPendingCampaignRequisition();
   }
 
   if (ejected) {
@@ -7053,6 +7299,7 @@ function endMission({ ejected = false, completed = false } = {}) {
     onboardingMessage,
     keyItemLines,
     capabilityUnlockLines,
+    pendingRequisition: getPendingCampaignRequisition(),
     debriefLoreLine,
     repossessedCount: mission.repossessedCount || 0,
     breachFailed: !!mission.breachFailed,
@@ -7084,6 +7331,26 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function renderCampaignRequisition(requisition) {
+  if (!requisition) return "";
+  return `
+    <section class="campaign-requisition">
+      <div class="salvage-title">Mission 4 Certified Requisition</div>
+      <p>Choose one role weapon. The selected frame is installed in Primary B; the other offers expire.</p>
+      <div class="campaign-requisition-offers">
+        ${requisition.offers.map(({ role, item }) => `
+          <button type="button" class="campaign-requisition-offer rarity-${escapeHtml(item.rarity || "certified")}" data-requisition-id="${escapeHtml(requisition.rewardId)}" data-requisition-item="${escapeHtml(item.id)}" style="${getRarityStyle(item.rarity || "certified")}">
+            <img src="${escapeHtml(item.icon || getDefaultItemIcon(item.rarity))}" alt="" />
+            <span class="campaign-requisition-role">${escapeHtml(role)} answer</span>
+            <strong>${escapeHtml(getCompactItemName(item))}</strong>
+            <span>${escapeHtml(getItemBrowserRole(item))}</span>
+          </button>
+        `).join("")}
+      </div>
+    </section>
+  `;
 }
 
 function renderDebriefSummary(summary) {
@@ -7191,7 +7458,11 @@ function renderDebriefSummary(summary) {
   if (!debriefSalvage) return;
   const identified = summary.identifiedItems || [];
   const lost = summary.lostCargo || [];
-  if (!identified.length && !lost.length) {
+  const requisitionHtml = renderCampaignRequisition(summary.pendingRequisition);
+  const claimedHtml = summary.requisitionClaimed
+    ? `<div class="campaign-requisition-claimed">Requisition accepted: <strong>${escapeHtml(summary.requisitionClaimed.name)}</strong> installed in Primary B.</div>`
+    : "";
+  if (!identified.length && !lost.length && !requisitionHtml && !claimedHtml) {
     debriefSalvage.innerHTML = `<div class="salvage-empty">${LEDGER_COPY.noCargo}</div>`;
     return;
   }
@@ -7247,7 +7518,21 @@ function renderDebriefSummary(summary) {
     `
     : "";
 
-  debriefSalvage.innerHTML = `${identifiedHtml}${lostHtml}`;
+  debriefSalvage.innerHTML = `${requisitionHtml}${claimedHtml}${identifiedHtml}${lostHtml}`;
+  debriefSalvage.querySelectorAll("[data-requisition-item]").forEach((button) => {
+    const requisition = summary.pendingRequisition;
+    const offer = requisition?.offers?.find((entry) => entry.item?.id === button.dataset.requisitionItem);
+    if (offer?.item) attachItemTooltip(button, offer.item, "primary-2");
+    button.addEventListener("click", () => {
+      const claimed = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
+      if (!claimed) return;
+      summary.pendingRequisition = null;
+      summary.requisitionClaimed = claimed;
+      if (returnBtn) returnBtn.disabled = false;
+      setHangarStatusMessage(`${getCompactItemName(claimed)} installed in Primary B.`);
+      renderDebriefSummary(summary);
+    });
+  });
   debriefSalvage.querySelectorAll(".salvage-item[data-item-id]").forEach((row) => {
     const item = identified.find((candidate) => candidate.id === row.dataset.itemId);
     if (item) attachItemTooltip(row, item, getComparableSlotIdForItem(item));
@@ -7538,12 +7823,15 @@ function renderInvestmentNode(key, data, tierConfig, index, currentTier) {
   const purchased = index < currentTier;
   const next = index === currentTier;
   const milestone = !!data.milestone;
-  const affordable = !milestone && next && state.credits >= tierConfig.cost;
+  const progressionLocked = key === "hulls" && !isCapabilityAvailable("hullLicenses");
+  const affordable = !milestone && !progressionLocked && next && state.credits >= tierConfig.cost;
   const color = getInvestmentAccentColor(branch.accent);
   const iconHtml = branch.iconPath
     ? `<img src="${escapeHtml(branch.iconPath)}" alt="" />`
     : `<span>${escapeHtml(branch.icon || String(index + 1))}</span>`;
-  const title = milestone
+  const title = progressionLocked
+    ? `${data.name}: ${getCapabilityRequirement("hullLicenses")}`
+    : milestone
     ? purchased
       ? `${tierConfig.benefit}: earned`
       : `${tierConfig.benefit}: ${tierConfig.requirementLabel}`
@@ -7555,7 +7843,7 @@ function renderInvestmentNode(key, data, tierConfig, index, currentTier) {
       data-invest-key="${escapeHtml(key)}"
       data-invest-tier="${index}"
       style="left:${position.x}%; top:${position.y}%; --invest-accent:${color};"
-      ${milestone ? 'aria-disabled="true"' : affordable ? "" : "disabled"}
+      ${milestone || progressionLocked ? 'aria-disabled="true" disabled' : affordable ? "" : "disabled"}
       aria-label="${escapeHtml(title)}"
       title="${escapeHtml(title)}"
     >
@@ -7624,6 +7912,11 @@ function renderInvestments() {
 
 async function handleInvestment(key) {
   if (key === "capabilities") return;
+  if (key === "hulls" && !isCapabilityAvailable("hullLicenses")) {
+    setHangarStatusMessage(`${getCapabilityRequirement("hullLicenses")} before purchasing named chassis.`);
+    safeUpdateHangar();
+    return;
+  }
   if (key === "marketLicense") {
     await purchaseLedgerLicense();
     return;
@@ -8774,24 +9067,22 @@ function ensureAuxSelection() {
   const supportItem = findInventoryItem(state.armory?.equippedSupportItemId);
   if (supportItem && isSupportSlotType(supportItem.slotType)) {
     const ability = supportItem.ability || supportItem.sourceId || "cloak";
+    if (!isSupportAbilityAvailable(ability)) {
+      state.armory.equippedSupportItemId = null;
+      state.rmbWeapon = "cloak";
+      saveState();
+      return;
+    }
     if (state.rmbWeapon !== ability) {
       state.rmbWeapon = ability;
       saveState();
     }
     return;
   }
-  const credits = state.lifetimeCredits;
-  const unlockedAux = state.unlocked?.aux || {};
   const current = rmbWeapons.find((weapon) => weapon.id === state.rmbWeapon);
-  const isUnlocked =
-    current &&
-    (state.debugUnlock ||
-      (unlockedAux[current.id] && credits >= (current.unlockAt ?? 0)));
+  const isUnlocked = current && isSupportAbilityAvailable(current.id);
   if (isUnlocked) return;
-  const firstUnlocked = rmbWeapons.find((weapon) => {
-    const rankOk = credits >= (weapon.unlockAt ?? 0) || state.debugUnlock;
-    return rankOk && (state.debugUnlock || unlockedAux[weapon.id]);
-  });
+  const firstUnlocked = rmbWeapons.find((weapon) => isSupportAbilityAvailable(weapon.id));
   if (firstUnlocked) {
     state.rmbWeapon = firstUnlocked.id;
     saveState();
@@ -9163,7 +9454,7 @@ function getOffenseStatsForBuild(build, targetState = state) {
     speed: cfg.bulletSpeed,
     radius: cfg.projectileRadius,
     damageBoostMult: 1,
-    buildDamageMult: build.primaryDamageMult ?? 1,
+    buildDamageMult: build.primaryDamageMult ?? build.frameDamageMult ?? 1,
     shotDamageMult: cfg.shotDamageMult,
   });
   const attacksPerSecond = cfg.cooldown > 0 ? 1 / cfg.cooldown : 0;
@@ -9190,6 +9481,7 @@ function getOffenseStatsForBuild(build, targetState = state) {
 }
 
 function getSelectedMiniWeapon(targetState = state) {
+  if (!isCapabilityAvailable("miniWeapon", targetState)) return null;
   const equippedId = targetState.armory?.equippedMiniItemId;
   const inventoryItem = findInventoryItem(equippedId, targetState);
   if (inventoryItem && normalizeArmorySlotType(inventoryItem.slotType) === "mini") return inventoryItem;
@@ -10462,7 +10754,12 @@ function getEquippedDefenseSlotIds() {
 
 function getSelectedSupportModule() {
   const equippedItem = findInventoryItem(state.armory?.equippedSupportItemId);
-  if (equippedItem && isSupportSlotType(equippedItem.slotType)) return equippedItem;
+  const equippedAbility = equippedItem?.ability || equippedItem?.sourceId || "cloak";
+  if (
+    equippedItem &&
+    isSupportSlotType(equippedItem.slotType) &&
+    isSupportAbilityAvailable(equippedAbility)
+  ) return equippedItem;
   const entries = getSupportModuleEntries();
   return entries.find((entry) => entry.id === state.rmbWeapon) || entries[0] || null;
 }
@@ -10479,6 +10776,8 @@ function getArmorySlotDefinitions() {
   const defenseA = getDefenseArmoryItemById(defenseSlotIds[0]) || null;
   const defenseB = getDefenseArmoryItemById(defenseSlotIds[1]) || null;
   const support = getSelectedSupportModule();
+  const primaryBLocked = !isCapabilityAvailable("primaryBay2");
+  const miniLocked = !isCapabilityAvailable("miniWeapon");
   return [
     {
       id: "primary",
@@ -10500,12 +10799,18 @@ function getArmorySlotDefinitions() {
       className: "armory-slot-primary-secondary",
       installedId: secondWeapon?.id || null,
       item: secondWeapon || null,
-      name: secondWeapon ? getCompactItemName(secondWeapon) : "Open Bay",
-      meta: secondWeapon?.build
+      locked: primaryBLocked,
+      requirement: getCapabilityRequirement("primaryBay2"),
+      name: primaryBLocked ? "Locked" : secondWeapon ? getCompactItemName(secondWeapon) : "Open Bay",
+      meta: primaryBLocked
+        ? getCapabilityRequirement("primaryBay2")
+        : secondWeapon?.build
         ? `${getSpreadLabel(secondWeapon.build.spread)} | Swap-ready`
         : `Focus ${formatSignedPercent(SINGLE_PRIMARY_FOCUS_RATE)} damage`,
       stats: secondWeapon ? getPrimaryBaySlotStats(1) : [],
-      note: secondWeapon
+      note: primaryBLocked
+        ? "Primary B becomes a swap weapon bay when authorized."
+        : secondWeapon
         ? "Swap to this weapon in flight. Carrying it applies second-bay primary damage strain."
         : "Keep this bay open for the single-primary damage focus.",
       icon: secondWeapon ? getArmoryFrameVisual(secondWeapon).icon : defenseVisuals.none.icon,
@@ -10516,9 +10821,11 @@ function getArmorySlotDefinitions() {
       className: "armory-slot-mini",
       installedId: mini?.id || null,
       item: mini || null,
-      name: mini ? getCompactItemName(mini) : "No Mini",
-      meta: mini ? getItemBrowserRole(mini) : "Auxiliary autogun",
-      note: mini?.description || "Install a compact auto-gun that fires independently.",
+      locked: miniLocked,
+      requirement: getCapabilityRequirement("miniWeapon"),
+      name: miniLocked ? "Locked" : mini ? getCompactItemName(mini) : "No Mini",
+      meta: miniLocked ? getCapabilityRequirement("miniWeapon") : mini ? getItemBrowserRole(mini) : "Auxiliary autogun",
+      note: miniLocked ? "The mini hardpoint is awarded with its baseline Tick Autogun." : mini?.description || "Install a compact auto-gun that fires independently.",
       icon: mini?.icon || getDefaultItemIcon("certified"),
     },
     {
@@ -10668,6 +10975,15 @@ function getArmoryItemsForSlot(slotId) {
 }
 
 function getArmorySlotMeta(slotId) {
+  const capabilityId = slotId === "primary-2" ? "primaryBay2" : slotId === "mini" ? "miniWeapon" : null;
+  if (capabilityId && !isCapabilityAvailable(capabilityId)) {
+    const capability = getProgressionCapability(capabilityId);
+    return {
+      title: capability?.label || "Locked capability",
+      copy: `${getCapabilityRequirement(capabilityId)}. Collected gear is preserved but cannot be installed yet.`,
+      tip: "Campaign authorization required",
+    };
+  }
   if (!slotId) {
     return {
       title: "Module Inventory",
@@ -10734,20 +11050,29 @@ function getArmorySlotLabel(slotId) {
 
 function canInstallSupportItem(item) {
   if (!item) return false;
+  const ability = item.ability || item.sourceId || item.id || "cloak";
+  if (!isSupportAbilityAvailable(ability)) return false;
   if (item.owned || state.debugUnlock) return true;
   return false;
 }
 
 function canInstallArmoryItem(item, slotId) {
   if (!item) return false;
+  if (slotId === "primary-2" && !isCapabilityAvailable("primaryBay2")) return false;
+  if (slotId === "mini" && !isCapabilityAvailable("miniWeapon")) return false;
   if (slotId === "support") return canInstallSupportItem(item);
-  if (slotId === "hull") return !!item.owned || state.debugUnlock;
+  if (slotId === "hull") {
+    if (item.id !== "starter" && !isCapabilityAvailable("hullLicenses")) return false;
+    return !!item.owned || state.debugUnlock;
+  }
   return !!item.owned || state.debugUnlock;
 }
 
 function installSupportItem(itemId) {
   const inventoryItem = findInventoryItem(itemId);
   if (inventoryItem && isSupportSlotType(inventoryItem.slotType)) {
+    const ability = inventoryItem.ability || inventoryItem.sourceId || "cloak";
+    if (!isSupportAbilityAvailable(ability)) return;
     state.armory = state.armory || {
       ownedLoadoutIds: [],
       ownedDefenseModuleIds: [],
@@ -10764,7 +11089,7 @@ function installSupportItem(itemId) {
   }
   const item = getSupportModuleEntries().find((entry) => entry.id === itemId);
   if (!item) return;
-  if (!item.owned && !state.debugUnlock) {
+  if (!item.owned) {
     return;
   }
   state.rmbWeapon = item.id;
@@ -10776,6 +11101,8 @@ function installSupportItem(itemId) {
 
 function handleArmorySlotInstall(slotId, itemId) {
   hideItemTooltip();
+  if (slotId === "primary-2" && !isCapabilityAvailable("primaryBay2")) return;
+  if (slotId === "mini" && !isCapabilityAvailable("miniWeapon")) return;
   if (slotId === "primary" || slotId === "primary-2") {
     const bayIndex = slotId === "primary-2" ? 1 : 0;
     if (slotId === "primary-2" && itemId === "none_second_primary") {
@@ -10872,7 +11199,8 @@ function renderShipUpgradesPanel() {
           : "One equipped primary is swap-only and cannot use Dual Fire.";
     const hullButtons = hullCatalog
       .map((hull) => {
-        const owned = ownedHullIds.has(hull.id) || state.debugUnlock;
+        const licensed = hull.id === "starter" || isCapabilityAvailable("hullLicenses");
+        const owned = licensed && (ownedHullIds.has(hull.id) || state.debugUnlock);
         const active = equippedHull.id === hull.id;
         return `
           <button
@@ -10880,7 +11208,7 @@ function renderShipUpgradesPanel() {
             class="armory-hull-option${active ? " is-active" : ""}${owned ? "" : " is-locked"}"
             data-hull-id="${hull.id}"
             ${owned ? "" : "disabled"}
-            title="${owned ? "Equip hull" : "Unlock in Ledger Investments"}"
+            title="${owned ? "Equip hull" : licensed ? "Unlock in Ledger Investments" : getCapabilityRequirement("hullLicenses") }"
           >
             <img src="${escapeHtml(hull.icon)}" alt="" />
             <span>${escapeHtml(hull.id === "starter" ? "Base" : getCompactItemName(hull).replace(" Hull", ""))}</span>
@@ -10922,8 +11250,9 @@ function renderShipUpgradesPanel() {
               return `
             <button
               type="button"
-              class="armory-slot ${slot.className} type-${typeKey} is-clickable${visualRarity ? ` rarity-${visualRarity}` : ""}${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
+              class="armory-slot ${slot.className} type-${typeKey} is-clickable${slot.locked ? " is-progression-locked" : ""}${visualRarity ? ` rarity-${visualRarity}` : ""}${armorySelectedSlotId === slot.id ? " is-selected" : ""}"
               data-armory-slot="${slot.id}"
+              title="${slot.locked ? escapeHtml(slot.requirement) : "Open compatible inventory"}"
               ${visualRarity ? `style="${getRarityStyle(visualRarity)}"` : ""}
             >
               <span class="armory-slot-label">${slot.label}</span>
@@ -10993,6 +11322,23 @@ function renderShipUpgradesPanel() {
 
   if (!weaponInventory) return;
   weaponInventory.innerHTML = "";
+  const pendingRequisition = getPendingCampaignRequisition();
+  if (pendingRequisition) {
+    const requisitionWrap = document.createElement("div");
+    requisitionWrap.className = "armory-pending-requisition";
+    requisitionWrap.innerHTML = renderCampaignRequisition(pendingRequisition);
+    requisitionWrap.querySelectorAll("[data-requisition-item]").forEach((button) => {
+      const offer = pendingRequisition.offers.find((entry) => entry.item?.id === button.dataset.requisitionItem);
+      if (offer?.item) attachItemTooltip(button, offer.item, "primary-2");
+      button.addEventListener("click", () => {
+        const claimed = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
+        if (!claimed) return;
+        setHangarStatusMessage(`${getCompactItemName(claimed)} installed in Primary B.`);
+        safeUpdateHangar();
+      });
+    });
+    weaponInventory.appendChild(requisitionWrap);
+  }
   const inventoryItems = filterAndSortBrowserItems(getArmoryItemsForSlot(armorySelectedSlotId), {
     query: armoryBrowserSearch?.value || "",
     sort: armoryBrowserSort?.value || "recent",
@@ -11000,7 +11346,7 @@ function renderShipUpgradesPanel() {
   });
 
   if (!inventoryItems.length) {
-    weaponInventory.innerHTML = `<div class="muted">No matching gear found.</div>`;
+    weaponInventory.insertAdjacentHTML("beforeend", `<div class="muted">No matching gear found.</div>`);
     return;
   }
 
@@ -11016,7 +11362,7 @@ function renderShipUpgradesPanel() {
     button.innerHTML = `
       <span class="armory-inventory-icon"><img src="${escapeHtml(item.icon)}" alt="" /></span>
       <span class="armory-inventory-name">${escapeHtml(getCompactItemName(item))}</span>
-      <span class="armory-inventory-meta">${escapeHtml(item.installed ? "Installed" : item.owned ? `${getItemTypeBadge(item, armorySelectedSlotId)} | ${getItemBrowserRole(item)}` : "Ledger/shop")}</span>
+      <span class="armory-inventory-meta">${escapeHtml(item.installed ? "Installed" : !canInstall && ["primary-2", "mini"].includes(armorySelectedSlotId) ? getCapabilityRequirement(armorySelectedSlotId === "mini" ? "miniWeapon" : "primaryBay2") : item.owned ? `${getItemTypeBadge(item, armorySelectedSlotId)} | ${getItemBrowserRole(item)}` : "Ledger/shop")}</span>
     `;
     attachItemTooltip(button, item, armorySelectedSlotId);
     button.addEventListener("click", () => {
@@ -12400,9 +12746,12 @@ function fireAltWeapon() {
 
 function useConsumable(slotIndex) {
   if (!mission || !mission.active) return;
+  if (slotIndex === 0 && !isCapabilityAvailable("consumableBay1")) return;
+  if (slotIndex === 1 && !isCapabilityAvailable("consumableBay2")) return;
   if (!mission.consumableSlots) return;
   const slotId = mission.consumableSlots[slotIndex];
   if (!slotId || slotId === "none") return;
+  if (slotId === "overcharge" && !isCapabilityAvailable("damageOvercharge")) return;
   const item = consumablesById[slotId];
   if (!item) return;
   const uses = mission.consumableUses?.[slotIndex] ?? 0;
@@ -15973,8 +16322,9 @@ function gameLoop(now) {
 
 async function bootstrapGame() {
   try {
-    await loadEconomyConfig();
+    await Promise.all([loadEconomyConfig(), loadProgressionConfig()]);
     state = loadState();
+    normalizeCampaignProgressionState(state);
     if (state.dualFireCampaignRefund > 0 && !state.dualFireCampaignRefundAcknowledged) {
       setHangarStatusMessage(
         `Ship Capabilities moved to campaign awards. ${formatCredits(state.dualFireCampaignRefund)} migration credit returned.`
@@ -15989,6 +16339,8 @@ async function bootstrapGame() {
       .then(() => {
         if (mission?.active) return;
         refreshSavedInventoryCatalogBuilds(state);
+        ensureCampaignFirstClearRewards(state);
+        normalizeCampaignProgressionState(state);
         syncStarterArmoryState();
         saveState();
         safeUpdateHangar();
@@ -16004,5 +16356,25 @@ async function bootstrapGame() {
     showStartupError(error);
   }
 }
+
+window.__campaignProgressionReport = () => ({
+  capabilities: Object.fromEntries(
+    Object.entries(progressionConfig?.capabilities || {}).map(([id, capability]) => [id, {
+      label: capability.label,
+      requirement: capability.requirement,
+      earned: isCapabilityEarned(id),
+      available: isCapabilityAvailable(id),
+    }])
+  ),
+  completedMissions: { ...(state?.completedMissions || {}) },
+  ownedStarterFrames: [...(state?.armory?.ownedLoadoutIds || [])],
+  equippedPrimaryB: getSecondPrimaryArmoryItem()?.id || null,
+  equippedMini: getSelectedMiniWeapon()?.id || null,
+  supportAbility: state?.rmbWeapon || null,
+  hull: getEquippedHull()?.id || null,
+  consumableSlots: [...(state?.consumableSlots || [])],
+  pendingRequisition: getPendingCampaignRequisition()?.rewardId || null,
+  testArsenalBypass: isDevArsenalEnabled(),
+});
 
 void bootstrapGame();

@@ -1,45 +1,55 @@
 {
   "version": 1,
+  "act1Stages": [
+    { "id": "level1", "hybrid": "level1", "choices": ["level1_swarm", "level1_armored"], "next": "level2" },
+    { "id": "level2", "hybrid": "level2", "choices": ["level2_swarm", "level2_armored"], "next": "level3" },
+    { "id": "level3", "hybrid": "level3", "choices": ["level3_swarm", "level3_armored"], "next": "level4" },
+    { "id": "level4", "hybrid": "level4", "choices": ["level4_swarm", "level4_armored"], "next": "level5" },
+    { "id": "level5", "hybrid": "level5", "choices": ["level5_swarm", "level5_armored"], "next": "level6" },
+    { "id": "level6", "hybrid": "level6", "choices": ["level6_swarm", "level6_armored"], "next": "level7" },
+    { "id": "level7", "hybrid": "level7", "choices": ["level7_swarm", "level7_armored"], "next": "level8" },
+    { "id": "level8", "hybrid": "level8", "choices": ["level8_swarm", "level8_armored"], "next": "act2_dead_air" }
+  ],
   "capabilities": {
     "consumableBay1": {
-      "missionId": "level1",
+      "stageId": "level1",
       "label": "Consumable Bay 1",
-      "requirement": "Clear Mission 1"
+      "requirement": "Clear Mission 1 Hybrid and either its Swarm or Armored contract"
     },
     "miniWeapon": {
-      "missionId": "level2",
+      "stageId": "level2",
       "label": "Mini Weapon",
-      "requirement": "Clear Mission 2"
+      "requirement": "Clear Mission 2 Hybrid and either its Swarm or Armored contract"
     },
     "empSupport": {
-      "missionId": "level3",
+      "stageId": "level3",
       "label": "EMP Support",
-      "requirement": "Clear Mission 3"
+      "requirement": "Clear Mission 3 Hybrid and either its Swarm or Armored contract"
     },
     "primaryBay2": {
-      "missionId": "level4",
+      "stageId": "level4",
       "label": "Primary B (Swap)",
-      "requirement": "Clear Mission 4"
+      "requirement": "Clear Mission 4 Hybrid and either its Swarm or Armored contract"
     },
     "damageOvercharge": {
-      "missionId": "level5",
+      "stageId": "level5",
       "label": "Damage Overcharge",
-      "requirement": "Clear Mission 5"
+      "requirement": "Clear Mission 5 Hybrid and either its Swarm or Armored contract"
     },
     "hullLicenses": {
-      "missionId": "level6",
+      "stageId": "level6",
       "label": "Named Hull Licenses",
-      "requirement": "Clear Mission 6"
+      "requirement": "Clear Mission 6 Hybrid and either its Swarm or Armored contract"
     },
     "bulwarkSupport": {
-      "missionId": "level6",
+      "stageId": "level6",
       "label": "Bulwark Support",
-      "requirement": "Clear Mission 6"
+      "requirement": "Clear Mission 6 Hybrid and either its Swarm or Armored contract"
     },
     "consumableBay2": {
-      "missionId": "level7",
+      "stageId": "level7",
       "label": "Consumable Bay 2",
-      "requirement": "Clear Mission 7"
+      "requirement": "Clear Mission 7 Hybrid and either its Swarm or Armored contract"
     }
   },
   "firstClearRewards": {
@@ -56,16 +66,24 @@
     "level2": [
       {
         "id": "mission-2-tick-autogun",
-        "type": "starterMini",
-        "starterMiniId": "mini_tick_autogun",
-        "autoEquip": true,
-        "label": "Tick Autogun"
+        "type": "requisition",
+        "slotType": "mini",
+        "installTarget": "mini",
+        "rarity": "certified",
+        "label": "Certified mini-weapon requisition",
+        "offers": [
+          { "role": "Forward", "baseId": "mini_tick_autogun" },
+          { "role": "Coverage", "baseId": "mini_guardian_turret" },
+          { "role": "Plasma", "baseId": "mini_plasma_wisp" }
+        ]
       }
     ],
     "level4": [
       {
         "id": "mission-4-certified-role-requisition",
         "type": "requisition",
+        "slotType": "primary",
+        "installTarget": "primary-2",
         "rarity": "certified",
         "label": "Certified role requisition",
         "offers": [

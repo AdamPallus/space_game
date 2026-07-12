@@ -2100,7 +2100,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 }
 .mission-card {
   position: relative;
-  height: 205px; /* uniform contract sheets; content is designed to fit */
+  height: 272px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
@@ -2221,6 +2221,79 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .mission-arrow.left::before { content: "\2039"; }
 .mission-arrow.right::before { content: "\203A"; }
 .mission-arrow:hover { border-color: var(--accent); }
+.mission-arrow.attention {
+  border-color: var(--amber);
+  color: var(--amber);
+  animation: missionVariantPulse 1.15s ease-in-out infinite;
+}
+@keyframes missionVariantPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(240, 180, 41, 0); transform: translateY(-50%) scale(1); }
+  50% { box-shadow: 0 0 14px rgba(240, 180, 41, 0.62); transform: translateY(-50%) scale(1.08); }
+}
+.mission-route {
+  display: grid;
+  grid-template-columns: minmax(42px, 1fr) auto minmax(52px, 1fr) auto minmax(48px, 1fr);
+  align-items: center;
+  justify-content: start;
+  gap: 5px;
+  padding: 6px 8px;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: var(--radius-sm);
+  background: rgba(5, 12, 24, 0.72);
+}
+.mission-route.needs-choice { border-color: rgba(240, 180, 41, 0.62); }
+.mission-route-choice { display: grid; gap: 2px; min-width: 0; }
+.mission-route-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  padding: 2px 4px;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  white-space: normal;
+  text-align: center;
+}
+.mission-route-node.swarm { border-color: rgba(94, 234, 212, 0.46); }
+.mission-route-node.armored { border-color: rgba(248, 113, 113, 0.48); }
+.mission-route-node.complete {
+  border-color: var(--good);
+  color: var(--good);
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.18);
+}
+.mission-route-connector { color: var(--muted); font-size: 10px; }
+.mission-route small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.25;
+}
+.mission-route.needs-choice small { color: var(--amber); }
+.mission-grade-stamp {
+  position: absolute;
+  z-index: 4;
+  top: 44px;
+  right: 34px;
+  display: grid;
+  place-items: center;
+  min-width: 58px;
+  min-height: 48px;
+  padding: 6px 10px;
+  background: url("assets/generated/ui_chrome_v2/stamp_frame.png") center / 100% 100% no-repeat;
+  color: var(--stamp);
+  font-family: var(--mono);
+  text-align: center;
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+.mission-grade-stamp strong { font-size: 18px; line-height: 1; }
+.mission-grade-stamp span { font-size: 8px; letter-spacing: 0.08em; }
+.mission-grade-stamp.grade-ss,
+.mission-grade-stamp.grade-s { color: var(--amber); }
 
 .mission-hover, .mission-card .mission-lock {
   position: absolute;

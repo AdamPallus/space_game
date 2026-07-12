@@ -137,7 +137,9 @@ Asset manifests and generation notes live in `ASSET_GENERATION.md`.
 
 Progress is stored client-side. Important save concepts include credits, lifetime credits, mission count, unlocked levels, completed mission counts, claimed first-clear rewards, pending requisitions, Act 2 key items, branch standing, onboarding stage, system unlocks, cargo, armory inventory, equipped hull, equipped mini weapon, optional second primary bay, selected primary fire mode, engineering tiers, Ledger market/license state, item collections, and relic collections.
 
-Campaign capability authorization is data-driven through `config/progression.json`. Completion records unlock Consumable Bay 1 (Mission 1), Mini plus the Tick Autogun (Mission 2), EMP (Mission 3), Primary B in Swap mode plus a choose-one Certified role requisition (Mission 4), Damage Overcharge (Mission 5), named-hull licenses and Bulwark (Mission 6), and Consumable Bay 2 (Mission 7). Locked Armory hardpoints remain visible with their requirement. Existing saves keep collected inventory but cannot equip it into an unauthorized slot; Test Arsenal temporarily bypasses authorization without changing completion records.
+Campaign capability authorization is data-driven through `config/progression.json`. Each Act 1 tier is a two-clear chapter: its Hybrid mission opens Swarm and Armored contracts, and clearing either role contract opens the next Hybrid plus the chapter award. Those awards are Consumable Bay 1 (Mission 1), Mini plus a choose-one Certified mini requisition (Mission 2), EMP (Mission 3), Primary B in Swap mode plus a choose-one Certified primary requisition (Mission 4), Damage Overcharge (Mission 5), named-hull licenses and Bulwark (Mission 6), and Consumable Bay 2 (Mission 7). Locked Armory hardpoints remain visible with their requirement. Existing saves keep collected inventory; Test Arsenal temporarily bypasses authorization without changing completion records.
+
+Each exact Hybrid, Swarm, and Armored profile stores its best completed enemy-destruction percentage. SS requires destroying all spawned enemies; S is 95-99%, A 85-94%, B 70-84%, C 50-69%, and D below 50%. Ratings appear in debrief and as claim-style stamps on Mission Board profiles. They are not unlock gates. Pilot Rank now uses the sum of best campaign-profile percentages rather than lifetime credits.
 
 Fresh pilots own only the non-sellable Cadet Kinetic Frame. Its frame multiplier puts effective starter-hull output at 177.9 DPS in the Armory, while `balance_report.js` checks a 150–180 target and compares the Cadet against Certified and Prototype primary medians.
 
@@ -152,6 +154,7 @@ node --check main.js
 node --check scripts/balance_report.js
 node scripts/validate_economy_config.js
 node scripts/validate_progression_config.js
+node scripts/validate_campaign_progression.js
 node scripts/validate_levels.js
 python3 scripts/validate_generated_assets.py
 node scripts/validate_weapon_frames.js

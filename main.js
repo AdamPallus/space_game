@@ -141,6 +141,7 @@ const relicArchive = document.getElementById("relic-archive");
 const STORAGE_KEY = "mini-fighter-save";
 const ECONOMY_CONFIG_PATH = "config/economy.json";
 const PROGRESSION_CONFIG_PATH = "config/progression.json";
+const CAMPAIGN_VARIANT_PROGRESSION_VERSION = 1;
 const ECONOMY_OVERRIDE_STORAGE_KEY = "mini-fighter-economy-overrides";
 const ECONOMY_PANEL_MINIMIZED_STORAGE_KEY = "mini-fighter-economy-panel-minimized";
 const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
@@ -738,8 +739,11 @@ function validateRuntimeProgressionConfig(config) {
   if (!isPlainObject(config.firstClearRewards)) {
     throw new Error("Progression config missing firstClearRewards.");
   }
+  if (!Array.isArray(config.act1Stages) || config.act1Stages.length !== 8) {
+    throw new Error("Progression config must define eight Act 1 stages.");
+  }
   Object.entries(config.capabilities).forEach(([id, entry]) => {
-    if (!isPlainObject(entry) || typeof entry.missionId !== "string") {
+    if (!isPlainObject(entry) || typeof entry.stageId !== "string") {
       throw new Error(`Invalid progression capability ${id}.`);
     }
     if (typeof entry.label !== "string" || typeof entry.requirement !== "string") {
@@ -761,13 +765,120 @@ function getProgressionCapability(capabilityId) {
   return progressionConfig?.capabilities?.[capabilityId] || null;
 }
 
+function getAct1StageNumber(levelId) {
+  const baseId = missionBaseIdFor(levelId);
+  const index = (progressionConfig?.act1Stages || []).findIndex((stage) => stage.id === baseId);
+  return index >= 0 ? index + 1 : null;
+}
+
+function getAct1RoleVariantIds(baseId) {
+  const configured = (progressionConfig?.act1Stages || []).find((stage) => stage.id === baseId)?.choices;
+  return (Array.isArray(configured) ? configured : levelVariantManifest?.[baseId] || []).slice();
+}
+
+function normalizeMissionResults(results) {
+  if (!isPlainObject(results)) return {};
+  return Object.fromEntries(
+    Object.entries(results)
+      .filter(([id, result]) => id && isPlainObject(result))
+      .map(([id, result]) => [id, {
+        completions: Math.max(0, Math.floor(Number(result.completions) || 0)),
+        bestPercent: Math.max(0, Math.min(100, Math.floor(Number(result.bestPercent) || 0))),
+        bestGrade: typeof result.bestGrade === "string" ? result.bestGrade : "",
+        bestKills: Math.max(0, Math.floor(Number(result.bestKills) || 0)),
+        bestSpawned: Math.max(0, Math.floor(Number(result.bestSpawned) || 0)),
+      }])
+  );
+}
+
+function hasCompletedExactMission(levelId, targetState = state) {
+  return Math.max(0, Number(targetState?.missionResults?.[levelId]?.completions) || 0) > 0;
+}
+
+function getMissionGrade(percent) {
+  if (percent >= 100) return "SS";
+  if (percent >= 95) return "S";
+  if (percent >= 85) return "A";
+  if (percent >= 70) return "B";
+  if (percent >= 50) return "C";
+  return "D";
+}
+
+function calculateMissionRating(kills, spawned) {
+  const destroyed = Math.max(0, Math.floor(Number(kills) || 0));
+  const encountered = Math.max(destroyed, Math.floor(Number(spawned) || 0));
+  const percent = encountered > 0
+    ? destroyed >= encountered
+      ? 100
+      : Math.max(0, Math.min(99, Math.floor((destroyed / encountered) * 100)))
+    : 0;
+  return { percent, grade: getMissionGrade(percent), kills: destroyed, spawned: encountered };
+}
+
+function recordMissionResult(levelId, rating, targetState = state) {
+  targetState.missionResults = normalizeMissionResults(targetState.missionResults);
+  const previous = targetState.missionResults[levelId] || {
+    completions: 0,
+    bestPercent: 0,
+    bestGrade: "",
+    bestKills: 0,
+    bestSpawned: 0,
+  };
+  const improved = rating.percent > previous.bestPercent || previous.completions <= 0;
+  targetState.missionResults[levelId] = {
+    completions: previous.completions + 1,
+    bestPercent: improved ? rating.percent : previous.bestPercent,
+    bestGrade: improved ? rating.grade : previous.bestGrade,
+    bestKills: improved ? rating.kills : previous.bestKills,
+    bestSpawned: improved ? rating.spawned : previous.bestSpawned,
+  };
+  return { ...rating, improved, bestPercent: targetState.missionResults[levelId].bestPercent };
+}
+
+function getMissionBestResult(levelId, targetState = state) {
+  return targetState?.missionResults?.[levelId] || null;
+}
+
+function getPilotRatingScore(targetState = state) {
+  return Object.entries(targetState?.missionResults || {}).reduce(
+    (sum, [levelId, result]) => {
+      const entry = getMissionEntry(levelId);
+      if (!entry || entry.test) return sum;
+      return sum + Math.max(0, Math.min(100, Number(result?.bestPercent) || 0));
+    },
+    0
+  );
+}
+
+function isAct1StageComplete(baseId, targetState = state) {
+  if (!getAct1StageNumber(baseId)) return false;
+  if (Array.isArray(targetState?.grandfatheredAct1Stages) && targetState.grandfatheredAct1Stages.includes(baseId)) {
+    return true;
+  }
+  return hasCompletedExactMission(baseId, targetState) &&
+    getAct1RoleVariantIds(baseId).some((variantId) => hasCompletedExactMission(variantId, targetState));
+}
+
+function migrateLegacyAct1Progression(targetState) {
+  if (
+    Math.floor(Number(targetState.campaignVariantProgressionVersion) || 0) >=
+    CAMPAIGN_VARIANT_PROGRESSION_VERSION
+  ) return;
+  targetState.grandfatheredAct1Stages = Array.from(new Set([
+    ...(Array.isArray(targetState.grandfatheredAct1Stages) ? targetState.grandfatheredAct1Stages : []),
+    ...Array.from({ length: 8 }, (_, index) => `level${index + 1}`)
+      .filter((stageId) => getCompletedMissionCount(stageId, targetState) > 0),
+  ]));
+  targetState.campaignVariantProgressionVersion = CAMPAIGN_VARIANT_PROGRESSION_VERSION;
+}
+
 function getCompletedMissionCount(missionId, targetState = state) {
   return Math.max(0, Math.floor(Number(targetState?.completedMissions?.[missionId]) || 0));
 }
 
 function isCapabilityEarned(capabilityId, targetState = state) {
   const capability = getProgressionCapability(capabilityId);
-  return !!capability && getCompletedMissionCount(capability.missionId, targetState) > 0;
+  return !!capability && isAct1StageComplete(capability.stageId, targetState);
 }
 
 function isCapabilityAvailable(capabilityId, targetState = state) {
@@ -808,6 +919,11 @@ function normalizeCampaignProgressionState(targetState) {
   targetState.pendingRequisitions = Array.isArray(targetState.pendingRequisitions)
     ? targetState.pendingRequisitions.filter((entry) => entry?.rewardId && Array.isArray(entry.offers))
     : [];
+  targetState.missionResults = normalizeMissionResults(targetState.missionResults);
+  targetState.grandfatheredAct1Stages = Array.isArray(targetState.grandfatheredAct1Stages)
+    ? Array.from(new Set(targetState.grandfatheredAct1Stages.filter((id) => getAct1StageNumber(id))))
+    : [];
+  migrateLegacyAct1Progression(targetState);
   targetState.consumableSlots = Array.isArray(targetState.consumableSlots)
     ? targetState.consumableSlots.slice(0, 2)
     : ["none", "none"];
@@ -986,10 +1102,10 @@ const defaultStarterWeaponLoadouts = [
       ammo: "kinetic",
       effect: "none",
       flowRateLevel: 0,
-      frameDamageMult: 0.47,
+      frameDamageMult: 0.94,
       flowVelocityLevel: 0,
       flowSizeLevel: 0,
-      kineticImpulseBudget: 0.6,
+      kineticImpulseBudget: 0,
       defenseSlots: ["shield", "none"],
       shieldMaxLevel: 0,
       shieldRegenLevel: 0,
@@ -1763,9 +1879,6 @@ function normalizeStarterArmoryState(targetState) {
   const ownedMiniWeaponIds = Array.from(
     new Set([
       ...(Array.isArray(existingArmory.ownedMiniWeaponIds) ? existingArmory.ownedMiniWeaponIds : []),
-      ...(isCapabilityEarned("miniWeapon", targetState)
-        ? starterMiniWeapons.map((item) => item.id)
-        : []),
     ])
   ).filter((id) => !!starterMiniWeaponsById[id]);
   const equippedMiniItemId = !isCapabilityAvailable("miniWeapon", targetState)
@@ -3434,7 +3547,7 @@ function ensureCampaignFirstClearRewards(targetState = state, onlyMissionId = nu
     : Object.keys(progressionConfig?.firstClearRewards || {});
 
   missionIds.forEach((missionId) => {
-    if (getCompletedMissionCount(missionId, targetState) <= 0) return;
+    if (!isAct1StageComplete(missionId, targetState)) return;
     getFirstClearRewards(missionId).forEach((reward) => {
       if (targetState.claimedFirstClearRewards[reward.id]) return;
       if (reward.type === "consumable") {
@@ -3448,21 +3561,6 @@ function ensureCampaignFirstClearRewards(targetState = state, onlyMissionId = nu
         }
         targetState.claimedFirstClearRewards[reward.id] = true;
         rewardLines.push({ label: reward.label, text: `${reward.quantity} issued` });
-        return;
-      }
-      if (reward.type === "starterMini") {
-        targetState.armory.ownedMiniWeaponIds = Array.from(
-          new Set([...(targetState.armory.ownedMiniWeaponIds || []), reward.starterMiniId])
-        );
-        const installed =
-          reward.autoEquip &&
-          isCapabilityAvailable("miniWeapon", targetState) &&
-          !targetState.armory.equippedMiniItemId;
-        if (installed) {
-          targetState.armory.equippedMiniItemId = reward.starterMiniId;
-        }
-        targetState.claimedFirstClearRewards[reward.id] = true;
-        rewardLines.push({ label: reward.label, text: installed ? "Issued and installed" : "Issued to Armory" });
         return;
       }
       if (reward.type === "requisition") {
@@ -3480,9 +3578,14 @@ function ensureCampaignFirstClearRewards(targetState = state, onlyMissionId = nu
           rewardId: reward.id,
           missionId,
           label: reward.label,
+          slotType: reward.slotType,
+          installTarget: reward.installTarget,
           offers,
         });
-        rewardLines.push({ label: reward.label, text: "Choose one weapon below" });
+        rewardLines.push({
+          label: reward.label,
+          text: `Choose one ${reward.slotType === "mini" ? "mini-weapon" : "primary weapon"} below`,
+        });
       }
     });
   });
@@ -3496,7 +3599,9 @@ function claimCampaignRequisition(rewardId, itemId) {
   addItemsToArmoryInventory([offer.item]);
   state.claimedFirstClearRewards[rewardId] = true;
   state.pendingRequisitions = state.pendingRequisitions.filter((entry) => entry.rewardId !== rewardId);
-  if (isCapabilityAvailable("primaryBay2") && !getSecondPrimaryArmoryItem()) {
+  if (requisition.slotType === "mini" && isCapabilityAvailable("miniWeapon")) {
+    state.armory.equippedMiniItemId = offer.item.id;
+  } else if (isCapabilityAvailable("primaryBay2") && !getSecondPrimaryArmoryItem()) {
     state.armory.equippedSecondPrimaryItemId = offer.item.id;
     state.armory.equippedSecondLoadoutId = null;
   }
@@ -4711,14 +4816,14 @@ function getLevelVisualTheme() {
 
 const activeCampaignLevels = [
   { id: "level1", label: "Mission 1" },
-  { id: "level2", label: "Mission 2" },
-  { id: "level3", label: "Mission 3" },
-  { id: "level4", label: "Mission 4" },
-  { id: "level5", label: "Mission 5" },
-  { id: "level6", label: "Mission 6" },
-  { id: "level7", label: "Mission 7" },
-  { id: "level8", label: "Mission 8" },
-  { id: "act2_dead_air", label: "Crossed Claims", requires: [{ completed: "level8" }] },
+  { id: "level2", label: "Mission 2", requires: [{ stageComplete: "level1" }] },
+  { id: "level3", label: "Mission 3", requires: [{ stageComplete: "level2" }] },
+  { id: "level4", label: "Mission 4", requires: [{ stageComplete: "level3" }] },
+  { id: "level5", label: "Mission 5", requires: [{ stageComplete: "level4" }] },
+  { id: "level6", label: "Mission 6", requires: [{ stageComplete: "level5" }] },
+  { id: "level7", label: "Mission 7", requires: [{ stageComplete: "level6" }] },
+  { id: "level8", label: "Mission 8", requires: [{ stageComplete: "level7" }] },
+  { id: "act2_dead_air", label: "Crossed Claims", requires: [{ stageComplete: "level8" }] },
   { id: "act2_processional", label: "Processional", requires: [{ completed: "act2_dead_air" }] },
   { id: "act2_repossession", label: "Repossession", requires: [{ completed: "act2_dead_air" }] },
   {
@@ -6264,6 +6369,9 @@ function loadState() {
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
       completedMissions: {},
+      missionResults: {},
+      campaignVariantProgressionVersion: CAMPAIGN_VARIANT_PROGRESSION_VERSION,
+      grandfatheredAct1Stages: [],
       claimedFirstClearRewards: {},
       pendingRequisitions: [],
       keyItems: [],
@@ -6392,6 +6500,11 @@ function loadState() {
     parsed.debugShowAllItems = parsed.debugShowAllItems ?? false;
     parsed.debugArsenalEnabled = parsed.debugArsenalEnabled ?? false;
     parsed.devShowMath = parsed.devShowMath ?? false;
+    parsed.missionResults = normalizeMissionResults(parsed.missionResults);
+    parsed.grandfatheredAct1Stages = Array.isArray(parsed.grandfatheredAct1Stages)
+      ? parsed.grandfatheredAct1Stages
+      : [];
+    migrateLegacyAct1Progression(parsed);
     parsed.audio = {
       musicVolume: Number.isFinite(parsed.audio?.musicVolume) ? Math.max(0, Math.min(1, parsed.audio.musicVolume)) : 1,
       sfxVolume: Number.isFinite(parsed.audio?.sfxVolume) ? Math.max(0, Math.min(1, parsed.audio.sfxVolume)) : 1,
@@ -6514,6 +6627,9 @@ function loadState() {
       lastMissionSummary: "N/A",
       unlockedLevels: 1,
       completedMissions: {},
+      missionResults: {},
+      campaignVariantProgressionVersion: CAMPAIGN_VARIANT_PROGRESSION_VERSION,
+      grandfatheredAct1Stages: [],
       claimedFirstClearRewards: {},
       pendingRequisitions: [],
       keyItems: [],
@@ -6775,7 +6891,11 @@ function getEmpClearRadiusForState(targetState = state) {
 
 function isDualFireCampaignMilestoneEarned(milestone, targetState = state) {
   return (milestone?.requirements || []).some((requiredMissionIds) =>
-    requiredMissionIds.every((missionId) => hasCompletedMission(missionId, targetState))
+    requiredMissionIds.every((missionId) =>
+      missionId === "level8"
+        ? isAct1StageComplete("level8", targetState)
+        : hasCompletedMission(missionId, targetState)
+    )
   );
 }
 
@@ -6807,6 +6927,7 @@ window.__dualFireProgressionReport = () => {
   const targetFor = (missionIds, hullId = "starter") => ({
     ...state,
     completedMissions: Object.fromEntries(missionIds.map((missionId) => [missionId, 1])),
+    grandfatheredAct1Stages: missionIds.includes("level8") ? ["level8"] : [],
     hulls: { ownedIds: ["starter", hullId], equippedId: hullId },
   });
   const rows = {
@@ -7052,6 +7173,7 @@ async function startMission({ showIntro = false } = {}) {
     elapsed: 0,
     score: 0,
     kills: 0,
+    spawnedEnemies: 0,
     killCredits: 0,
     spawnTimer: 0,
     enemyFireTimer: 0,
@@ -7184,7 +7306,10 @@ function endMission({ ejected = false, completed = false } = {}) {
   state.credits += finalReward;
   state.lifetimeCredits += finalReward;
   state.missionCount += 1;
-  state.lastMissionSummary = `${formatTime(mission.elapsed)} | ${mission.kills} kills`;
+  let missionRating = completed
+    ? calculateMissionRating(mission.kills, mission.spawnedEnemies)
+    : null;
+  state.lastMissionSummary = `${formatTime(mission.elapsed)} | ${mission.kills} kills${missionRating ? ` | ${missionRating.grade} ${missionRating.percent}%` : ""}`;
   const outcome = completed ? "boss" : ejected ? "rtb" : "death";
   const bulletinSaleSummary = capturePendingBulletinSaleSummary();
   const ledgerMissionSummary = settleLedgerAfterMission(outcome);
@@ -7193,10 +7318,13 @@ function endMission({ ejected = false, completed = false } = {}) {
   const campaignDualFireTierBefore = getCampaignDualFireTier(state);
   const campaignProgressionBefore = {
     completedMissions: { ...(state.completedMissions || {}) },
+    missionResults: deepClone(state.missionResults || {}),
+    grandfatheredAct1Stages: [...(state.grandfatheredAct1Stages || [])],
   };
   let firstClearRewardLines = [];
   const debriefLoreLine = completed ? pickDebriefLoreLine(mission.level) : "";
   if (completed && mission.level?.id) {
+    missionRating = recordMissionResult(mission.level.id, missionRating, state);
     const completedBaseId = missionProgressionBaseIdFor(mission.level);
     completedEntry = availableLevels.find((level) => level.id === completedBaseId);
     normalizeAct2ProgressState(state);
@@ -7299,6 +7427,7 @@ function endMission({ ejected = false, completed = false } = {}) {
     onboardingMessage,
     keyItemLines,
     capabilityUnlockLines,
+    missionRating,
     pendingRequisition: getPendingCampaignRequisition(),
     debriefLoreLine,
     repossessedCount: mission.repossessedCount || 0,
@@ -7335,10 +7464,13 @@ function escapeHtml(value) {
 
 function renderCampaignRequisition(requisition) {
   if (!requisition) return "";
+  const stage = getAct1StageNumber(requisition.missionId);
+  const isMini = requisition.slotType === "mini";
+  const destination = isMini ? "Mini hardpoint" : "Primary B";
   return `
     <section class="campaign-requisition">
-      <div class="salvage-title">Mission 4 Certified Requisition</div>
-      <p>Choose one role weapon. The selected frame is installed in Primary B; the other offers expire.</p>
+      <div class="salvage-title">Mission ${stage || ""} Certified ${isMini ? "Mini" : "Primary"} Requisition</div>
+      <p>Choose one role weapon. The selection is installed in ${destination}; the other offers expire.</p>
       <div class="campaign-requisition-offers">
         ${requisition.offers.map(({ role, item }) => `
           <button type="button" class="campaign-requisition-offer rarity-${escapeHtml(item.rarity || "certified")}" data-requisition-id="${escapeHtml(requisition.rewardId)}" data-requisition-item="${escapeHtml(item.id)}" style="${getRarityStyle(item.rarity || "certified")}">
@@ -7378,7 +7510,9 @@ function renderDebriefSummary(summary) {
         ? "CLAIM ADJUSTED"
         : summary.outcome === "rtb"
           ? "RTB SETTLED"
-          : "SETTLED";
+          : summary.missionRating
+            ? `${summary.missionRating.grade} · ${summary.missionRating.percent}%`
+            : "SETTLED";
   }
 
   if (debriefLedger) {
@@ -7414,6 +7548,13 @@ function renderDebriefSummary(summary) {
         label: "Repossessed by counterparty",
         text: `${summary.repossessedCount} item${summary.repossessedCount === 1 ? "" : "s"}`,
         fee: true,
+      });
+    }
+    if (summary.missionRating) {
+      rows.push({
+        label: "Mission rating",
+        text: `${summary.missionRating.grade} · ${summary.missionRating.percent}% destroyed${summary.missionRating.improved ? " · new best" : ""}`,
+        memo: true,
       });
     }
     (summary.keyItemLines || []).forEach((item) => {
@@ -7460,7 +7601,7 @@ function renderDebriefSummary(summary) {
   const lost = summary.lostCargo || [];
   const requisitionHtml = renderCampaignRequisition(summary.pendingRequisition);
   const claimedHtml = summary.requisitionClaimed
-    ? `<div class="campaign-requisition-claimed">Requisition accepted: <strong>${escapeHtml(summary.requisitionClaimed.name)}</strong> installed in Primary B.</div>`
+    ? `<div class="campaign-requisition-claimed">Requisition accepted: <strong>${escapeHtml(summary.requisitionClaimed.item.name)}</strong> installed in ${escapeHtml(summary.requisitionClaimed.destination)}.</div>`
     : "";
   if (!identified.length && !lost.length && !requisitionHtml && !claimedHtml) {
     debriefSalvage.innerHTML = `<div class="salvage-empty">${LEDGER_COPY.noCargo}</div>`;
@@ -7522,14 +7663,17 @@ function renderDebriefSummary(summary) {
   debriefSalvage.querySelectorAll("[data-requisition-item]").forEach((button) => {
     const requisition = summary.pendingRequisition;
     const offer = requisition?.offers?.find((entry) => entry.item?.id === button.dataset.requisitionItem);
-    if (offer?.item) attachItemTooltip(button, offer.item, "primary-2");
+    if (offer?.item) attachItemTooltip(button, offer.item, requisition.installTarget || "primary-2");
     button.addEventListener("click", () => {
       const claimed = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
       if (!claimed) return;
       summary.pendingRequisition = null;
-      summary.requisitionClaimed = claimed;
+      summary.requisitionClaimed = {
+        item: claimed,
+        destination: requisition.slotType === "mini" ? "Mini" : "Primary B",
+      };
       if (returnBtn) returnBtn.disabled = false;
-      setHangarStatusMessage(`${getCompactItemName(claimed)} installed in Primary B.`);
+      setHangarStatusMessage(`${getCompactItemName(claimed)} installed in ${requisition.slotType === "mini" ? "Mini" : "Primary B"}.`);
       renderDebriefSummary(summary);
     });
   });
@@ -7567,7 +7711,9 @@ function updateHangar() {
   refreshSystemUnlocks();
   syncStarterArmoryState();
   if (pilotRank) {
-    pilotRank.textContent = getPilotRank(state.lifetimeCredits);
+    const ratingScore = getPilotRatingScore(state);
+    pilotRank.textContent = getPilotRank(state);
+    pilotRank.title = `Best mission-rating total: ${ratingScore}`;
   }
   if (availableCreditsEl) {
     setCountedNumber(availableCreditsEl, state.credits);
@@ -7967,6 +8113,12 @@ function estimateLevelCredits(levelMeta) {
 
 function getMissionLockReason(levelId) {
   if (state.debugUnlock) return "Debug: unlocked";
+  const baseId = missionBaseIdFor(levelId);
+  if (baseId !== levelId && getAct1StageNumber(baseId)) {
+    return hasCompletedExactMission(baseId)
+      ? "Unlocked role contract"
+      : `Clear Mission ${getAct1StageNumber(baseId)} Hybrid to open its Swarm and Armored contracts.`;
+  }
   const entry = availableLevels.find((level) => level.id === levelId);
   if (entry?.test) return "Test mission";
   if (Array.isArray(entry?.requires) && entry.requires.length) {
@@ -8093,6 +8245,7 @@ function getKeyItemLabel(keyId) {
 function isMissionRequirementSatisfied(requirement, targetState = state) {
   if (!isPlainObject(requirement)) return false;
   if (requirement.completed) return hasCompletedMission(requirement.completed, targetState);
+  if (requirement.stageComplete) return isAct1StageComplete(requirement.stageComplete, targetState);
   if (requirement.keyItem) return hasKeyItem(requirement.keyItem, targetState);
   return false;
 }
@@ -8106,6 +8259,10 @@ function getMissionUnlockRequirementText(levelId) {
       if (requirement.completed) {
         const requiredEntry = getMissionEntry(requirement.completed);
         return `${(requiredEntry?.label || requirement.completed).replace(/^Act 2: /, "")} settled`;
+      }
+      if (requirement.stageComplete) {
+        const stage = getAct1StageNumber(requirement.stageComplete);
+        return `Mission ${stage} Hybrid plus one role contract settled`;
       }
       if (requirement.keyItem) return getKeyItemLabel(requirement.keyItem);
       return "";
@@ -8176,6 +8333,18 @@ async function warmMissionVariantCache() {
   return missionVariantWarmupPromise;
 }
 
+function getMissionVariantLabel(levelId) {
+  if (levelId.endsWith("_swarm")) return "Swarm";
+  if (levelId.endsWith("_armored")) return "Armored";
+  return getAct1StageNumber(levelId) ? "Hybrid" : "Standard";
+}
+
+function getAct1StageRewardLabels(baseId) {
+  return Object.values(progressionConfig?.capabilities || {})
+    .filter((capability) => capability.stageId === baseId)
+    .map((capability) => capability.label);
+}
+
 async function renderLevelSelectAsync() {
   const renderVersion = ++missionSelectRenderVersion;
   if (!levelList) return;
@@ -8185,8 +8354,12 @@ async function renderLevelSelectAsync() {
   const requiredMissionId = directive?.missionId || null;
 
   if (!isLevelUnlocked(selectedLevelId)) {
-    const firstUnlocked = availableLevels.find((level) => isLevelUnlocked(level.id));
-    if (firstUnlocked) selectedLevelId = firstUnlocked.id;
+    const selectedBaseId = missionBaseIdFor(selectedLevelId);
+    const canInspectLockedVariant = selectedBaseId !== selectedLevelId && isLevelUnlocked(selectedBaseId);
+    if (!canInspectLockedVariant) {
+      const firstUnlocked = availableLevels.find((level) => isLevelUnlocked(level.id));
+      if (firstUnlocked) selectedLevelId = firstUnlocked.id;
+    }
   }
   if (requiredMissionId) {
     selectedLevelId = requiredMissionId;
@@ -8215,7 +8388,7 @@ async function renderLevelSelectAsync() {
     if (renderVersion !== missionSelectRenderVersion) return;
     const onboardingLockedBase =
       !!requiredMissionId && !groupIds.includes(requiredMissionId);
-    const cardUnlocked = baseUnlocked && !onboardingLockedBase;
+    const groupNavigable = baseUnlocked && !onboardingLockedBase;
     const active = groupIds.includes(selectedLevelId);
     const savedIdx = state.missionCarouselIndex?.[level.id] ?? 0;
     const selectedIdx = groupIds.indexOf(selectedLevelId);
@@ -8227,6 +8400,7 @@ async function renderLevelSelectAsync() {
       Math.min(groupIds.length - 1, desiredIdx)
     );
     const slideId = groupIds[idx];
+    const cardUnlocked = isLevelUnlocked(slideId) && !onboardingLockedBase;
     const metaData = await loadLevelMeta(slideId);
     if (renderVersion !== missionSelectRenderVersion) return;
 
@@ -8245,10 +8419,48 @@ async function renderLevelSelectAsync() {
     const title = metaData.name || level.label;
     const desc = metaData.description || slideId.toUpperCase();
     const badge = metaData.difficulty || "Unknown";
-    const variantLabel = groupIds.length > 1 ? `${idx + 1}/${groupIds.length}` : "";
+    const variantLabel = groupIds.length > 1
+      ? `${getMissionVariantLabel(slideId)} · ${idx + 1}/${groupIds.length}`
+      : "";
     const branchLabel = level.contractTag || (level.branch ? ACT2_BRANCH_LABELS[level.branch] : "");
     const branchTagHtml = branchLabel
       ? `<span class="mission-branch-tag ${escapeHtml(level.contractClass || level.branch || "")}">${escapeHtml(branchLabel)}</span>`
+      : "";
+    const bestResult = getMissionBestResult(slideId);
+    const ratingStampHtml = bestResult?.completions > 0
+      ? `<div class="mission-grade-stamp grade-${escapeHtml((bestResult.bestGrade || "D").toLowerCase())}" title="Best completion: ${bestResult.bestPercent}% destroyed"><strong>${escapeHtml(bestResult.bestGrade || "D")}</strong><span>${bestResult.bestPercent}%</span></div>`
+      : "";
+    const stageNumber = getAct1StageNumber(level.id);
+    const hybridDone = stageNumber ? hasCompletedExactMission(level.id) : false;
+    const swarmId = `${level.id}_swarm`;
+    const armoredId = `${level.id}_armored`;
+    const swarmDone = stageNumber ? hasCompletedExactMission(swarmId) : false;
+    const armoredDone = stageNumber ? hasCompletedExactMission(armoredId) : false;
+    const stageDone = stageNumber ? isAct1StageComplete(level.id) : false;
+    const needsRoleChoice = !!stageNumber && hybridDone && !stageDone;
+    const nextStop = stageNumber === 8 ? "Deep Claims" : `Mission ${Number(stageNumber) + 1}`;
+    const rewardLabels = stageNumber ? getAct1StageRewardLabels(level.id) : [];
+    const routePrompt = !stageNumber
+      ? ""
+      : !baseUnlocked
+        ? getMissionUnlockRequirementText(level.id)
+        : !hybridDone
+        ? "Clear Hybrid to open the two role contracts."
+        : !stageDone
+          ? `Choose Swarm or Armored. Clear either to unlock ${nextStop}${rewardLabels.length ? ` and ${rewardLabels.join(" + ")}` : ""}.`
+          : `${nextStop} unlocked${rewardLabels.length ? ` · ${rewardLabels.join(" + ")} earned` : ""}.`;
+    const routeHtml = stageNumber
+      ? `<div class="mission-route${needsRoleChoice ? " needs-choice" : ""}">
+          <span class="mission-route-node${hybridDone ? " complete" : ""}">Hybrid</span>
+          <span class="mission-route-connector">→</span>
+          <span class="mission-route-choice">
+            <span class="mission-route-node swarm${swarmDone ? " complete" : ""}">Swarm</span>
+            <span class="mission-route-node armored${armoredDone ? " complete" : ""}">Armored</span>
+          </span>
+          <span class="mission-route-connector">→</span>
+          <span class="mission-route-node next${stageDone ? " complete" : ""}">${escapeHtml(nextStop)}</span>
+          <small>${escapeHtml(routePrompt)}</small>
+        </div>`
       : "";
 
     const metaBits = [];
@@ -8287,14 +8499,15 @@ async function renderLevelSelectAsync() {
     const lockTitle = onboardingLockedBase ? "Training" : "Locked";
     const lockReason = onboardingLockedBase
       ? `Training directive: ${directive.title}`
-      : getMissionLockReason(level.id);
+      : getMissionLockReason(slideId);
 
     card.innerHTML = `
       <div class="mission-shell">
+        ${ratingStampHtml}
         ${
           groupIds.length > 1
-            ? `<button type="button" class="mission-arrow left" data-action="prev" aria-label="Previous variant" title="Previous variant"></button>
-               <button type="button" class="mission-arrow right" data-action="next" aria-label="Next variant" title="Next variant"></button>`
+            ? `<button type="button" class="mission-arrow left${needsRoleChoice ? " attention" : ""}" data-action="prev" aria-label="Previous variant" title="Previous variant"></button>
+               <button type="button" class="mission-arrow right${needsRoleChoice ? " attention" : ""}" data-action="next" aria-label="Next variant" title="Next variant"></button>`
             : ""
         }
         <div class="mission-top">
@@ -8305,6 +8518,7 @@ async function renderLevelSelectAsync() {
         <p class="mission-desc">${desc}</p>
         <div class="mission-icons">${iconsHtml}</div>
         <div class="mission-meta">${metaBits.map((m) => `<span>${m}</span>`).join("")}</div>
+        ${routeHtml}
         <div class="mission-actions">
           <div class="left">
             <button type="button" class="ghost small" data-action="select">${selectedLevelId === slideId ? "Selected" : "Select"}</button>
@@ -8330,7 +8544,7 @@ async function renderLevelSelectAsync() {
     `;
 
     const setIndex = (nextIdx) => {
-      if (!cardUnlocked || requiredMissionId) return;
+      if (!groupNavigable || requiredMissionId) return;
       if (!state.missionCarouselIndex) state.missionCarouselIndex = {};
       const wrapped = (nextIdx + groupIds.length) % groupIds.length;
       const previousScrollY = window.scrollY;
@@ -8349,7 +8563,7 @@ async function renderLevelSelectAsync() {
     const prevButton = card.querySelector('button[data-action="prev"]');
     const nextButton = card.querySelector('button[data-action="next"]');
     if (prevButton) {
-      prevButton.disabled = !cardUnlocked || !!requiredMissionId;
+      prevButton.disabled = !groupNavigable || !!requiredMissionId;
       prevButton.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -8357,7 +8571,7 @@ async function renderLevelSelectAsync() {
       });
     }
     if (nextButton) {
-      nextButton.disabled = !cardUnlocked || !!requiredMissionId;
+      nextButton.disabled = !groupNavigable || !!requiredMissionId;
       nextButton.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -9449,12 +9663,16 @@ function getOffenseStatsForBuild(build, targetState = state) {
   const mount = targetState.weapon?.mount || state.weapon?.mount || "front";
   const mountShots = mount === "rear" ? 2 : 1;
   const totalProjectiles = (cfg.angles?.length || 1) * mountShots;
+  const buildDamageMult = build.primaryDamageMult ?? build.frameDamageMult ?? 1;
+  const frameDamageMult = build.frameDamageMult ?? 1;
+  const loadoutDamageMult = build.loadoutPrimaryDamageMult ?? 1;
+  const otherDamageMult = buildDamageMult / Math.max(0.001, frameDamageMult * loadoutDamageMult);
   const hitDamage = computePrimaryDamage({
     ammo: cfg.ammo,
     speed: cfg.bulletSpeed,
     radius: cfg.projectileRadius,
     damageBoostMult: 1,
-    buildDamageMult: build.primaryDamageMult ?? build.frameDamageMult ?? 1,
+    buildDamageMult,
     shotDamageMult: cfg.shotDamageMult,
   });
   const attacksPerSecond = cfg.cooldown > 0 ? 1 / cfg.cooldown : 0;
@@ -9466,6 +9684,10 @@ function getOffenseStatsForBuild(build, targetState = state) {
   const burnText = cfg.ammo === "plasma" ? ` (burns up to ${formatNumber(burnDps, 1)}/s)` : "";
   return {
     cfg,
+    buildDamageMult,
+    frameDamageMult,
+    loadoutDamageMult,
+    otherDamageMult,
     dps,
     directDps,
     hitDamage,
@@ -9485,7 +9707,7 @@ function getSelectedMiniWeapon(targetState = state) {
   const equippedId = targetState.armory?.equippedMiniItemId;
   const inventoryItem = findInventoryItem(equippedId, targetState);
   if (inventoryItem && normalizeArmorySlotType(inventoryItem.slotType) === "mini") return inventoryItem;
-  return starterMiniWeaponsById[equippedId] || starterMiniWeapons[0] || null;
+  return starterMiniWeaponsById[equippedId] || null;
 }
 
 function getMiniWeaponStatsForItem(item, targetState = state) {
@@ -9613,7 +9835,7 @@ function createItemOwnBuild(item) {
     shieldRegenMult: 1,
     armorCapacityMult: 1,
     armorDragMult: 1,
-    primaryDamageMult: 1,
+    primaryDamageMult: itemBuild.frameDamageMult ?? itemBuild.primaryDamageMult ?? 1,
     loadoutPrimaryDamageMult: 1,
     loadoutPrimaryDamageDelta: 0,
     loadoutModifierLabel: "Intrinsic",
@@ -9957,13 +10179,22 @@ function getPrimaryDamageBreakdownRows(offense) {
   const focusText = cfg.shotDamageMult > 1
     ? ` · Focus x${formatNumber(cfg.shotDamageMult, 2)}`
     : "";
+  const frameText = Math.abs((offense.frameDamageMult ?? 1) - 1) > 0.001
+    ? ` · Frame x${formatNumber(offense.frameDamageMult, 2)}`
+    : "";
+  const loadoutText = Math.abs((offense.loadoutDamageMult ?? 1) - 1) > 0.001
+    ? ` · Loadout x${formatNumber(offense.loadoutDamageMult, 2)}`
+    : "";
+  const otherDamageText = Math.abs((offense.otherDamageMult ?? 1) - 1) > 0.001
+    ? ` · Ship x${formatNumber(offense.otherDamageMult, 2)}`
+    : "";
   if (cfg.ammo === "plasma") {
     const impulseText = cfg.plasmaImpulseBudget > 0.001
       ? ` · Impulse x${formatNumber(cfg.plasmaImpulseSizeScale, 2)}`
       : "";
     rows.push({
-      text: `Base ${ECONOMY.plasma.baseDamage} · Size x${formatNumber(cfg.baseSizeFactor, 2)}${impulseText}${focusText} -> ${formatNumber(offense.hitDamage, 1)}`,
-      math: `Plasma hit damage = base * size * impulse size${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}.`,
+      text: `Base ${ECONOMY.plasma.baseDamage} · Size x${formatNumber(cfg.baseSizeFactor, 2)}${impulseText}${focusText}${frameText}${loadoutText}${otherDamageText} -> ${formatNumber(offense.hitDamage, 1)}`,
+      math: `Plasma hit damage = base * size * impulse size${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}${frameText ? " * frame output" : ""}${loadoutText ? " * loadout output" : ""}${otherDamageText ? " * ship output" : ""}.`,
     });
     if (offense.burnDps) {
       rows.push({
@@ -9973,8 +10204,8 @@ function getPrimaryDamageBreakdownRows(offense) {
     }
   } else {
     rows.push({
-      text: `Base ${ECONOMY.kinetic.baseDamage} · Size x${formatNumber(cfg.sizeFactor, 2)} · Speed x${formatNumber(cfg.velocityFactor, 2)}${focusText} -> ${formatNumber(offense.hitDamage, 1)}`,
-      math: `Kinetic hit damage = base * size * speed^${ECONOMY.kinetic.velocityExponent}${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}.`,
+      text: `Base ${ECONOMY.kinetic.baseDamage} · Size x${formatNumber(cfg.sizeFactor, 2)} · Speed x${formatNumber(cfg.velocityFactor, 2)}${focusText}${frameText}${loadoutText}${otherDamageText} -> ${formatNumber(offense.hitDamage, 1)}`,
+      math: `Kinetic hit damage = base * size * speed^${ECONOMY.kinetic.velocityExponent}${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}${frameText ? " * frame output" : ""}${loadoutText ? " * loadout output" : ""}${otherDamageText ? " * ship output" : ""}.`,
     });
   }
   rows.push({ text: `Shots per second ${formatNumber(offense.attacksPerSecond, 2)}` });
@@ -10881,7 +11112,9 @@ function getArmoryItemsForSlot(slotId) {
       owned: true,
       installed: isSecondBay && !getSecondPrimaryArmoryItem(),
     };
-    const starterItems = starterWeaponLoadouts.map((item) => ({
+    const starterItems = starterWeaponLoadouts
+      .filter((item) => item.id === "fundamentals")
+      .map((item) => ({
       ...item,
       slotType: "primary",
       icon: getArmoryFrameVisual(item).icon,
@@ -10903,7 +11136,7 @@ function getArmoryItemsForSlot(slotId) {
   }
   if (slotId === "mini") {
     const ownedMiniIds = new Set(state.armory?.ownedMiniWeaponIds || []);
-    const starterItems = starterMiniWeapons.map((item) => ({
+    const starterItems = starterMiniWeapons.filter((item) => ownedMiniIds.has(item.id)).map((item) => ({
       ...item,
       owned: ownedMiniIds.has(item.id),
       installed: state.armory?.equippedMiniItemId === item.id,
@@ -10926,7 +11159,7 @@ function getArmoryItemsForSlot(slotId) {
     }));
   }
   if (slotId === "support") {
-    const baseItems = getSupportModuleEntries().map((item) => ({
+    const baseItems = getSupportModuleEntries().filter((item) => item.owned).map((item) => ({
       ...item,
       installed: !state.armory?.equippedSupportItemId && state.rmbWeapon === item.id,
     }));
@@ -11329,11 +11562,11 @@ function renderShipUpgradesPanel() {
     requisitionWrap.innerHTML = renderCampaignRequisition(pendingRequisition);
     requisitionWrap.querySelectorAll("[data-requisition-item]").forEach((button) => {
       const offer = pendingRequisition.offers.find((entry) => entry.item?.id === button.dataset.requisitionItem);
-      if (offer?.item) attachItemTooltip(button, offer.item, "primary-2");
+      if (offer?.item) attachItemTooltip(button, offer.item, pendingRequisition.installTarget || "primary-2");
       button.addEventListener("click", () => {
         const claimed = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
         if (!claimed) return;
-        setHangarStatusMessage(`${getCompactItemName(claimed)} installed in Primary B.`);
+        setHangarStatusMessage(`${getCompactItemName(claimed)} installed in ${pendingRequisition.slotType === "mini" ? "Mini" : "Primary B"}.`);
         safeUpdateHangar();
       });
     });
@@ -11727,11 +11960,12 @@ function renderLedgerMarket() {
 }
 
 
-function getPilotRank(credits) {
-  if (credits < 250) return "Rookie";
-  if (credits < 750) return "Wing Ace";
-  if (credits < 1800) return "Vanguard";
-  if (credits < 3600) return "Strike Leader";
+function getPilotRank(targetState = state) {
+  const ratingScore = getPilotRatingScore(targetState);
+  if (ratingScore < 200) return "Rookie";
+  if (ratingScore < 600) return "Wing Ace";
+  if (ratingScore < 1200) return "Vanguard";
+  if (ratingScore < 2000) return "Strike Leader";
   return "Legend";
 }
 
@@ -11741,6 +11975,10 @@ function isLevelUnlocked(levelId, seen = null) {
   if (visited.has(levelId)) return false;
   visited.add(levelId);
 
+  const baseId = missionBaseIdFor(levelId);
+  if (baseId && baseId !== levelId && getAct1StageNumber(baseId)) {
+    return hasCompletedExactMission(baseId);
+  }
   const entry = availableLevels.find((level) => level.id === levelId);
   if (!entry) {
     const base = missionBaseIdFor(levelId);
@@ -11908,6 +12146,7 @@ function spawnEnemyFromSpec(spec) {
   }
 
   enemies.push(enemy);
+  if (mission?.active) mission.spawnedEnemies = Math.max(0, Number(mission.spawnedEnemies) || 0) + 1;
   if (enemy.isBoss) {
     mission.bossAlive = true;
   }

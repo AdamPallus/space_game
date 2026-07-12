@@ -74,14 +74,14 @@ an all-unlocked starter state.
 | Milestone | Campaign award | Purpose |
 | --- | --- | --- |
 | Fresh save | Weak Cadet Kinetic Frame in Primary A, two defense bays, starter hull, Cloak, full hangar navigation | Immediately playable without supplying free swarm, armor, and alternate-ammo answers. |
-| Mission 1 clear | Consumable Bay 1, one Shield Overcharge, Ledger consumable stock | Introduce preparation and emergency timing immediately. |
-| Mission 2 clear | Mini weapon slot and Tick Autogun | Add passive coverage only after primary fire is understood. |
-| Mission 3 clear | EMP support authorization and one Armor Sealant | Introduce projectile control and armor recovery before dense mid-act pressure. |
-| Mission 4 clear | Primary B in **Swap** mode plus a choose-one Certified role requisition | Introduce role switching well before Dual Fire and guarantee a second weapon worth swapping to. |
-| Mission 5 clear | Damage Overcharge consumable | Add offensive tempo for bosses and dangerous overlaps. |
-| Mission 6 clear | Named-hull licenses and Bulwark support authorization | Hull identity and the third aux role arrive after core gear loops are familiar; chassis still cost credits. |
-| Mission 7 clear | Consumable Bay 2 | Let the player compose recovery and offense before Last Light. |
-| Last Light clear | Dual Fire Tier 1 and the first Pre-Founding commissioning package | Finish Act 1 with the complete loadout vocabulary and a viable entry build for harder content. |
+| Mission 1 chapter | Consumable Bay 1, one Shield Overcharge, Ledger consumable stock | Introduce preparation after the player has cleared Hybrid plus one role contract. |
+| Mission 2 chapter | Mini weapon slot plus a choose-one Certified mini requisition | Make passive coverage a visible choice rather than a silent automatic install. |
+| Mission 3 chapter | EMP support authorization and one Armor Sealant | Introduce projectile control and armor recovery before dense mid-act pressure. |
+| Mission 4 chapter | Primary B in **Swap** mode plus a choose-one Certified role requisition | Introduce role switching after role pressure has already made alternate weapons desirable. |
+| Mission 5 chapter | Damage Overcharge consumable | Add offensive tempo for bosses and dangerous overlaps. |
+| Mission 6 chapter | Named-hull licenses and Bulwark support authorization | Hull identity and the third aux role arrive after core gear loops are familiar; chassis still cost credits. |
+| Mission 7 chapter | Consumable Bay 2 | Let the player compose recovery and offense before Last Light. |
+| Last Light chapter | Dual Fire Tier 1 and the first Pre-Founding commissioning package | Finish Act 1 with the complete loadout vocabulary and a viable entry build for harder content. |
 
 An authorization that introduces EMP or Bulwark also grants one baseline module
 and enables that family in ordinary drops and Ledger stock. The player should
@@ -99,6 +99,22 @@ Named hulls use the same two-part contract: the Mission 6 clear authorizes hull
 licenses, while Ledger Investments and credit prices determine which chassis
 the player actually owns. Broadside may improve eligible Dual Fire tiers under
 the existing rules; it does not bypass campaign authorization.
+
+### Act 1 chapter and rating contract
+
+- Every Act 1 tier is a two-clear chapter: clear the Hybrid mission, then clear
+  either its Swarm or Armored contract. The role clear opens the next Hybrid
+  mission and grants that chapter's capability award.
+- The Mission Board keeps the existing cards and carousel but shows a compact
+  Hybrid -> Swarm/Armored -> Next route. After Hybrid is cleared, variant arrows
+  receive an animated prompt until either role contract is settled.
+- Completed mission profiles store their best enemy-destruction percentage.
+  Enemies that enter the mission and escape count against the result; spawned
+  adds and split children count as enemies. SS requires 100% destroyed. S is
+  95-99%, A 85-94%, B 70-84%, C 50-69%, and D below 50%.
+- Ratings are mastery feedback, not another unlock requirement. Best grades are
+  stamped on the exact Hybrid, Swarm, or Armored profile. Pilot Rank is derived
+  from the sum of best campaign-profile percentages instead of lifetime credits.
 
 ### Starter weapon contract
 
@@ -263,7 +279,8 @@ role-based counters; do not normalize exceptional builds.
    add the Mission 4 Certified role requisition and starter-vs-rarity balance
    report checks.
 4. Keep locked controls visible with exact requirements and newly earned awards
-   visible in debrief.
+   visible in debrief. Make Act 1 Hybrid/role routing and best mission ratings
+   legible on the Mission Board.
 5. Make Test Arsenal bypass all capability gates while enabled without changing
    earned milestones.
 6. Migrate old saves safely. Existing advanced saves derive awards from
@@ -271,7 +288,7 @@ role-based counters; do not normalize exceptional builds.
    unless Test Arsenal is active; no legacy-player preservation work should
    compromise the fresh-save design.
 
-Stop for a short fresh-save UI and Mission 1–4 playtest.
+Stop for a short fresh-save chapter-pacing playtest before proceeding to Slice B.
 
 ### Slice B — consumables and pickup utility
 
@@ -319,6 +336,12 @@ the progression foundation.
   advanced aux modules, named hulls, consumable Bay 2, or Dual Fire early.
 - A fresh pilot owns only the Cadet Kinetic Frame; its effective starter-hull DPS
   is approximately 150–180 and remains below the Certified primary median.
+- Mission 1 Hybrid opens its Swarm and Armored contracts; either role clear opens
+  Mission 2 and grants the Mission 1 chapter award. The same pattern continues
+  through Act 1.
+- Completed mission profiles show a best percentage and grade; only 100% earns SS.
+- Pilot Rank responds to best completed mission ratings rather than credits.
+- Mission 2 grants a visible choose-one Certified mini requisition.
 - Mission 4 grants a real Certified weapon choice when Primary B unlocks.
 - Every locked capability states the mission that awards it.
 - Each newly authorized aux/consumable can be tried immediately through a free

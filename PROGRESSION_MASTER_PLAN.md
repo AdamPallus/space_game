@@ -1,10 +1,10 @@
 # Progression Master Plan — Power First, Then Progression
 
-**Status:** Accepted direction. Slices 1–4 are player-validated. Repossession's
-Assessor liens remain explicitly unverified. Slice 5, Return Address, has
-validated its interception concept and is in a focused ramp revision. The Dual
-Fire campaign ladder is implemented for that retest. Later slices remain drafts
-until a playtest or conversation promotes them.
+**Status:** Accepted direction. Slices 1–5 are player-validated. Repossession's
+Assessor liens remain explicitly unverified. The next authorized work is the
+fresh-save capability, consumable, and guaranteed-gear spine in
+`CAMPAIGN_PROGRESSION_SPEC.md`; no sixth post-Last-Light mission should precede
+it.
 
 **Creative and playtest authority:** Adam.
 
@@ -414,8 +414,7 @@ AI parameters instead of losing them to the parent link.
 
 ## 9. Slice 5 — Return Address
 
-**Status:** Core encounter validated; first ramp revision implemented for
-playtest.
+**Status:** Player-validated after the first ramp revision.
 
 Destroying the Gatekeeper does not silence the maintenance band. It stamps the
 player's flight telemetry into it. Verdant seedships follow that route back to
@@ -475,26 +474,27 @@ the mission's hardest problem.
 - Does the debrief fact that none of the seedships acquired a weapons lock make
   the encounter more interesting without prematurely declaring the Verdant good?
 
-Codex stops after deployment for this combat and objective playtest.
+The revised Tier 2 gold Dual Fire playtest found the mission challenging and
+working well. This closes the five-mission vertical-slice experiment and proves
+that the current author/revise/human-playtest method can produce campaign-worthy
+encounters.
 
-## 10. Later slices — draft backlog, not authorization
+## 10. Accepted next execution order
 
-These ideas remain available, but none should be implemented automatically after
-Slice 5:
-
-1. **Return Address revision.** Validate the new mid-mission overlap and smoother
-   Matriarch ramp with both a gold single-primary build and a complementary
-   Tier 2 Dual Fire build.
-2. **Assessor verification.** Keep lien readability marked unverified until a
-   future Repossession run actually observes it; this does not block Verdant work.
-3. **Loot chase.** Act-aware rarity floors, milestone rewards, provenance labels,
-   and other ways to make dangerous field salvage relevant to a gold-equipped
-   pilot now have a concrete failing case from Repossession.
-4. **Item creativity.** Named cloak/bulwark relics, mini-weapon trinket affixes,
-   armor packs, and role-specific weapon surges remain a creative backlog.
-5. **Act and story structure.** Name or commit to Act 2 only after several missions
-   are fun. Then decide how much of the existing lore deserves to be carried by
-   them.
+1. **Campaign progression spine.** Implement `CAMPAIGN_PROGRESSION_SPEC.md`:
+   mission-earned capability milestones, Act 1 consumables, guaranteed gold
+   commissioning rewards, and a fresh-save balance pass through the validated
+   campaign.
+2. **Remaining observations.** Verify Assessor lien readability when convenient
+   and address progression-run UI friction. Item creativity, mini output,
+   single-primary payoff, cloak payoff, and mobile Armory density remain tuning
+   candidates rather than blockers.
+3. **Story/economy setup.** Execute The Bill Arrives, Planet Raids, and The Fork
+   in that order. Their order is load-bearing.
+4. **Canonical Act 3.** Re-author missions one at a time using the successful
+   playtest method. Reuse Probate's pressure doctrine, invasion mechanics, art,
+   and Heirloom plumbing, but not its discarded mission scripts. The Fork may
+   shape Act 3; it is not Act 3 itself.
 
 ## 11. Documentation authority
 

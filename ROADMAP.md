@@ -1,29 +1,27 @@
 # Roadmap
 
-Last audited: 2026-07-10
+Last audited: 2026-07-11
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
-## Active execution slice (2026-07-10)
+## Active execution slice (2026-07-11)
 
-`PROGRESSION_MASTER_PLAN.md` records the player-validated creative direction and
-the development/testing contract. Crossed Claims, Processional, and Repossession
-are validated, and The Green Signal has now validated the Verdant population
-check at the intended gold tier. Assessor liens remain explicitly unverified.
-Return Address has validated its mothership-interception concept and is in one
-focused ramp revision: move its Rootward crises into active waves and smooth the
-final carrier cliff. Dual Fire progression is now campaign-earned so that
-retest has an enforceable Tier 2 baseline. It stops for a real playtest before
-any sixth post-Last-Light mission. Loot, item, economy, and broader story
-expansions remain draft backlog.
+All five newly authored post-Last-Light missions are player-validated. That
+proves the mission-design loop; the next problem is making a normal fresh save
+earn the builds that the Test Arsenal proved can clear them.
 
-This work is also the current creative-delegation experiment: prove that Codex
-can turn one approved encounter thesis into one fun mission, stop for Adam's
-playtest, and revise from that judgment. Only after that process works repeatedly
-should instructions move upward from individual level design to mission clusters,
-story arcs, and coordinated story/economy systems. The long-range destination and
-authority ladder are recorded in `MOTHERSHIP_AUTOMATION_PROPOSAL.md`; that
-proposal does not authorize work beyond the active playtest slice.
+`CAMPAIGN_PROGRESSION_SPEC.md` is the next authorized player-facing work. It
+defines four ordered implementation slices:
+
+1. campaign-earned capability milestones from Mission 1 through Last Light;
+2. early stocked consumables with shield overcharge, armor overplate, and a
+   damage window, followed by difficulty integration;
+3. guaranteed, role-aware gold commissioning rewards and act-aware drop tables;
+4. a fresh-save balance pass through Act 1 and the five validated missions.
+
+No new campaign mission should be authored before that progression spine is
+playable. Assessor lien readability remains an explicitly unverified but
+non-blocking observation.
 
 ## Player-validated combat direction (2026-07-09)
 
@@ -133,7 +131,7 @@ The `outdated_docs/implemented_specs/ECONOMY_CONTROL_SPEC.md` Phase 8 prelude ha
 - `scripts/balance_report.js` now prints Credit Flow full-clear and first-third short-loop rows, no-spend cumulative baselines, affordability milestones, and warnings for target/saturation concerns.
 - `?devTuning=1` provides a compact non-combat economy console with sparse local overrides, immediate rerendering, active override badge, reset, and merged JSON export.
 
-## Next Player-Testing Priorities
+## Validated mission notes and remaining observations
 
 Crossed Claims' first playtest validated the encounter thesis: high armor class erased
 much of the chip field, grapplers and heavy projectiles still threatened the
@@ -165,9 +163,9 @@ Return Address's first playtests established that its objective triage is clear,
 interesting, and worth replaying. Its opening was too easy, Rootwards arrived in
 windows where they could be focused down, and the finale jumped to roughly ten
 carriers plus the boss. The revision overlaps Rootwards with earlier active
-waves, then slightly reduces the Matriarch's immediate final brood and carrier
-cadence. The next playtest should establish whether that creates a real ramp
-without taking away the final mixed-role loadout check.
+waves and slightly reduces the Matriarch's immediate final brood and carrier
+cadence. A subsequent Tier 2 gold Dual Fire run found the result challenging and
+working well, closing the active mission-design slice.
 
 Beginning with The Green Signal, the campaign guarantees the Tier 2 Dual-Fire
 Coupler. Needlebloom plus Starwound is an intended solution:
@@ -177,13 +175,16 @@ viable route. A completionist can earn Tier 3 before Return Address, and Tier 4
 after it; both are allowed to outgear the target rather than becoming its floor.
 
 Repossession also exposed a reward mismatch: a pilot who needs gold gear has no
-reason to risk the run for visibly scrap/certified/prototype salvage. Preserve the
-drop-and-theft machinery, but solve incentive later through act-aware rarity
-floors, upgrade/crafting value, or milestone rewards in the economy/reward pass.
+reason to risk the run for visibly scrap/certified/prototype salvage. A fresh-save
+run confirmed the larger problem: lucky drops can produce an Orphan Signal or
+Gravebolt Rail, but there is no guaranteed way to assemble every role the gold
+campaign expects. `CAMPAIGN_PROGRESSION_SPEC.md` promotes first-clear gold
+commissioning rewards and act-aware rarity tables from backlog to active work.
 
-Other tuning candidates—mini output, single-primary specialist payoff, loot rolls, economy
-scarcity, cloak payoff, and mobile Armory density—remain valid backlog but are
-not part of the active slice.
+Other tuning candidates—mini output, single-primary specialist payoff, loot
+rolls, economy scarcity, cloak payoff, and mobile Armory density—remain valid
+backlog. Consumable usefulness and capability timing are now part of the active
+slice.
 
 ## Story-Economy Arc (draft backlog)
 
@@ -223,7 +224,11 @@ regression access. Passing validation does not make them campaign content.
 The old Act 3 encounters are also hidden experiments. Pressure telemetry,
 rammer/latch behaviors, breach integrity, lien caps, boss phases, Heirloom
 plumbing, invasion art, and the home-hull background remain reusable systems.
-No Probate mission or music pass is currently authorized as campaign work.
+No old Probate mission or music pass is currently authorized as campaign work.
+After The Bill Arrives, Planet Raids, and The Fork establish the story/economy
+setup, canonical Act 3 should be re-authored one mission at a time with the same
+human-playtest loop that produced the five accepted missions. The Fork may alter
+its framing or routes, but is not itself Act 3.
 
 ## Deferred
 

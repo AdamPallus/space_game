@@ -1,10 +1,11 @@
 # Act 3: Probate — Design & Combat Doctrine
 
-Status: active design (Claude, 2026-07-03). Written in direct response to the
-Act 2 playtest verdict: the levels were not fun because nothing tried to kill
-the player. This doc leads with the combat doctrine because that failure was
-systemic, not cosmetic. Act 2 stays as-is until Act 3 teaches us what fun
-measures like; then it gets a combat-only pass.
+Status: **reusable Act 3 premise and pressure doctrine, not a canonical mission
+order.** Written in direct response to the failed passive-mission experiments,
+its threat-simultaneity rules, invasion premise, and mechanics remain valuable.
+The listed mission scripts are hidden prototypes. A future canonical Act 3 will
+be re-authored one mission at a time after the player-progression spine and the
+story/economy setup.
 
 ## The premise: They Followed You Home
 

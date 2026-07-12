@@ -1,6 +1,6 @@
 # Space Shooter Current State
 
-Last audited: 2026-07-10
+Last audited: 2026-07-11
 
 This is the first file to read before changing the game. It summarizes what is implemented now, which docs are still authoritative, which older specs are archived, and which validation commands should pass before committing.
 
@@ -32,10 +32,13 @@ These are intentional follow-up targets, not bugs in the docs:
 - Crossed Claims' first playtest validated its swarm/armor overlap: a high-AC twin-rapid-plasma ship erased chip fire and small enemies but remained vulnerable to grapplers, heavy projectiles, and armored anchors. Processional's first playtest validated its pure swarm/defense check: Needlebloom plus AC30 Heavy Plate could not clear everything but survived the chip field while ships and heavy projectiles remained dodge threats; conductor collapse read clearly. Its first miniboss now holds an orbit until killed instead of descending offscreen.
 - Repossession is player-validated with the gold Starwound Lance. Its encounter composition and AC30–42 role check work, and the strengthened focused kinetics, plasma rendering optimization, and Escrow lock presentation are player-accepted. The seizure slug is sharpened from 760 to 1350 after it proved too easy to dodge; Assessor lien readability is still unverified because Assessors were not noticed during the retest.
 - The Green Signal is player-validated. Purple plasma/defense failed early, while gold defense plus a gold Needlebloom Driver cleared with almost no hull remaining; its enemies, population snowball, and Seedcarrier split all worked. The Gatekeeper follow-up fixes a phase-index bug that prevented Overgrowth and gives both transitions immediate summons plus faster, phase-specific budding.
-- Return Address's interception concept is player-validated and in a focused ramp revision. Its first pass started too quietly, left Rootwards easy to isolate, then jumped to roughly ten carriers plus the boss. Rootwards now overlap active threat waves, while the Matriarch's final transition releases two carriers and five Bursters and buds carrier pairs every 1.8 seconds. A Needlebloom/Starwound Dual Fire pairing proved to be a valid mixed-role answer.
+- Return Address is player-validated after its focused ramp revision. Rootwards now overlap active threat waves, while the Matriarch's final transition releases two carriers and five Bursters and buds carrier pairs every 1.8 seconds. A gold Needlebloom/Starwound Tier 2 Dual Fire pairing found the revised mission challenging and fair.
 - Repossession also proved that random sub-gold salvage is not worth combat risk once gold gear is required. Reward rarity floors/progression remain deferred to the economy pass rather than being special-cased in one level.
-- No sixth post-Last-Light mission or broader Act 2/3 progression beyond the implemented Dual Fire ladder, loot, item, economy, story, or music phase is currently authorized. Those ideas remain draft backlog in `PROGRESSION_MASTER_PLAN.md` and `ROADMAP.md` pending conversation after the Return Address revision.
-- The new overhaul systems still need player testing around early hard-mission pickups, cache readability, hull art/readability, phone-sized Armory density, and whether high-rarity defense is now too strong. The current Return Address retest should use campaign Tier 2: complementary pairing is intended, while completionist Tier 3/4 is allowed to outgear it. Recent tuning already made mini rarity matter, made defense rarity matter, gave focused single-shot primaries competitive DPS, clarified item stats, surfaced per-bay effective DPS on the Armory stage, and changed Dual Fire to independent per-weapon cadence.
+- Fresh-save progression is the active gap. Major loadout capabilities are exposed too early, `isSystemUnlocked` currently bypasses gating, and the campaign does not teach mini weapons, Primary B, consumables, advanced aux modules, and hull licenses through first-clear milestones. `CAMPAIGN_PROGRESSION_SPEC.md` is the next authorized implementation work.
+- The campaign has no guaranteed normal-play route to a coherent gold build before the post-Last-Light missions begin balancing around gold equipment. Last Light and the five validated missions need idempotent first-clear commissioning rewards, act-aware rarity tables, and role-aware offer coverage.
+- Shield and armor pickups are often redundant at full capacity. The active progression spec introduces stocked Shield Overcharge, Armor Sealant/overplate, and Damage Overcharge in Act 1, then authorizes a fresh-save balance pass that makes those tools useful without requiring one exact consumable.
+- No sixth post-Last-Light mission is authorized until the progression spine is playable. The old Act 3 missions remain hidden experiments; the future canonical Act 3 must be re-authored mission by mission after the story/economy setup and The Fork. The Fork is a story choice and bridge, not Act 3 itself.
+- Other overhaul systems still need player testing around cache readability, hull art/readability, phone-sized Armory density, high-rarity defense, mini output, single-primary payoff, and cloak usefulness.
 
 ## Run Locally
 
@@ -137,7 +140,8 @@ Active docs in the repo root:
 - `STATE.md`: current source of truth and validation checklist.
 - `CURRENT_SYSTEMS.md`: detailed explanation of implemented systems.
 - `ROADMAP.md`: prioritized next work.
-- `PROGRESSION_MASTER_PLAN.md`: accepted power-first creative direction, campaign-preservation rule, human-playtest contract, validated Slices 1–3, and active Slice 4 playtest spec. Later slices are explicitly draft backlog.
+- `CAMPAIGN_PROGRESSION_SPEC.md`: implementation-ready next pass for fresh-save capability awards, Act 1 consumables, guaranteed gold acquisition, difficulty integration, and the path to a canonical Act 3.
+- `PROGRESSION_MASTER_PLAN.md`: accepted power-first creative direction, campaign-preservation rule, human-playtest contract, and verdicts for the five validated post-Last-Light slices.
 - `MOTHERSHIP_AUTOMATION_PROPOSAL.md`: accepted long-term population, supervised-automation, value-drift, and creative-delegation direction; not implementation authorization.
 - `ECONOMY_DESIGN.md`: active economy design thesis and long-term direction.
 - `UI_DESIGN.md`: active visual and interaction design rules.

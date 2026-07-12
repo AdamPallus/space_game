@@ -7,12 +7,12 @@ deliberately unresolved. The story should crystallize only as the project earns
 the ability to design and test higher-level arcs. Protected possibilities in
 this document should survive until that work can evaluate them in context.
 
-**Current gate:** The Green Signal playtest demonstrated that Codex can author a
-distinct gold-tier mission, receive specific fun judgment, and revise the weak
-boss beat without discarding the successful encounter. Adam explicitly promoted
-one more Stage-A mission. Return Address is now the active candidate; this does
-not authorize a mission cluster, population system, offline automation, or story
-branch beyond that single playtest slice.
+**Current gate:** Five distinct post-Last-Light missions are now
+player-validated, including Return Address after its ramp revision. This proves
+the individual-mission creative loop. The next authorized work is the
+fresh-save capability, consumable, and guaranteed-gear spine in
+`CAMPAIGN_PROGRESSION_SPEC.md`; it does not authorize a mission cluster,
+population system, offline automation, or autonomous story branch.
 
 This document extends `STORY-PREMISE.md` and
 `STORY-PREMISE-DEEP-HISTORY.md`. It gives the existing story-economy backlog a

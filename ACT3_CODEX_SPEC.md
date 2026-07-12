@@ -1,12 +1,11 @@
 # Act 3 Codex Spec — Invasion Mechanics, Heirloom Tier, Art
 
-Status: engine/art implemented; generated music remains active. Design and combat doctrine in
-`ACT3_PROBATE_DESIGN.md`. The first three Act 3 missions
-(`act3_death_notice`, `act3_next_of_kin`, `act3_death_duties`) are authored,
-pressure-tested with `?devPressure=1`, and playable now with the Act 3
-mechanics/art upgrades in place. Keep this root spec active until §2.2 music is
-selected, wired, loop-checked, and credited; then archive it with the normal
-doc lifecycle.
+Status: **historical engine/art work order and reusable toolbox reference.** The
+engine, Heirloom plumbing, pressure telemetry, and generated art are implemented.
+The three old `act3_*` missions are hidden experiments, not player-facing canon,
+and no music pass is currently authorized. `CAMPAIGN_PROGRESSION_SPEC.md` is the
+next work; a future canonical Act 3 will be re-authored mission by mission after
+the story/economy setup and The Fork.
 
 ## 0. Prerequisite bug fix: boss phases stop firing after the transition
 

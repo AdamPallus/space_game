@@ -275,9 +275,23 @@ function validateConfig(config) {
       validatePositiveCost(item.cost, `${itemPath}.cost`);
       numberAt(item.usesPerMission, `${itemPath}.usesPerMission`, { min: 1, integer: true });
       numberAt(item.cooldown, `${itemPath}.cooldown`, { min: 0 });
-      numberAt(item.unlockTier, `${itemPath}.unlockTier`, { min: 0, integer: true });
+      numberAt(item.stockCap, `${itemPath}.stockCap`, { min: 1, integer: true });
+      stringAt(item.capabilityId, `${itemPath}.capabilityId`);
       stringAt(item.hudLabel, `${itemPath}.hudLabel`);
-      if (item.duration !== undefined) numberAt(item.duration, `${itemPath}.duration`, { min: 0 });
+      const effect = item.effect;
+      if (objectAt(effect, `${itemPath}.effect`)) {
+        stringAt(effect.kind, `${itemPath}.effect.kind`);
+        if (!['shieldOvercharge', 'armorSealant', 'damageOvercharge'].includes(effect.kind)) {
+          fail(`${itemPath}.effect.kind is unsupported.`);
+        }
+        ['restoreRate', 'overflowRate', 'hullRepairRate'].forEach((field) => {
+          if (effect[field] !== undefined) validateFraction(effect[field], `${itemPath}.effect.${field}`);
+        });
+        ['holdDuration', 'decayDuration', 'duration'].forEach((field) => {
+          if (effect[field] !== undefined) numberAt(effect[field], `${itemPath}.effect.${field}`, { min: 0 });
+        });
+        if (effect.damageMult !== undefined) numberAt(effect.damageMult, `${itemPath}.effect.damageMult`, { min: 1 });
+      }
       if (seenIds.has(item.id)) fail(`${itemPath}.id duplicates ${item.id}.`);
       seenIds.add(item.id);
     });

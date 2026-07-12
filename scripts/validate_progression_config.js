@@ -25,6 +25,7 @@ const expectedCapabilities = new Set([
   "consumableBay1",
   "miniWeapon",
   "empSupport",
+  "armorSealant",
   "primaryBay2",
   "damageOvercharge",
   "hullLicenses",
@@ -63,6 +64,9 @@ capabilityIds.forEach((id) => {
 });
 
 const rewardIds = new Set();
+["level1", "level2", "level3", "level4", "level5"].forEach((missionId) => {
+  assert(Array.isArray(config.firstClearRewards[missionId]), `missing first-clear rewards for ${missionId}`);
+});
 Object.entries(config.firstClearRewards).forEach(([missionId, rewards]) => {
   assert(missionIds.has(missionId), `reward table has invalid mission ${missionId}`);
   assert(Array.isArray(rewards) && rewards.length, `${missionId} rewards must be a non-empty array`);
@@ -72,10 +76,21 @@ Object.entries(config.firstClearRewards).forEach(([missionId, rewards]) => {
     rewardIds.add(reward.id);
     assert(typeof reward.label === "string" && reward.label.trim(), `${reward.id} is missing label`);
     if (reward.type === "consumable") {
+      assert(
+        Object.keys(reward).every((key) => ["id", "type", "consumableId", "quantity", "autoEquipSlot", "label"].includes(key)),
+        `${reward.id} has an unknown field`
+      );
       assert(consumableIds.has(reward.consumableId), `${reward.id} has invalid consumableId`);
       assert(Number.isInteger(reward.quantity) && reward.quantity > 0, `${reward.id} quantity must be positive`);
-      assert(reward.autoEquipSlot === 0 || reward.autoEquipSlot === 1, `${reward.id} has invalid autoEquipSlot`);
+      assert(
+        reward.autoEquipSlot === undefined || reward.autoEquipSlot === 0 || reward.autoEquipSlot === 1,
+        `${reward.id} has invalid autoEquipSlot`
+      );
     } else if (reward.type === "requisition") {
+      assert(
+        Object.keys(reward).every((key) => ["id", "type", "slotType", "installTarget", "rarity", "label", "offers"].includes(key)),
+        `${reward.id} has an unknown field`
+      );
       assert(validRarities.has(reward.rarity), `${reward.id} has invalid rarity`);
       assert(["primary", "mini"].includes(reward.slotType), `${reward.id} has invalid slotType`);
       assert(

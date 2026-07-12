@@ -143,35 +143,57 @@
   },
   "consumables": [
     {
-      "id": "bomb",
-      "name": "Bomb Charge",
-      "desc": "Detonates a blast that damages nearby enemies.",
-      "cost": 220,
+      "id": "shieldBoost",
+      "name": "Shield Overcharge",
+      "desc": "Restores 40% shields and holds up to 25% temporary overflow before it decays.",
+      "cost": 900,
       "usesPerMission": 1,
       "cooldown": 12,
-      "unlockTier": 1,
-      "hudLabel": "Bomb"
+      "stockCap": 6,
+      "capabilityId": "consumableBay1",
+      "hudLabel": "Shield",
+      "effect": {
+        "kind": "shieldOvercharge",
+        "restoreRate": 0.4,
+        "overflowRate": 0.25,
+        "holdDuration": 8,
+        "decayDuration": 3
+      }
     },
     {
-      "id": "shieldBoost",
-      "name": "Shield Booster",
-      "desc": "Restore shields and patch some hull.",
-      "cost": 160,
-      "usesPerMission": 2,
-      "cooldown": 10,
-      "unlockTier": 3,
-      "hudLabel": "Shield"
+      "id": "armorSealant",
+      "name": "Armor Sealant",
+      "desc": "Restores 35% armor and holds up to 20% temporary overplate; repairs hull when armor cannot.",
+      "cost": 1400,
+      "usesPerMission": 1,
+      "cooldown": 12,
+      "stockCap": 6,
+      "capabilityId": "armorSealant",
+      "hudLabel": "Sealant",
+      "effect": {
+        "kind": "armorSealant",
+        "restoreRate": 0.35,
+        "overflowRate": 0.2,
+        "hullRepairRate": 0.18,
+        "holdDuration": 10,
+        "decayDuration": 4
+      }
     },
     {
       "id": "overcharge",
-      "name": "Overcharge",
-      "desc": "Temporarily increases primary damage.",
-      "cost": 260,
+      "name": "Damage Overcharge",
+      "desc": "Increases primary damage by 40% for 7 seconds.",
+      "cost": 2000,
       "usesPerMission": 1,
-      "cooldown": 18,
-      "duration": 6,
-      "unlockTier": 3,
-      "hudLabel": "Overcharge"
+      "cooldown": 15,
+      "stockCap": 6,
+      "capabilityId": "damageOvercharge",
+      "hudLabel": "Damage",
+      "effect": {
+        "kind": "damageOvercharge",
+        "damageMult": 1.4,
+        "duration": 7
+      }
     }
   ],
   "reportTargets": {

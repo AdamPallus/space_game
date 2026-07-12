@@ -8,6 +8,7 @@ const ITEM_POOL_PATH = path.join(ROOT, "items", "item_pool.json");
 const WEAPON_FRAMES_PATH = path.join(ROOT, "items", "weapon_frames.json");
 const ENEMY_CATALOG_PATH = path.join(ROOT, "enemies", "enemy_catalog.json");
 const ECONOMY_CONFIG_PATH = path.join(ROOT, "config", "economy.json");
+const PROGRESSION_CONFIG_PATH = path.join(ROOT, "config", "progression.json");
 const LEVEL_DIR = path.join(ROOT, "levels");
 const LEVEL_MANIFEST_PATH = path.join(LEVEL_DIR, "manifest.json");
 
@@ -82,6 +83,7 @@ function clone(value) {
 }
 
 const economyConfig = readJson(ECONOMY_CONFIG_PATH);
+const progressionConfig = readJson(PROGRESSION_CONFIG_PATH);
 const levelManifest = readJson(LEVEL_MANIFEST_PATH);
 const enemyCatalogEntries = readJson(ENEMY_CATALOG_PATH).entries || {};
 
@@ -1213,6 +1215,16 @@ function printCreditFlowReport() {
   affordabilityItems.forEach((item) => {
     console.log(
       `${item.category.padEnd(15)} ${item.label.slice(0, 34).padEnd(34)} cost ${formatCreditAmount(item.cost).padStart(5)} | full ${firstAffordableMission(fullRows, item.cost).padEnd(4)} | short ${firstAffordableMission(shortRows, item.cost).padEnd(4)}`
+    );
+  });
+
+  console.log("\nCredit Flow consumable insurance");
+  (economyConfig.consumables || []).forEach((item) => {
+    const stageId = progressionConfig.capabilities?.[item.capabilityId]?.stageId;
+    const row = fullRows.find((entry) => entry.levelId === stageId) || fullRows[0];
+    const replacementNet = row ? row.total - item.cost : -item.cost;
+    console.log(
+      `${(item.name || item.id).slice(0, 24).padEnd(24)} unlock ${(stageId || "n/a").replace("level", "M").padEnd(4)} | replenish ${formatCreditAmount(item.cost).padStart(5)} | boosted-clear net ${formatCreditAmount(replacementNet).padStart(6)}`
     );
   });
 

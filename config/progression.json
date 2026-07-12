@@ -26,6 +26,11 @@
       "label": "EMP Support",
       "requirement": "Clear Mission 3 Hybrid and either its Swarm or Armored contract"
     },
+    "armorSealant": {
+      "stageId": "level3",
+      "label": "Armor Sealant Supply",
+      "requirement": "Clear Mission 3 Hybrid and either its Swarm or Armored contract"
+    },
     "primaryBay2": {
       "stageId": "level4",
       "label": "Primary B (Swap)",
@@ -78,6 +83,15 @@
         ]
       }
     ],
+    "level3": [
+      {
+        "id": "mission-3-armor-sealant-sample",
+        "type": "consumable",
+        "consumableId": "armorSealant",
+        "quantity": 1,
+        "label": "Armor Sealant sample"
+      }
+    ],
     "level4": [
       {
         "id": "mission-4-certified-role-requisition",
@@ -91,6 +105,15 @@
           { "role": "Armor", "baseId": "slug_cannon" },
           { "role": "Plasma", "baseId": "plasma_lance" }
         ]
+      }
+    ],
+    "level5": [
+      {
+        "id": "mission-5-damage-overcharge-sample",
+        "type": "consumable",
+        "consumableId": "overcharge",
+        "quantity": 1,
+        "label": "Damage Overcharge sample"
       }
     ]
   }

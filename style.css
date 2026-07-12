@@ -308,6 +308,8 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .hud-right { justify-self: end; }
 .hud-row { display: flex; justify-content: space-between; gap: 12px; }
 .hud-row span:first-child { color: var(--muted); }
+.hud-action { pointer-events: auto; cursor: pointer; color: var(--accent); }
+.hud-action.disabled { opacity: 0.45; cursor: default; }
 
 .hud-center {
   display: flex;
@@ -539,6 +541,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .mobile-btn.swap .weapon-strip { pointer-events: none; }
 .mobile-btn:disabled { opacity: 0.4; }
 .mobile-btn.swap { border-color: var(--accent); color: var(--accent); }
+.mobile-btn.item { border-color: var(--amber); color: var(--amber); min-width: 86px; }
 .mobile-btn.eject { border-color: var(--amber); color: var(--amber); }
 .mobile-btn.launch { background: var(--accent); border-color: var(--accent); color: #06222e; }
 .mobile-icon { width: 22px; height: 22px; }
@@ -1189,6 +1192,73 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   flex-direction: column;
   gap: 6px;
 }
+.armory-consumables {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border: 1px solid rgba(240, 180, 41, 0.28);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(240, 180, 41, 0.08), transparent 50%), var(--panel);
+  padding: 10px 12px;
+}
+.armory-consumable-head,
+.armory-consumable-bays { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.armory-consumable-head h3 { font-size: 12px; }
+.armory-consumable-head span { color: var(--muted); font-size: 9px; }
+.armory-consumable-bays { align-items: stretch; }
+.armory-consumable-bay {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 7px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--ink);
+  padding: 7px;
+  text-align: left;
+}
+.armory-consumable-bay img { width: 28px; height: 28px; object-fit: contain; }
+.armory-consumable-bay strong,
+.armory-consumable-bay span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.armory-consumable-bay strong { font-size: 10px; }
+.armory-consumable-bay span { color: var(--muted); font-size: 8px; }
+.armory-consumable-bay.is-locked { opacity: 0.48; border-style: dashed; }
+.armory-consumable-bay.is-selected { border-color: var(--amber); box-shadow: 0 0 10px rgba(240, 180, 41, 0.14); }
+.armory-consumable-stock { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.armory-consumable-choice {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(10, 14, 22, 0.82);
+  color: var(--ink);
+  padding: 6px;
+  cursor: pointer;
+  font-size: 9px;
+}
+.armory-consumable-choice.is-equipped { border-color: var(--amber); color: var(--amber); }
+.armory-consumable-choice:disabled { opacity: 0.4; cursor: default; }
+.ledger-consumable-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ledger-consumable-item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 7px;
+  align-items: center;
+  border: 1px solid rgba(240, 180, 41, 0.25);
+  border-radius: var(--radius-sm);
+  background: rgba(10, 14, 22, 0.82);
+  padding: 7px;
+}
+.ledger-consumable-item img { width: 28px; height: 28px; object-fit: contain; }
+.ledger-consumable-item strong,
+.ledger-consumable-item span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ledger-consumable-item strong { font-size: 9px; }
+.ledger-consumable-item span { color: var(--muted); font-size: 8px; }
+.ledger-consumable-item button { grid-column: 1 / -1; }
+.ledger-consumable-item.is-locked { opacity: 0.48; border-style: dashed; }
 .armory-inspector-head { display: flex; align-items: center; gap: 10px; }
 .armory-inspector-title { font-weight: 700; font-size: 14px; }
 .armory-inspector-stats {
@@ -2719,6 +2789,10 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
     gap: 6px;
     padding: 6px 8px;
   }
+  #mobile-controls { gap: 4px; padding: 0 8px; }
+  .mobile-btn { flex: 1; min-width: 52px; min-height: 48px; padding: 4px; font-size: 10px; }
+  .mobile-btn.swap { min-width: 72px; }
+  .mobile-btn.item { min-width: 58px; }
   .hud-center { grid-column: 1 / -1; grid-row: 1; }
   .hud-left { grid-row: 2; }
   .hud-right { grid-row: 2; }

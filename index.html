@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=followup-1" />
+    <link rel="stylesheet" href="style.css?v=consumables-1" />
   </head>
   <body>
     <div id="app">
@@ -60,6 +60,8 @@
         <div class="hud-right">
           <div class="hud-row"><span>Credits</span><span id="hud-credits">0</span></div>
           <div class="hud-row"><span>Mini</span><span id="hud-mini">-</span></div>
+          <div class="hud-row"><span>Supply 1</span><span id="hud-item-1">-</span></div>
+          <div class="hud-row"><span>Supply 2</span><span id="hud-item-2">-</span></div>
           <div class="hud-row"><span>Timer</span><span id="hud-time">00:00</span></div>
         </div>
       </div>
@@ -142,6 +144,7 @@
                   <input type="checkbox" id="debug-skip-onboarding" />
                   <span>Skip Onboarding</span>
                 </label>
+                <button id="debug-refill-consumables" class="btn ghost small">Refill Consumables</button>
                 <button id="reset-btn" class="btn ghost small">Reset Progress</button>
               </div>
             </details>
@@ -193,6 +196,7 @@
               </div>
               <div class="armory-side">
                 <div class="armory-inspector" id="armory-inspector" aria-label="Selected module"></div>
+                <section class="armory-consumables" id="armory-consumables" aria-label="Mission supplies"></section>
                 <div class="armory-rack">
                   <div class="armory-rack-head">
                     <div>
@@ -257,6 +261,11 @@
                           <span class="ledger-pane-note license" id="ledger-license-status"></span>
                         </div>
                       </div>
+                      <div class="ledger-pane-head compact">
+                        <h4>Mission Supplies</h4>
+                        <span class="ledger-pane-note">Persistent stock · consumed on use</span>
+                      </div>
+                      <div class="ledger-consumable-list" id="ledger-consumable-list"></div>
                       <div class="ledger-pane-head compact">
                         <h4>Exchange Lots</h4>
                         <span class="ledger-pane-note">Rotating stock</span>
@@ -429,6 +438,7 @@
         <span>Move: Mouse</span>
         <span>Fire: LMB</span>
         <span>Alt: RMB</span>
+        <span>Supplies: 1 / 2</span>
         <span>Swap: Q</span>
         <span>Recall: E</span>
         <span>Pause: P</span>
@@ -440,6 +450,8 @@
           <span class="mobile-label" id="mobile-alt-label"></span>
         </button>
         <button class="mobile-btn swap" id="mobile-swap">Swap</button>
+        <button class="mobile-btn item" id="mobile-item-1" hidden>Item 1</button>
+        <button class="mobile-btn item" id="mobile-item-2" hidden>Item 2</button>
         <button class="mobile-btn eject" id="mobile-eject">RTB</button>
         <button class="mobile-btn launch" id="mobile-launch">Launch</button>
       </div>
@@ -492,6 +504,6 @@
       </div>
     </div>
 
-  <script src="main.js?v=mission-ratings-13"></script>
+  <script src="main.js?v=consumables-1"></script>
   </body>
 </html>

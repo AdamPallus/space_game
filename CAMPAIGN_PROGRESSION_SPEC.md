@@ -270,6 +270,8 @@ role-based counters; do not normalize exceptional builds.
 
 ### Slice A — progression foundation
 
+**Implemented and player-approved.** Mission ratings and the two-clear Act 1 chapter ladder are live.
+
 1. Add `config/progression.json` with a validated, data-driven capability
    milestone and first-clear reward table derived from base mission clears. Add
    `scripts/validate_progression_config.js`; do not hide campaign requirements
@@ -291,6 +293,8 @@ role-based counters; do not normalize exceptional builds.
 Stop for a short fresh-save chapter-pacing playtest before proceeding to Slice B.
 
 ### Slice B — consumables and pickup utility
+
+**Implemented; awaiting the late-Act-1 consumable playtest.** Final replacement-price tuning remains intentionally deferred to the focused economy pass.
 
 1. Route Shield Overcharge, Armor Sealant, and Damage Overcharge through
    validated config.

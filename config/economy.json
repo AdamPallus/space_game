@@ -91,6 +91,33 @@
       "rarityWeights": { "certified": 0.25, "prototype": 0.7, "preFounding": 0.05 },
       "slotWeights": { "primary": 0.72, "defense": 0.2, "aux": 0.08 }
     },
+    "act2": {
+      "ordinary": {
+        "chance": 0.035,
+        "rarityWeights": { "certified": 0.45, "prototype": 0.5, "preFounding": 0.05 }
+      },
+      "transport": {
+        "chance": 1,
+        "rarityWeights": { "certified": 0.3, "prototype": 0.6, "preFounding": 0.1 },
+        "slotWeights": { "primary": 0.55, "defense": 0.27, "aux": 0.18 }
+      },
+      "captain": {
+        "chance": 0.7,
+        "minBaseCredit": 150,
+        "rarityWeights": { "prototype": 0.82, "preFounding": 0.18 },
+        "slotWeights": { "primary": 0.62, "defense": 0.24, "aux": 0.14 }
+      },
+      "miniboss": {
+        "chance": 1,
+        "rarityWeights": { "prototype": 0.8, "preFounding": 0.2 },
+        "slotWeights": { "primary": 0.65, "defense": 0.22, "aux": 0.13 }
+      },
+      "boss": {
+        "chance": 1,
+        "rarityWeights": { "prototype": 0.7, "preFounding": 0.3 },
+        "slotWeights": { "primary": 0.65, "defense": 0.22, "aux": 0.13 }
+      }
+    },
     "eliteBonusChance": 0.15
   },
   "missionRewards": {

@@ -998,9 +998,9 @@ function expectedRarityListValue(rarity) {
   return midpoint * qualityMult;
 }
 
-function expectedSourceSalvageSaleValue(sourceKey, { force = false, elite = false } = {}) {
+function expectedSourceSalvageSaleValue(sourceKey, { force = false, elite = false, act2 = false } = {}) {
   const dropTables = economyConfig.dropTables || {};
-  const source = dropTables[sourceKey] || dropTables.ordinary || {};
+  const source = (act2 ? dropTables.act2?.[sourceKey] : null) || dropTables[sourceKey] || dropTables.ordinary || {};
   const baseChance = force ? 1 : Number(source.chance) || 0;
   const eliteBonus = elite && sourceKey !== "boss" ? Number(dropTables.eliteBonusChance) || 0 : 0;
   const chance = Math.max(0, Math.min(1, baseChance + eliteBonus));
@@ -1072,6 +1072,7 @@ function buildCreditFlowRow(levelId, index, mode, failures) {
     return sum + expectedSourceSalvageSaleValue(sourceKey, {
       force: sourceKey === "boss",
       elite,
+      act2: levelId.startsWith("act2_"),
     });
   }, 0);
   const pickupSalvageSale = expectedPickupSalvageSaleValue(level, cutoff);
@@ -1397,6 +1398,48 @@ const toughestPlated = enemies
   )[0];
 
 const failures = [];
+
+function printCommissioningReport() {
+  const reportFailures = [];
+  const expectedCommissionMissions = [
+    "level8",
+    "act2_dead_air",
+    "act2_processional",
+    "act2_repossession",
+    "act2_green_signal",
+    "act2_return_address",
+  ];
+  console.log("\n=== First-Clear Commissioning ===");
+  expectedCommissionMissions.forEach((missionId) => {
+    const rewards = (progressionConfig.firstClearRewards?.[missionId] || [])
+      .filter((reward) => reward.rarity === "preFounding");
+    const roles = rewards.flatMap((reward) => (reward.offers || []).map((offer) => offer.role));
+    console.log(`${missionId}: ${rewards.length} package(s) | ${roles.join(" / ")}`);
+    if (!rewards.length) reportFailures.push(`${missionId} has no Pre-Founding first-clear commission.`);
+    rewards.forEach((reward) => {
+      if ((reward.offers || []).length < 3) {
+        reportFailures.push(`${reward.id} does not present three role choices.`);
+      }
+    });
+  });
+  const act2Drops = economyConfig.dropTables?.act2 || {};
+  console.log("\n=== Act 2 Salvage Rarity ===");
+  ["ordinary", "transport", "captain", "miniboss", "boss"].forEach((sourceKey) => {
+    const source = act2Drops[sourceKey] || {};
+    const total = Object.values(source.rarityWeights || {}).reduce((sum, value) => sum + Number(value || 0), 0);
+    const goldChance = total > 0 ? Number(source.rarityWeights?.preFounding || 0) / total : 0;
+    console.log(`${sourceKey}: ${(Number(source.chance || 0) * 100).toFixed(1)}% drop | ${(goldChance * 100).toFixed(1)}% gold when dropped`);
+  });
+  if ((act2Drops.miniboss?.rarityWeights?.scrap || 0) > 0 || (act2Drops.miniboss?.rarityWeights?.certified || 0) > 0) {
+    reportFailures.push("Act 2 miniboss salvage falls below Prototype.");
+  }
+  if (!(Number(act2Drops.miniboss?.rarityWeights?.preFounding) > 0)) {
+    reportFailures.push("Act 2 miniboss salvage has no gold chance.");
+  }
+  return reportFailures;
+}
+
+failures.push(...printCommissioningReport());
 if (cadetDisplayedDps < 150 || cadetDisplayedDps > 180) {
   failures.push(`Cadet displayed DPS ${cadetDisplayedDps.toFixed(1)} is outside the 150-180 starter target.`);
 }

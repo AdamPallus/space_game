@@ -26,14 +26,17 @@ No new campaign mission should be authored before that progression spine is
 playable. Assessor lien readability remains an explicitly unverified but
 non-blocking observation.
 
-Slices A and B are implemented. Act 1 advances Hybrid -> choose Swarm or Armored
+Slices A, B, and C are implemented. Act 1 advances Hybrid -> choose Swarm or Armored
 -> next Hybrid, so every capability requires two clears and the role variants
 create demand before alternate weapon systems arrive. Mission supplies are free
 to equip and charged per activation at run settlement, with debt permitted,
 first-clear fee waivers, independent trust-based bay authorization, exact full
 armor repair, persistent 125% shield overcharge, and short/long impulse options.
-The next implementation slice after the focused supply playtest is Slice C's
-guaranteed, role-aware gold acquisition path.
+Slice C adds Prototype choices in Missions 6 and 7, separate Last Light gold
+primary/survival commissions, a role-weighted gold choice after each validated
+Act 2 boss, persistent first-clear provenance, and Act 2-specific salvage floors.
+The required next gate is a fresh-save progression run without Test Arsenal;
+its findings authorize Slice D's minimal authored balance corrections.
 
 ## Player-validated combat direction (2026-07-09)
 

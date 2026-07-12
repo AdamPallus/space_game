@@ -20,7 +20,15 @@ const config = JSON.parse(fs.readFileSync(progressionPath, "utf8"));
 const economy = JSON.parse(fs.readFileSync(economyPath, "utf8"));
 const itemPool = JSON.parse(fs.readFileSync(itemPoolPath, "utf8"));
 const levelManifest = JSON.parse(fs.readFileSync(levelManifestPath, "utf8"));
-const missionIds = new Set(Array.from({ length: 8 }, (_, index) => `level${index + 1}`));
+const act1MissionIds = Array.from({ length: 8 }, (_, index) => `level${index + 1}`);
+const act2MissionIds = [
+  "act2_dead_air",
+  "act2_processional",
+  "act2_repossession",
+  "act2_green_signal",
+  "act2_return_address",
+];
+const missionIds = new Set([...act1MissionIds, ...act2MissionIds]);
 const expectedCapabilities = new Set([
   "consumableBay1",
   "miniWeapon",
@@ -88,28 +96,47 @@ Object.entries(config.firstClearRewards).forEach(([missionId, rewards]) => {
       );
     } else if (reward.type === "requisition") {
       assert(
-        Object.keys(reward).every((key) => ["id", "type", "slotType", "installTarget", "rarity", "label", "offers"].includes(key)),
+        Object.keys(reward).every((key) => ["id", "type", "slotType", "installTarget", "rarity", "label", "title", "description", "offers"].includes(key)),
         `${reward.id} has an unknown field`
       );
       assert(validRarities.has(reward.rarity), `${reward.id} has invalid rarity`);
-      assert(["primary", "mini"].includes(reward.slotType), `${reward.id} has invalid slotType`);
-      assert(
-        reward.installTarget === (reward.slotType === "mini" ? "mini" : "primary-2"),
-        `${reward.id} has invalid installTarget`
-      );
+      assert(["primary", "mini", "mixed"].includes(reward.slotType), `${reward.id} has invalid slotType`);
+      assert(["mini", "primary-2", "primary-open", "best-open"].includes(reward.installTarget), `${reward.id} has invalid installTarget`);
+      if (reward.title !== undefined) assert(typeof reward.title === "string" && reward.title.trim(), `${reward.id} has invalid title`);
+      if (reward.description !== undefined) assert(typeof reward.description === "string" && reward.description.trim(), `${reward.id} has invalid description`);
       assert(Array.isArray(reward.offers) && reward.offers.length >= 3, `${reward.id} needs at least 3 offers`);
-      const offered = new Set();
+      const offeredRoles = new Set();
       reward.offers.forEach((offer) => {
         assert(typeof offer.role === "string" && offer.role.trim(), `${reward.id} offer is missing role`);
-        assert(itemPool.entries?.[offer.baseId], `${reward.id} has unknown baseId ${offer.baseId}`);
-        assert(itemPool.entries[offer.baseId].slotType === reward.slotType, `${offer.baseId} must be ${reward.slotType}`);
-        assert(!offered.has(offer.baseId), `${reward.id} repeats ${offer.baseId}`);
-        offered.add(offer.baseId);
+        assert(!offeredRoles.has(offer.role), `${reward.id} repeats role ${offer.role}`);
+        offeredRoles.add(offer.role);
+        const source = offer.source || "entries";
+        assert(["entries", "relics"].includes(source), `${reward.id} offer has invalid source ${source}`);
+        const catalog = itemPool[source];
+        const baseIds = Array.isArray(offer.baseIds) ? offer.baseIds : [offer.baseId];
+        assert(baseIds.length > 0 && baseIds.every(Boolean), `${reward.id} offer needs baseId or baseIds`);
+        const uniqueBaseIds = new Set(baseIds);
+        assert(uniqueBaseIds.size === baseIds.length, `${reward.id} offer repeats a baseId`);
+        baseIds.forEach((baseId) => {
+          assert(catalog?.[baseId], `${reward.id} has unknown ${source} baseId ${baseId}`);
+          if (reward.slotType !== "mixed") {
+            assert(catalog[baseId].slotType === reward.slotType, `${baseId} must be ${reward.slotType}`);
+          }
+        });
       });
     } else {
       fail(`${reward.id} has unknown type ${reward.type}`);
     }
   });
 });
+
+act2MissionIds.forEach((missionId) => {
+  const rewards = config.firstClearRewards[missionId];
+  assert(Array.isArray(rewards) && rewards.some((reward) => reward.rarity === "preFounding"), `${missionId} needs a Pre-Founding first-clear reward`);
+});
+assert(
+  (config.firstClearRewards.level8 || []).filter((reward) => reward.rarity === "preFounding").length >= 2,
+  "Last Light needs separate Pre-Founding primary and survival commissions"
+);
 
 console.log(`Validated ${capabilityIds.length} capabilities and ${rewardIds.size} first-clear rewards in ${progressionPath}`);

@@ -230,6 +230,25 @@ function validateConfig(config) {
       }
     });
     numberAt(dropTables.captain?.minBaseCredit, "dropTables.captain.minBaseCredit", { min: 0 });
+    if (objectAt(dropTables.act2, "dropTables.act2")) {
+      ["ordinary", "transport", "captain", "miniboss", "boss"].forEach((source) => {
+        const sourceConfig = dropTables.act2[source];
+        if (!objectAt(sourceConfig, `dropTables.act2.${source}`)) return;
+        validateFraction(sourceConfig.chance, `dropTables.act2.${source}.chance`);
+        validateWeights(sourceConfig.rarityWeights, `dropTables.act2.${source}.rarityWeights`, VALID_RARITIES);
+        if (sourceConfig.slotWeights) {
+          validateWeights(sourceConfig.slotWeights, `dropTables.act2.${source}.slotWeights`, VALID_SLOT_TYPES);
+        }
+      });
+      numberAt(dropTables.act2.captain?.minBaseCredit, "dropTables.act2.captain.minBaseCredit", { min: 0 });
+      const minibossWeights = dropTables.act2.miniboss?.rarityWeights || {};
+      if ((minibossWeights.scrap || 0) > 0 || (minibossWeights.certified || 0) > 0) {
+        fail("dropTables.act2.miniboss must floor drops at Prototype.");
+      }
+      if (!(Number(minibossWeights.preFounding) > 0)) {
+        fail("dropTables.act2.miniboss must retain a non-zero Pre-Founding chance.");
+      }
+    }
     validateFraction(dropTables.eliteBonusChance, "dropTables.eliteBonusChance");
   }
 

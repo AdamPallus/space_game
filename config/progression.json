@@ -122,6 +122,157 @@
         "quantity": 1,
         "label": "Sustained Impulse fee waiver"
       }
+    ],
+    "level6": [
+      {
+        "id": "mission-6-prototype-hardening-requisition",
+        "type": "requisition",
+        "slotType": "mixed",
+        "installTarget": "best-open",
+        "rarity": "prototype",
+        "label": "Prototype hardening requisition",
+        "title": "Chapter 6 Prototype Requisition",
+        "description": "Choose a defensive system for the Last Light approach.",
+        "offers": [
+          { "role": "Shield", "baseId": "defense_anchor_shield" },
+          { "role": "Armor", "baseId": "defense_ablative_plate" },
+          { "role": "Control", "baseId": "aux_bulwark" }
+        ]
+      }
+    ],
+    "level7": [
+      {
+        "id": "mission-7-prototype-role-requisition",
+        "type": "requisition",
+        "slotType": "primary",
+        "installTarget": "primary-open",
+        "rarity": "prototype",
+        "label": "Prototype role requisition",
+        "title": "Chapter 7 Prototype Requisition",
+        "description": "Choose the role your current armory cannot cover.",
+        "offers": [
+          { "role": "Swarm", "baseId": "needle_storm" },
+          { "role": "Armor", "baseId": "longbow_rail" },
+          { "role": "Payload", "baseId": "plasma_lance" }
+        ]
+      }
+    ],
+    "level8": [
+      {
+        "id": "last-light-primary-commission",
+        "type": "requisition",
+        "slotType": "primary",
+        "installTarget": "primary-open",
+        "rarity": "preFounding",
+        "label": "Last Light primary commission",
+        "title": "First-Clear Commission · Primary",
+        "description": "The old armory opens once. Choose a gold answer for swarms, armor, or flexible pressure.",
+        "offers": [
+          { "role": "Swarm", "source": "relics", "baseIds": ["relic_greenline_bloom", "relic_rattlewake_array", "relic_founder_flak", "relic_cinderloom_spray"] },
+          { "role": "Armor", "source": "relics", "baseIds": ["relic_blackbox_driver", "relic_gravebolt_rail", "relic_starwound_lance", "relic_vesper_barrage"] },
+          { "role": "Flexible", "source": "relics", "baseIds": ["relic_oathpair_driver", "relic_censer_twin", "relic_needleloom_driver", "relic_auric_stitcher"] }
+        ]
+      },
+      {
+        "id": "last-light-survival-commission",
+        "type": "requisition",
+        "slotType": "mixed",
+        "installTarget": "best-open",
+        "rarity": "preFounding",
+        "label": "Last Light survival commission",
+        "title": "First-Clear Commission · Survival",
+        "description": "Choose the system that will keep the new commission flying.",
+        "offers": [
+          { "role": "Shield", "source": "relics", "baseId": "relic_cradle_aegis" },
+          { "role": "Armor", "source": "relics", "baseId": "relic_founder_plate" },
+          { "role": "Control", "source": "relics", "baseId": "relic_orphan_signal" }
+        ]
+      }
+    ],
+    "act2_dead_air": [
+      {
+        "id": "crossed-claims-commission",
+        "type": "requisition",
+        "slotType": "mixed",
+        "installTarget": "best-open",
+        "rarity": "preFounding",
+        "label": "Crossed Claims commission",
+        "title": "Claimant-Seizure Commission",
+        "description": "Choose the answer your first claimant exposed as missing.",
+        "offers": [
+          { "role": "Swarm", "source": "relics", "baseIds": ["relic_greenline_bloom", "relic_rattlewake_array", "relic_founder_flak", "relic_cinderloom_spray"] },
+          { "role": "Armor", "source": "relics", "baseIds": ["relic_blackbox_driver", "relic_gravebolt_rail", "relic_starwound_lance", "relic_vesper_barrage"] },
+          { "role": "Survival", "source": "relics", "baseIds": ["relic_cradle_aegis", "relic_founder_plate", "relic_orphan_signal"] }
+        ]
+      }
+    ],
+    "act2_processional": [
+      {
+        "id": "processional-commission",
+        "type": "requisition",
+        "slotType": "mixed",
+        "installTarget": "best-open",
+        "rarity": "preFounding",
+        "label": "Processional commission",
+        "title": "Chorus Countermeasure Commission",
+        "description": "The dispersed Chorus leaves three useful frequencies behind.",
+        "offers": [
+          { "role": "Crowd Break", "source": "relics", "baseIds": ["relic_founder_flak", "relic_greenline_bloom", "relic_rattlewake_array"] },
+          { "role": "Sustain", "source": "relics", "baseIds": ["relic_auric_stitcher", "relic_censer_twin", "relic_needleloom_driver"] },
+          { "role": "Recovery", "source": "relics", "baseIds": ["relic_cradle_aegis", "relic_orphan_signal"] }
+        ]
+      }
+    ],
+    "act2_repossession": [
+      {
+        "id": "repossession-commission",
+        "type": "requisition",
+        "slotType": "mixed",
+        "installTarget": "best-open",
+        "rarity": "preFounding",
+        "label": "Repossession commission",
+        "title": "Lien-Breaker Commission",
+        "description": "Recovered Tithe authority can be reforged as breach, payload, or plating.",
+        "offers": [
+          { "role": "Breach", "source": "relics", "baseIds": ["relic_blackbox_driver", "relic_gravebolt_rail"] },
+          { "role": "Payload", "source": "relics", "baseIds": ["relic_starwound_lance", "relic_vesper_barrage"] },
+          { "role": "Plating", "source": "relics", "baseIds": ["relic_founder_plate", "relic_orphan_signal"] }
+        ]
+      }
+    ],
+    "act2_green_signal": [
+      {
+        "id": "green-signal-commission",
+        "type": "requisition",
+        "slotType": "mixed",
+        "installTarget": "best-open",
+        "rarity": "preFounding",
+        "label": "Green Signal commission",
+        "title": "Verdant Graft Commission",
+        "description": "The surviving growth accepts one controlled graft.",
+        "offers": [
+          { "role": "Plasma Graft", "source": "relics", "baseIds": ["relic_auric_stitcher", "relic_cinderloom_spray", "relic_greenline_bloom"] },
+          { "role": "Kinetic Prune", "source": "relics", "baseIds": ["relic_needleloom_driver", "relic_founder_flak", "relic_rattlewake_array"] },
+          { "role": "Containment", "source": "relics", "baseIds": ["relic_cradle_aegis", "relic_founder_plate", "relic_orphan_signal"] }
+        ]
+      }
+    ],
+    "act2_return_address": [
+      {
+        "id": "return-address-commission",
+        "type": "requisition",
+        "slotType": "mixed",
+        "installTarget": "best-open",
+        "rarity": "preFounding",
+        "label": "Return Address commission",
+        "title": "Returned Commission",
+        "description": "Choose the final missing piece before the campaign moves beyond proven space.",
+        "offers": [
+          { "role": "Heavy", "source": "relics", "baseIds": ["relic_gravebolt_rail", "relic_starwound_lance", "relic_blackbox_driver", "relic_vesper_barrage"] },
+          { "role": "Screen", "source": "relics", "baseIds": ["relic_greenline_bloom", "relic_founder_flak", "relic_cinderloom_spray", "relic_rattlewake_array"] },
+          { "role": "Systems", "source": "relics", "baseIds": ["relic_cradle_aegis", "relic_founder_plate", "relic_orphan_signal", "relic_oathpair_driver", "relic_censer_twin"] }
+        ]
+      }
     ]
   }
 }

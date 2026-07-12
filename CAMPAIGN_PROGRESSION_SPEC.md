@@ -327,6 +327,8 @@ Stop for a late-Act-1 consumable playtest before raising mission pressure.
 
 ### Slice C — guaranteed gear path
 
+**Implementation status (2026-07-12): complete; awaiting the required fresh-save progression playtest.**
+
 1. Implement idempotent first-clear requisitions and commissioning packages.
 2. Add role-aware offer generation and act-aware rarity tables.
 3. Ensure Last Light produces a coherent gold entry package.

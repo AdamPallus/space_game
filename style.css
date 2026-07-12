@@ -2845,9 +2845,44 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   display: grid;
   gap: 8px;
   padding: 12px;
-  border: 1px solid var(--amber);
+  border: 1px solid var(--rarity-color, var(--amber));
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--panel) 86%, var(--amber) 14%);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--panel) 82%, var(--rarity-color, var(--amber)) 18%), var(--panel) 72%),
+    var(--panel);
+  box-shadow: inset 3px 0 0 var(--rarity-color, var(--amber)), 0 0 12px var(--rarity-glow, transparent);
+  overflow: hidden;
+  position: relative;
+}
+.campaign-requisition.is-commission::after {
+  content: "COMMISSION";
+  position: absolute;
+  top: 16px;
+  right: -28px;
+  width: 120px;
+  padding: 3px 0;
+  transform: rotate(35deg);
+  border-block: 1px solid color-mix(in srgb, var(--rarity-color) 70%, transparent);
+  color: color-mix(in srgb, var(--rarity-color) 70%, transparent);
+  font-family: var(--mono);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-align: center;
+  pointer-events: none;
+}
+.campaign-requisition-kicker,
+.campaign-requisition-source {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.campaign-requisition-kicker {
+  color: var(--rarity-color, var(--amber));
+}
+.campaign-requisition-source {
+  color: var(--muted);
 }
 .campaign-requisition p {
   margin: 0;
@@ -2876,6 +2911,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 }
 .campaign-requisition-offer:hover,
 .campaign-requisition-offer:focus-visible {
+  transform: translateY(-1px);
   box-shadow: 0 0 12px var(--rarity-glow, rgba(240, 180, 41, 0.25));
   outline: none;
 }

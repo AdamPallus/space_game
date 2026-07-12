@@ -3377,6 +3377,23 @@ function isAct3Level(level = mission?.level) {
   return /^act3_/.test(String(level?.id || ""));
 }
 
+function isAct2Level(level = mission?.level) {
+  return /^act2_/.test(String(level?.id || ""));
+}
+
+function getMissionDropSourceConfig(sourceKey, enemy = null) {
+  const dropTables = getDropTableConfig();
+  const actSourceKey = enemy?.miniboss ? "miniboss" : sourceKey;
+  if (isAct2Level() && dropTables.act2?.[actSourceKey]) {
+    return { sourceKey: actSourceKey, sourceConfig: dropTables.act2[actSourceKey], dropTables };
+  }
+  return {
+    sourceKey,
+    sourceConfig: dropTables[sourceKey] || dropTables.ordinary,
+    dropTables,
+  };
+}
+
 function getActiveMissionCompletionCount() {
   if (!mission?.level?.id) return 0;
   const baseId = missionProgressionBaseIdFor(mission.level);
@@ -3413,9 +3430,8 @@ function rollAct3HeirloomDrop(enemy, { boss = false, miniboss = false } = {}) {
 
 function rollSalvageDrop(enemy, { force = false, forceSource = null, minRarity = null } = {}) {
   if (!itemPoolCatalog) return null;
-  const sourceKey = forceSource || getDropSourceKey(enemy);
-  const dropTables = getDropTableConfig();
-  const sourceConfig = dropTables[sourceKey] || dropTables.ordinary;
+  const requestedSourceKey = forceSource || getDropSourceKey(enemy);
+  const { sourceKey, sourceConfig, dropTables } = getMissionDropSourceConfig(requestedSourceKey, enemy);
   const elite = missionHasEliteModifier();
   const chance = Math.min(
     1,
@@ -3443,7 +3459,7 @@ function rollSalvageDrop(enemy, { force = false, forceSource = null, minRarity =
     }) ||
     rollItemForRarity(rarity, { sourceKey, includeActiveMission: true });
   if (!item) return null;
-  item.dropSource = sourceKey;
+  item.dropSource = isAct2Level() ? `act2:${sourceKey}` : sourceKey;
   return {
     rarity,
     item,
@@ -3610,10 +3626,79 @@ function getFirstClearRewards(missionId) {
   return progressionConfig?.firstClearRewards?.[missionId] || [];
 }
 
+function isFirstClearRewardMissionComplete(missionId, targetState = state) {
+  return getAct1StageNumber(missionId)
+    ? isAct1StageComplete(missionId, targetState)
+    : getCompletedMissionCount(missionId, targetState) > 0;
+}
+
+function getCampaignOfferCatalog(offer) {
+  const source = offer?.source || "entries";
+  return itemPoolCatalog?.[source] || null;
+}
+
+function createCampaignRequisitionOffers(reward, targetState = state) {
+  const ownedBaseIds = new Set(
+    [
+      ...getArmoryInventory(targetState),
+      ...(targetState.pendingRequisitions || []).flatMap((entry) =>
+        (entry.offers || []).map((offer) => offer.item).filter(Boolean)
+      ),
+    ]
+      .map((item) => getCatalogBaseIdForItem(item))
+      .filter(Boolean)
+  );
+  const selectedBaseIds = new Set();
+  return (reward.offers || []).map((offer) => {
+    const catalog = getCampaignOfferCatalog(offer);
+    const candidates = Array.isArray(offer.baseIds) && offer.baseIds.length
+      ? offer.baseIds
+      : [offer.baseId];
+    const validCandidates = candidates.filter((baseId) => catalog?.[baseId]);
+    const freshCandidates = validCandidates.filter(
+      (baseId) => !ownedBaseIds.has(baseId) && !selectedBaseIds.has(baseId)
+    );
+    const uniqueCandidates = validCandidates.filter((baseId) => !selectedBaseIds.has(baseId));
+    const pool = freshCandidates.length ? freshCandidates : uniqueCandidates.length ? uniqueCandidates : validCandidates;
+    const baseId = pool[Math.floor(Math.random() * pool.length)];
+    if (!baseId || !catalog?.[baseId]) return null;
+    selectedBaseIds.add(baseId);
+    const item = createRolledItem(baseId, catalog[baseId], reward.rarity);
+    item.dropSource = "campaignCommission";
+    item.campaignRewardId = reward.id;
+    item.campaignRewardMissionId = reward.missionId;
+    item.campaignRewardLabel = reward.label;
+    item.campaignRewardRole = offer.role;
+    item.firstClearAward = true;
+    return { role: offer.role, item };
+  }).filter(Boolean);
+}
+
 function getPendingCampaignRequisition(targetState = state) {
   return Array.isArray(targetState?.pendingRequisitions)
     ? targetState.pendingRequisitions[0] || null
     : null;
+}
+
+function applyDevCampaignCommissionGrant(targetState = state) {
+  if (!devCommissionMissionId || !getFirstClearRewards(devCommissionMissionId).length) return false;
+  normalizeCampaignProgressionState(targetState);
+  if (getAct1StageNumber(devCommissionMissionId)) {
+    targetState.completedMissions[devCommissionMissionId] = Math.max(
+      1,
+      getCompletedMissionCount(devCommissionMissionId, targetState)
+    );
+    if (!targetState.grandfatheredAct1Stages.includes(devCommissionMissionId)) {
+      targetState.grandfatheredAct1Stages.push(devCommissionMissionId);
+    }
+  } else {
+    targetState.completedMissions[devCommissionMissionId] = Math.max(
+      1,
+      getCompletedMissionCount(devCommissionMissionId, targetState)
+    );
+  }
+  ensureCampaignFirstClearRewards(targetState, devCommissionMissionId);
+  return true;
 }
 
 function ensureCampaignFirstClearRewards(targetState = state, onlyMissionId = null) {
@@ -3624,7 +3709,7 @@ function ensureCampaignFirstClearRewards(targetState = state, onlyMissionId = nu
     : Object.keys(progressionConfig?.firstClearRewards || {});
 
   missionIds.forEach((missionId) => {
-    if (!isAct1StageComplete(missionId, targetState)) return;
+    if (!isFirstClearRewardMissionComplete(missionId, targetState)) return;
     getFirstClearRewards(missionId).forEach((reward) => {
       if (targetState.claimedFirstClearRewards[reward.id]) return;
       if (reward.type === "consumable") {
@@ -3646,28 +3731,57 @@ function ensureCampaignFirstClearRewards(targetState = state, onlyMissionId = nu
           (entry) => entry.rewardId === reward.id
         );
         if (alreadyPending || !itemPoolCatalog?.entries) return;
-        const offers = reward.offers.map((offer) => {
-          const item = createRolledItem(offer.baseId, itemPoolCatalog.entries[offer.baseId], reward.rarity);
-          item.dropSource = "campaignRequisition";
-          item.campaignRewardId = reward.id;
-          return { role: offer.role, item };
-        });
+        const offers = createCampaignRequisitionOffers({ ...reward, missionId }, targetState);
+        if (offers.length !== reward.offers.length) return;
         targetState.pendingRequisitions.push({
           rewardId: reward.id,
           missionId,
           label: reward.label,
+          title: reward.title || reward.label,
+          description: reward.description || "Choose one offer; the others expire.",
+          rarity: reward.rarity,
           slotType: reward.slotType,
           installTarget: reward.installTarget,
           offers,
         });
         rewardLines.push({
           label: reward.label,
-          text: `Choose one ${reward.slotType === "mini" ? "mini-weapon" : "primary weapon"} below`,
+          text: `Choose one ${reward.rarity === "preFounding" ? "Pre-Founding commission" : `${reward.rarity} item`} below`,
         });
       }
     });
   });
   return rewardLines;
+}
+
+function installCampaignRequisitionItem(item, requisition) {
+  const slotType = normalizeArmorySlotType(item?.slotType);
+  if (slotType === "mini" && isCapabilityAvailable("miniWeapon")) {
+    state.armory.equippedMiniItemId = item.id;
+    return "Mini hardpoint";
+  }
+  if (slotType === "primary" && isCapabilityAvailable("primaryBay2") && !getSecondPrimaryArmoryItem()) {
+    state.armory.equippedSecondPrimaryItemId = item.id;
+    state.armory.equippedSecondLoadoutId = null;
+    return "Primary B";
+  }
+  if (slotType === "defense") {
+    const slots = Array.isArray(state.armory.equippedDefenseSlotIds)
+      ? state.armory.equippedDefenseSlotIds.slice(0, 2)
+      : ["none", "none"];
+    while (slots.length < 2) slots.push("none");
+    const openIndex = slots.findIndex((id) => !id || id === "none");
+    if (openIndex >= 0) {
+      slots[openIndex] = item.id;
+      state.armory.equippedDefenseSlotIds = slots;
+      return `Defense ${openIndex === 0 ? "A" : "B"}`;
+    }
+  }
+  if (slotType === "aux" && !state.armory.equippedSupportItemId) {
+    state.armory.equippedSupportItemId = item.id;
+    return "Aux hardpoint";
+  }
+  return "Armory storage";
 }
 
 function claimCampaignRequisition(rewardId, itemId) {
@@ -3677,16 +3791,11 @@ function claimCampaignRequisition(rewardId, itemId) {
   addItemsToArmoryInventory([offer.item]);
   state.claimedFirstClearRewards[rewardId] = true;
   state.pendingRequisitions = state.pendingRequisitions.filter((entry) => entry.rewardId !== rewardId);
-  if (requisition.slotType === "mini" && isCapabilityAvailable("miniWeapon")) {
-    state.armory.equippedMiniItemId = offer.item.id;
-  } else if (isCapabilityAvailable("primaryBay2") && !getSecondPrimaryArmoryItem()) {
-    state.armory.equippedSecondPrimaryItemId = offer.item.id;
-    state.armory.equippedSecondLoadoutId = null;
-  }
+  const destination = installCampaignRequisitionItem(offer.item, requisition);
   state.shipBuild = composeShipBuildFromArmory(state);
   syncShipBuildToLegacy();
   saveState();
-  return offer.item;
+  return { item: offer.item, destination };
 }
 
 function createDefaultLedgerMarketState() {
@@ -4213,6 +4322,7 @@ const devArsenal = isDevFlagEnabled("devArsenal");
 const devPressure = isDevFlagEnabled("devPressure");
 const devPerf = isDevFlagEnabled("devPerf");
 const devActs = isDevFlagEnabled("devActs");
+const devCommissionMissionId = getDevParam("devCommission");
 const DEV_DUAL_FIRE_OVERRIDE_STORAGE_KEY = "mini-fighter-dev-dual-fire-tier";
 
 function normalizeDevDualFireTier(value) {
@@ -7592,19 +7702,28 @@ function escapeHtml(value) {
 function renderCampaignRequisition(requisition) {
   if (!requisition) return "";
   const stage = getAct1StageNumber(requisition.missionId);
-  const isMini = requisition.slotType === "mini";
-  const destination = isMini ? "Mini hardpoint" : "Primary B";
+  const rarity = requisition.rarity || requisition.offers?.[0]?.item?.rarity || "certified";
+  const rarityLabel = getRarityLabel(rarity);
+  const missionLabel = availableLevels.find((level) => level.id === requisition.missionId)?.label ||
+    (stage ? `Mission ${stage}` : requisition.missionId);
+  const exactDestination = requisition.installTarget === "mini"
+    ? "The selection installs in the Mini hardpoint."
+    : requisition.installTarget === "primary-2"
+      ? "The selection installs in Primary B."
+      : "The selection fills an open compatible hardpoint when available; otherwise it enters Armory storage.";
   return `
-    <section class="campaign-requisition">
-      <div class="salvage-title">Mission ${stage || ""} Certified ${isMini ? "Mini" : "Primary"} Requisition</div>
-      <p>Choose one role weapon. The selection is installed in ${destination}; the other offers expire.</p>
+    <section class="campaign-requisition${rarity === "preFounding" ? " is-commission" : ""}" style="${getRarityStyle(rarity)}">
+      <div class="campaign-requisition-kicker">${escapeHtml(rarity === "preFounding" ? "First-clear commission" : "Chapter award")} · ${escapeHtml(rarityLabel)}</div>
+      <div class="salvage-title">${escapeHtml(requisition.title || requisition.label || "Requisition")}</div>
+      <div class="campaign-requisition-source">${escapeHtml(missionLabel)} · one selection authorized</div>
+      <p>${escapeHtml(requisition.description || "Choose one offer; the others expire.")} ${escapeHtml(exactDestination)}</p>
       <div class="campaign-requisition-offers">
         ${requisition.offers.map(({ role, item }) => `
           <button type="button" class="campaign-requisition-offer rarity-${escapeHtml(item.rarity || "certified")}" data-requisition-id="${escapeHtml(requisition.rewardId)}" data-requisition-item="${escapeHtml(item.id)}" style="${getRarityStyle(item.rarity || "certified")}">
             <img src="${escapeHtml(item.icon || getDefaultItemIcon(item.rarity))}" alt="" />
-            <span class="campaign-requisition-role">${escapeHtml(role)} answer</span>
+            <span class="campaign-requisition-role">${escapeHtml(role)}</span>
             <strong>${escapeHtml(getCompactItemName(item))}</strong>
-            <span>${escapeHtml(getItemBrowserRole(item))}</span>
+            <span>${escapeHtml(getRarityLabel(item.rarity))} · ${escapeHtml(getItemBrowserRole(item))}</span>
           </button>
         `).join("")}
       </div>
@@ -7752,7 +7871,7 @@ function renderDebriefSummary(summary) {
   const lost = summary.lostCargo || [];
   const requisitionHtml = renderCampaignRequisition(summary.pendingRequisition);
   const claimedHtml = summary.requisitionClaimed
-    ? `<div class="campaign-requisition-claimed">Requisition accepted: <strong>${escapeHtml(summary.requisitionClaimed.item.name)}</strong> installed in ${escapeHtml(summary.requisitionClaimed.destination)}.</div>`
+    ? `<div class="campaign-requisition-claimed">Commission accepted: <strong>${escapeHtml(summary.requisitionClaimed.item.name)}</strong> routed to ${escapeHtml(summary.requisitionClaimed.destination)}.</div>`
     : "";
   if (!identified.length && !lost.length && !requisitionHtml && !claimedHtml) {
     debriefSalvage.innerHTML = `<div class="salvage-empty">${LEDGER_COPY.noCargo}</div>`;
@@ -7816,15 +7935,15 @@ function renderDebriefSummary(summary) {
     const offer = requisition?.offers?.find((entry) => entry.item?.id === button.dataset.requisitionItem);
     if (offer?.item) attachItemTooltip(button, offer.item, requisition.installTarget || "primary-2");
     button.addEventListener("click", () => {
-      const claimed = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
-      if (!claimed) return;
-      summary.pendingRequisition = null;
+      const claim = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
+      if (!claim) return;
+      summary.pendingRequisition = getPendingCampaignRequisition();
       summary.requisitionClaimed = {
-        item: claimed,
-        destination: requisition.slotType === "mini" ? "Mini" : "Primary B",
+        item: claim.item,
+        destination: claim.destination,
       };
-      if (returnBtn) returnBtn.disabled = false;
-      setHangarStatusMessage(`${getCompactItemName(claimed)} installed in ${requisition.slotType === "mini" ? "Mini" : "Primary B"}.`);
+      if (returnBtn) returnBtn.disabled = !!summary.pendingRequisition;
+      setHangarStatusMessage(`${getCompactItemName(claim.item)} routed to ${claim.destination}.`);
       renderDebriefSummary(summary);
     });
   });
@@ -10445,6 +10564,20 @@ function getActivePrimaryBreakdownSections(stats, primaryItem, targetState = sta
   );
 }
 
+function getItemProvenanceLine(item) {
+  if (!item) return "";
+  if (item.firstClearAward || item.dropSource === "campaignCommission") {
+    const missionLabel = availableLevels.find((level) => level.id === item.campaignRewardMissionId)?.label ||
+      item.campaignRewardMissionId || "Campaign";
+    const role = item.campaignRewardRole ? ` · ${item.campaignRewardRole}` : "";
+    return `First-clear commission · ${missionLabel}${role}`;
+  }
+  if (String(item.dropSource || "").startsWith("act2:")) {
+    return `Act 2 salvage · ${String(item.dropSource).slice(5)}`;
+  }
+  return "";
+}
+
 function getItemDisplayStats(item, slotId = null) {
   const resolvedSlotId = getComparableSlotIdForItem(item, slotId);
   const previewState = createPreviewStateWithItem(item, resolvedSlotId);
@@ -10457,7 +10590,9 @@ function getItemDisplayStats(item, slotId = null) {
   const typeLine = getItemTypeLine(item, build, resolvedSlotId);
   const { innateLines, affixLines, specialLines } = getItemLanguageLines(item);
   const tags = Array.isArray(item?.tags) ? item.tags.slice(0, 5) : [];
+  const provenance = getItemProvenanceLine(item);
   const footer = [
+    provenance,
     Number.isFinite(item?.value) ? `Sell ${formatCredits(Math.round(item.value * getMarketSellRate()))}` : "",
     tags.length ? tags.join(" · ") : "",
   ].filter(Boolean).join("   ");
@@ -11725,9 +11860,9 @@ function renderShipUpgradesPanel() {
       const offer = pendingRequisition.offers.find((entry) => entry.item?.id === button.dataset.requisitionItem);
       if (offer?.item) attachItemTooltip(button, offer.item, pendingRequisition.installTarget || "primary-2");
       button.addEventListener("click", () => {
-        const claimed = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
-        if (!claimed) return;
-        setHangarStatusMessage(`${getCompactItemName(claimed)} installed in ${pendingRequisition.slotType === "mini" ? "Mini" : "Primary B"}.`);
+        const claim = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
+        if (!claim) return;
+        setHangarStatusMessage(`${getCompactItemName(claim.item)} routed to ${claim.destination}.`);
         safeUpdateHangar();
       });
     });
@@ -15131,8 +15266,8 @@ function handleEnemyDestroyed(enemy, bullet) {
       rollAct3HeirloomDrop(enemy, { miniboss: true }) ||
       rollSalvageDrop(enemy, {
         force: true,
-        forceSource: getDropSourceKey(enemy),
-        minRarity: "certified",
+        forceSource: isAct2Level() ? "miniboss" : getDropSourceKey(enemy),
+        minRarity: isAct2Level() ? "prototype" : "certified",
       });
     if (drop) spawnSalvagePod(enemy.x, enemy.y, drop);
     spawnExplosion(enemy.x, enemy.y, Math.max(enemy.radius * 1.5, 44), {
@@ -17005,6 +17140,7 @@ async function bootstrapGame() {
       .then(() => {
         if (mission?.active) return;
         refreshSavedInventoryCatalogBuilds(state);
+        applyDevCampaignCommissionGrant(state);
         ensureCampaignFirstClearRewards(state);
         normalizeCampaignProgressionState(state);
         syncStarterArmoryState();

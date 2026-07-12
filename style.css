@@ -1400,12 +1400,20 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .ledger-consumable-item.is-locked { opacity: 0.48; border-style: dashed; }
 .armory-main {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(420px, 1fr) auto;
   gap: 8px;
 }
-.armory-stage-panel { flex: 1 1 auto; min-height: 420px; }
+.armory-stage-panel {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  min-height: 420px;
+}
 .armory-command-strip {
+  grid-column: 1 / -1;
+  grid-row: 2;
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1469,6 +1477,20 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .armory-drawer-head h3 { margin-top: 2px; }
 .armory-drawer .armory-inventory-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
 @keyframes armory-drawer-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
+
+@media (min-width: 861px) {
+  .armory-main.has-open-drawer {
+    grid-template-columns: minmax(360px, 1fr) minmax(360px, min(500px, 48%));
+  }
+  .armory-main.has-open-drawer .armory-drawer {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1;
+    inset: auto;
+    width: auto;
+    min-width: 0;
+  }
+}
 .armory-inspector-head { display: flex; align-items: center; gap: 10px; }
 .armory-inspector-title { font-weight: 700; font-size: 14px; }
 .armory-inspector-stats {

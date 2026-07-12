@@ -48,6 +48,7 @@ const rtbCancelButton = document.getElementById("rtb-cancel");
 const shipNodeButtons = document.querySelectorAll("[data-ship-node]");
 const shipStats = document.getElementById("ship-stats");
 const armoryBench = document.getElementById("armory-bench");
+const armoryMain = document.querySelector(".armory-main");
 const armoryConsumables = document.getElementById("armory-consumables");
 const armoryDrawer = document.getElementById("armory-drawer");
 const armoryDrawerClose = document.getElementById("armory-drawer-close");
@@ -7933,7 +7934,7 @@ function renderDebriefSummary(summary) {
   debriefSalvage.querySelectorAll("[data-requisition-item]").forEach((button) => {
     const requisition = summary.pendingRequisition;
     const offer = requisition?.offers?.find((entry) => entry.item?.id === button.dataset.requisitionItem);
-    if (offer?.item) attachItemTooltip(button, offer.item, requisition.installTarget || "primary-2");
+    if (offer?.item) attachItemTooltip(button, offer.item, getComparableSlotIdForItem(offer.item));
     button.addEventListener("click", () => {
       const claim = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
       if (!claim) return;
@@ -11848,6 +11849,7 @@ function renderShipUpgradesPanel() {
     armoryDrawer.hidden = !armoryDrawerOpen;
     armoryDrawer.classList.toggle("is-open", armoryDrawerOpen);
   }
+  if (armoryMain) armoryMain.classList.toggle("has-open-drawer", armoryDrawerOpen);
 
   if (!weaponInventory || !armoryDrawerOpen) return;
   weaponInventory.innerHTML = "";
@@ -11858,7 +11860,7 @@ function renderShipUpgradesPanel() {
     requisitionWrap.innerHTML = renderCampaignRequisition(pendingRequisition);
     requisitionWrap.querySelectorAll("[data-requisition-item]").forEach((button) => {
       const offer = pendingRequisition.offers.find((entry) => entry.item?.id === button.dataset.requisitionItem);
-      if (offer?.item) attachItemTooltip(button, offer.item, pendingRequisition.installTarget || "primary-2");
+      if (offer?.item) attachItemTooltip(button, offer.item, getComparableSlotIdForItem(offer.item));
       button.addEventListener("click", () => {
         const claim = claimCampaignRequisition(button.dataset.requisitionId, button.dataset.requisitionItem);
         if (!claim) return;

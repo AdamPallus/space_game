@@ -8,6 +8,7 @@ const files = ["index.html", "main.js"];
 const failures = [];
 const indexSource = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const mainSource = fs.readFileSync(path.join(root, "main.js"), "utf8");
+const styleSource = fs.readFileSync(path.join(root, "style.css"), "utf8");
 
 files.forEach((relativePath) => {
   const source = fs.readFileSync(path.join(root, relativePath), "utf8");
@@ -26,6 +27,18 @@ if (!mainSource.includes("supply-control-icon") || !mainSource.includes("supply-
 }
 if (!mainSource.includes('debriefCredits.classList.toggle("is-debt", finalReward < 0)')) {
   failures.push("main.js must mark negative net settlement as debt.");
+}
+if (/attachItemTooltip\(button, offer\.item,[^\n]*installTarget/.test(mainSource)) {
+  failures.push("Campaign award tooltips must use the offered item's real slot, not a routing target.");
+}
+if (!mainSource.includes("attachItemTooltip(button, offer.item, getComparableSlotIdForItem(offer.item))")) {
+  failures.push("Campaign award tooltips must derive their comparable slot from each offered item.");
+}
+if (!mainSource.includes('armoryMain.classList.toggle("has-open-drawer", armoryDrawerOpen)')) {
+  failures.push("The Armory must expose its open-drawer layout state.");
+}
+if (!styleSource.includes(".armory-main.has-open-drawer") || !styleSource.includes("grid-column: 2")) {
+  failures.push("The desktop Armory drawer must occupy a dedicated column instead of covering hardpoints.");
 }
 
 if (failures.length) {

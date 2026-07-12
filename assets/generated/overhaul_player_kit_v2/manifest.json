@@ -1,0 +1,21 @@
+{
+  "generator": "Codex built-in imagegen",
+  "workflow": "individual chroma-key generation with local alpha cleanup",
+  "generatedAt": "2026-07-12",
+  "sprites": [
+    {
+      "name": "supply_redline_impulse",
+      "file": "supply_redline_impulse.png",
+      "keyColor": "#00ff00",
+      "size": [256, 256],
+      "role": "short high-output impulse supply"
+    },
+    {
+      "name": "supply_sustained_impulse",
+      "file": "supply_sustained_impulse.png",
+      "keyColor": "#ff00ff",
+      "size": [256, 256],
+      "role": "long regulated impulse supply"
+    }
+  ]
+}

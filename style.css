@@ -548,6 +548,144 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .mobile-icon { width: 22px; height: 22px; }
 .mobile-label { font-size: 10px; }
 
+.hud-supply-row > span:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.hud-supply-control {
+  --supply-accent: var(--amber);
+  --supply-progress-angle: 360deg;
+  position: relative;
+  isolation: isolate;
+  width: 218px;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: var(--radius-sm);
+  background: rgba(8, 12, 20, 0.92);
+  color: var(--ink);
+  padding: 5px 6px;
+  font-family: inherit;
+  text-align: left;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.hud-supply-control::after {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--supply-accent) 11%, transparent), transparent 58%);
+  opacity: 0.55;
+}
+.supply-control-progress {
+  position: absolute;
+  z-index: -1;
+  inset: 2px;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: conic-gradient(from -90deg, var(--supply-accent) 0 var(--supply-progress-angle), transparent var(--supply-progress-angle) 360deg);
+  opacity: 0.2;
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1px;
+}
+.supply-control-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--supply-accent) 48%, transparent));
+}
+.supply-control-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.supply-control-copy strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 10px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.supply-control-copy small {
+  overflow: hidden;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 8px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.supply-control-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--supply-accent);
+  font-family: var(--mono);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.supply-control-action kbd {
+  display: grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  border: 1px solid var(--supply-accent);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  font: 700 10px var(--mono);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.42);
+}
+.hud-supply-control.is-ready {
+  border-color: color-mix(in srgb, var(--supply-accent) 62%, transparent);
+}
+.hud-supply-control.is-ready:hover,
+.hud-supply-control.is-ready:focus-visible {
+  border-color: var(--supply-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--supply-accent) 24%, transparent);
+  outline: none;
+}
+.hud-supply-control.is-active {
+  border-color: var(--supply-accent);
+  box-shadow: 0 0 13px color-mix(in srgb, var(--supply-accent) 32%, transparent);
+}
+.hud-supply-control.is-active .supply-control-progress { opacity: 0.9; }
+.hud-supply-control.is-active .supply-control-status,
+.hud-supply-control.is-active .supply-control-action { color: var(--supply-accent); }
+.hud-supply-control.is-recharging .supply-control-progress { opacity: 0.48; }
+.hud-supply-control.is-recharging .supply-control-action { color: var(--muted); }
+.hud-supply-control.is-spent { opacity: 0.48; }
+.hud-supply-control:disabled { cursor: default; }
+.mobile-btn.item.hud-supply-control {
+  width: min(156px, 28vw);
+  min-width: 112px;
+  min-height: 58px;
+  grid-template-columns: 32px minmax(0, 1fr);
+  padding: 5px 7px;
+  color: var(--ink);
+}
+.mobile-btn.item.hud-supply-control .supply-control-action {
+  position: absolute;
+  right: 5px;
+  bottom: 3px;
+  font-size: 6px;
+}
+
 /* ==========================================================================
    OVERLAY SHELL (hangar + debrief)
    ========================================================================== */
@@ -2056,6 +2194,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 }
 .ledger-line.fee, .ledger-line.warn { color: var(--danger); }
 .ledger-line.total, .ledger-line.net { color: var(--good); font-weight: 700; }
+.ledger-line.total.negative { color: var(--danger); }
 
 /* ==========================================================================
    INVESTMENTS TREE
@@ -2870,6 +3009,18 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .mobile-btn { flex: 1; min-width: 52px; min-height: 48px; padding: 4px; font-size: 10px; }
   .mobile-btn.swap { min-width: 72px; }
   .mobile-btn.item { min-width: 58px; }
+  .mobile-btn.item.hud-supply-control {
+    width: 22vw;
+    min-width: 68px;
+    grid-template-columns: 25px minmax(0, 1fr);
+    gap: 3px;
+    padding: 4px;
+  }
+  .mobile-btn.item.hud-supply-control .supply-control-icon { width: 25px; height: 25px; }
+  .mobile-btn.item.hud-supply-control .supply-control-copy strong { font-size: 8px; }
+  .mobile-btn.item.hud-supply-control .supply-control-copy small { font-size: 6px; }
+  .mobile-btn.item.hud-supply-control .supply-control-action { display: none; }
+  .hud-supply-row { display: none; }
   .armory-command-strip { grid-template-columns: 1fr; }
   .armory-command-actions { border-left: 0; border-top: 1px solid var(--line); justify-content: flex-end; }
   .armory-compare-toggle { display: none; }

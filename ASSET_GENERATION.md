@@ -31,6 +31,10 @@ generated packs:
   Twin, Needleloom Driver, Auric Stitcher, Rattlewake Array, Cinderloom Spray,
   Vesper Barrage, and Founder Flak.
 - Shield booster and armor patch caches use generated pickup sprites.
+- Redline and Sustained Impulse use distinct transparent reactor icons from
+  `assets/generated/overhaul_player_kit_v2/`. Redline is the hot red overclock
+  chevron; Sustained is the regulated blue concentric coil. Both were generated
+  individually with Codex built-in imagegen and locally chroma-keyed to alpha.
 - Ledger license, hull unlock, dual-fire, and second-bay affordances use
   generated terminal/shop sprites from the same pack. The fixed Basic Gear shop
   section has been removed from the current game.

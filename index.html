@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=supply-credit-2" />
+    <link rel="stylesheet" href="style.css?v=supply-feedback-3" />
   </head>
   <body>
     <div id="app">
@@ -60,8 +60,8 @@
         <div class="hud-right">
           <div class="hud-row"><span>Credits</span><span id="hud-credits">0</span></div>
           <div class="hud-row"><span>Mini</span><span id="hud-mini">-</span></div>
-          <div class="hud-row"><span>Supply 1</span><span id="hud-item-1">-</span></div>
-          <div class="hud-row"><span>Supply 2</span><span id="hud-item-2">-</span></div>
+          <div class="hud-row hud-supply-row"><span>Supply 1</span><button type="button" class="hud-supply-control" id="hud-item-1" disabled>—</button></div>
+          <div class="hud-row hud-supply-row"><span>Supply 2</span><button type="button" class="hud-supply-control" id="hud-item-2" disabled>—</button></div>
           <div class="hud-row"><span>Timer</span><span id="hud-time">00:00</span></div>
         </div>
       </div>
@@ -449,8 +449,8 @@
           <span class="mobile-label" id="mobile-alt-label"></span>
         </button>
         <button class="mobile-btn swap" id="mobile-swap">Swap</button>
-        <button class="mobile-btn item" id="mobile-item-1" hidden>Item 1</button>
-        <button class="mobile-btn item" id="mobile-item-2" hidden>Item 2</button>
+        <button class="mobile-btn item hud-supply-control compact" id="mobile-item-1" hidden>Item 1</button>
+        <button class="mobile-btn item hud-supply-control compact" id="mobile-item-2" hidden>Item 2</button>
         <button class="mobile-btn eject" id="mobile-eject">RTB</button>
         <button class="mobile-btn launch" id="mobile-launch">Launch</button>
       </div>
@@ -503,6 +503,6 @@
       </div>
     </div>
 
-  <script src="main.js?v=supply-credit-2"></script>
+  <script src="main.js?v=supply-feedback-3"></script>
   </body>
 </html>

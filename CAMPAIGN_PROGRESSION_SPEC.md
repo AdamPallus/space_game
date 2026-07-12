@@ -169,6 +169,13 @@ authorization and DEV fee waivers without altering campaign records.
 - Both modify the existing `kineticImpulseBudget` shot construction rather than
   applying a generic damage multiplier. Kinetic shots become faster and gain
   speed-fed damage; plasma shots become larger, slower, and more explosive.
+- Their activation lockout exactly matches their effect duration. If both
+  distinct boosters overlap, their multipliers combine multiplicatively
+  (`2.0 × 1.4 = 2.8×`). Reactivating the same booster refreshes its timer rather
+  than multiplying a duplicate copy.
+- Combat controls show the supply icon, remaining authorized charges, explicit
+  activation affordance, and a duration/recharge sweep. Active impulse effects
+  also draw separate countdown arcs around the ship, matching aux feedback.
 
 Scripted shield and armor pickups are the exact same supplies. If at least 10%
 of the applicable base layer is missing, the pickup activates immediately for

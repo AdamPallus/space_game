@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LEVELS_DIR = ROOT / "levels"
 PROJECTILE_DIR = ROOT / "assets" / "generated" / "enemy_projectiles_space_v1"
 BOSS_DIR = ROOT / "assets" / "generated" / "bosses_broadside_v1"
+SUPPLY_ICON_DIR = ROOT / "assets" / "generated" / "overhaul_player_kit_v2"
 CATALOG_PATH = ROOT / "enemies" / "enemy_catalog.json"
 CAMPAIGN_MISSION_COUNT = 11
 MIN_BOSS_ASPECT = 1.55
@@ -88,6 +89,20 @@ def validate_transparent_corners(path: Path, errors: list[str]) -> None:
     corners = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
     if any(image.getpixel(point)[3] != 0 for point in corners):
         errors.append(f"{path.relative_to(ROOT)} does not have transparent corners")
+
+
+def validate_supply_icons(errors: list[str]) -> None:
+    for name in ("supply_redline_impulse.png", "supply_sustained_impulse.png"):
+        path = SUPPLY_ICON_DIR / name
+        if not path.exists():
+            errors.append(f"Missing supply icon {path.relative_to(ROOT)}")
+            continue
+        image = Image.open(path).convert("RGBA")
+        if image.size != (256, 256):
+            errors.append(f"{path.relative_to(ROOT)} must be 256x256, got {image.size}")
+        validate_transparent_corners(path, errors)
+        if not image.getchannel("A").getbbox():
+            errors.append(f"{path.relative_to(ROOT)} has no visible pixels")
 
 
 def campaign_level_ids() -> list[str]:
@@ -249,6 +264,7 @@ def main() -> int:
     validate_bosses(errors)
     validate_act2_catalog_art(errors)
     validate_act3_invasion_art(errors)
+    validate_supply_icons(errors)
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)

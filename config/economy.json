@@ -173,7 +173,7 @@
       "name": "Redline Impulse",
       "desc": "Doubles primary projectile impulse for 10 seconds. Built for bosses and crisis windows.",
       "cost": 2200,
-      "cooldown": 16,
+      "cooldown": 10,
       "capabilityId": "damageOvercharge",
       "hudLabel": "Redline",
       "effect": {
@@ -187,7 +187,7 @@
       "name": "Sustained Impulse",
       "desc": "Adds 40% primary projectile impulse for 30 seconds. Built for prolonged pressure.",
       "cost": 1600,
-      "cooldown": 20,
+      "cooldown": 30,
       "capabilityId": "damageOvercharge",
       "hudLabel": "Sustain",
       "effect": {

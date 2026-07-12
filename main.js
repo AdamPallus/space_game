@@ -160,6 +160,7 @@ const GENERATED_ITEM_ICON_ROOT = `${GENERATED_ROOT}/item_icons_v1`;
 const GENERATED_ITEM_ICON_ROOT_V2 = `${GENERATED_ROOT}/item_icons_v2`;
 const GENERATED_PILOT_ROOT = `${GENERATED_ROOT}/pilot_sprites`;
 const GENERATED_OVERHAUL_ROOT = `${GENERATED_ROOT}/overhaul_player_kit_v1`;
+const GENERATED_SUPPLY_ROOT = `${GENERATED_ROOT}/overhaul_player_kit_v2`;
 const GENERATED_HULL_ROOT = `${GENERATED_ROOT}/overhaul_hulls_v2`;
 const BOSS_DEFEAT_DELAY_SECONDS = 2.8;
 const VALID_WEAPON_SPREADS = ["focused", "dual", "dualRapid", "rapid", "burst", "wide"];
@@ -211,6 +212,8 @@ const overhaulKit = {
   pickups: {
     shieldBooster: `${GENERATED_OVERHAUL_ROOT}/pickup_shield_booster.png`,
     armorPatch: `${GENERATED_OVERHAUL_ROOT}/pickup_armor_patch.png`,
+    redlineImpulse: `${GENERATED_SUPPLY_ROOT}/supply_redline_impulse.png`,
+    sustainedImpulse: `${GENERATED_SUPPLY_ROOT}/supply_sustained_impulse.png`,
   },
   capabilities: {
     dualFire: `${GENERATED_OVERHAUL_ROOT}/capability_dual_fire.png`,
@@ -7559,6 +7562,7 @@ function endMission({ ejected = false, completed = false } = {}) {
   playUiSfx("stamp");
   debriefTime.textContent = formatTime(mission.elapsed);
   debriefKills.textContent = mission.kills.toString();
+  debriefCredits.classList.toggle("is-debt", finalReward < 0);
   setCountedNumber(debriefCredits, finalReward, { duration: 620 });
 
   overlay.hidden = false;
@@ -7720,14 +7724,19 @@ function renderDebriefSummary(summary) {
         memo: true,
       });
     }
-    rows.push({ label: "Net", amount: summary.finalReward, total: true });
+    rows.push({
+      label: "Net",
+      amount: summary.finalReward,
+      total: true,
+      negative: summary.finalReward < 0,
+    });
     debriefLedger.innerHTML = `
       <div class="ledger-title">Claims Receipt</div>
       <div class="ledger-lines">
         ${rows
           .map(
             (row, index) => `
-          <div class="ledger-line${row.fee ? " fee" : ""}${row.total ? " total" : ""}${row.memo ? " memo" : ""}" style="--line-index: ${index}">
+          <div class="ledger-line${row.fee ? " fee" : ""}${row.total ? " total" : ""}${row.negative ? " negative" : ""}${row.memo ? " memo" : ""}" style="--line-index: ${index}">
             <span>${escapeHtml(row.label)}${row.note ? ` <em>${escapeHtml(row.note)}</em>` : ""}</span>
             <strong>${row.text ? escapeHtml(row.text) : `${row.amount < 0 ? "-" : ""}${formatCredits(Math.abs(row.amount))}`}</strong>
           </div>
@@ -11775,7 +11784,17 @@ function getConsumableLabel(item) {
 function getConsumableIcon(item) {
   if (item?.effect?.kind === "shieldOvercharge") return overhaulKit.pickups.shieldBooster;
   if (item?.effect?.kind === "armorSealant") return overhaulKit.pickups.armorPatch;
+  if (item?.id === "redlineImpulse") return overhaulKit.pickups.redlineImpulse;
+  if (item?.id === "sustainedImpulse") return overhaulKit.pickups.sustainedImpulse;
   return overhaulKit.capabilities.dualFire;
+}
+
+function getConsumableAccent(item) {
+  if (item?.id === "redlineImpulse") return "#fb5b62";
+  if (item?.id === "sustainedImpulse") return "#38bdf8";
+  if (item?.effect?.kind === "shieldOvercharge") return "#7dd3fc";
+  if (item?.effect?.kind === "armorSealant") return "#facc15";
+  return "#f0b429";
 }
 
 function isConsumableUnlocked(item, targetState = state) {
@@ -12595,18 +12614,73 @@ function applyConsumableEffect(item, { x = player.x, y = player.y, announce = tr
   }
   if (effect.kind === "impulseBoost") {
     player.impulseBoostEffects = Array.isArray(player.impulseBoostEffects) ? player.impulseBoostEffects : [];
-    player.impulseBoostEffects.push({ id: item.id, bonus: effect.impulseBonus, remaining: effect.duration });
-    if (announce) spawnFloatingText(x, y, `IMPULSE +${Math.round(effect.impulseBonus * 100)}%`, "#fb7185");
+    const existing = player.impulseBoostEffects.find((entry) => entry.id === item.id);
+    if (existing) {
+      existing.bonus = effect.impulseBonus;
+      existing.duration = effect.duration;
+      existing.remaining = effect.duration;
+    } else {
+      player.impulseBoostEffects.push({
+        id: item.id,
+        bonus: effect.impulseBonus,
+        duration: effect.duration,
+        remaining: effect.duration,
+      });
+    }
+    if (announce) {
+      spawnFloatingText(
+        x,
+        y,
+        `IMPULSE ×${formatNumber(getActiveImpulseMultiplier(), 1)}`,
+        getConsumableAccent(item)
+      );
+    }
     playSfx("boost", 0.4);
     return true;
   }
   return false;
 }
 
-function getActiveImpulseBonus() {
+function getActiveImpulseEffects() {
   return (Array.isArray(player.impulseBoostEffects) ? player.impulseBoostEffects : [])
-    .reduce((max, entry) => Math.max(max, Number(entry?.bonus) || 0), 0);
+    .filter((entry) => (Number(entry?.remaining) || 0) > 0 && (Number(entry?.bonus) || 0) > 0);
 }
+
+function calculateImpulseEffectMultiplier(effects) {
+  return (Array.isArray(effects) ? effects : [])
+    .reduce((multiplier, entry) => multiplier * (1 + (Number(entry.bonus) || 0)), 1);
+}
+
+function getActiveImpulseMultiplier() {
+  return calculateImpulseEffectMultiplier(getActiveImpulseEffects());
+}
+
+function getActiveImpulseBonus() {
+  return Math.max(0, getActiveImpulseMultiplier() - 1);
+}
+
+function getImpulseEffectRemaining(itemId) {
+  return getActiveImpulseEffects()
+    .filter((entry) => entry.id === itemId)
+    .reduce((remaining, entry) => Math.max(remaining, Number(entry.remaining) || 0), 0);
+}
+
+window.__supplyEffectReport = () => {
+  const impulseSupplies = consumables.filter((item) => item.effect?.kind === "impulseBoost");
+  return {
+    entries: impulseSupplies.map((item) => ({
+      id: item.id,
+      bonus: item.effect.impulseBonus,
+      duration: item.effect.duration,
+      cooldown: item.cooldown,
+      timingAligned: item.cooldown === item.effect.duration,
+    })),
+    simultaneousMultiplier: calculateImpulseEffectMultiplier(
+      impulseSupplies.map((item) => ({ bonus: item.effect.impulseBonus }))
+    ),
+    duplicatePolicy: "refresh",
+  };
+};
 
 function isFieldSupplyEffectMeaningful(item) {
   const threshold = Math.max(0, Number(getSupplyAuthorizationConfig().fieldActivationThreshold) || 0.1);
@@ -15300,6 +15374,7 @@ function drawPlayer() {
   }
 
   drawRmbIndicator();
+  drawImpulseSupplyIndicators();
   ctx.restore();
 }
 
@@ -15336,6 +15411,40 @@ function drawRmbIndicator() {
     ctx.arc(player.x, player.y, radius, 0, Math.PI * 2);
     ctx.stroke();
   }
+  ctx.restore();
+}
+
+function drawImpulseSupplyIndicators() {
+  const effects = getActiveImpulseEffects();
+  if (!effects.length) return;
+  ctx.save();
+  effects.forEach((entry, index) => {
+    const item = consumablesById[entry.id];
+    const duration = Math.max(0.1, Number(entry.duration) || Number(item?.effect?.duration) || 1);
+    const progress = Math.max(0, Math.min(1, (Number(entry.remaining) || 0) / duration));
+    const radius = player.radius + 21 + index * 7;
+    const color = getConsumableAccent(item);
+    ctx.lineWidth = index === 0 ? 3.4 : 2.7;
+    ctx.strokeStyle = "rgba(15, 23, 42, 0.78)";
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(
+      player.x,
+      player.y,
+      radius,
+      -Math.PI / 2,
+      -Math.PI / 2 + Math.PI * 2 * progress
+    );
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  });
   ctx.restore();
 }
 
@@ -16018,48 +16127,85 @@ function updateConsumableHud() {
   const uses = mission?.consumableUses || [0, 0];
   const cooldowns = mission?.consumableCooldowns || [0, 0];
 
+  const ensureControlMarkup = (control, item, index, mobile = false) => {
+    if (!control) return null;
+    const identity = `${item.id}:${mobile ? "mobile" : "desktop"}`;
+    if (control.dataset.supplyIdentity !== identity) {
+      control.dataset.supplyIdentity = identity;
+      control.innerHTML = `
+        <span class="supply-control-progress" aria-hidden="true"></span>
+        <img class="supply-control-icon" src="${escapeHtml(getConsumableIcon(item))}" alt="" />
+        <span class="supply-control-copy">
+          <strong>${escapeHtml(item.name)}</strong>
+          <small class="supply-control-status"></small>
+        </span>
+        <span class="supply-control-action"><span>Activate</span>${mobile ? "" : `<kbd>${index + 1}</kbd>`}</span>
+      `;
+    }
+    return {
+      status: control.querySelector(".supply-control-status"),
+      action: control.querySelector(".supply-control-action span"),
+    };
+  };
+
+  const clearControl = (control, fallbackLabel) => {
+    if (!control) return;
+    control.dataset.supplyIdentity = "";
+    control.innerHTML = fallbackLabel;
+    control.disabled = true;
+    control.classList.remove("is-active", "is-recharging", "is-ready", "is-spent");
+    control.style.removeProperty("--supply-accent");
+    control.style.removeProperty("--supply-progress-angle");
+    control.setAttribute("aria-label", `${fallbackLabel} empty`);
+  };
+
   const updateSlot = (index, hudEl, mobileBtn, fallbackLabel) => {
     const slotId = slots[index];
     if (!inMission || !slotId || slotId === "none") {
-      if (hudEl) hudEl.textContent = "-";
-      if (hudEl) {
-        hudEl.classList.remove("hud-action");
-        hudEl.classList.remove("disabled");
-        hudEl.removeAttribute("role");
-        hudEl.removeAttribute("aria-disabled");
-      }
-      if (mobileBtn) {
-        mobileBtn.textContent = fallbackLabel;
-        mobileBtn.disabled = true;
-      }
+      clearControl(hudEl, "—");
+      clearControl(mobileBtn, fallbackLabel);
       return;
     }
     const item = consumablesById[slotId];
-    const label = getConsumableLabel(item);
     const remaining = uses[index] ?? 0;
     const cooldown = cooldowns[index] ?? 0;
     const maxUses = getConsumableBayUseLimit(index);
     const waivers = Math.max(0, Number(state.supplyWaivers?.[slotId]) || 0);
     const costText = waivers > 0 ? `${waivers} waived` : `${formatLedgerCredits(item.cost)}/use`;
-    let hudText = `${label} (${index + 1}) ${remaining}/${maxUses} · ${costText}`;
-    if (cooldown > 0) {
-      hudText += ` | ${Math.ceil(cooldown)}s`;
-    }
-    if (hudEl) hudEl.textContent = hudText;
-    if (hudEl) {
-      hudEl.classList.add("hud-action");
-      hudEl.classList.toggle("disabled", cooldown > 0 || remaining <= 0);
-      hudEl.setAttribute("role", "button");
-      hudEl.setAttribute("aria-disabled", cooldown > 0 || remaining <= 0 ? "true" : "false");
-    }
-    if (mobileBtn) {
-      if (cooldown > 0) {
-        mobileBtn.textContent = `${label} ${Math.ceil(cooldown)}s`;
-      } else {
-        mobileBtn.textContent = `${label} ${remaining}/${maxUses} · ${waivers > 0 ? "waived" : formatLedgerCredits(item.cost)}`;
-      }
-      mobileBtn.disabled = cooldown > 0 || remaining <= 0 || !inMission;
-    }
+    const effectRemaining = item.effect?.kind === "impulseBoost" ? getImpulseEffectRemaining(slotId) : 0;
+    const active = effectRemaining > 0;
+    const recharging = !active && cooldown > 0;
+    const spent = remaining <= 0;
+    const phaseRemaining = active ? effectRemaining : cooldown;
+    const phaseDuration = active
+      ? Math.max(0.1, Number(item.effect?.duration) || 1)
+      : Math.max(0.1, Number(item.cooldown) || 1);
+    const progress = phaseRemaining > 0 ? Math.max(0, Math.min(1, phaseRemaining / phaseDuration)) : 1;
+    const statusText = active
+      ? `${formatNumber(effectRemaining, 1)}s effect · ${remaining}/${maxUses} left`
+      : recharging
+        ? `${formatNumber(cooldown, 1)}s recharge · ${remaining}/${maxUses} left`
+        : `${remaining}/${maxUses} charges · ${costText}`;
+    const actionText = active ? "Active" : recharging ? "Recharging" : spent ? "Spent" : "Activate";
+    const disabled = cooldown > 0 || spent || !inMission;
+
+    [[hudEl, false], [mobileBtn, true]].forEach(([control, mobile]) => {
+      if (!control) return;
+      const refs = ensureControlMarkup(control, item, index, mobile);
+      if (refs?.status) refs.status.textContent = statusText;
+      if (refs?.action) refs.action.textContent = actionText;
+      control.disabled = disabled;
+      control.classList.toggle("is-active", active);
+      control.classList.toggle("is-recharging", recharging);
+      control.classList.toggle("is-ready", !active && !recharging && !spent);
+      control.classList.toggle("is-spent", spent && !active);
+      control.style.setProperty("--supply-accent", getConsumableAccent(item));
+      control.style.setProperty("--supply-progress-angle", `${Math.round(progress * 360)}deg`);
+      control.setAttribute(
+        "aria-label",
+        `${item.name}, bay ${index + 1}, ${statusText}${disabled ? "" : ", activate"}`
+      );
+    });
   };
 
   updateSlot(0, hudItem1, mobileItem1, "Item 1");

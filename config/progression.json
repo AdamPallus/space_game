@@ -185,7 +185,7 @@
         "offers": [
           { "role": "Shield", "source": "relics", "baseId": "relic_cradle_aegis" },
           { "role": "Armor", "source": "relics", "baseId": "relic_founder_plate" },
-          { "role": "Control", "source": "relics", "baseId": "relic_orphan_signal" }
+          { "role": "Control", "baseIds": ["aux_emp", "aux_bulwark"] }
         ]
       }
     ],

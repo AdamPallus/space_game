@@ -40,6 +40,10 @@ if (!mainSource.includes('armoryMain.classList.toggle("has-open-drawer", armoryD
 if (!styleSource.includes(".armory-main.has-open-drawer") || !styleSource.includes("grid-column: 2")) {
   failures.push("The desktop Armory drawer must occupy a dedicated column instead of covering hardpoints.");
 }
+if (!styleSource.includes(".debrief-salvage > :not(.salvage-list) { flex: 0 0 auto; }") ||
+    !styleSource.includes(".debrief-salvage > .salvage-list")) {
+  failures.push("Debrief commissions must keep their natural height while cargo scrolls independently.");
+}
 
 if (failures.length) {
   failures.forEach((failure) => console.error(`validate_ui_contract: ${failure}`));

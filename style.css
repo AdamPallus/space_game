@@ -2805,10 +2805,19 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 }
 .debrief-salvage {
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-right: 4px;
+}
+.debrief-salvage > :not(.salvage-list) { flex: 0 0 auto; }
+.debrief-salvage > .salvage-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   padding-right: 4px;
 }
 .salvage-title {
@@ -3050,6 +3059,7 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
   .investment-tree-map { min-height: 410px; }
   .debrief-scroll { grid-template-columns: 1fr; overflow-y: auto; }
   .debrief-ledger, .debrief-salvage { overflow: visible; min-height: auto; }
+  .debrief-salvage > .salvage-list { flex: 0 0 auto; overflow: visible; padding-right: 0; }
   .stat-big { font-size: 15px; }
   #controls { display: none; }
   .scene-head { flex-wrap: wrap; }

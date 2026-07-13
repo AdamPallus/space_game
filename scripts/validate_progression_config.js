@@ -138,5 +138,19 @@ assert(
   (config.firstClearRewards.level8 || []).filter((reward) => reward.rarity === "preFounding").length >= 2,
   "Last Light needs separate Pre-Founding primary and survival commissions"
 );
+const lastLightSurvival = (config.firstClearRewards.level8 || []).find(
+  (reward) => reward.id === "last-light-survival-commission"
+);
+const lastLightSurvivalBaseIds = (lastLightSurvival?.offers || []).flatMap((offer) =>
+  Array.isArray(offer.baseIds) ? offer.baseIds : [offer.baseId]
+);
+assert(
+  !lastLightSurvivalBaseIds.includes("relic_orphan_signal"),
+  "Last Light must not guarantee the unique Orphan Signal"
+);
+assert(
+  lastLightSurvivalBaseIds.includes("aux_emp") && lastLightSurvivalBaseIds.includes("aux_bulwark"),
+  "Last Light control coverage must offer a standard EMP/Bulwark roll"
+);
 
 console.log(`Validated ${capabilityIds.length} capabilities and ${rewardIds.size} first-clear rewards in ${progressionPath}`);

@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=supply-feedback-3" />
+    <link rel="stylesheet" href="style.css?v=unlimited-cargo-1" />
   </head>
   <body>
     <div id="app">
@@ -44,10 +44,9 @@
               <div id="miniboss-progress-fill"></div>
             </div>
           </div>
-          <div class="cargo-hud" aria-label="Cargo hold">
-            <span class="cargo-label">Cargo</span>
+          <div class="cargo-hud" aria-label="Recovered cargo, unlimited capacity">
+            <span class="cargo-label">Cargo <strong id="hud-cargo-count">0 / ∞</strong></span>
             <div class="cargo-pips" id="hud-cargo-pips"></div>
-            <div class="cargo-status" id="hud-cargo-status" hidden>CARGO FULL</div>
           </div>
           <div class="defense-integrity-hud" id="hud-defense-integrity" hidden>
             <span>Mothership</span>
@@ -503,6 +502,6 @@
       </div>
     </div>
 
-  <script src="main.js?v=dual-kinetic-2"></script>
+  <script src="main.js?v=unlimited-cargo-1"></script>
   </body>
 </html>

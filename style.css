@@ -374,8 +374,9 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 }
 
 .cargo-hud { display: flex; align-items: center; gap: 8px; }
-.cargo-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.cargo-pips { display: flex; gap: 5px; }
+.cargo-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.cargo-label strong { color: var(--ink); font-family: var(--mono); font-weight: 600; }
+.cargo-pips { display: flex; align-items: center; gap: 5px; min-height: 18px; }
 .cargo-pip {
   width: 18px;
   height: 18px;
@@ -394,11 +395,11 @@ button.ghost:disabled { opacity: 0.45; cursor: default; }
 .cargo-pip.filled.rarity-prototype { background-image: url("assets/generated/ui_chrome_v2/salvage_pod_prototype.png"); }
 .cargo-pip.filled.rarity-preFounding { background-image: url("assets/generated/ui_chrome_v2/salvage_pod_pre_founding.png"); }
 .cargo-pip.filled.rarity-heirloom { background-image: url("assets/generated/ui_chrome_v2/salvage_pod_pre_founding.png"); }
-.cargo-status {
+.cargo-overflow {
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--danger);
+  font-family: var(--mono);
+  color: var(--muted);
+  white-space: nowrap;
 }
 .defense-integrity-hud {
   display: flex;

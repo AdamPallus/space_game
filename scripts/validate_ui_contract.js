@@ -44,6 +44,19 @@ if (!styleSource.includes(".debrief-salvage > :not(.salvage-list) { flex: 0 0 au
     !styleSource.includes(".debrief-salvage > .salvage-list")) {
   failures.push("Debrief commissions must keep their natural height while cargo scrolls independently.");
 }
+if (!indexSource.includes('id="hud-cargo-count"') || !indexSource.includes("0 / ∞")) {
+  failures.push("The combat HUD must present cargo as an unlimited running total.");
+}
+if (!mainSource.includes("cargo.slice(-CARGO_HUD_VISIBLE_ITEMS)") || !styleSource.includes(".cargo-overflow")) {
+  failures.push("Unlimited cargo must keep a bounded recent-pod HUD with an overflow count.");
+}
+if (/CARGO FULL|cargoFull|getConfiguredCargoSize/.test(`${indexSource}\n${mainSource}`)) {
+  failures.push("Retired cargo-cap rejection behavior must not return.");
+}
+const collectSalvageBody = mainSource.match(/function collectSalvagePod\(pod\) \{([\s\S]*?)\n\}/)?.[1] || "";
+if (!collectSalvageBody.includes("cargo.push(cloneItem(pod.item))") || /return false|cargo\.length\s*>=/.test(collectSalvageBody)) {
+  failures.push("Every salvage pod must enter cargo without a capacity check.");
+}
 
 if (failures.length) {
   failures.forEach((failure) => console.error(`validate_ui_contract: ${failure}`));

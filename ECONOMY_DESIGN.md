@@ -50,11 +50,14 @@ to credits only through the Ledger (at the Ledger's spread).
 | Ordinary enemies | 2% | scrap-grade only |
 
 ### Cargo hold
-- The drone has **3 cargo slots** (upgradable later via Engineering Bay tier).
-- When cargo is full, new pods cannot be collected — they drift offscreen and
-  are lost. The player watches value float away. This is deliberate tension;
-  do not add auto-pickup or overflow storage.
-- HUD shows cargo as 3 small slot icons with rarity glows.
+- **Cargo capacity is unlimited.** Every salvage pod the player reaches can be
+  collected; the game does not make a fun drop uncollectable because earlier
+  drops filled an arbitrary hold.
+- The HUD shows the total as `collected / ∞`, the six most recent rarity
+  icons, and an overflow count for earlier pods. Debrief still opens every pod.
+- The player must still extract or complete the mission to keep cargo. Hull loss
+  voids the entire haul, so accumulation pressure comes from survival and the
+  RTB decision rather than a slot cap.
 
 ### The extraction decision
 | Outcome | Bounty (kill credits) | Cargo | Bonus |
@@ -136,15 +139,16 @@ Example item: **"Certified Scatter Array — Vampiric trace"** (Spread base,
 The existing `items/weapon_frames.json` frames become the **base item set**;
 guaranteed starter gear, never lost.
 
-### Storage between runs: unbounded, on purpose
+### Cargo and storage: unbounded, on purpose
 
-The 3-slot cargo hold is the only inventory cap. Salvage that survives the
-flight home is kept forever — no stash limits, no inventory-management
-chores, nothing that fights the accumulation fantasy. Selling pressure comes
-from the market (credits are useful; bulletins reward timing), and holding
-inventory for a demand spike is a legitimate strategy. If hoarding ever turns
-degenerate, the remedy is a small per-cycle "Ledger warehousing fee" receipt
-line — never a hard cap.
+Both the in-flight cargo hold and storage between runs are unbounded. Salvage
+the player reaches and successfully brings home is kept forever — no slot
+limits, no inventory-management chores, and nothing that fights the
+accumulation fantasy. Selling pressure comes from the market (credits are
+useful; bulletins reward timing), and holding inventory for a demand spike is a
+legitimate strategy. If hoarding ever turns degenerate, solve that during a
+dedicated economy pass with incentives or a small per-cycle "Ledger
+warehousing fee" receipt line, never by silently restoring a hard cap.
 
 ### Kinetic flow model (implemented baseline, tune further after Phase 4)
 
@@ -224,8 +228,9 @@ scene (see UI_DESIGN.md).
 
 Keep the existing three tracks and costs (200–6000¢). Reframe effects to fit:
 
-- **Engineering Bay** — consumables as before; **tier 3 adds a 4th cargo slot,
-  tier 5 a 5th**. (Cargo is the best money sink in this design.)
+- **Engineering Bay** — consumables as before. Former cargo-slot tiers are
+  retired; later economy work must find sinks that do not make collected loot
+  uncollectable.
 - **Operations Center** — mission variants as before (this is the content
   unlock track; variants already exist on disk).
 - **Fleet Shares** — passive dividends as before. Narratively, this is the
@@ -258,9 +263,10 @@ what services you buy (investments).
   naturally). Two effects:
   1. Death costs a **flat refit (~150¢, scales with hull class)** instead of
      the 25% writedown. Variable downside traded for fixed downside.
-  2. **Mod bay** — owned hulls accept modifications (lessors forbid them):
-     fit a module granting +1 defense slot OR +1 cargo slot. Ownership is the
-     gateway to build depth.
+  2. **Mod bay** — owned hulls accept modifications (lessors forbid them).
+     Cargo-slot modules are retired; the exact non-cargo module choices remain
+     for the Phase 8 player-experience spec. Ownership is still the gateway to
+     build depth.
 - **Later:** multiple owned hulls with distinct slot layouts, swapped per
   contract at the hangar (6,000–12,000¢ range).
 - **Endgame hook (not v1, write nothing yet):** lease spare hulls out —

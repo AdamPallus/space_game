@@ -1,6 +1,6 @@
 # Space Shooter Current State
 
-Last audited: 2026-07-15
+Last audited: 2026-07-16
 
 This is the first file to read before changing the game. It summarizes what is implemented now, which docs are still authoritative, which older specs are archived, and which validation commands should pass before committing.
 
@@ -12,7 +12,7 @@ The project is a browser-based extraction shmup. Players launch from the hangar,
 - Scripted JSON missions in `levels/` with variants, lab encounters, bosses, salvage pods, item drops, enemy projectile profiles/attack patterns, and enemy catalog validation.
 - The player-facing campaign runs from Mission 1 through Mission 8 / Last Light, then continues through five newly authored slices: Crossed Claims (hybrid), Processional (Chorus swarm), Repossession (Tithe armor), The Green Signal (Verdant ecology), and Return Address (Verdant interception). Missions 9–11 and the remaining old Act 2/3 encounter scripts are hidden from the normal board; `?devActs=1` exposes and unlocks them only for agentic regression access.
 - The discarded Act 2/3 passes remain a mechanics and art toolbox: graph unlocks, branch tracking, miniboss treatment, lineage AIs, boss phases, tractor pulls, lock-on shots, rammer/latch behavior, breach integrity, lien caps, generated fleets/backgrounds, and Heirloom plumbing still exist even though their old missions are not campaign canon.
-- A cargo and extraction loop with recovery bonuses, death writedowns, cargo holds, mission debriefs, and itemized salvage.
+- A cargo and extraction loop with unlimited in-flight collection, recovery bonuses, death writedowns, mission debriefs, and itemized salvage. Every reached pod can be collected; the HUD shows a running total, recent rarity icons, and overflow count rather than empty capacity slots.
 - Stable replay difficulty: completed mission count drives records, market refreshes, and mission numbering, but it does not scale enemy damage or speed on replayed missions. Combat pressure can still ramp within a mission over elapsed time or through explicit level-authored projectile profiles.
 - A generated item system using `items/item_pool.json`, weapon frames, affix families, relic collection tracking, and armory card/tooltips.
 - A Ledger market with rotating stock, daily lots, pricing, dividends, bulletins, volatility, sponsored listings, and license tiers that increase visible stock through Ledger Investments. Active economy tuning lives in `config/economy.json` and is validated before startup.
@@ -30,7 +30,7 @@ These are intentional follow-up targets, not bugs in the docs:
 
 - The `outdated_docs/implemented_specs/NEXT_OVERHAUL_SPEC.md` cleanup/loadout pass is implemented for player testing, including hangar-first starts, explicit credit settlement, repair/booster caches, EMP projectile clear, browsing controls, Ledger license investments, mini weapons, second-primary swapping, named hulls, aux engineering, and opt-in compatible dual-fire.
 - Item durability remains deferred.
-- Cargo/economy hulls remain deferred.
+- Economy hulls remain deferred. Cargo-capacity hulls and cargo-slot upgrades are retired; unlimited collection is the intentional current rule.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader design direction rather than current gameplay systems.
 - Crossed Claims' first playtest validated its swarm/armor overlap: a high-AC twin-rapid-plasma ship erased chip fire and small enemies but remained vulnerable to grapplers, heavy projectiles, and armored anchors. Processional's first playtest validated its pure swarm/defense check: Needlebloom plus AC30 Heavy Plate could not clear everything but survived the chip field while ships and heavy projectiles remained dodge threats; conductor collapse read clearly. Its first miniboss now holds an orbit until killed instead of descending offscreen.
 - Repossession is player-validated with the gold Starwound Lance. Its encounter composition and AC30–42 role check work, and the strengthened focused kinetics, plasma rendering optimization, and Escrow lock presentation are player-accepted. The seizure slug is sharpened from 760 to 1350 after it proved too easy to dodge; Assessor lien readability is still unverified because Assessors were not noticed during the retest.
@@ -64,6 +64,7 @@ Useful dev query flags:
 - `?devAutoFire=1` keeps the primary weapon firing during manual checks.
 - `?devCommission=<missionId>` grants that mission's first-clear reward queue for agentic reward-UI testing. It intentionally marks the named mission complete in the active local save; use it only on a disposable test pilot.
 - `?devTuning=1` opens the economy tuning console on non-combat scenes. Sparse local overrides persist in localStorage, show a `TUNING OVERRIDES ACTIVE` badge, and can be exported as merged JSON.
+- `?devArsenal=1&devCargo=8` seeds a disposable sortie with eight mixed-rarity cargo pods for unlimited-hold HUD and debrief regression checks. The fixture is capped at 24 and does not run without Test Arsenal mode.
 - The Dev Options menu includes `Test Arsenal + Wallet`; checking it persists the mode in the current save, grants a 999,999,999-credit wallet, and reveals the Ledger Test Arsenal with one fresh random roll of every standard item, Pre-Founding relic, and Heirloom. It also reveals a save-safe `Effective Dual Fire` selector for Progression or exact Tier 0–4 testing. Unchecking hides and disables that override but does not undo credits or acquired items. `?devArsenal=1&devDualFire=2` is the agent-friendly Tier 2 shortcut.
 
 ## Validation
@@ -126,7 +127,7 @@ alpha processing described in `ASSET_GENERATION.md`.
 
 Recent history shows these major pieces have already landed:
 
-- Phase 1 extraction loop: salvage pods, cargo hold, extraction settlement, and itemized debrief.
+- Phase 1 extraction loop: salvage pods, unlimited cargo collection, extraction settlement, and itemized debrief.
 - Phase 2 Ledger market: rotating stock, lots, market state, dividends, and UI.
 - Phase 3 flat scene shell: noncombat navigation and scene-based UI.
 - Phase 4 item generation: larger item pool, affix families, relics, balance report, and validators.

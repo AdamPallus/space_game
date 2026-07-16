@@ -1,6 +1,6 @@
 # Current Systems
 
-Last audited: 2026-07-15
+Last audited: 2026-07-16
 
 This file explains how the game works today. It is intentionally descriptive rather than aspirational; new plans should start in `ROADMAP.md` and only graduate into this file after implementation.
 
@@ -8,7 +8,7 @@ This file explains how the game works today. It is intentionally descriptive rat
 
 The player starts from the hangar, prepares a ship in the armory, chooses a mission, launches into combat, collects salvage and item drops, then extracts. Completing or failing a sortie settles credits, cargo, items, market progress, and mission unlocks.
 
-Combat is still arcade-first. The player controls a ship in a scrolling arena, fights scripted waves, picks up drops, and survives until the mission timer, boss, or objective chain completes. Extraction is the main risk/reward bridge between combat and progression: cargo that is recovered or safely extracted becomes part of the long-term account state.
+Combat is still arcade-first. The player controls a ship in a scrolling arena, fights scripted waves, picks up drops, and survives until the mission timer, boss, or objective chain completes. Extraction is the main risk/reward bridge between combat and progression: every reached salvage pod can be collected without a capacity limit, but cargo only becomes part of the long-term account state after a successful RTB or completion. Hull loss still voids the full haul. The combat HUD shows the total over an infinity mark, the six most recent rarity icons, and a count for earlier pods.
 
 ## Combat And Ship Systems
 
@@ -103,7 +103,7 @@ Old Flight School save fields remain migration-compatible, but they no longer co
 
 The economy combines enemy kill bounties, explicit objective credits, mission completion credits, cargo recovery, Ledger market returns, and item collection. Score and elapsed mission time can remain as display or telemetry, but they do not silently convert into credits. Mission debrief copy breaks out kill bounties, objective credits, completion credits, recovery charges, dividends, writedowns, and market settlement.
 
-Active economy tuning is loaded from `config/economy.json` before save migration or hangar rendering. Startup blocks with a visible error if the shipped config is missing or invalid. The config owns market rates and license tiers, extraction cargo and payout rates, item value ranges and roll-quality value scaling, drop tables, mission reward constants, investments, consumables, Credit Flow report targets, and legacy credit gates still needed for compatibility. Combat math, level enemy/objective credits, item affixes, rarity presentation, and level data remain outside the economy config.
+Active economy tuning is loaded from `config/economy.json` before save migration or hangar rendering. Startup blocks with a visible error if the shipped config is missing or invalid. The config owns market rates and license tiers, extraction payout rates and the explicit unlimited-cargo policy, item value ranges and roll-quality value scaling, drop tables, mission reward constants, investments, consumables, Credit Flow report targets, and legacy credit gates still needed for compatibility. Combat math, level enemy/objective credits, item affixes, rarity presentation, and level data remain outside the economy config.
 
 Ledger market state includes rotating stock, lot purchases, dividends, price movement, bulletins, volatility, sponsored listings, mispriced opportunities, and license tiers. Ledger licenses increase visible stock from 5 lots to 7, 9, and 11 lots at the documented upgrade costs, but the license purchase UI lives in Ledger Investments rather than Market. Market does not include a fixed Basic Gear section. Market lots preserve saved item/list value and compute purchase price at render and purchase time from current config rates; sale quotes derive the handling fee from `sellRate`, so config edits affect live sale payouts without code changes.
 
@@ -124,7 +124,7 @@ Armory inventory, item archive, and Ledger sell views now include text search pl
 Current gaps:
 
 - Item durability is still deferred.
-- Cargo/economy hulls are still deferred.
+- Economy hulls are still deferred. Cargo-capacity hulls and cargo-slot upgrades are no longer planned under the current unlimited-collection rule.
 - Larger family-tier, hull-ownership, and certification systems remain design direction rather than current implementation.
 
 ## Assets
@@ -176,7 +176,7 @@ git diff --check
 The most important remaining design mismatches are:
 
 - Item durability is not implemented and remains intentionally deferred.
-- Cargo/economy hulls are not part of the first hull pass.
+- Economy hulls are not part of the first hull pass; cargo capacity is no longer a hull axis.
 - Family tiers, hull ownership fiction, surface layers, and certification systems remain broader economy/lore direction rather than active gameplay systems.
 - The new overhaul systems need player-testing balance passes after deployment, especially second-bay strain, high-rarity defense strength, and early hard-mission pickup placement. If high armor class over-solves projectile density, the preferred counterbalance is adding visually obvious high-damage projectiles rather than simply raising all enemy DPS.
 - The old Act 2/3 mission and music plans are historical/toolbox material, not active implementation work.

@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "market": {
     "buyRate": 1,
     "sellRate": 0.4,
@@ -48,7 +48,7 @@
     ]
   },
   "extraction": {
-    "cargoSize": 3,
+    "cargoCapacity": "unlimited",
     "deathBountyWritedownRate": 0.25,
     "deathBountyKeepFraction": 0.75,
     "recoveryBonusRate": { "min": 0.1, "max": 0.25 }

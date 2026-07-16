@@ -22,7 +22,7 @@ const minibossShieldFill = document.getElementById("miniboss-shield-fill");
 const minibossArmorFill = document.getElementById("miniboss-armor-fill");
 const minibossProgressFill = document.getElementById("miniboss-progress-fill");
 const hudCargoPips = document.getElementById("hud-cargo-pips");
-const hudCargoStatus = document.getElementById("hud-cargo-status");
+const hudCargoCount = document.getElementById("hud-cargo-count");
 const hudDefenseIntegrity = document.getElementById("hud-defense-integrity");
 const hudDefenseIntegrityFill = document.getElementById("hud-defense-integrity-fill");
 const hudDefenseIntegrityValue = document.getElementById("hud-defense-integrity-value");
@@ -326,7 +326,6 @@ const PROJECTILE_RUNTIME_PROFILE_KEYS = new Set([
 const ECONOMY = {
   salvagePodSpeed: 40,
   fieldPickupSpeed: 46,
-  cargoFullFlashSeconds: 1.1,
   minDamageFloor: 0.2,
   kinetic: {
     baseDamage: 14,
@@ -398,6 +397,8 @@ const ECONOMY = {
     },
   },
 };
+
+const CARGO_HUD_VISIBLE_ITEMS = 6;
 
 let baseEconomyConfig = null;
 let economyConfig = null;
@@ -501,11 +502,6 @@ function getMarketHandlingFeeRate() {
   return Math.max(0, Math.min(1, 1 - getMarketSellRate()));
 }
 
-function getConfiguredCargoSize() {
-  const value = getExtractionConfig().cargoSize;
-  return Math.max(1, Math.round(value));
-}
-
 function normalizeEconomyLicenseTier(config, fallbackTier = 0) {
   if (!isPlainObject(config)) throw new Error("market.licenseTiers entries must be objects.");
   const lots = Number(config?.lots ?? config?.stockLots);
@@ -548,9 +544,10 @@ function normalizeEconomyConfig(config) {
   normalized.market.stockVersion = Math.max(1, Math.round(stockVersion));
   normalized.market.licenseTiers = normalized.market.licenseTiers.map(normalizeEconomyLicenseTier);
   if (!normalized.market.licenseTiers.length) throw new Error("market.licenseTiers must not be empty.");
-  const cargoSize = Number(normalized.extraction.cargoSize);
-  if (!Number.isFinite(cargoSize)) throw new Error("extraction.cargoSize must be finite.");
-  normalized.extraction.cargoSize = Math.max(1, Math.round(cargoSize));
+  if (normalized.extraction.cargoCapacity !== "unlimited") {
+    throw new Error('extraction.cargoCapacity must be "unlimited".');
+  }
+  delete normalized.extraction.cargoSize;
   const writedownRate = Number(normalized.extraction.deathBountyWritedownRate);
   if (!Number.isFinite(writedownRate)) {
     throw new Error("extraction.deathBountyWritedownRate must be finite.");
@@ -1107,7 +1104,6 @@ const KINETIC_FOCUSED_SINGLE_SHOT_DAMAGE_MULT = {
 };
 
 const LEDGER_COPY = {
-  cargoFull: "CARGO FULL",
   shieldCache: "SHIELD CACHE",
   armorCache: "ARMOR PATCH",
   salvageCache: "FIELD SALVAGE",
@@ -4382,6 +4378,10 @@ const devPressure = isDevFlagEnabled("devPressure");
 const devPerf = isDevFlagEnabled("devPerf");
 const devActs = isDevFlagEnabled("devActs");
 const devCommissionMissionId = getDevParam("devCommission");
+const requestedDevCargoCount = Math.floor(Number(getDevParam("devCargo")));
+const devCargoFixtureCount = devArsenal && Number.isFinite(requestedDevCargoCount)
+  ? Math.max(0, Math.min(24, requestedDevCargoCount))
+  : 0;
 const DEV_DUAL_FIRE_OVERRIDE_STORAGE_KEY = "mini-fighter-dev-dual-fire-tier";
 
 function normalizeDevDualFireTier(value) {
@@ -4885,7 +4885,6 @@ const salvagePods = [];
 const floatingTexts = [];
 const explosions = [];
 let backgroundScroll = 0;
-let cargoHudMessageTimer = 0;
 
 const assets = {
   background: loadImage(`${BG_ROOT}/blue.png`),
@@ -7475,6 +7474,14 @@ async function startMission({ showIntro = false } = {}) {
     onboardingMissionId: directive?.missionId || null,
     onboardingTitle: directive?.title || "",
   };
+  if (devCargoFixtureCount > 0) {
+    const fixtureRarities = ["scrap", "certified", "prototype"];
+    for (let index = 0; index < devCargoFixtureCount; index += 1) {
+      const rarity = fixtureRarities[index % fixtureRarities.length];
+      const item = rollItemForRarity(rarity, { sourceKey: "devCargo", includeActiveMission: false });
+      if (item) state.cargo.push(item);
+    }
+  }
   setDesiredMusic(level);
   bullets.length = 0;
   enemyBullets.length = 0;
@@ -7482,7 +7489,6 @@ async function startMission({ showIntro = false } = {}) {
   salvagePods.length = 0;
   floatingTexts.length = 0;
   explosions.length = 0;
-  cargoHudMessageTimer = 0;
   player.x = canvas.width / window.devicePixelRatio / 2;
   player.y = canvas.height / window.devicePixelRatio - 120;
   pointer.x = player.x;
@@ -12718,7 +12724,6 @@ function spawnSalvagePod(x, y, drop) {
     rarity: drop.rarity || drop.item.rarity || "scrap",
     item: drop.item,
     age: 0,
-    rejected: false,
   });
 }
 
@@ -12746,7 +12751,6 @@ function spawnFieldCache(x, y, type) {
     x,
     y,
     age: 0,
-    rejected: false,
   });
 }
 
@@ -12791,12 +12795,6 @@ function getCargoItems() {
 
 function collectSalvagePod(pod) {
   const cargo = getCargoItems();
-  if (cargo.length >= getConfiguredCargoSize()) {
-    pod.rejected = true;
-    cargoHudMessageTimer = ECONOMY.cargoFullFlashSeconds;
-    spawnFloatingText(player.x, player.y - 32, LEDGER_COPY.cargoFull, "#f97316");
-    return false;
-  }
   cargo.push(cloneItem(pod.item));
   if (mission) mission.cargo = cargo;
   spawnFloatingText(pod.x, pod.y, getRarityConfig(pod.rarity).shortLabel, getRarityConfig(pod.rarity).color);
@@ -12931,7 +12929,6 @@ function handleSalvagePodCollisions() {
   if (!mission?.active) return;
   for (let i = salvagePods.length - 1; i >= 0; i -= 1) {
     const pod = salvagePods[i];
-    if (pod.rejected) continue;
     if (distance(player.x, player.y, pod.x, pod.y) < player.radius + pod.radius) {
       const collected = pod.kind === "salvage" || !pod.kind
         ? collectSalvagePod(pod)
@@ -14210,7 +14207,7 @@ function getNearestLooseSalvagePod(enemy) {
   let best = null;
   let bestDistance = Infinity;
   salvagePods.forEach((pod) => {
-    if (!pod || pod.rejected || pod.kind && pod.kind !== "salvage") return;
+    if (!pod || pod.kind && pod.kind !== "salvage") return;
     const d = distance(enemy.x, enemy.y, pod.x, pod.y);
     if (d < bestDistance) {
       best = pod;
@@ -14507,8 +14504,6 @@ function update(delta) {
   cameraShake.kickX *= kickDamp;
   cameraShake.kickY *= kickDamp;
   screenFlash = Math.max(0, screenFlash - delta * 6.0);
-  cargoHudMessageTimer = Math.max(0, cargoHudMessageTimer - delta);
-
   if (!mission || !mission.active || paused) return;
 
   mission.elapsed += delta;
@@ -15812,7 +15807,7 @@ function drawSalvagePod(pod) {
     assets.salvagePodFallback;
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
-  ctx.globalAlpha = pod.rejected ? 0.42 : 0.72;
+  ctx.globalAlpha = 0.72;
   const glow = ctx.createRadialGradient(pod.x, pod.y, 0, pod.x, pod.y, 34 * pulse);
   glow.addColorStop(0, rarityConfig.glow);
   glow.addColorStop(1, "rgba(0, 0, 0, 0)");
@@ -15821,7 +15816,7 @@ function drawSalvagePod(pod) {
   ctx.arc(pod.x, pod.y, 34 * pulse, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalCompositeOperation = "source-over";
-  ctx.globalAlpha = pod.rejected ? 0.55 : 1;
+  ctx.globalAlpha = 1;
   if (sprite?.loaded || assets.salvagePodFallback?.loaded) {
     drawSpriteCentered(
       sprite?.loaded ? sprite : assets.salvagePodFallback,
@@ -15845,7 +15840,6 @@ function drawCarriedPod(enemy) {
     x: enemy.x,
     y: enemy.y + enemy.radius * 0.45,
     age: enemy.carriedPod.age || mission?.elapsed || 0,
-    rejected: false,
   });
 }
 
@@ -16299,24 +16293,28 @@ function updateCargoHud() {
   if (!hudCargoPips) return;
   const cargo = getCargoItems();
   hudCargoPips.innerHTML = "";
-  const cargoSize = getConfiguredCargoSize();
-  for (let i = 0; i < cargoSize; i += 1) {
-    const item = cargo[i];
-    const rarity = item?.rarity || null;
+  const hiddenCount = Math.max(0, cargo.length - CARGO_HUD_VISIBLE_ITEMS);
+  const visibleCargo = cargo.slice(-CARGO_HUD_VISIBLE_ITEMS);
+  if (hudCargoCount) hudCargoCount.textContent = `${cargo.length} / ∞`;
+  const cargoHud = hudCargoPips.closest(".cargo-hud");
+  if (cargoHud) {
+    cargoHud.setAttribute("aria-label", `${cargo.length} recovered cargo pods, unlimited capacity`);
+  }
+  if (hiddenCount > 0) {
+    const overflow = document.createElement("span");
+    overflow.className = "cargo-overflow";
+    overflow.textContent = `+${hiddenCount}`;
+    overflow.dataset.uiTip = `${hiddenCount} earlier cargo pod${hiddenCount === 1 ? "" : "s"} safely stored`;
+    hudCargoPips.appendChild(overflow);
+  }
+  visibleCargo.forEach((item, index) => {
+    const rarity = item?.rarity || "scrap";
     const pip = document.createElement("span");
-    pip.className = `cargo-pip${rarity ? ` filled rarity-${rarity}` : ""}`;
-    if (rarity) {
-      pip.dataset.uiTip = getRarityLabel(rarity);
-      pip.setAttribute("style", getRarityStyle(rarity));
-    } else {
-      pip.dataset.uiTip = "Empty cargo slot";
-    }
+    pip.className = `cargo-pip filled rarity-${rarity}`;
+    pip.dataset.uiTip = `${getRarityLabel(rarity)} cargo · ${hiddenCount + index + 1} of ${cargo.length}`;
+    pip.setAttribute("style", getRarityStyle(rarity));
     hudCargoPips.appendChild(pip);
-  }
-  if (hudCargoStatus) {
-    hudCargoStatus.hidden = cargoHudMessageTimer <= 0;
-    hudCargoStatus.textContent = LEDGER_COPY.cargoFull;
-  }
+  });
 }
 
 function updateDefenseIntegrityHud() {

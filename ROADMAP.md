@@ -1,6 +1,6 @@
 # Roadmap
 
-Last audited: 2026-07-15
+Last audited: 2026-07-16
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
@@ -23,6 +23,12 @@ economic skeleton but still needs a dedicated creative session to decide its
 player experience, characters, choice presentation, and emotional turn.
 Assessor lien readability remains an explicitly unverified but non-blocking
 observation.
+
+Fresh-player feedback also retired the three-slot cargo hold before the next
+economy phase. In-flight collection and between-run storage are now unlimited;
+survival and the RTB decision remain the extraction risk. Cargo-slot investments
+and hull bonuses are removed from the backlog unless a future explicit design
+decision reopens them.
 
 ## Player-validated combat direction (2026-07-09)
 
@@ -196,7 +202,7 @@ an accepted long-term proposal, not an implementation-ready recut of the phases
 below.
 
 1. **Phase 8 — The Bill Arrives (credit sink + leash).** Build the two designed-but-deferred sinks from `ECONOMY_DESIGN.md`: Family Tier (§7 — signed remittance liabilities plus gray-market perks delivered by named family members) and Hull Ownership (§6 — lease writedown vs. owned flat refit plus mod bay). This is the fix for the credit surplus: money starts buying a life instead of just gear, and the Chapter 1 leash appears on screen as a recurring red receipt line the player chose to sign. Use `config/economy.json`, Credit Flow, and `?devTuning=1` for tuning instead of code edits.
-2. **Phase 9 — Planet Raids (the hidden extraction).** Build the surface-layer sketch (`ECONOMY_DESIGN.md` §9) as a distinct raid mission type. Surface targets are loot, not threats; raids gate the next tier of consumables and the deferred cargo/economy hulls. Every raid debrief carries a **sealed manifest** line — cargo the player delivered, never saw, and is not paid for ("Manifest line 7 — sealed under Ledger seal."). Sealed manifests accumulate visibly in the archive. Pre-Founding relic lore lines begin pointing at what the manifests contain.
+2. **Phase 9 — Planet Raids (the hidden extraction).** Build the surface-layer sketch (`ECONOMY_DESIGN.md` §9) as a distinct raid mission type. Surface targets are loot, not threats; raids gate the next tier of consumables and deferred economy hulls, not cargo capacity. Every raid debrief carries a **sealed manifest** line — cargo the player delivered, never saw, and is not paid for ("Manifest line 7 — sealed under Ledger seal."). Sealed manifests accumulate visibly in the archive. Pre-Founding relic lore lines begin pointing at what the manifests contain.
 3. **Phase 10 — The Fork (Loyalist / Rebel).** Off-books resistance contracts that never appear on the mission board, versus a Ledger confidence track that eventually makes the true-believer case in full. The Rebel path is autonomous drone allies with escalating divergence from Ledger command; `MOTHERSHIP_AUTOMATION_PROPOSAL.md` preserves the possibility that this includes both genuine alignment failures and principled independence. Do not spec this phase until 8 and 9 are playable — the fork only means something once the leash and the manifests have been felt.
 
 ## Silent Lineages toolbox status

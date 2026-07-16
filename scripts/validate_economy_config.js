@@ -177,7 +177,12 @@ function validateConfig(config) {
 
   const extraction = config.extraction;
   if (objectAt(extraction, "extraction")) {
-    numberAt(extraction.cargoSize, "extraction.cargoSize", { min: 1, integer: true });
+    if (extraction.cargoCapacity !== "unlimited") {
+      fail('extraction.cargoCapacity must be "unlimited".');
+    }
+    if (Object.prototype.hasOwnProperty.call(extraction, "cargoSize")) {
+      fail("extraction.cargoSize is retired; in-mission cargo has no capacity limit.");
+    }
     validateFraction(extraction.deathBountyWritedownRate, "extraction.deathBountyWritedownRate");
     validateFraction(extraction.deathBountyKeepFraction, "extraction.deathBountyKeepFraction");
     if (

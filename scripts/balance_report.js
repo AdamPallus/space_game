@@ -25,6 +25,7 @@ const ECONOMY = {
       large: 1.16,
     },
     velocityLevelBudgetBonus: 0.12,
+    dualHeavyImpulseBonus: 0.65,
   },
   plasma: {
     baseDamage: 12,
@@ -288,12 +289,17 @@ function rollSampleItem(pool, id, entry, rarity, seed) {
   };
 }
 
-function getKineticImpulseBudget(build, gunDiameter = "medium") {
+function getKineticPatternImpulseBonus(spread = "focused") {
+  return spread === "dual" ? ECONOMY.kinetic.dualHeavyImpulseBonus || 0 : 0;
+}
+
+function getKineticImpulseBudget(build, gunDiameter = "medium", spread = "focused") {
   const kinetic = ECONOMY.kinetic;
   const baseBudget = kinetic.impulseBudgetByDiameter[gunDiameter] || 1;
   const velocityBonus = Math.max(0, build.flowVelocityLevel || 0) * kinetic.velocityLevelBudgetBonus;
   const itemBonus = Number.isFinite(build.kineticImpulseBudget) ? build.kineticImpulseBudget : 0;
-  return Math.max(0.2, baseBudget + velocityBonus + itemBonus);
+  const patternBonus = getKineticPatternImpulseBonus(spread);
+  return Math.max(0.2, baseBudget + velocityBonus + itemBonus + patternBonus);
 }
 
 function getPlasmaImpulseTuning(build) {
@@ -434,7 +440,10 @@ function getPrimaryFireConfig(build) {
     : { impulseBudget: 0, sizeScale: 1, speedScale: 1 };
   const projectileRadius = 4 * diameterScale * flowSizeScale * spreadRadiusScale * plasmaImpulseTuning.sizeScale;
   const sizeFactor = Math.max(0.05, projectileRadius / 4);
-  const kineticImpulseBudget = ammo === "kinetic" ? getKineticImpulseBudget(build, gunDiameter) : null;
+  const kineticPatternImpulseBonus =
+    ammo === "kinetic" ? getKineticPatternImpulseBonus(spread) : 0;
+  const kineticImpulseBudget =
+    ammo === "kinetic" ? getKineticImpulseBudget(build, gunDiameter, spread) : null;
   const velocityFactor =
     ammo === "kinetic"
       ? Math.max(
@@ -462,6 +471,8 @@ function getPrimaryFireConfig(build) {
     shotDamageMult,
     armorChipFloorRate: isRapidPattern ? 0.035 : ECONOMY.minDamageFloor,
     minArmorChipDamage: isRapidPattern ? 0.25 : 1,
+    kineticImpulseBudget,
+    kineticPatternImpulseBonus,
   };
 }
 
@@ -1564,6 +1575,14 @@ const phase4bRows = {
   slug: requireRow("base:slug_cannon"),
   longbow: requireRow("base:longbow_rail"),
 };
+const dualKineticRows = {
+  heavy: requireRow("base:twin_driver"),
+  rapid: requireRow("base:stitch_driver"),
+};
+const goldDualKineticRows = {
+  heavy: requireRow("preFounding:relic_oathpair_driver"),
+  rapid: requireRow("preFounding:relic_needleloom_driver"),
+};
 const phase4bPlatedTarget =
   enemies.find((enemy) => enemy.id === "level8_armored:boss") ||
   enemies.find((enemy) => enemy.id === "plated") ||
@@ -1572,6 +1591,60 @@ const phase4bSwarmTarget =
   enemies.find((enemy) => enemy.id === "fighter") ||
   enemies.find((enemy) => enemy.id === "scout") ||
   enemies.find((enemy) => enemy.id === "gnat");
+
+if (phase4bPlatedTarget && Object.values(dualKineticRows).every(Boolean)) {
+  const heavy = dualKineticRows.heavy;
+  const rapid = dualKineticRows.rapid;
+  const perShotRatio = heavy.offense.perShot / Math.max(0.001, rapid.offense.perShot);
+  const dpsRatio = heavy.offense.directDps / Math.max(0.001, rapid.offense.directDps);
+  const heavyTtk = heavy.ttk[phase4bPlatedTarget.id];
+  const rapidTtk = rapid.ttk[phase4bPlatedTarget.id];
+  if (perShotRatio < 1.75) {
+    failures.push(
+      `Twin Driver should hit at least 75% harder than Stitch Driver; got ${perShotRatio.toFixed(2)}x.`
+    );
+  }
+  if (!(dpsRatio >= 0.7 && dpsRatio <= 1.15)) {
+    failures.push(
+      `Twin Driver unarmored DPS should stay near Stitch Driver while trading cadence for impact; got ${dpsRatio.toFixed(2)}x.`
+    );
+  }
+  if (!(Number.isFinite(heavyTtk) && Number.isFinite(rapidTtk) && heavyTtk <= rapidTtk * 0.75)) {
+    failures.push(
+      `Twin Driver should beat Stitch Driver by at least 25% against ${phase4bPlatedTarget.id}; got ${formatTtk(heavyTtk)}s vs ${formatTtk(rapidTtk)}s.`
+    );
+  }
+  console.log(
+    `Dual kinetic role check: Twin ${heavy.offense.perShot.toFixed(1)} damage/shot, ${heavy.offense.directDps.toFixed(1)} DPS, ${formatTtk(heavyTtk)}s plated | Stitch ${rapid.offense.perShot.toFixed(1)} damage/shot, ${rapid.offense.directDps.toFixed(1)} DPS, ${formatTtk(rapidTtk)}s plated`
+  );
+}
+
+if (phase4bPlatedTarget && Object.values(goldDualKineticRows).every(Boolean)) {
+  const heavy = goldDualKineticRows.heavy;
+  const rapid = goldDualKineticRows.rapid;
+  const perShotRatio = heavy.offense.perShot / Math.max(0.001, rapid.offense.perShot);
+  const dpsRatio = heavy.offense.directDps / Math.max(0.001, rapid.offense.directDps);
+  const heavyTtk = heavy.ttk[phase4bPlatedTarget.id];
+  const rapidTtk = rapid.ttk[phase4bPlatedTarget.id];
+  if (perShotRatio < 2) {
+    failures.push(
+      `Oathpair should hit at least twice as hard as Needleloom; got ${perShotRatio.toFixed(2)}x.`
+    );
+  }
+  if (!(dpsRatio >= 0.75 && dpsRatio <= 1.1)) {
+    failures.push(
+      `Oathpair raw DPS should stay near Needleloom while trading cadence for impact; got ${dpsRatio.toFixed(2)}x.`
+    );
+  }
+  if (!(Number.isFinite(heavyTtk) && Number.isFinite(rapidTtk) && heavyTtk <= rapidTtk * 0.85)) {
+    failures.push(
+      `Oathpair should beat Needleloom by at least 15% against ${phase4bPlatedTarget.id}; got ${formatTtk(heavyTtk)}s vs ${formatTtk(rapidTtk)}s.`
+    );
+  }
+  console.log(
+    `Gold dual kinetic check: Oathpair ${heavy.offense.perShot.toFixed(1)} damage/shot, ${heavy.offense.directDps.toFixed(1)} DPS, ${formatTtk(heavyTtk)}s plated | Needleloom ${rapid.offense.perShot.toFixed(1)} damage/shot, ${rapid.offense.directDps.toFixed(1)} DPS, ${formatTtk(rapidTtk)}s plated`
+  );
+}
 
 if (phase4bPlatedTarget && Object.values(phase4bRows).every(Boolean)) {
   const needleTtk = phase4bRows.needle.ttk[phase4bPlatedTarget.id];

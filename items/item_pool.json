@@ -1196,12 +1196,12 @@
       "uniqueProperty": {
         "id": "oathpair_recoil_oath",
         "name": "Oathpair recoil oath",
-        "description": "Adds paired recoil recovery and shared impulse reserve.",
+        "description": "Adds paired recoil recovery and +110% shared impulse reserve.",
         "tags": ["impulse", "flow-rate", "driver"],
         "buildAdd": {
           "flowRateLevel": 1,
           "flowVelocityLevel": 1,
-          "kineticImpulseBudget": 0.16
+          "kineticImpulseBudget": 1.1
         }
       },
       "relicLore": "TODO(adam): Final Oathpair Driver identification fragment."

@@ -91,7 +91,7 @@ Mini weapons should contribute roughly 20-35% of a comparable primary weapon's s
 : One straight projectile.
 
 `dual`
-: Two straight projectiles fired side by side. It has slower trigger cadence than focused fire.
+: Two straight projectiles fired side by side. It has slower trigger cadence than focused fire. Kinetic dual frames receive a factory paired-recoil impulse reserve so their larger rounds deliver materially heavier individual hits; item, aux, and supply impulse still stack through the normal kinetic speed-damage formula.
 
 `dualRapid`
 : Two narrow side-by-side projectiles with rapid-fire cadence. This is a hybrid family, shown to players as `Twin Rapid`.

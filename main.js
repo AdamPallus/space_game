@@ -339,6 +339,7 @@ const ECONOMY = {
       large: 1.16,
     },
     velocityLevelBudgetBonus: 0.12,
+    dualHeavyImpulseBonus: 0.65,
   },
   plasma: {
     baseDamage: 12,
@@ -2912,6 +2913,63 @@ function normalizeSavedArmoryItem(item) {
   refreshSavedCatalogItemBuild(item);
   return item;
 }
+
+window.__dualKineticBalanceReport = () => {
+  const legacyOathpair = {
+    baseId: "relic_oathpair_driver",
+    slotType: "primary",
+    rarity: "preFounding",
+    build: {
+      ...createDefaultShipBuild(),
+      gunDiameter: "medium",
+      spread: "dual",
+      ammo: "kinetic",
+      effect: "vampiric",
+      effectUpgrades: {
+        ...createDefaultShipBuild().effectUpgrades,
+        vampiric: 2,
+      },
+      flowRateLevel: 2,
+      flowVelocityLevel: 3,
+      cooldownMult: 0.98,
+      kineticImpulseBudget: 0.6,
+    },
+    affixes: [{ id: "vampiric_trace", effectTier: 2 }],
+  };
+  const before = {
+    impulse: legacyOathpair.build.kineticImpulseBudget,
+    effect: legacyOathpair.build.effect,
+    vampiricTier: legacyOathpair.build.effectUpgrades.vampiric,
+  };
+  const changed = refreshSavedCatalogItemBuild(legacyOathpair);
+  const kineticDual = getPrimaryFireConfig({
+    ...createDefaultShipBuild(),
+    gunDiameter: "medium",
+    spread: "dual",
+    ammo: "kinetic",
+  });
+  const plasmaDual = getPrimaryFireConfig({
+    ...createDefaultShipBuild(),
+    gunDiameter: "medium",
+    spread: "dual",
+    ammo: "plasma",
+  });
+  return {
+    patternImpulse: {
+      kineticDual: kineticDual.kineticPatternImpulseBonus,
+      plasmaDual: plasmaDual.kineticPatternImpulseBonus,
+    },
+    saveRefresh: {
+      changed,
+      before,
+      after: {
+        impulse: legacyOathpair.build.kineticImpulseBudget,
+        effect: legacyOathpair.build.effect,
+        vampiricTier: legacyOathpair.build.effectUpgrades.vampiric,
+      },
+    },
+  };
+};
 
 function getCatalogAffix(affixId) {
   const catalog = itemPoolCatalog || { affixes: {} };
@@ -8046,6 +8104,7 @@ function updateHangar() {
   document.body.dataset.primaryFireModeEffective = getPrimaryFireMode();
   if (arsenalEnabled) {
     const dualFireProgressionAudit = window.__dualFireProgressionReport?.();
+    const dualKineticBalanceAudit = window.__dualKineticBalanceReport?.();
     document.body.dataset.dualFireMilestoneAudit = JSON.stringify(dualFireProgressionAudit?.milestones || {});
     document.body.dataset.dualFireBroadsideAudit = JSON.stringify(dualFireProgressionAudit?.broadside || {});
     document.body.dataset.dualFireMigrationCaseAudit = JSON.stringify(dualFireProgressionAudit?.migrationCases || {});
@@ -8056,12 +8115,14 @@ function updateHangar() {
       retiredUpgradeTier: state.upgrades?.dualFire || 0,
       refund: state.dualFireCampaignRefund || 0,
     });
+    document.body.dataset.dualKineticBalanceAudit = JSON.stringify(dualKineticBalanceAudit || {});
   } else {
     delete document.body.dataset.dualFireMilestoneAudit;
     delete document.body.dataset.dualFireBroadsideAudit;
     delete document.body.dataset.dualFireMigrationCaseAudit;
     delete document.body.dataset.dualFireModeAudit;
     delete document.body.dataset.dualFireMigrationAudit;
+    delete document.body.dataset.dualKineticBalanceAudit;
   }
   syncAudioControls();
   if (hangarStatus) {
@@ -10414,7 +10475,11 @@ function getActivePrimaryImpulseRows(stats, primaryItem) {
   const effectiveBuild = stats?.build;
   if (!cfg || !effectiveBuild) return [];
   const totalImpulseAdders = getBuildImpulseBudget(effectiveBuild);
-  if (Math.abs(totalImpulseAdders) <= 0.001) return [];
+  const patternImpulseBonus = cfg.kineticPatternImpulseBonus ?? 0;
+  if (
+    Math.abs(totalImpulseAdders) <= 0.001 &&
+    Math.abs(patternImpulseBonus) <= 0.001
+  ) return [];
 
   const intrinsicBuild = primaryItem ? createIntrinsicPrimaryBuild(primaryItem) : createDefaultShipBuild();
   const installedImpulse = totalImpulseAdders - getBuildImpulseBudget(intrinsicBuild);
@@ -10433,11 +10498,18 @@ function getActivePrimaryImpulseRows(stats, primaryItem) {
     ];
   }
 
+  const impulseParts = [];
+  if (Math.abs(displayedImpulse) > 0.001) {
+    impulseParts.push(formatSignedPercent(displayedImpulse));
+  }
+  if (patternImpulseBonus > 0.001) {
+    impulseParts.push(`Paired ${formatSignedPercent(patternImpulseBonus)}`);
+  }
   return [
     {
-      label,
-      value: `${formatSignedPercent(displayedImpulse)} | Speed x${formatNumber(cfg.velocityFactor, 2)}`,
-      math: `Total kinetic impulse budget ${formatNumber(cfg.kineticImpulseBudget, 2)} feeds speed-based damage.`,
+      label: patternImpulseBonus > 0.001 ? "Kinetic Impulse" : label,
+      value: `${impulseParts.join(" · ")} | Speed x${formatNumber(cfg.velocityFactor, 2)}`,
+      math: `Total kinetic impulse budget ${formatNumber(cfg.kineticImpulseBudget, 2)} includes bore, flow, item, support, and paired-pattern reserves and feeds speed-based damage.`,
     },
   ];
 }
@@ -10475,9 +10547,12 @@ function getPrimaryDamageBreakdownRows(offense) {
       });
     }
   } else {
+    const pairedImpulseText = cfg.kineticPatternImpulseBonus > 0.001
+      ? ` · Paired impulse ${formatSignedPercent(cfg.kineticPatternImpulseBonus)}`
+      : "";
     rows.push({
-      text: `Base ${ECONOMY.kinetic.baseDamage} · Size x${formatNumber(cfg.sizeFactor, 2)} · Speed x${formatNumber(cfg.velocityFactor, 2)}${focusText}${frameText}${loadoutText}${otherDamageText} -> ${formatNumber(offense.hitDamage, 1)}`,
-      math: `Kinetic hit damage = base * size * speed^${ECONOMY.kinetic.velocityExponent}${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}${frameText ? " * frame output" : ""}${loadoutText ? " * loadout output" : ""}${otherDamageText ? " * ship output" : ""}.`,
+      text: `Base ${ECONOMY.kinetic.baseDamage} · Size x${formatNumber(cfg.sizeFactor, 2)} · Speed x${formatNumber(cfg.velocityFactor, 2)}${pairedImpulseText}${focusText}${frameText}${loadoutText}${otherDamageText} -> ${formatNumber(offense.hitDamage, 1)}`,
+      math: `Kinetic hit damage = base * size * speed^${ECONOMY.kinetic.velocityExponent}${cfg.kineticPatternImpulseBonus > 0.001 ? "; paired heavy drivers add factory impulse before speed is calculated" : ""}${cfg.shotDamageMult > 1 ? " * focused multiplier" : ""}${frameText ? " * frame output" : ""}${loadoutText ? " * loadout output" : ""}${otherDamageText ? " * ship output" : ""}.`,
     });
   }
   rows.push({ text: `Shots per second ${formatNumber(offense.attacksPerSecond, 2)}` });
@@ -10639,7 +10714,7 @@ function getItemDisplayStats(item, slotId = null) {
         value: formatNumber(offense.hitDamage, 1),
         math: offense.cfg.ammo === "plasma"
           ? `Plasma hit damage = ${ECONOMY.plasma.baseDamage} * size ${formatNumber(offense.cfg.baseSizeFactor, 2)} * impulse ${formatNumber(offense.cfg.plasmaImpulseSizeScale, 2)}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`
-          : `Kinetic hit damage = ${ECONOMY.kinetic.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)} * ${formatNumber(offense.cfg.velocityFactor, 2)}^${ECONOMY.kinetic.velocityExponent}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`,
+          : `Kinetic hit damage = ${ECONOMY.kinetic.baseDamage} * ${formatNumber(offense.cfg.sizeFactor, 2)} * ${formatNumber(offense.cfg.velocityFactor, 2)}^${ECONOMY.kinetic.velocityExponent}${offense.cfg.kineticPatternImpulseBonus > 0.001 ? `; paired recoil reserve ${formatSignedPercent(offense.cfg.kineticPatternImpulseBonus)}` : ""}${offense.cfg.shotDamageMult > 1 ? ` * focused ${formatNumber(offense.cfg.shotDamageMult, 2)}x` : ""}.`,
       },
       {
         label: "Ammo",
@@ -12907,7 +12982,11 @@ function getWeaponConfig() {
   };
 }
 
-function getKineticImpulseBudget(build, gunDiameter = "medium") {
+function getKineticPatternImpulseBonus(spread = "focused") {
+  return spread === "dual" ? ECONOMY.kinetic.dualHeavyImpulseBonus ?? 0 : 0;
+}
+
+function getKineticImpulseBudget(build, gunDiameter = "medium", spread = "focused") {
   const kinetic = ECONOMY.kinetic;
   const baseBudget = kinetic.impulseBudgetByDiameter?.[gunDiameter] ?? 1;
   const velocityBonus =
@@ -12915,7 +12994,8 @@ function getKineticImpulseBudget(build, gunDiameter = "medium") {
   const itemBonus = Number.isFinite(build?.kineticImpulseBudget)
     ? build.kineticImpulseBudget
     : 0;
-  return Math.max(0.2, baseBudget + velocityBonus + itemBonus);
+  const patternBonus = getKineticPatternImpulseBonus(spread);
+  return Math.max(0.2, baseBudget + velocityBonus + itemBonus + patternBonus);
 }
 
 function getPlasmaImpulseTuning(build) {
@@ -13020,8 +13100,10 @@ function getPrimaryFireConfig(buildOverride = null) {
   const projectileRadius = baseProjectileRadius * plasmaImpulseTuning.sizeScale;
   const baseSizeFactor = Math.max(0.05, baseProjectileRadius / 4);
   const sizeFactor = Math.max(0.05, projectileRadius / 4);
+  const kineticPatternImpulseBonus =
+    ammo === "kinetic" ? getKineticPatternImpulseBonus(spread) : 0;
   const kineticImpulseBudget =
-    ammo === "kinetic" ? getKineticImpulseBudget(build, gunDiameter) : null;
+    ammo === "kinetic" ? getKineticImpulseBudget(build, gunDiameter, spread) : null;
   const velocityFactor =
     ammo === "kinetic"
       ? Math.max(
@@ -13098,6 +13180,7 @@ function getPrimaryFireConfig(buildOverride = null) {
     sizeFactor,
     velocityFactor,
     kineticImpulseBudget,
+    kineticPatternImpulseBonus,
     plasmaImpulseBudget: plasmaImpulseTuning.impulseBudget,
     plasmaImpulseSizeScale: plasmaImpulseTuning.sizeScale,
     plasmaImpulseSpeedScale: plasmaImpulseTuning.speedScale,

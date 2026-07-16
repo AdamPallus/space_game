@@ -3,9 +3,10 @@
 Status: **historical engine/art work order and reusable toolbox reference.** The
 engine, Heirloom plumbing, pressure telemetry, and generated art are implemented.
 The three old `act3_*` missions are hidden experiments, not player-facing canon,
-and no music pass is currently authorized. `CAMPAIGN_PROGRESSION_SPEC.md` is the
-next work; a future canonical Act 3 will be re-authored mission by mission after
-the story/economy setup and The Fork.
+and no music pass is currently authorized. The campaign progression spine is
+implemented and archived under `outdated_docs/implemented_specs/`; Phase 8
+remains brainstorm/spec territory. A future canonical Act 3 will be re-authored
+mission by mission after the story/economy setup and The Fork.
 
 ## 0. Prerequisite bug fix: boss phases stop firing after the transition
 

@@ -1,10 +1,10 @@
 # Progression Master Plan — Power First, Then Progression
 
-**Status:** Accepted direction. Slices 1–5 are player-validated. Repossession's
-Assessor liens remain explicitly unverified. The next authorized work is the
-fresh-save capability, consumable, and guaranteed-gear spine in
-`CAMPAIGN_PROGRESSION_SPEC.md`; no sixth post-Last-Light mission should precede
-it.
+**Status:** Accepted direction. Slices 1–5 and the fresh-save capability,
+consumable, and guaranteed-gear spine are player-validated. Repossession's
+Assessor liens remain explicitly unverified. The progression spec is archived
+under `outdated_docs/implemented_specs/`; no sixth post-Last-Light mission is
+authorized while Phase 8 remains brainstorm/spec territory.
 
 **Creative and playtest authority:** Adam.
 
@@ -481,7 +481,7 @@ encounters.
 
 ## 10. Accepted next execution order
 
-1. **Campaign progression spine.** Implement `CAMPAIGN_PROGRESSION_SPEC.md`:
+1. **Campaign progression spine.** Implemented from the archived campaign progression spec:
    mission-earned capability milestones, Act 1 consumables, guaranteed gold
    commissioning rewards, and a fresh-save balance pass through the validated
    campaign.

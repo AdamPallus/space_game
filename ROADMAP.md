@@ -1,42 +1,28 @@
 # Roadmap
 
-Last audited: 2026-07-12
+Last audited: 2026-07-15
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
-## Active execution slice (2026-07-11)
+## Active execution status (2026-07-15)
 
-All five newly authored post-Last-Light missions are player-validated. That
-proves the mission-design loop; the next problem is making a normal fresh save
-earn the builds that the Test Arsenal proved can clear them.
+The campaign progression spine is implemented and player-accepted. Fresh-save
+runs validated capability pacing, supply credit, guaranteed commissioning, and
+the route into the five authored post-Last-Light missions. An unassisted novice
+run later reached Mission 7 without touching the marketplace, understood the
+swarm/armor vocabulary, and enjoyed swapping newly unlocked weapons. Its weak
+gold Oathpair drop exposed a historical dual-kinetic calibration problem: the
+larger slow-cadence rounds lacked the impulse needed to convert size into damage.
+That targeted correction now applies to the entire non-rapid paired kinetic
+pattern, with an additional gold reserve on Oathpair; it does not flatten
+plasma or rapid-fire roles.
 
-`CAMPAIGN_PROGRESSION_SPEC.md` is the next authorized player-facing work. Its
-four ordered implementation slices cover:
-
-1. campaign-earned capability milestones from Mission 1 through Last Light;
-2. a single deliberately weak Cadet starter frame, followed by earned weapon
-   choices instead of free swarm/armor role coverage;
-3. early mission supplies with shield/armor recovery and two real impulse
-   windows; activation fees are loss-leading progression insurance, not part of
-   the normal difficulty baseline;
-4. guaranteed, role-aware gold commissioning rewards and act-aware drop tables;
-5. a fresh-save balance pass through Act 1 and the five validated missions.
-
-No new campaign mission should be authored before that progression spine is
-playable. Assessor lien readability remains an explicitly unverified but
-non-blocking observation.
-
-Slices A, B, and C are implemented. Act 1 advances Hybrid -> choose Swarm or Armored
--> next Hybrid, so every capability requires two clears and the role variants
-create demand before alternate weapon systems arrive. Mission supplies are free
-to equip and charged per activation at run settlement, with debt permitted,
-first-clear fee waivers, independent trust-based bay authorization, exact full
-armor repair, persistent 125% shield overcharge, and short/long impulse options.
-Slice C adds Prototype choices in Missions 6 and 7, separate Last Light gold
-primary/survival commissions, a role-weighted gold choice after each validated
-Act 2 boss, persistent first-clear provenance, and Act 2-specific salvage floors.
-The required next gate is a fresh-save progression run without Test Arsenal;
-its findings authorize Slice D's minimal authored balance corrections.
+`outdated_docs/implemented_specs/CAMPAIGN_PROGRESSION_SPEC.md` is archived as implemented. No new campaign
+mission is currently authorized: Phase 8 — The Bill Arrives has a settled
+economic skeleton but still needs a dedicated creative session to decide its
+player experience, characters, choice presentation, and emotional turn.
+Assessor lien readability remains an explicitly unverified but non-blocking
+observation.
 
 ## Player-validated combat direction (2026-07-09)
 
@@ -190,16 +176,14 @@ viable route. A completionist can earn Tier 3 before Return Address, and Tier 4
 after it; both are allowed to outgear the target rather than becoming its floor.
 
 Repossession also exposed a reward mismatch: a pilot who needs gold gear has no
-reason to risk the run for visibly scrap/certified/prototype salvage. A fresh-save
-run confirmed the larger problem: lucky drops can produce an Orphan Signal or
-Gravebolt Rail, but there is no guaranteed way to assemble every role the gold
-campaign expects. `CAMPAIGN_PROGRESSION_SPEC.md` promotes first-clear gold
-commissioning rewards and act-aware rarity tables from backlog to active work.
+reason to risk the run for visibly scrap/certified/prototype salvage. The
+implemented progression spine answers that with first-clear commissioning and
+Act 2 rarity floors while retaining lucky early purple/gold drops as memorable
+accelerators rather than progression requirements.
 
 Other tuning candidates—mini output, single-primary specialist payoff, loot
 rolls, economy scarcity, cloak payoff, and mobile Armory density—remain valid
-backlog. Consumable usefulness and capability timing are now part of the active
-slice.
+backlog.
 
 ## Story-Economy Arc (draft backlog)
 

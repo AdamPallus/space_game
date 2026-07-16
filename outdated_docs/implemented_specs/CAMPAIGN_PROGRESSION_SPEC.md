@@ -1,9 +1,10 @@
 # Campaign Progression Spine
 
-Status: **in execution; Slices A and B implemented**
+Status: **implemented and player-accepted**
 
-Approved direction: 2026-07-11. Slice A is player-approved. Slice B now reflects
-the post-playtest supply-credit redesign and awaits a focused human playtest.
+Approved direction: 2026-07-11. Slices A–C shipped the capability, supply-credit,
+and commissioning spine. Fresh-save runs accepted the progression experience as
+Slice D; subsequent novice play exposed only a targeted dual-kinetic role gap.
 
 ## 1. Why this pass exists
 
@@ -305,7 +306,7 @@ Stop for a short fresh-save chapter-pacing playtest before proceeding to Slice B
 
 ### Slice B — consumables and pickup utility
 
-**Implemented; awaiting the revised late-Act-1 supply playtest.** Final fee and
+**Implemented and player-accepted.** Final fee and
 economy tuning remains intentionally deferred to the focused economy pass.
 
 1. Route Shield Overcharge, Armor Sealant, Redline Impulse, and Sustained
@@ -327,7 +328,7 @@ Stop for a late-Act-1 consumable playtest before raising mission pressure.
 
 ### Slice C — guaranteed gear path
 
-**Implementation status (2026-07-12): complete; awaiting the required fresh-save progression playtest.**
+**Implementation status (2026-07-15): complete and player-accepted after fresh-save progression runs.**
 
 1. Implement idempotent first-clear requisitions and commissioning packages.
 2. Add role-aware offer generation and act-aware rarity tables.
@@ -341,6 +342,10 @@ player can reach and beat the current campaign without Test Arsenal, not whether
 every possible random roll appeared.
 
 ### Slice D — authored balance pass
+
+**Implementation status (2026-07-15): accepted.** Fresh-save and novice runs
+validated the progression spine. The novice run's weak Oathpair drop prompted a
+targeted dual-kinetic calibration follow-up rather than a broader mission retune.
 
 1. Review Missions 1–8 in unlock order with the real acquisition path.
 2. Add difficulty only after the matching tool is introduced.

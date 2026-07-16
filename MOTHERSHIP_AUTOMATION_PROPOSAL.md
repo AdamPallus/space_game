@@ -7,11 +7,10 @@ deliberately unresolved. The story should crystallize only as the project earns
 the ability to design and test higher-level arcs. Protected possibilities in
 this document should survive until that work can evaluate them in context.
 
-**Current gate:** Five distinct post-Last-Light missions are now
-player-validated, including Return Address after its ramp revision. This proves
-the individual-mission creative loop. The next authorized work is the
-fresh-save capability, consumable, and guaranteed-gear spine in
-`CAMPAIGN_PROGRESSION_SPEC.md`; it does not authorize a mission cluster,
+**Current gate:** Five distinct post-Last-Light missions and the fresh-save
+capability, consumable, and guaranteed-gear spine are now player-validated.
+This proves the individual-mission and progression loops. Phase 8 remains
+brainstorm/spec territory; this proposal does not authorize a mission cluster,
 population system, offline automation, or autonomous story branch.
 
 This document extends `STORY-PREMISE.md` and

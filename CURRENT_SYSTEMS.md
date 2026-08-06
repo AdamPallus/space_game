@@ -1,6 +1,6 @@
 # Current Systems
 
-Last audited: 2026-07-16
+Last audited: 2026-08-05
 
 This file explains how the game works today. It is intentionally descriptive rather than aspirational; new plans should start in `ROADMAP.md` and only graduate into this file after implementation.
 
@@ -43,9 +43,11 @@ Mission scripts live in `levels/*.json`. They define metadata, backgrounds, wave
 
 The player-facing Act 1 campaign has eight core missions ending at Mission 8, Last Light. Each has Standard, Swarm, and Armored carousel entries with profiled projectile damage and weighted attack patterns. Completing any variant of `levelX` unlocks the next base mission through Mission 8, while lab-style encounters remain separate test entries.
 
-`Flocking Lab: Wake Geometry` is one of those separate test entries. Its reusable `flock` AI keeps personal space across every flocking enemy while cohesion and alignment remain school-specific. It predicts each player's projectile lane from relative velocity and future closest approach, reacts more broadly to physically larger shots, and limits turn speed/reaction timing so weapons still connect. Linked conductors tighten coordination; losing the signal permanently reduces cohesion and adds individual panic until another matching conductor appears. The lab has an opening school, a two-school merge, and a conductor finale, uses existing Chorus art, grants no new campaign route, and publishes a small runtime audit for spacing and avoidance smoke tests. Level validation enforces the flock parameter and event-override contracts.
+`Flocking Lab: Wake Geometry` remains a separate test entry. Its reusable `flock` AI keeps personal space across every flocking enemy while cohesion and alignment remain school-specific. It predicts each player's projectile lane from relative velocity and future closest approach, reacts more broadly to physically larger shots, and limits turn speed/reaction timing so weapons still connect. Linked conductors tighten coordination; losing the signal permanently reduces cohesion and adds individual panic until another matching conductor appears. Missions may set `aiParams.departAfter`; surviving flock members then stop firing and withdraw through the top of the arena, preserving a bounded wave while correctly lowering the player's destruction rating. The lab publishes a small runtime audit for spacing, avoidance, and departure smoke tests. Level validation enforces the flock parameter and event-override contracts.
 
 Clearing Last Light unlocks Crossed Claims, the player-validated hybrid slice whose newly authored waves overlap mobile shielded screens, conductor support, armored gunwalls/strongboxes, latch attackers, and a phased boss. Clearing Crossed Claims unlocks Processional, a player-validated Chorus swarm mission with synchronized ranks, lane-callers, collision skirmishers, conductor buffs and collapse, two shield-heavy miniboss beats, and a phased Processional Warden. The first Vestibule Cantor enters an orbiting hold and remains present until killed rather than following its catalog lane-shift descent offscreen. Their encounter files do not apply weapon-specific scaling.
+
+Clearing Processional also exposes `Collateral Choir`, an optional campaign candidate placed before Repossession on the board without becoming a progression gate. The Tithe has classified a captured Chorus school as collateral and uses its predictive flocking movement as an evasive screen for plated Bailiffs, Notaries, Strongboxes, and an Auditor. Schools withdraw if not destroyed during their authored window, so survival and a high mission rating remain distinct outcomes. The Receiver-General boss takes over as conductor, reinforces at two durability thresholds, and mixes Chorus chip fields with Tithe heavy cores and seizure locks. Existing later bosses keep their established scale despite the inserted candidate card. The candidate uses ordinary Act 2 drops, has no guaranteed commission, and awaits human balance approval.
 
 Crossed Claims also unlocks Repossession as a sibling route. Repossession is a player-validated Tithe armor mission with low-count AC30–42 plated targets, Bailiffs that can seize the scripted salvage pod and retreat, softer lien Assessors, sparse heavy projectiles, a persistent orbiting Auditor miniboss, and an AC40 phased Escrow boss. The Escrow's ineffective mouse-overwritten tractor pattern was replaced by a fixed-position seizure lock followed by a 1350-speed, 130-damage kinetic slug. Attached Assessors draw a persistent lien tether/rings, label themselves, and show their exact drain rate at the player; that presentation is implemented but still awaiting a playtest in which an Assessor is actually noticed. The mission is challenging but winnable with role-appropriate Pre-Founding gear.
 
@@ -93,7 +95,7 @@ branch in Ledger Investments displays these earned milestones without charging
 credits. Broadside can boost earned Tier 1/2 by one tier, but cannot create Tier
 1 from zero or substitute for the completion-only Tier 4.
 
-The normal board hides Missions 9–11 and every remaining old Act 2/3 encounter card. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox. The five post-Last-Light slices above are the only active continuation; no sixth mission or broader Act 2/3 campaign is currently active.
+The normal board hides Missions 9–11 and every remaining old Act 2/3 encounter card. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox. The five player-validated post-Last-Light slices plus the optional Collateral Choir candidate are the only active continuation; no broader Act 2/3 campaign is currently active.
 
 ## Onboarding
 

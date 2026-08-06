@@ -3,8 +3,10 @@
 **Status:** Accepted direction. Slices 1–5 and the fresh-save capability,
 consumable, and guaranteed-gear spine are player-validated. Repossession's
 Assessor liens remain explicitly unverified. The progression spec is archived
-under `outdated_docs/implemented_specs/`; no sixth post-Last-Light mission is
-authorized while Phase 8 remains brainstorm/spec territory.
+under `outdated_docs/implemented_specs/`. Collateral Choir is the one authorized
+sixth-mission candidate: it is visible after Processional but deliberately does
+not gate the established route or add a guaranteed commission until its first
+human playtest. Phase 8 remains brainstorm/spec territory.
 
 **Creative and playtest authority:** Adam.
 

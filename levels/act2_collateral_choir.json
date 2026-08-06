@@ -1,0 +1,678 @@
+{
+  "id": "act2_collateral_choir",
+  "name": "Collateral Choir",
+  "background": "generatedCathedralDriftLooped",
+  "music": "space_battle_bpm130.ogg",
+  "difficulty": "Hybrid Gold / Evasive Screen",
+  "description": "The Tithe has collateralized a captured Chorus formation. Its schools bend around your fire while armored receivers advance inside the moving blind. Break the conductors, then collect the collector.",
+  "completeOnBoss": true,
+  "projectileProfiles": {
+    "notationDart": {
+      "threatClass": "chip",
+      "damage": 9,
+      "speed": 292,
+      "radius": 3,
+      "image": "enemy_space_gold_hymn_dart",
+      "width": 13,
+      "height": 34,
+      "animation": "bolt"
+    },
+    "writSlug": {
+      "threatClass": "standard",
+      "damage": 30,
+      "speed": 232,
+      "radius": 5,
+      "image": "enemy_space_warm_standard_slug",
+      "width": 16,
+      "height": 40,
+      "animation": "bolt"
+    },
+    "seizureCore": {
+      "threatClass": "heavy",
+      "damage": 62,
+      "speed": 164,
+      "radius": 8,
+      "image": "enemy_space_warm_heavy_core",
+      "width": 50,
+      "height": 50,
+      "animation": "orb",
+      "spinRate": 2
+    },
+    "concordRing": {
+      "threatClass": "bossHazard",
+      "damage": 78,
+      "speed": 148,
+      "radius": 12,
+      "image": "enemy_space_gold_hymn_ring",
+      "width": 70,
+      "height": 70,
+      "animation": "orb",
+      "spinRate": 1.5
+    },
+    "foreclosureSlug": {
+      "threatClass": "bossHazard",
+      "damage": 115,
+      "speed": 1100,
+      "radius": 7,
+      "image": "enemy_space_warm_standard_slug",
+      "width": 18,
+      "height": 64,
+      "animation": "lance"
+    }
+  },
+  "enemyTypes": {
+    "censer": {
+      "hull": 50,
+      "shield": 68,
+      "shieldRegen": 12,
+      "speed": 158,
+      "collisionDamage": 38,
+      "pattern": "drift",
+      "ai": "flock",
+      "aiParams": {
+        "flockGroup": "collateral_screen",
+        "neighborRadius": 255,
+        "separationRadius": 68,
+        "separationWeight": 2.1,
+        "cohesionWeight": 0.36,
+        "alignmentWeight": 0.38,
+        "avoidanceWeight": 3.15,
+        "lookAhead": 0.72,
+        "avoidPadding": 22,
+        "holdY": 205,
+        "playerTrack": 0.08,
+        "drift": 42,
+        "driftRate": 0.8,
+        "maxSpeedMult": 1.68,
+        "acceleration": 5.3,
+        "departAfter": 18,
+        "linkedTo": [
+          "precentor",
+          "boss"
+        ]
+      },
+      "attackPatterns": [
+        {
+          "id": "screen_needle",
+          "mode": "aim",
+          "profile": "notationDart",
+          "fireRate": 1.9,
+          "weight": 1,
+          "speedJitter": 0.12
+        }
+      ]
+    },
+    "chorister": {
+      "hull": 72,
+      "shield": 108,
+      "shieldRegen": 18,
+      "speed": 126,
+      "collisionDamage": 30,
+      "pattern": "drift",
+      "ai": "flock",
+      "aiParams": {
+        "flockGroup": "collateral_screen",
+        "neighborRadius": 275,
+        "separationRadius": 76,
+        "separationWeight": 2,
+        "cohesionWeight": 0.4,
+        "alignmentWeight": 0.42,
+        "avoidanceWeight": 2.85,
+        "lookAhead": 0.68,
+        "avoidPadding": 24,
+        "holdY": 232,
+        "playerTrack": 0.06,
+        "drift": 34,
+        "driftRate": 0.66,
+        "maxSpeedMult": 1.58,
+        "acceleration": 4.8,
+        "departAfter": 23,
+        "linkedTo": [
+          "precentor",
+          "boss"
+        ]
+      },
+      "attackPatterns": [
+        {
+          "id": "collateral_triplet",
+          "mode": "spread",
+          "profile": "notationDart",
+          "count": 3,
+          "spreadDeg": 26,
+          "fireRate": 1.55,
+          "weight": 1,
+          "speedJitter": 0.1
+        }
+      ]
+    },
+    "cantor": {
+      "hull": 62,
+      "shield": 82,
+      "shieldRegen": 15,
+      "speed": 146,
+      "collisionDamage": 34,
+      "pattern": "drift",
+      "ai": "flock",
+      "aiParams": {
+        "flockGroup": "counterclaim_screen",
+        "neighborRadius": 265,
+        "separationRadius": 72,
+        "separationWeight": 2.1,
+        "cohesionWeight": 0.35,
+        "alignmentWeight": 0.38,
+        "avoidanceWeight": 3.05,
+        "lookAhead": 0.72,
+        "avoidPadding": 22,
+        "holdY": 268,
+        "playerTrack": 0.07,
+        "drift": 41,
+        "driftRate": 0.88,
+        "maxSpeedMult": 1.7,
+        "acceleration": 5.4,
+        "departAfter": 21,
+        "linkedTo": [
+          "precentor",
+          "boss"
+        ]
+      },
+      "attackPatterns": [
+        {
+          "id": "counterclaim_pulse",
+          "mode": "aim",
+          "profile": "writSlug",
+          "fireRate": 1.7,
+          "weight": 1,
+          "speedJitter": 0.08
+        }
+      ]
+    },
+    "teller": {
+      "hull": 48,
+      "speed": 166,
+      "collisionDamage": 24,
+      "attackPatterns": [
+        {
+          "id": "teller_notation",
+          "mode": "aim",
+          "profile": "notationDart",
+          "fireRate": 1.45,
+          "weight": 1,
+          "speedJitter": 0.1
+        }
+      ]
+    },
+    "bailiff": {
+      "hull": 110,
+      "armor": 560,
+      "armorClass": 28,
+      "speed": 92,
+      "collisionDamage": 30,
+      "attackPatterns": [
+        {
+          "id": "bailiff_writ",
+          "mode": "aim",
+          "profile": "writSlug",
+          "fireRate": 1.35,
+          "weight": 1
+        }
+      ],
+      "ai": "thief",
+      "aiParams": {
+        "escapeSpeed": 142,
+        "interest": 1.7,
+        "holdY": 205,
+        "standoff": 235
+      }
+    },
+    "notary": {
+      "hull": 160,
+      "armor": 850,
+      "armorClass": 32,
+      "speed": 58,
+      "pattern": "stall",
+      "patternParams": {
+        "stallY": 188,
+        "stallDuration": 17,
+        "strafeAmp": 170,
+        "strafeFreq": 0.85,
+        "postSpeedMult": 0.9
+      },
+      "attackPatterns": [
+        {
+          "id": "notary_fan",
+          "mode": "spread",
+          "profile": "writSlug",
+          "count": 5,
+          "spreadDeg": 52,
+          "fireRate": 1.4,
+          "weight": 3
+        },
+        {
+          "id": "notary_seal",
+          "mode": "aim",
+          "profile": "seizureCore",
+          "fireRate": 2.05,
+          "weight": 1
+        }
+      ]
+    },
+    "strongbox": {
+      "hull": 260,
+      "armor": 1900,
+      "armorClass": 38,
+      "speed": 32,
+      "attackPatterns": [
+        {
+          "id": "vault_core",
+          "mode": "aim",
+          "profile": "seizureCore",
+          "fireRate": 1.8,
+          "weight": 3
+        },
+        {
+          "id": "vault_writ",
+          "mode": "spread",
+          "profile": "writSlug",
+          "count": 5,
+          "spreadDeg": 48,
+          "fireRate": 2.3,
+          "weight": 1
+        }
+      ]
+    },
+    "precentor": {
+      "hull": 300,
+      "shield": 620,
+      "shieldRegen": 28,
+      "armor": 0,
+      "speed": 100,
+      "pattern": "drift",
+      "ai": "conductor",
+      "miniboss": true,
+      "aiParams": {
+        "holdY": 150,
+        "slideSpeed": 0.72,
+        "keepOut": 188,
+        "conductorBuff": {
+          "fireRateMult": 0.72,
+          "shieldRegenBonus": 18
+        }
+      },
+      "attackPatterns": [
+        {
+          "id": "security_fan",
+          "mode": "spread",
+          "profile": "notationDart",
+          "count": 7,
+          "spreadDeg": 64,
+          "fireRate": 1.18,
+          "weight": 3
+        },
+        {
+          "id": "secured_writ",
+          "mode": "aim",
+          "profile": "writSlug",
+          "fireRate": 1.75,
+          "weight": 1
+        }
+      ]
+    },
+    "auditor": {
+      "hull": 500,
+      "armor": 1700,
+      "armorClass": 36,
+      "speed": 78,
+      "pattern": "bossOrbit",
+      "patternParams": {
+        "radiusX": 245,
+        "radiusY": 54,
+        "orbitSpeed": 0.78,
+        "warmupTime": 0.7,
+        "wobble": 8
+      },
+      "miniboss": true,
+      "attackPatterns": [
+        {
+          "id": "audit_fan",
+          "mode": "spread",
+          "profile": "writSlug",
+          "count": 7,
+          "spreadDeg": 62,
+          "fireRate": 1.08,
+          "weight": 3
+        },
+        {
+          "id": "audit_core",
+          "mode": "aim",
+          "profile": "seizureCore",
+          "fireRate": 1.55,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "seizureCore",
+              "angleOffsetDeg": -9
+            },
+            {
+              "profile": "seizureCore",
+              "angleOffsetDeg": 9
+            }
+          ]
+        }
+      ]
+    },
+    "boss": {
+      "template": "act2_repossession:boss",
+      "name": "Receiver-General",
+      "hull": 1500,
+      "shield": 900,
+      "shieldRegen": 24,
+      "armor": 3200,
+      "armorClass": 36,
+      "speed": 92,
+      "pattern": "drift",
+      "ai": "conductor",
+      "aiParams": {
+        "holdY": 148,
+        "slideSpeed": 0.78,
+        "keepOut": 190,
+        "conductorBuff": {
+          "fireRateMult": 0.7,
+          "shieldRegenBonus": 20
+        }
+      },
+      "attackPatterns": [
+        {
+          "id": "collateral_fan",
+          "mode": "spread",
+          "profile": "notationDart",
+          "count": 9,
+          "spreadDeg": 76,
+          "fireRate": 1.05,
+          "weight": 3,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "secured_core",
+          "mode": "aim",
+          "profile": "seizureCore",
+          "fireRate": 1.55,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "seizureCore",
+              "angleOffsetDeg": -8
+            },
+            {
+              "profile": "seizureCore",
+              "angleOffsetDeg": 8
+            }
+          ]
+        },
+        {
+          "id": "foreclosure_lock",
+          "mode": "aim",
+          "fireRate": 1.85,
+          "weight": 1,
+          "lockedShot": {
+            "profile": "foreclosureSlug",
+            "delay": 0.78
+          }
+        }
+      ],
+      "phases": [
+        {
+          "label": "Perfect collateral",
+          "hpFraction": 0.65,
+          "speedMult": 1.1,
+          "attackPatterns": [
+            {
+              "id": "perfect_concord",
+              "mode": "radial",
+              "profile": "notationDart",
+              "count": 24,
+              "fireRate": 0.9,
+              "weight": 3,
+              "speedJitter": 0.14
+            },
+            {
+              "id": "perfect_core",
+              "mode": "spread",
+              "profile": "concordRing",
+              "count": 5,
+              "spreadDeg": 70,
+              "fireRate": 1.45,
+              "weight": 2
+            }
+          ],
+          "summons": [
+            {
+              "type": "censer",
+              "count": 8,
+              "radius": 112
+            },
+            {
+              "type": "cantor",
+              "count": 4,
+              "radius": 178
+            }
+          ]
+        },
+        {
+          "label": "Liquidate the choir",
+          "hpFraction": 0.3,
+          "speedMult": 1.22,
+          "attackPatterns": [
+            {
+              "id": "liquidation_ring",
+              "mode": "radial",
+              "profile": "concordRing",
+              "count": 18,
+              "fireRate": 0.82,
+              "weight": 3,
+              "speedJitter": 0.12
+            },
+            {
+              "id": "liquidation_lock",
+              "mode": "aim",
+              "fireRate": 1.05,
+              "weight": 2,
+              "lockedShot": {
+                "profile": "foreclosureSlug",
+                "delay": 0.64
+              }
+            }
+          ],
+          "summons": [
+            {
+              "type": "chorister",
+              "count": 8,
+              "radius": 132
+            },
+            {
+              "type": "bailiff",
+              "count": 2,
+              "radius": 205
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "time": 1,
+      "type": "censer",
+      "count": 10,
+      "interval": 0.18
+    },
+    {
+      "time": 5,
+      "type": "teller",
+      "count": 6,
+      "interval": 0.38
+    },
+    {
+      "time": 10,
+      "type": "chorister",
+      "count": 6,
+      "interval": 0.3
+    },
+    {
+      "time": 14,
+      "type": "bailiff",
+      "count": 2,
+      "interval": 1.1
+    },
+    {
+      "time": 18,
+      "type": "precentor",
+      "count": 1
+    },
+    {
+      "time": 19,
+      "type": "censer",
+      "count": 10,
+      "interval": 0.17
+    },
+    {
+      "time": 26,
+      "type": "notary",
+      "count": 2,
+      "interval": 1.25
+    },
+    {
+      "time": 30,
+      "type": "cantor",
+      "count": 7,
+      "interval": 0.24
+    },
+    {
+      "time": 34,
+      "type": "teller",
+      "count": 6,
+      "interval": 0.34
+    },
+    {
+      "time": 39,
+      "type": "strongbox",
+      "count": 1
+    },
+    {
+      "time": 43,
+      "type": "chorister",
+      "count": 8,
+      "interval": 0.24
+    },
+    {
+      "time": 50,
+      "type": "auditor",
+      "count": 1
+    },
+    {
+      "time": 51,
+      "type": "censer",
+      "count": 10,
+      "interval": 0.16
+    },
+    {
+      "time": 59,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 0.85
+    },
+    {
+      "time": 63,
+      "type": "cantor",
+      "count": 8,
+      "interval": 0.22
+    },
+    {
+      "time": 68,
+      "type": "notary",
+      "count": 3,
+      "interval": 1.05
+    },
+    {
+      "time": 73,
+      "type": "precentor",
+      "count": 1
+    },
+    {
+      "time": 74,
+      "type": "chorister",
+      "count": 8,
+      "interval": 0.22
+    },
+    {
+      "time": 80,
+      "type": "strongbox",
+      "count": 1
+    },
+    {
+      "time": 82,
+      "type": "teller",
+      "count": 8,
+      "interval": 0.27
+    },
+    {
+      "time": 87,
+      "type": "censer",
+      "count": 6,
+      "interval": 0.17
+    },
+    {
+      "time": 87,
+      "type": "cantor",
+      "count": 6,
+      "interval": 0.21
+    },
+    {
+      "time": 94,
+      "type": "boss",
+      "count": 1
+    },
+    {
+      "time": 96,
+      "type": "censer",
+      "count": 10,
+      "interval": 0.16
+    },
+    {
+      "time": 102,
+      "type": "bailiff",
+      "count": 3,
+      "interval": 0.8
+    },
+    {
+      "time": 108,
+      "type": "cantor",
+      "count": 8,
+      "interval": 0.2
+    }
+  ],
+  "pickups": [
+    {
+      "time": 38,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "primary",
+      "x": 0.5,
+      "y": -48
+    },
+    {
+      "time": 47,
+      "type": "armor_patch",
+      "x": 0.4
+    },
+    {
+      "time": 72,
+      "type": "shield_booster",
+      "x": 0.62
+    }
+  ],
+  "debriefLore": [
+    "The Chorus did not volunteer. The Tithe called consent an unperfected security interest.",
+    "Their formation was not armor. It was moving negative space: a place your fire was always about to reach.",
+    "The Receiver-General carried two signatures for every ship in its choir. None belonged to the pilots."
+  ]
+}

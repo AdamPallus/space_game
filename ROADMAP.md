@@ -1,10 +1,10 @@
 # Roadmap
 
-Last audited: 2026-07-16
+Last audited: 2026-08-05
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
-## Active execution status (2026-07-15)
+## Active execution status (2026-08-05)
 
 The campaign progression spine is implemented and player-accepted. Fresh-save
 runs validated capability pacing, supply credit, guaranteed commissioning, and
@@ -17,12 +17,7 @@ That targeted correction now applies to the entire non-rapid paired kinetic
 pattern, with an additional gold reserve on Oathpair; it does not flatten
 plasma or rapid-fire roles.
 
-`outdated_docs/implemented_specs/CAMPAIGN_PROGRESSION_SPEC.md` is archived as implemented. No new campaign
-mission is currently authorized: Phase 8 — The Bill Arrives has a settled
-economic skeleton but still needs a dedicated creative session to decide its
-player experience, characters, choice presentation, and emotional turn.
-Assessor lien readability remains an explicitly unverified but non-blocking
-observation.
+`outdated_docs/implemented_specs/CAMPAIGN_PROGRESSION_SPEC.md` is archived as implemented. One bounded campaign candidate is now authorized: Collateral Choir turns the approved Flocking Lab behavior into a full Chorus/Tithe hybrid between Processional and Repossession. It is visible after Processional but does not gate Repossession, The Green Signal, or later capability rewards while its first human balance test is pending. Phase 8 — The Bill Arrives remains a separate creative problem: its economic skeleton is settled, but its player experience, characters, choice presentation, and emotional turn still need a dedicated session. Assessor lien readability remains an explicitly unverified but non-blocking observation.
 
 Fresh-player feedback also retired the three-slot cargo hold before the next
 economy phase. In-flight collection and between-run storage are now unlimited;
@@ -30,10 +25,11 @@ survival and the RTB decision remain the extraction risk. Cargo-slot investments
 and hull bonuses are removed from the backlog unless a future explicit design
 decision reopens them.
 
-The Flocking Lab is a bounded combat-AI experiment prompted by the next creative
-session, not authorization for Phase 8 or another campaign mission. It is ready
-for human play as a separate lab card; its outcome can inform later Chorus or
-biological-swarm encounters without committing the campaign story.
+The Flocking Lab remains the small isolated regression surface. Its successful
+visual result now feeds Collateral Choir, where scored schools withdraw on a
+timer and create moving cover for armored Tithe anchors. This exception does not
+authorize Phase 8 or a broader autonomous campaign pass; Collateral Choir is the
+single deployed candidate awaiting Adam's playtest.
 
 ## Player-validated combat direction (2026-07-09)
 

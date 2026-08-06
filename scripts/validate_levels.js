@@ -11,6 +11,7 @@ const ITEM_POOL_PATH = path.join(ROOT, "items", "item_pool.json");
 
 const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "template",
+  "name",
   "sprite",
   "spriteScale",
   "color",
@@ -69,6 +70,7 @@ const FLOCK_AI_PARAM_KEYS = new Set([
   "driftRate",
   "maxSpeedMult",
   "acceleration",
+  "departAfter",
   "linkedTo",
 ]);
 const PROJECTILE_PROFILE_KEYS = new Set([
@@ -448,6 +450,7 @@ function validateFlockAiParams(config, errors, context) {
     "driftRate",
     "maxSpeedMult",
     "acceleration",
+    "departAfter",
   ].forEach((key) => {
     if (params[key] !== undefined && (!Number.isFinite(params[key]) || params[key] < 0)) {
       errors.push(`${context} flock AI field '${key}' must be a non-negative number.`);

@@ -228,6 +228,7 @@ const overhaulKit = {
 let shouldAutoLaunchFreshPilotMission = false;
 const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "template",
+  "name",
   "sprite",
   "spriteScale",
   "color",
@@ -286,6 +287,7 @@ const FLOCK_AI_PARAM_KEYS = new Set([
   "driftRate",
   "maxSpeedMult",
   "acceleration",
+  "departAfter",
   "linkedTo",
 ]);
 const PROJECTILE_PROFILE_KEYS = new Set([
@@ -5100,6 +5102,13 @@ const activeCampaignLevels = [
   { id: "level8", label: "Mission 8", requires: [{ stageComplete: "level7" }] },
   { id: "act2_dead_air", label: "Crossed Claims", requires: [{ stageComplete: "level8" }] },
   { id: "act2_processional", label: "Processional", requires: [{ completed: "act2_dead_air" }] },
+  {
+    id: "act2_collateral_choir",
+    label: "Collateral Choir",
+    requires: [{ completed: "act2_processional" }],
+    candidate: true,
+    bossScaleIndex: 9.5,
+  },
   { id: "act2_repossession", label: "Repossession", requires: [{ completed: "act2_dead_air" }] },
   {
     id: "act2_green_signal",
@@ -5842,6 +5851,7 @@ function validateFlockAiParams(config, errors, context) {
     "driftRate",
     "maxSpeedMult",
     "acceleration",
+    "departAfter",
   ].forEach((key) => {
     if (params[key] !== undefined && (!Number.isFinite(params[key]) || params[key] < 0)) {
       errors.push(`${context} flock AI field '${key}' must be a non-negative number.`);
@@ -12614,9 +12624,13 @@ function spawnEnemyFromSpec(spec) {
   };
 
   if (enemy.isBoss) {
+    const missionEntry = availableLevels.find((level) => level.id === mission?.level?.id);
+    const scalingLevels = availableLevels.filter((level) => !level.candidate);
     const levelIndex = Math.max(
       0,
-      availableLevels.findIndex((level) => level.id === mission?.level?.id)
+      Number.isFinite(missionEntry?.bossScaleIndex)
+        ? missionEntry.bossScaleIndex
+        : scalingLevels.findIndex((level) => level.id === mission?.level?.id)
     );
     const bossScale = 1 + levelIndex * 0.22;
     enemy.hull = Math.round(enemy.hull * bossScale);
@@ -14355,6 +14369,27 @@ function applyFlockMovement(enemy, delta, empFactor = 1) {
     enemy.flockAvoidanceActive = false;
   }
 
+  const departAfter = Number(params.departAfter);
+  if (
+    Number.isFinite(departAfter) &&
+    departAfter > 0 &&
+    mission.elapsed - enemy.spawnTime >= departAfter
+  ) {
+    enemy.flockDeparting = true;
+    enemy.flockAvoidanceActive = false;
+    enemy.flockThreatScore = 0;
+    const side = enemy.x < width / 2 ? -1 : 1;
+    const targetVx = side * baseSpeed * 0.34;
+    const targetVy = -baseSpeed * 1.18;
+    const response = 1 - Math.exp(-4.6 * delta);
+    enemy.vx += (targetVx - enemy.vx) * response;
+    enemy.vy += (targetVy - enemy.vy) * response;
+    enemy.x += enemy.vx * empFactor * delta;
+    enemy.y += enemy.vy * empFactor * delta;
+    if (enemy.y < -Math.max(70, enemy.radius * 2.5)) enemy.escaped = true;
+    return;
+  }
+
   let neighborCount = 0;
   let centerX = enemy.x;
   let centerY = enemy.y;
@@ -14556,6 +14591,7 @@ function buildFlockingAudit() {
     count: flock.length,
     groups,
     activeAvoiders: flock.filter((enemy) => enemy.flockAvoidanceActive).length,
+    departing: flock.filter((enemy) => enemy.flockDeparting).length,
     conductorLinked: flock.filter((enemy) => !!enemy.conductorBuff).length,
     conductorLost: flock.filter((enemy) => !!enemy.flockConductorLost).length,
     avoidanceEvents: mission?.flockAvoidanceEvents || 0,
@@ -14568,7 +14604,7 @@ function buildFlockingAudit() {
 }
 
 function updateFlockingAudit(delta) {
-  if (mission?.level?.id !== "flocking_lab") return;
+  if (!["flocking_lab", "act2_collateral_choir"].includes(mission?.level?.id)) return;
   mission.flockAuditTimer = (mission.flockAuditTimer || 0) - delta;
   if (mission.flockAuditTimer > 0) return;
   mission.flockAuditTimer = 0.4;
@@ -15004,6 +15040,7 @@ function update(delta) {
     enemies.forEach((enemy) => {
       if (!enemy.empImmune && (globalEmp || enemy.empHitTimer > 0)) return;
       if (enemy.bossPhaseTransitionTimer > 0) return;
+      if (enemy.flockDeparting) return;
       enemy.fireCooldown -= delta;
       if (enemy.fireCooldown > 0) return;
       if (enemy.y < 40) return;

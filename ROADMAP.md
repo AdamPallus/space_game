@@ -30,6 +30,11 @@ survival and the RTB decision remain the extraction risk. Cargo-slot investments
 and hull bonuses are removed from the backlog unless a future explicit design
 decision reopens them.
 
+The Flocking Lab is a bounded combat-AI experiment prompted by the next creative
+session, not authorization for Phase 8 or another campaign mission. It is ready
+for human play as a separate lab card; its outcome can inform later Chorus or
+biological-swarm encounters without committing the campaign story.
+
 ## Player-validated combat direction (2026-07-09)
 
 This direction is folded into the current master plan and governs the active slices:

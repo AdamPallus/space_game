@@ -263,6 +263,31 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "phases",
   "hpScale",
 ]);
+const LEVEL_EVENT_OVERRIDE_KEYS = new Set([
+  ...LEVEL_ENEMY_OVERRIDE_KEYS,
+  "x",
+  "y",
+  "vx",
+  "vy",
+]);
+const FLOCK_AI_PARAM_KEYS = new Set([
+  "flockGroup",
+  "neighborRadius",
+  "separationRadius",
+  "separationWeight",
+  "cohesionWeight",
+  "alignmentWeight",
+  "avoidanceWeight",
+  "lookAhead",
+  "avoidPadding",
+  "holdY",
+  "playerTrack",
+  "drift",
+  "driftRate",
+  "maxSpeedMult",
+  "acceleration",
+  "linkedTo",
+]);
 const PROJECTILE_PROFILE_KEYS = new Set([
   "id",
   "profile",
@@ -5143,6 +5168,7 @@ const availableLevels = [
   { id: "overhaul_demo", label: "Overhaul Demo", test: true },
   { id: "patterns_demo", label: "Pattern Lab", test: true },
   { id: "ai_demo", label: "AI Lab", test: true },
+  { id: "flocking_lab", label: "Flocking Lab", test: true },
   { id: "generated_sprite_lab", label: "Generated Sprite Lab", test: true },
   { id: "biological_hive_lab", label: "Biological Hive Lab", test: true },
 ];
@@ -5786,6 +5812,49 @@ function validateLevelDefense(defense, errors, context) {
   }
 }
 
+function validateFlockAiParams(config, errors, context) {
+  if (config.ai !== "flock") return;
+  const params = config.aiParams;
+  if (!isPlainObject(params)) {
+    errors.push(`${context} flock AI must declare aiParams.`);
+    return;
+  }
+  Object.keys(params).forEach((key) => {
+    if (!FLOCK_AI_PARAM_KEYS.has(key)) {
+      errors.push(`${context} flock AI uses unsupported aiParams field '${key}'.`);
+    }
+  });
+  if (typeof params.flockGroup !== "string" || !params.flockGroup.trim()) {
+    errors.push(`${context} flock AI must declare a non-empty flockGroup.`);
+  }
+  [
+    "neighborRadius",
+    "separationRadius",
+    "separationWeight",
+    "cohesionWeight",
+    "alignmentWeight",
+    "avoidanceWeight",
+    "lookAhead",
+    "avoidPadding",
+    "holdY",
+    "playerTrack",
+    "drift",
+    "driftRate",
+    "maxSpeedMult",
+    "acceleration",
+  ].forEach((key) => {
+    if (params[key] !== undefined && (!Number.isFinite(params[key]) || params[key] < 0)) {
+      errors.push(`${context} flock AI field '${key}' must be a non-negative number.`);
+    }
+  });
+  if (params.linkedTo !== undefined) {
+    const links = Array.isArray(params.linkedTo) ? params.linkedTo : [params.linkedTo];
+    if (!links.length || links.some((entry) => typeof entry !== "string" || !entry.trim())) {
+      errors.push(`${context} flock AI linkedTo must name one or more conductor types.`);
+    }
+  }
+}
+
 function validateLevelData(level) {
   const errors = [];
   if (!level || typeof level !== "object") {
@@ -5818,6 +5887,7 @@ function validateLevelData(level) {
         errors.push(`Enemy '${typeId}' uses unsupported field '${key}'.`);
       }
     });
+    validateFlockAiParams(config, errors, `Enemy '${typeId}'`);
     validateProjectileProfileRef(config.projectileProfile, projectileProfiles, errors, `Enemy '${typeId}' projectileProfile`);
     if (config.attackPatterns !== undefined) {
       if (!Array.isArray(config.attackPatterns)) {
@@ -5866,6 +5936,17 @@ function validateLevelData(level) {
     }
     if (!enemyTypes[event.type]) {
       errors.push(`Event ${index + 1} in '${levelId}' references unknown enemy '${event.type}'.`);
+    }
+    if (event.overrides !== undefined) {
+      if (!isPlainObject(event.overrides)) {
+        errors.push(`Event ${index + 1} in '${levelId}' overrides must be an object.`);
+      } else {
+        Object.keys(event.overrides).forEach((key) => {
+          if (!LEVEL_EVENT_OVERRIDE_KEYS.has(key)) {
+            errors.push(`Event ${index + 1} in '${levelId}' uses unsupported override '${key}'.`);
+          }
+        });
+      }
     }
   });
   return errors;
@@ -9051,6 +9132,7 @@ function describeMovement(spec) {
   if (ai === "splitter") return "Transport behavior that splits into smaller drones on death.";
   if (ai === "sentinel") return "Holds a firing line near the top and strafes to keep you in its sights.";
   if (ai === "skitter") return "Nervous skirmisher that attempts to dodge incoming fire.";
+  if (ai === "flock") return "Schools with nearby allies, keeps personal space, and bends around incoming firing lanes.";
   if (ai === "duelist") return "Keeps a standoff distance and slides into flanking angles.";
   return "Steady descent with light drift.";
 }
@@ -14173,6 +14255,326 @@ function getDelayedPlayerPosition(delaySeconds = 2) {
   return best || { x: player.x, y: player.y };
 }
 
+function getStableFlockValue(enemy, salt = 0) {
+  const raw = Math.sin(((enemy?.id || 1) + salt * 17.17) * 12.9898) * 43758.5453;
+  return raw - Math.floor(raw);
+}
+
+function getFlockGroup(enemy) {
+  return enemy?.aiParams?.flockGroup || enemy?.type || "flock";
+}
+
+function senseFlockProjectileThreat(enemy) {
+  const params = enemy.aiParams || {};
+  const lookAhead = Math.max(0.12, params.lookAhead ?? 0.72);
+  const padding = Math.max(0, params.avoidPadding ?? 22);
+  const maxCheck = Math.min(36, bullets.length);
+  let bestThreat = null;
+
+  for (let index = 0; index < maxCheck; index += 1) {
+    const bullet = bullets[bullets.length - 1 - index];
+    if (!bullet || bullet.orbiting) continue;
+    const relativeX = enemy.x - bullet.x;
+    const relativeY = enemy.y - bullet.y;
+    const relativeVx = enemy.vx - (bullet.vx || 0);
+    const relativeVy = enemy.vy - (bullet.vy || 0);
+    const relativeSpeedSq = relativeVx * relativeVx + relativeVy * relativeVy;
+    if (relativeSpeedSq < 1) continue;
+
+    let closestTime = -(
+      relativeX * relativeVx + relativeY * relativeVy
+    ) / relativeSpeedSq;
+    const currentDistance = Math.hypot(relativeX, relativeY);
+    const bulletRadius = Math.max(2, Number(bullet.radius) || 4);
+    // Explosive rounds receive a modest extra tell, but not their full blast
+    // radius. The flock should bend around the projectile, not invalidate the
+    // player's earned screen-filling detonation.
+    const explosiveTell = bullet.explosive
+      ? Math.min(24, Math.max(0, Number(bullet.explosiveRadius) || 0) * 0.12)
+      : 0;
+    const dangerRadius = enemy.radius + bulletRadius + padding + explosiveTell;
+    if (closestTime < 0) {
+      if (currentDistance > dangerRadius) continue;
+      closestTime = 0;
+    }
+    if (closestTime > lookAhead) continue;
+
+    const closestX = relativeX + relativeVx * closestTime;
+    const closestY = relativeY + relativeVy * closestTime;
+    const closestDistance = Math.hypot(closestX, closestY);
+    if (closestDistance >= dangerRadius) continue;
+
+    const proximity = 1 - closestDistance / Math.max(1, dangerRadius);
+    const immediacy = 1 - (closestTime / lookAhead) * 0.42;
+    const score = proximity * immediacy;
+    if (bestThreat && bestThreat.score >= score) continue;
+
+    let awayX;
+    let awayY;
+    if (closestDistance > 1) {
+      awayX = closestX / closestDistance;
+      awayY = closestY / closestDistance;
+    } else {
+      const bulletSpeed = Math.hypot(bullet.vx || 0, bullet.vy || 0) || 1;
+      const perpendicularX = -(bullet.vy || 0) / bulletSpeed;
+      const perpendicularY = (bullet.vx || 0) / bulletSpeed;
+      const sideDot = relativeX * perpendicularX + relativeY * perpendicularY;
+      const fallbackSide = enemy.flockTurnBias || 1;
+      const side = Math.abs(sideDot) > 0.5 ? Math.sign(sideDot) : fallbackSide;
+      awayX = perpendicularX * side;
+      awayY = perpendicularY * side;
+    }
+    bestThreat = {
+      x: awayX,
+      y: awayY,
+      score,
+      radius: bulletRadius,
+      closestTime,
+    };
+  }
+  return bestThreat;
+}
+
+function applyFlockMovement(enemy, delta, empFactor = 1) {
+  const params = enemy.aiParams || {};
+  const width = canvas.width / window.devicePixelRatio;
+  const height = canvas.height / window.devicePixelRatio;
+  const group = getFlockGroup(enemy);
+  const neighborRadius = Math.max(60, params.neighborRadius ?? 220);
+  const configuredSeparation = Math.max(24, params.separationRadius ?? 58);
+  const baseSpeed = Math.max(30, enemy.speed || 100);
+
+  if (!Number.isFinite(enemy.flockPhase)) {
+    enemy.flockPhase = getStableFlockValue(enemy, 1) * Math.PI * 2;
+    enemy.flockTemperament = 0.76 + getStableFlockValue(enemy, 2) * 0.42;
+    enemy.flockTurnBias = getStableFlockValue(enemy, 3) < 0.5 ? -1 : 1;
+    enemy.flockSenseTimer = getStableFlockValue(enemy, 4) * 0.12;
+    enemy.flockAvoidX = 0;
+    enemy.flockAvoidY = 0;
+    enemy.flockThreatScore = 0;
+    enemy.flockAvoidanceActive = false;
+  }
+
+  let neighborCount = 0;
+  let centerX = enemy.x;
+  let centerY = enemy.y;
+  let alignmentX = enemy.vx;
+  let alignmentY = enemy.vy;
+  let separationX = 0;
+  let separationY = 0;
+  let positionCorrectionX = 0;
+  let positionCorrectionY = 0;
+
+  enemies.forEach((candidate) => {
+    if (candidate === enemy || candidate.hull <= 0 || candidate.ai !== "flock") return;
+    const dx = enemy.x - candidate.x;
+    const dy = enemy.y - candidate.y;
+    let d = Math.hypot(dx, dy);
+    const separationRadius = Math.max(
+      configuredSeparation,
+      candidate.aiParams?.separationRadius || 0,
+      enemy.radius + candidate.radius + 8
+    );
+    if (d < separationRadius) {
+      let nx;
+      let ny;
+      if (d > 0.5) {
+        nx = dx / d;
+        ny = dy / d;
+      } else {
+        const lowId = Math.min(enemy.id, candidate.id);
+        const highId = Math.max(enemy.id, candidate.id);
+        const pairSeed = { id: lowId * 997 + highId };
+        const angle = getStableFlockValue(pairSeed, 7) * Math.PI * 2;
+        const side = enemy.id === lowId ? 1 : -1;
+        nx = Math.cos(angle) * side;
+        ny = Math.sin(angle) * side;
+        d = 0;
+      }
+      const pressure = 1 - d / separationRadius;
+      separationX += nx * pressure;
+      separationY += ny * pressure;
+      const correctionDistance = Math.max(
+        enemy.radius + candidate.radius + 2,
+        separationRadius * 0.86
+      );
+      const overlap = correctionDistance - d;
+      if (overlap > 0) {
+        positionCorrectionX += nx * overlap * 0.42;
+        positionCorrectionY += ny * overlap * 0.42;
+      }
+    }
+    if (getFlockGroup(candidate) !== group || d > neighborRadius) return;
+    neighborCount += 1;
+    centerX += candidate.x;
+    centerY += candidate.y;
+    alignmentX += candidate.vx;
+    alignmentY += candidate.vy;
+  });
+
+  const correctionMagnitude = Math.hypot(positionCorrectionX, positionCorrectionY);
+  if (correctionMagnitude > 0) {
+    const correctionCap = Math.min(14, correctionMagnitude);
+    enemy.x += (positionCorrectionX / correctionMagnitude) * correctionCap;
+    enemy.y += (positionCorrectionY / correctionMagnitude) * correctionCap;
+  }
+
+  const divisor = neighborCount + 1;
+  centerX /= divisor;
+  centerY /= divisor;
+  alignmentX /= divisor;
+  alignmentY /= divisor;
+
+  enemy.flockSenseTimer = (enemy.flockSenseTimer || 0) - delta;
+  if (enemy.flockSenseTimer <= 0) {
+    const threat = senseFlockProjectileThreat(enemy);
+    const wasAvoiding = enemy.flockAvoidanceActive;
+    if (threat) {
+      enemy.flockAvoidX = threat.x;
+      enemy.flockAvoidY = threat.y;
+      enemy.flockThreatScore = threat.score;
+      enemy.flockThreatRadius = threat.radius;
+      enemy.flockAvoidanceActive = true;
+      enemy.flockThreatHold = 0.16;
+      if (!wasAvoiding && mission) {
+        mission.flockAvoidanceEvents = (mission.flockAvoidanceEvents || 0) + 1;
+      }
+      if (mission) {
+        mission.flockLargestThreatRadius = Math.max(
+          mission.flockLargestThreatRadius || 0,
+          threat.radius
+        );
+      }
+    } else {
+      enemy.flockAvoidanceActive = false;
+      enemy.flockThreatScore = 0;
+    }
+    const reaction = 0.055 + getStableFlockValue(enemy, 5) * 0.11;
+    enemy.flockSenseTimer = reaction / Math.max(0.65, enemy.flockTemperament || 1);
+  } else if (enemy.flockThreatHold > 0) {
+    enemy.flockThreatHold = Math.max(0, enemy.flockThreatHold - delta);
+    enemy.flockAvoidanceActive = enemy.flockThreatHold > 0;
+  }
+
+  const conductorLost = !!enemy.flockConductorLost;
+  const conductorActive = !!enemy.conductorBuff;
+  const cohesionMult = conductorActive ? 1.28 : conductorLost ? 0.32 : 1;
+  const alignmentMult = conductorActive ? 1.36 : conductorLost ? 0.28 : 1;
+  const panicMult = conductorLost ? 1.2 : 1;
+  const holdY = Math.max(70, Math.min(height * 0.58, params.holdY ?? 205));
+  const drift = params.drift ?? 38;
+  const driftRate = params.driftRate ?? 0.72;
+  const cohesionWeight = (params.cohesionWeight ?? 0.34) * cohesionMult;
+  const alignmentWeight = Math.max(0, Math.min(0.8, (params.alignmentWeight ?? 0.34) * alignmentMult));
+  const separationWeight = (params.separationWeight ?? 1.9) * panicMult;
+  const avoidanceWeight = (params.avoidanceWeight ?? 3.1) * (conductorLost ? 1.16 : 1);
+  const playerTrack = params.playerTrack ?? 0.08;
+  const temperament = enemy.flockTemperament || 1;
+  const wave = Math.sin(mission.elapsed * driftRate + enemy.flockPhase);
+
+  let targetVx = wave * drift + (centerX - enemy.x) * cohesionWeight;
+  let targetVy = (holdY - enemy.y) * 0.9 + (centerY - enemy.y) * cohesionWeight * 0.55;
+  targetVx = targetVx * (1 - alignmentWeight) + alignmentX * alignmentWeight;
+  targetVy = targetVy * (1 - alignmentWeight) + alignmentY * alignmentWeight;
+  targetVx += (player.x - centerX) * playerTrack;
+  targetVx += separationX * baseSpeed * separationWeight;
+  targetVy += separationY * baseSpeed * separationWeight * 0.78;
+
+  const linkedTo = params.linkedTo;
+  const leader = linkedTo
+    ? enemies.find((candidate) => (
+      candidate.hull > 0 &&
+      candidate.ai === "conductor" &&
+      linkedToMatchesConductor(linkedTo, candidate.type)
+    ))
+    : null;
+  if (leader) {
+    targetVx += (leader.x - centerX) * 0.22;
+    targetVy += (leader.y + 62 - centerY) * 0.18;
+  }
+
+  if (enemy.flockAvoidanceActive) {
+    const threatScore = Math.max(0, enemy.flockThreatScore || 0);
+    targetVx += enemy.flockAvoidX * baseSpeed * avoidanceWeight * threatScore * temperament;
+    targetVy += enemy.flockAvoidY * baseSpeed * avoidanceWeight * threatScore * temperament * 0.42;
+  }
+
+  if (conductorLost) {
+    targetVx += Math.sin(mission.elapsed * 3.1 + enemy.flockPhase) * baseSpeed * 0.42;
+    targetVy += Math.cos(mission.elapsed * 2.4 + enemy.flockPhase) * baseSpeed * 0.16;
+  }
+
+  const margin = Math.max(48, enemy.radius + 20);
+  if (enemy.x < margin) targetVx += (margin - enemy.x) * 3.4;
+  if (enemy.x > width - margin) targetVx -= (enemy.x - (width - margin)) * 3.4;
+  if (enemy.y < 48) targetVy += (48 - enemy.y) * 2.2;
+  if (enemy.y > height * 0.66) targetVy -= (enemy.y - height * 0.66) * 3.2;
+
+  const maxSpeed = baseSpeed * Math.max(1, params.maxSpeedMult ?? 1.65);
+  const targetSpeed = Math.hypot(targetVx, targetVy);
+  if (targetSpeed > maxSpeed) {
+    targetVx = (targetVx / targetSpeed) * maxSpeed;
+    targetVy = (targetVy / targetSpeed) * maxSpeed;
+  }
+  const response = 1 - Math.exp(-Math.max(1, params.acceleration ?? 5.2) * delta);
+  enemy.vx += (targetVx - enemy.vx) * response;
+  enemy.vy += (targetVy - enemy.vy) * response;
+  enemy.x += enemy.vx * empFactor * delta;
+  enemy.y += enemy.vy * empFactor * delta;
+}
+
+function buildFlockingAudit() {
+  const flock = enemies.filter((enemy) => enemy.ai === "flock" && enemy.hull > 0);
+  const groups = {};
+  let minimumGap = null;
+  let minimumVisualGap = null;
+  let overlappingPairs = 0;
+  let crowdedPairs = 0;
+  flock.forEach((enemy) => {
+    const group = getFlockGroup(enemy);
+    groups[group] = (groups[group] || 0) + 1;
+  });
+  for (let left = 0; left < flock.length; left += 1) {
+    for (let right = left + 1; right < flock.length; right += 1) {
+      const pairDistance = distance(flock[left].x, flock[left].y, flock[right].x, flock[right].y);
+      const gap = pairDistance
+        - flock[left].radius
+        - flock[right].radius;
+      const desiredSpacing = Math.max(
+        flock[left].aiParams?.separationRadius || 0,
+        flock[right].aiParams?.separationRadius || 0
+      ) * 0.86;
+      const visualGap = pairDistance - desiredSpacing;
+      minimumGap = minimumGap === null ? gap : Math.min(minimumGap, gap);
+      minimumVisualGap = minimumVisualGap === null ? visualGap : Math.min(minimumVisualGap, visualGap);
+      if (gap < 0) overlappingPairs += 1;
+      if (visualGap < 0) crowdedPairs += 1;
+    }
+  }
+  return {
+    mission: mission?.level?.id || null,
+    count: flock.length,
+    groups,
+    activeAvoiders: flock.filter((enemy) => enemy.flockAvoidanceActive).length,
+    conductorLinked: flock.filter((enemy) => !!enemy.conductorBuff).length,
+    conductorLost: flock.filter((enemy) => !!enemy.flockConductorLost).length,
+    avoidanceEvents: mission?.flockAvoidanceEvents || 0,
+    largestThreatRadius: Math.round((mission?.flockLargestThreatRadius || 0) * 10) / 10,
+    minimumGap: minimumGap === null ? null : Math.round(minimumGap * 10) / 10,
+    minimumVisualGap: minimumVisualGap === null ? null : Math.round(minimumVisualGap * 10) / 10,
+    overlappingPairs,
+    crowdedPairs,
+  };
+}
+
+function updateFlockingAudit(delta) {
+  if (mission?.level?.id !== "flocking_lab") return;
+  mission.flockAuditTimer = (mission.flockAuditTimer || 0) - delta;
+  if (mission.flockAuditTimer > 0) return;
+  mission.flockAuditTimer = 0.4;
+  document.documentElement.dataset.flockingAudit = JSON.stringify(buildFlockingAudit());
+}
+
 function linkedToMatchesConductor(linkedTo, conductorType) {
   if (!linkedTo || !conductorType) return false;
   if (Array.isArray(linkedTo)) return linkedTo.includes(conductorType);
@@ -14186,16 +14588,22 @@ function updateConductorLinks(delta) {
     const conductor = conductors.find((candidate) => linkedToMatchesConductor(enemy.aiParams.linkedTo, candidate.type));
     if (conductor) {
       enemy.conductorBuff = conductor.aiParams?.conductorBuff || { fireRateMult: 0.85, shieldRegenBonus: 8 };
+      if (enemy.ai === "flock") enemy.flockConductorLost = false;
       return;
     }
     if (enemy.conductorBuff) {
       enemy.conductorBuff = null;
       enemy.scatterTimer = Math.max(enemy.scatterTimer || 0, 1.2);
-      enemy.pattern = "zigzag";
-      enemy.patternParams = { ...(enemy.patternParams || {}), amplitude: 160, frequency: 5 };
-      enemy.patternTime = 0;
-      enemy.spawnX = enemy.x;
-      enemy.spawnY = enemy.y;
+      if (enemy.ai === "flock") {
+        enemy.flockConductorLost = true;
+        enemy.flockSenseTimer = 0;
+      } else {
+        enemy.pattern = "zigzag";
+        enemy.patternParams = { ...(enemy.patternParams || {}), amplitude: 160, frequency: 5 };
+        enemy.patternTime = 0;
+        enemy.spawnX = enemy.x;
+        enemy.spawnY = enemy.y;
+      }
     }
     if (enemy.scatterTimer > 0) {
       enemy.scatterTimer = Math.max(0, enemy.scatterTimer - delta);
@@ -15084,6 +15492,9 @@ function update(delta) {
       } else {
         enemy.vx += Math.sin(mission.elapsed * 2.2 + enemy.id) * 0.08;
       }
+    } else if (enemy.ai === "flock") {
+      applyFlockMovement(enemy, delta, empFactor);
+      return;
     } else if (enemy.ai === "duelist") {
       applyDuelistMovement(enemy, delta, empFactor);
       return;
@@ -15094,6 +15505,8 @@ function update(delta) {
     enemy.x += enemy.vx * empFactor * delta;
     enemy.y += enemy.vy * empFactor * delta;
   });
+
+  updateFlockingAudit(delta);
 
   player.x = Math.max(40, Math.min(width - 40, player.x));
   player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
@@ -17261,5 +17674,7 @@ window.__campaignProgressionReport = () => ({
   pendingRequisition: getPendingCampaignRequisition()?.rewardId || null,
   testArsenalBypass: isDevArsenalEnabled(),
 });
+
+window.__flockingReport = () => buildFlockingAudit();
 
 void bootstrapGame();

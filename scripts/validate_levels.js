@@ -46,6 +46,31 @@ const LEVEL_ENEMY_OVERRIDE_KEYS = new Set([
   "phases",
   "hpScale",
 ]);
+const LEVEL_EVENT_OVERRIDE_KEYS = new Set([
+  ...LEVEL_ENEMY_OVERRIDE_KEYS,
+  "x",
+  "y",
+  "vx",
+  "vy",
+]);
+const FLOCK_AI_PARAM_KEYS = new Set([
+  "flockGroup",
+  "neighborRadius",
+  "separationRadius",
+  "separationWeight",
+  "cohesionWeight",
+  "alignmentWeight",
+  "avoidanceWeight",
+  "lookAhead",
+  "avoidPadding",
+  "holdY",
+  "playerTrack",
+  "drift",
+  "driftRate",
+  "maxSpeedMult",
+  "acceleration",
+  "linkedTo",
+]);
 const PROJECTILE_PROFILE_KEYS = new Set([
   "id",
   "profile",
@@ -393,6 +418,49 @@ function validateLevelDefense(defense, errors, context) {
   }
 }
 
+function validateFlockAiParams(config, errors, context) {
+  if (config.ai !== "flock") return;
+  const params = config.aiParams;
+  if (!isPlainObject(params)) {
+    errors.push(`${context} flock AI must declare aiParams.`);
+    return;
+  }
+  Object.keys(params).forEach((key) => {
+    if (!FLOCK_AI_PARAM_KEYS.has(key)) {
+      errors.push(`${context} flock AI uses unsupported aiParams field '${key}'.`);
+    }
+  });
+  if (typeof params.flockGroup !== "string" || !params.flockGroup.trim()) {
+    errors.push(`${context} flock AI must declare a non-empty flockGroup.`);
+  }
+  [
+    "neighborRadius",
+    "separationRadius",
+    "separationWeight",
+    "cohesionWeight",
+    "alignmentWeight",
+    "avoidanceWeight",
+    "lookAhead",
+    "avoidPadding",
+    "holdY",
+    "playerTrack",
+    "drift",
+    "driftRate",
+    "maxSpeedMult",
+    "acceleration",
+  ].forEach((key) => {
+    if (params[key] !== undefined && (!Number.isFinite(params[key]) || params[key] < 0)) {
+      errors.push(`${context} flock AI field '${key}' must be a non-negative number.`);
+    }
+  });
+  if (params.linkedTo !== undefined) {
+    const links = Array.isArray(params.linkedTo) ? params.linkedTo : [params.linkedTo];
+    if (!links.length || links.some((entry) => typeof entry !== "string" || !entry.trim())) {
+      errors.push(`${context} flock AI linkedTo must name one or more conductor types.`);
+    }
+  }
+}
+
 function validateLevel(level) {
   const errors = [];
   const levelId = level.id || "unknown";
@@ -422,6 +490,7 @@ function validateLevel(level) {
         errors.push(`Enemy '${typeId}' uses unsupported field '${key}'.`);
       }
     }
+    validateFlockAiParams(config, errors, `Enemy '${typeId}'`);
     validateProjectileProfileRef(config.projectileProfile, projectileProfiles, errors, `Enemy '${typeId}' projectileProfile`);
     if (config.attackPatterns !== undefined) {
       if (!Array.isArray(config.attackPatterns)) {
@@ -468,6 +537,17 @@ function validateLevel(level) {
     }
     if (!enemyTypes[event.type]) {
       errors.push(`Event ${index + 1} in '${levelId}' references unknown enemy '${event.type}'.`);
+    }
+    if (event.overrides !== undefined) {
+      if (!isPlainObject(event.overrides)) {
+        errors.push(`Event ${index + 1} in '${levelId}' overrides must be an object.`);
+      } else {
+        for (const key of Object.keys(event.overrides)) {
+          if (!LEVEL_EVENT_OVERRIDE_KEYS.has(key)) {
+            errors.push(`Event ${index + 1} in '${levelId}' uses unsupported override '${key}'.`);
+          }
+        }
+      }
     }
   });
   if (level.pickups !== undefined) {

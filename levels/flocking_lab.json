@@ -1,0 +1,277 @@
+{
+  "id": "flocking_lab",
+  "name": "Flocking Lab: Wake Geometry",
+  "background": "generatedCathedralDriftLooped",
+  "music": "space_battle_bpm130.ogg",
+  "difficulty": "Experimental Chorus",
+  "description": "A short live-fire trial of Chorus schools that keep formation, make room for one another, and bend around incoming firing lanes. Their discipline strengthens under a conductor and breaks into individual panic when the signal dies.",
+  "completeOnBoss": true,
+  "projectileProfiles": {
+    "labNeedle": {
+      "threatClass": "chip",
+      "damage": 7,
+      "speed": 255,
+      "radius": 3,
+      "image": "enemy_space_gold_hymn_dart",
+      "width": 13,
+      "height": 34,
+      "animation": "bolt"
+    },
+    "labPulse": {
+      "threatClass": "standard",
+      "damage": 16,
+      "speed": 205,
+      "radius": 5,
+      "image": "enemy_space_cool_standard_bolt",
+      "width": 18,
+      "height": 42,
+      "animation": "bolt"
+    }
+  },
+  "enemyTypes": {
+    "censer": {
+      "hull": 28,
+      "shield": 34,
+      "shieldRegen": 8,
+      "speed": 142,
+      "collisionDamage": 24,
+      "pattern": "drift",
+      "ai": "flock",
+      "aiParams": {
+        "flockGroup": "wake",
+        "neighborRadius": 250,
+        "separationRadius": 68,
+        "separationWeight": 2.05,
+        "cohesionWeight": 0.35,
+        "alignmentWeight": 0.34,
+        "avoidanceWeight": 3.15,
+        "lookAhead": 0.72,
+        "avoidPadding": 22,
+        "holdY": 190,
+        "playerTrack": 0.08,
+        "drift": 42,
+        "maxSpeedMult": 1.68,
+        "acceleration": 5.3,
+        "linkedTo": [
+          "precentor",
+          "boss"
+        ]
+      },
+      "attackPatterns": [
+        {
+          "id": "wake_needle",
+          "mode": "aim",
+          "profile": "labNeedle",
+          "fireRate": 2.35,
+          "weight": 1,
+          "speedJitter": 0.12
+        }
+      ]
+    },
+    "chorister": {
+      "hull": 40,
+      "shield": 54,
+      "shieldRegen": 10,
+      "speed": 118,
+      "collisionDamage": 22,
+      "pattern": "drift",
+      "ai": "flock",
+      "aiParams": {
+        "flockGroup": "port_school",
+        "neighborRadius": 270,
+        "separationRadius": 76,
+        "separationWeight": 2,
+        "cohesionWeight": 0.38,
+        "alignmentWeight": 0.4,
+        "avoidanceWeight": 2.85,
+        "lookAhead": 0.68,
+        "avoidPadding": 24,
+        "holdY": 235,
+        "playerTrack": 0.06,
+        "drift": 32,
+        "maxSpeedMult": 1.58,
+        "acceleration": 4.8,
+        "linkedTo": [
+          "precentor",
+          "boss"
+        ]
+      },
+      "attackPatterns": [
+        {
+          "id": "school_triplet",
+          "mode": "spread",
+          "profile": "labNeedle",
+          "count": 3,
+          "spreadDeg": 24,
+          "fireRate": 2.15,
+          "weight": 1,
+          "speedJitter": 0.1
+        }
+      ]
+    },
+    "cantor": {
+      "hull": 34,
+      "shield": 44,
+      "shieldRegen": 9,
+      "speed": 136,
+      "collisionDamage": 26,
+      "pattern": "drift",
+      "ai": "flock",
+      "aiParams": {
+        "flockGroup": "starboard_school",
+        "neighborRadius": 260,
+        "separationRadius": 72,
+        "separationWeight": 2.1,
+        "cohesionWeight": 0.34,
+        "alignmentWeight": 0.36,
+        "avoidanceWeight": 3.05,
+        "lookAhead": 0.72,
+        "avoidPadding": 22,
+        "holdY": 270,
+        "playerTrack": 0.07,
+        "drift": 40,
+        "maxSpeedMult": 1.7,
+        "acceleration": 5.4,
+        "linkedTo": [
+          "precentor",
+          "boss"
+        ]
+      },
+      "attackPatterns": [
+        {
+          "id": "school_pulse",
+          "mode": "aim",
+          "profile": "labPulse",
+          "fireRate": 2.45,
+          "weight": 1,
+          "speedJitter": 0.08
+        }
+      ]
+    },
+    "precentor": {
+      "hull": 150,
+      "shield": 240,
+      "shieldRegen": 18,
+      "speed": 94,
+      "pattern": "drift",
+      "ai": "conductor",
+      "miniboss": true,
+      "aiParams": {
+        "holdY": 148,
+        "slideSpeed": 0.7,
+        "keepOut": 185,
+        "conductorBuff": {
+          "fireRateMult": 0.8,
+          "shieldRegenBonus": 12
+        }
+      },
+      "attackPatterns": [
+        {
+          "id": "conducted_fan",
+          "mode": "spread",
+          "profile": "labNeedle",
+          "count": 5,
+          "spreadDeg": 52,
+          "fireRate": 1.65,
+          "weight": 1
+        }
+      ]
+    },
+    "boss": {
+      "template": "act2_processional:boss",
+      "hull": 180,
+      "shield": 240,
+      "shieldRegen": 16,
+      "armor": 0,
+      "speed": 98,
+      "pattern": "drift",
+      "ai": "conductor",
+      "aiParams": {
+        "holdY": 152,
+        "slideSpeed": 0.76,
+        "keepOut": 190,
+        "conductorBuff": {
+          "fireRateMult": 0.72,
+          "shieldRegenBonus": 16
+        }
+      },
+      "attackPatterns": [
+        {
+          "id": "wake_fan",
+          "mode": "spread",
+          "profile": "labNeedle",
+          "count": 7,
+          "spreadDeg": 68,
+          "fireRate": 1.45,
+          "weight": 3,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "wake_pulse",
+          "mode": "aim",
+          "profile": "labPulse",
+          "fireRate": 1.9,
+          "weight": 1
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "time": 1,
+      "type": "censer",
+      "count": 14,
+      "interval": 0.14
+    },
+    {
+      "time": 11,
+      "type": "chorister",
+      "count": 6,
+      "interval": 0.28,
+      "overrides": {
+        "x": 185,
+        "y": 112,
+        "vx": 185,
+        "vy": 18
+      }
+    },
+    {
+      "time": 11,
+      "type": "cantor",
+      "count": 6,
+      "interval": 0.28,
+      "overrides": {
+        "x": 960,
+        "y": 248,
+        "vx": -185,
+        "vy": -12
+      }
+    },
+    {
+      "time": 23,
+      "type": "precentor",
+      "count": 1
+    },
+    {
+      "time": 24,
+      "type": "censer",
+      "count": 10,
+      "interval": 0.16
+    },
+    {
+      "time": 43,
+      "type": "boss",
+      "count": 1
+    },
+    {
+      "time": 44,
+      "type": "censer",
+      "count": 12,
+      "interval": 0.15
+    }
+  ],
+  "debriefLore": [
+    "The Chorus did not dodge as individuals. It changed the shape of the empty space around your fire.",
+    "When the conducting signal failed, agreement became instinct again. Instinct was faster, but it was no longer one thing."
+  ]
+}

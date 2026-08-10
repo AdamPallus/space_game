@@ -73,6 +73,28 @@ const FLOCK_AI_PARAM_KEYS = new Set([
   "departAfter",
   "linkedTo",
 ]);
+const SHOAL_AI_PARAM_KEYS = new Set([
+  "shoalGroup",
+  "neighborRadius",
+  "separationRadius",
+  "separationWeight",
+  "cohesionWeight",
+  "alignmentWeight",
+  "holdY",
+  "wander",
+  "wanderRate",
+  "playerTrack",
+  "maxSpeedMult",
+  "acceleration",
+  "protects",
+  "guardRadius",
+  "guardArcDeg",
+  "guardWeight",
+  "alarmDuration",
+  "alarmTighten",
+  "rageDuration",
+  "rageSpeedMult",
+]);
 const PROJECTILE_PROFILE_KEYS = new Set([
   "id",
   "profile",
@@ -464,6 +486,53 @@ function validateFlockAiParams(config, errors, context) {
   }
 }
 
+function validateShoalAiParams(config, errors, context) {
+  if (config.ai !== "shoal") return;
+  const params = config.aiParams;
+  if (!isPlainObject(params)) {
+    errors.push(`${context} shoal AI must declare aiParams.`);
+    return;
+  }
+  Object.keys(params).forEach((key) => {
+    if (!SHOAL_AI_PARAM_KEYS.has(key)) {
+      errors.push(`${context} shoal AI uses unsupported aiParams field '${key}'.`);
+    }
+  });
+  if (typeof params.shoalGroup !== "string" || !params.shoalGroup.trim()) {
+    errors.push(`${context} shoal AI must declare a non-empty shoalGroup.`);
+  }
+  [
+    "neighborRadius",
+    "separationRadius",
+    "separationWeight",
+    "cohesionWeight",
+    "alignmentWeight",
+    "holdY",
+    "wander",
+    "wanderRate",
+    "playerTrack",
+    "maxSpeedMult",
+    "acceleration",
+    "guardRadius",
+    "guardArcDeg",
+    "guardWeight",
+    "alarmDuration",
+    "alarmTighten",
+    "rageDuration",
+    "rageSpeedMult",
+  ].forEach((key) => {
+    if (params[key] !== undefined && (!Number.isFinite(params[key]) || params[key] < 0)) {
+      errors.push(`${context} shoal AI field '${key}' must be a non-negative number.`);
+    }
+  });
+  if (params.protects !== undefined) {
+    const protectedTypes = Array.isArray(params.protects) ? params.protects : [params.protects];
+    if (!protectedTypes.length || protectedTypes.some((entry) => typeof entry !== "string" || !entry.trim())) {
+      errors.push(`${context} shoal AI protects must name one or more enemy types.`);
+    }
+  }
+}
+
 function validateLevel(level) {
   const errors = [];
   const levelId = level.id || "unknown";
@@ -494,6 +563,7 @@ function validateLevel(level) {
       }
     }
     validateFlockAiParams(config, errors, `Enemy '${typeId}'`);
+    validateShoalAiParams(config, errors, `Enemy '${typeId}'`);
     validateProjectileProfileRef(config.projectileProfile, projectileProfiles, errors, `Enemy '${typeId}' projectileProfile`);
     if (config.attackPatterns !== undefined) {
       if (!Array.isArray(config.attackPatterns)) {

@@ -1,10 +1,10 @@
 # Roadmap
 
-Last audited: 2026-08-05
+Last audited: 2026-08-09
 
 This is the active planning doc for the next playable changes. Historical specs have been archived under `outdated_docs/`; current implementation details live in `STATE.md` and `CURRENT_SYSTEMS.md`.
 
-## Active execution status (2026-08-05)
+## Active execution status (2026-08-09)
 
 The campaign progression spine is implemented and player-accepted. Fresh-save
 runs validated capability pacing, supply credit, guaranteed commissioning, and
@@ -30,6 +30,13 @@ visual result now feeds Collateral Choir, where scored schools withdraw on a
 timer and create moving cover for armored Tithe anchors. This exception does not
 authorize Phase 8 or a broader autonomous campaign pass; Collateral Choir is the
 single deployed candidate awaiting Adam's playtest.
+
+The new Broodwake Lab is an equally bounded Verdant experiment. It tests whether
+biological enemies feel more alive when they share local spacing, protect the
+most important living producer in a defensive crescent, propagate a visible
+wound alarm, and rush after the protected ecology collapses. It is not on the
+campaign route and does not authorize another full level. The next gate is a
+human playtest of readability, fun, and whether any behavior deserves promotion.
 
 ## Player-validated combat direction (2026-07-09)
 

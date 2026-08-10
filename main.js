@@ -290,6 +290,28 @@ const FLOCK_AI_PARAM_KEYS = new Set([
   "departAfter",
   "linkedTo",
 ]);
+const SHOAL_AI_PARAM_KEYS = new Set([
+  "shoalGroup",
+  "neighborRadius",
+  "separationRadius",
+  "separationWeight",
+  "cohesionWeight",
+  "alignmentWeight",
+  "holdY",
+  "wander",
+  "wanderRate",
+  "playerTrack",
+  "maxSpeedMult",
+  "acceleration",
+  "protects",
+  "guardRadius",
+  "guardArcDeg",
+  "guardWeight",
+  "alarmDuration",
+  "alarmTighten",
+  "rageDuration",
+  "rageSpeedMult",
+]);
 const PROJECTILE_PROFILE_KEYS = new Set([
   "id",
   "profile",
@@ -5178,6 +5200,7 @@ const availableLevels = [
   { id: "patterns_demo", label: "Pattern Lab", test: true },
   { id: "ai_demo", label: "AI Lab", test: true },
   { id: "flocking_lab", label: "Flocking Lab", test: true },
+  { id: "biological_shoal_lab", label: "Living Current Lab", test: true },
   { id: "generated_sprite_lab", label: "Generated Sprite Lab", test: true },
   { id: "biological_hive_lab", label: "Biological Hive Lab", test: true },
 ];
@@ -5865,6 +5888,53 @@ function validateFlockAiParams(config, errors, context) {
   }
 }
 
+function validateShoalAiParams(config, errors, context) {
+  if (config.ai !== "shoal") return;
+  const params = config.aiParams;
+  if (!isPlainObject(params)) {
+    errors.push(`${context} shoal AI must declare aiParams.`);
+    return;
+  }
+  Object.keys(params).forEach((key) => {
+    if (!SHOAL_AI_PARAM_KEYS.has(key)) {
+      errors.push(`${context} shoal AI uses unsupported aiParams field '${key}'.`);
+    }
+  });
+  if (typeof params.shoalGroup !== "string" || !params.shoalGroup.trim()) {
+    errors.push(`${context} shoal AI must declare a non-empty shoalGroup.`);
+  }
+  [
+    "neighborRadius",
+    "separationRadius",
+    "separationWeight",
+    "cohesionWeight",
+    "alignmentWeight",
+    "holdY",
+    "wander",
+    "wanderRate",
+    "playerTrack",
+    "maxSpeedMult",
+    "acceleration",
+    "guardRadius",
+    "guardArcDeg",
+    "guardWeight",
+    "alarmDuration",
+    "alarmTighten",
+    "rageDuration",
+    "rageSpeedMult",
+  ].forEach((key) => {
+    if (params[key] !== undefined && (!Number.isFinite(params[key]) || params[key] < 0)) {
+      errors.push(`${context} shoal AI field '${key}' must be a non-negative number.`);
+    }
+  });
+  if (params.protects !== undefined) {
+    const protectedTypes = Array.isArray(params.protects) ? params.protects : [params.protects];
+    if (!protectedTypes.length || protectedTypes.some((entry) => typeof entry !== "string" || !entry.trim())) {
+      errors.push(`${context} shoal AI protects must name one or more enemy types.`);
+    }
+  }
+}
+
 function validateLevelData(level) {
   const errors = [];
   if (!level || typeof level !== "object") {
@@ -5898,6 +5968,7 @@ function validateLevelData(level) {
       }
     });
     validateFlockAiParams(config, errors, `Enemy '${typeId}'`);
+    validateShoalAiParams(config, errors, `Enemy '${typeId}'`);
     validateProjectileProfileRef(config.projectileProfile, projectileProfiles, errors, `Enemy '${typeId}' projectileProfile`);
     if (config.attackPatterns !== undefined) {
       if (!Array.isArray(config.attackPatterns)) {
@@ -9143,6 +9214,7 @@ function describeMovement(spec) {
   if (ai === "sentinel") return "Holds a firing line near the top and strafes to keep you in its sights.";
   if (ai === "skitter") return "Nervous skirmisher that attempts to dodge incoming fire.";
   if (ai === "flock") return "Schools with nearby allies, keeps personal space, and bends around incoming firing lanes.";
+  if (ai === "shoal") return "Reads nearby organisms, screens living producers under threat, and rushes the pilot when its ward dies.";
   if (ai === "duelist") return "Keeps a standoff distance and slides into flanking angles.";
   return "Steady descent with light drift.";
 }
@@ -14558,6 +14630,265 @@ function applyFlockMovement(enemy, delta, empFactor = 1) {
   enemy.y += enemy.vy * empFactor * delta;
 }
 
+function getShoalGroup(enemy) {
+  return enemy?.aiParams?.shoalGroup || enemy?.type || "shoal";
+}
+
+function getShoalProtectedTypes(enemy) {
+  const protects = enemy?.aiParams?.protects;
+  if (!protects) return [];
+  return Array.isArray(protects) ? protects : [protects];
+}
+
+function findShoalProtector(enemy) {
+  const protectedTypes = getShoalProtectedTypes(enemy);
+  if (!protectedTypes.length) return null;
+  let best = null;
+  let bestPriority = Infinity;
+  let bestDistance = Infinity;
+  enemies.forEach((candidate) => {
+    if (candidate === enemy || candidate.hull <= 0) return;
+    const priority = protectedTypes.indexOf(candidate.type);
+    if (priority < 0) return;
+    const candidateDistance = distance(enemy.x, enemy.y, candidate.x, candidate.y);
+    if (priority > bestPriority || (priority === bestPriority && candidateDistance >= bestDistance)) return;
+    best = candidate;
+    bestPriority = priority;
+    bestDistance = candidateDistance;
+  });
+  return best;
+}
+
+function applyShoalMovement(enemy, delta, empFactor = 1) {
+  const params = enemy.aiParams || {};
+  const width = canvas.width / window.devicePixelRatio;
+  const height = canvas.height / window.devicePixelRatio;
+  const group = getShoalGroup(enemy);
+  const baseSpeed = Math.max(30, enemy.speed || 110);
+  const neighborRadius = Math.max(60, params.neighborRadius ?? 230);
+  const configuredSeparation = Math.max(24, params.separationRadius ?? 58);
+
+  if (!Number.isFinite(enemy.shoalPhase)) {
+    enemy.shoalPhase = getStableFlockValue(enemy, 11) * Math.PI * 2;
+    enemy.shoalTemperament = 0.78 + getStableFlockValue(enemy, 12) * 0.46;
+    enemy.shoalGuardSlot = getStableFlockValue(enemy, 13) * 2 - 1;
+    enemy.shoalGuardDepth = 0.78 + getStableFlockValue(enemy, 14) * 0.4;
+    enemy.shoalOrbitDirection = getStableFlockValue(enemy, 15) < 0.5 ? -1 : 1;
+    enemy.shoalAlarmTimer = 0;
+    enemy.shoalRageTimer = 0;
+    enemy.shoalProtectorId = null;
+  }
+
+  let neighborCount = 0;
+  let centerX = enemy.x;
+  let centerY = enemy.y;
+  let alignmentX = enemy.vx;
+  let alignmentY = enemy.vy;
+  let separationX = 0;
+  let separationY = 0;
+  let correctionX = 0;
+  let correctionY = 0;
+  let neighborWounded = false;
+
+  enemies.forEach((candidate) => {
+    if (candidate === enemy || candidate.hull <= 0 || candidate.ai !== "shoal") return;
+    const dx = enemy.x - candidate.x;
+    const dy = enemy.y - candidate.y;
+    let d = Math.hypot(dx, dy);
+    const separationRadius = Math.max(
+      configuredSeparation,
+      candidate.aiParams?.separationRadius || 0,
+      enemy.radius + candidate.radius + 6
+    );
+    if (d < separationRadius) {
+      let nx;
+      let ny;
+      if (d > 0.5) {
+        nx = dx / d;
+        ny = dy / d;
+      } else {
+        const angle = getStableFlockValue({ id: Math.min(enemy.id, candidate.id) * 991 + Math.max(enemy.id, candidate.id) }, 16) * Math.PI * 2;
+        const side = enemy.id < candidate.id ? 1 : -1;
+        nx = Math.cos(angle) * side;
+        ny = Math.sin(angle) * side;
+        d = 0;
+      }
+      const pressure = 1 - d / separationRadius;
+      separationX += nx * pressure;
+      separationY += ny * pressure;
+      const overlap = Math.max(enemy.radius + candidate.radius + 2, separationRadius * 0.82) - d;
+      if (overlap > 0) {
+        correctionX += nx * overlap * 0.38;
+        correctionY += ny * overlap * 0.38;
+      }
+    }
+    if (getShoalGroup(candidate) !== group || d > neighborRadius) return;
+    neighborCount += 1;
+    centerX += candidate.x;
+    centerY += candidate.y;
+    alignmentX += candidate.vx;
+    alignmentY += candidate.vy;
+    if ((candidate.healthBarTimer || 0) > 0.7) neighborWounded = true;
+  });
+
+  const correctionMagnitude = Math.hypot(correctionX, correctionY);
+  if (correctionMagnitude > 0) {
+    const correctionCap = Math.min(12, correctionMagnitude);
+    enemy.x += (correctionX / correctionMagnitude) * correctionCap;
+    enemy.y += (correctionY / correctionMagnitude) * correctionCap;
+  }
+
+  const divisor = neighborCount + 1;
+  centerX /= divisor;
+  centerY /= divisor;
+  alignmentX /= divisor;
+  alignmentY /= divisor;
+
+  const protector = findShoalProtector(enemy);
+  if (protector) {
+    const newlyGuarding = enemy.shoalProtectorId !== protector.id;
+    enemy.shoalProtectorId = protector.id;
+    enemy.shoalHadProtector = true;
+    enemy.shoalProtectorLossHandled = false;
+    enemy.shoalRageTimer = 0;
+    if (newlyGuarding && mission) {
+      mission.shoalGuardChanges = (mission.shoalGuardChanges || 0) + 1;
+    }
+  } else {
+    enemy.shoalProtectorId = null;
+    if (enemy.shoalHadProtector && !enemy.shoalProtectorLossHandled) {
+      enemy.shoalProtectorLossHandled = true;
+      enemy.shoalRageTimer = Math.max(0, params.rageDuration ?? 3.6);
+      if (mission) mission.shoalRageEvents = (mission.shoalRageEvents || 0) + 1;
+    }
+  }
+
+  const protectorWounded = !!protector && (protector.healthBarTimer || 0) > 0.45;
+  const alarmTriggered = protectorWounded || neighborWounded;
+  if (alarmTriggered) {
+    if (!(enemy.shoalAlarmTimer > 0) && mission) {
+      mission.shoalAlarmEvents = (mission.shoalAlarmEvents || 0) + 1;
+    }
+    enemy.shoalAlarmTimer = Math.max(enemy.shoalAlarmTimer || 0, params.alarmDuration ?? 1.7);
+  } else if (enemy.shoalAlarmTimer > 0) {
+    enemy.shoalAlarmTimer = Math.max(0, enemy.shoalAlarmTimer - delta);
+  }
+  if (enemy.shoalRageTimer > 0) {
+    enemy.shoalRageTimer = Math.max(0, enemy.shoalRageTimer - delta);
+  }
+
+  const cohesionWeight = params.cohesionWeight ?? 0.28;
+  const alignmentWeight = Math.max(0, Math.min(0.72, params.alignmentWeight ?? 0.2));
+  const separationWeight = params.separationWeight ?? 2.1;
+  const wander = params.wander ?? 42;
+  const wanderRate = params.wanderRate ?? 0.82;
+  const temperament = enemy.shoalTemperament || 1;
+  const wave = Math.sin(mission.elapsed * wanderRate * temperament + enemy.shoalPhase);
+  const eddy = Math.cos(mission.elapsed * wanderRate * 0.71 + enemy.shoalPhase * 1.7);
+
+  let targetVx = wave * wander + (centerX - enemy.x) * cohesionWeight;
+  let targetVy = eddy * wander * 0.32 + (centerY - enemy.y) * cohesionWeight * 0.5;
+  targetVx = targetVx * (1 - alignmentWeight) + alignmentX * alignmentWeight;
+  targetVy = targetVy * (1 - alignmentWeight) + alignmentY * alignmentWeight;
+  targetVx += separationX * baseSpeed * separationWeight;
+  targetVy += separationY * baseSpeed * separationWeight * 0.82;
+
+  if (protector) {
+    const alarmed = enemy.shoalAlarmTimer > 0;
+    const playerAngle = Math.atan2(player.y - protector.y, player.x - protector.x);
+    const baseArc = Math.max(20, Math.min(320, params.guardArcDeg ?? 150)) * (Math.PI / 180);
+    const arc = baseArc * (alarmed ? 0.62 : 1);
+    const orbit = Math.sin(mission.elapsed * 0.74 + enemy.shoalPhase) * 0.13 * enemy.shoalOrbitDirection;
+    const guardAngle = playerAngle + enemy.shoalGuardSlot * arc * 0.5 + orbit;
+    const tighten = alarmed ? Math.max(0.35, params.alarmTighten ?? 0.7) : 1;
+    const guardRadius = Math.max(
+      protector.radius + enemy.radius + 10,
+      (params.guardRadius ?? 112) * enemy.shoalGuardDepth * tighten
+    );
+    const guardX = protector.x + Math.cos(guardAngle) * guardRadius;
+    const guardY = protector.y + Math.sin(guardAngle) * guardRadius;
+    const guardWeight = (params.guardWeight ?? 2.2) * (alarmed ? 1.38 : 1);
+    targetVx += (guardX - enemy.x) * guardWeight;
+    targetVy += (guardY - enemy.y) * guardWeight;
+  } else if (enemy.shoalRageTimer > 0 && player.cloakTimer <= 0) {
+    const dx = player.x - enemy.x;
+    const dy = player.y - enemy.y;
+    const d = Math.hypot(dx, dy) || 1;
+    const rageSpeed = baseSpeed * Math.max(1, params.rageSpeedMult ?? 1.75);
+    targetVx += (dx / d) * rageSpeed + Math.sin(mission.elapsed * 5 + enemy.shoalPhase) * baseSpeed * 0.38;
+    targetVy += (dy / d) * rageSpeed;
+  } else {
+    const holdY = Math.max(70, Math.min(height * 0.58, params.holdY ?? 220));
+    targetVy += (holdY - enemy.y) * 0.82;
+    targetVx += (player.x - centerX) * (params.playerTrack ?? 0.035);
+  }
+
+  const raging = enemy.shoalRageTimer > 0;
+  const margin = Math.max(44, enemy.radius + 18);
+  if (enemy.x < margin) targetVx += (margin - enemy.x) * 3.1;
+  if (enemy.x > width - margin) targetVx -= (enemy.x - (width - margin)) * 3.1;
+  if (enemy.y < 42) targetVy += (42 - enemy.y) * 2.1;
+  if (!raging && enemy.y > height * 0.72) targetVy -= (enemy.y - height * 0.72) * 3;
+
+  const rageMult = raging ? Math.max(1, params.rageSpeedMult ?? 1.75) : 1;
+  const maxSpeed = baseSpeed * Math.max(1, params.maxSpeedMult ?? 1.62) * rageMult;
+  const targetSpeed = Math.hypot(targetVx, targetVy);
+  if (targetSpeed > maxSpeed) {
+    targetVx = (targetVx / targetSpeed) * maxSpeed;
+    targetVy = (targetVy / targetSpeed) * maxSpeed;
+  }
+  const response = 1 - Math.exp(-Math.max(1, params.acceleration ?? 4.8) * delta);
+  enemy.vx += (targetVx - enemy.vx) * response;
+  enemy.vy += (targetVy - enemy.vy) * response;
+  enemy.x += enemy.vx * empFactor * delta;
+  enemy.y += enemy.vy * empFactor * delta;
+}
+
+function buildShoalAudit() {
+  const shoal = enemies.filter((enemy) => enemy.ai === "shoal" && enemy.hull > 0);
+  const groups = {};
+  const protectors = {};
+  let minimumGap = null;
+  let overlappingPairs = 0;
+  shoal.forEach((enemy) => {
+    const group = getShoalGroup(enemy);
+    groups[group] = (groups[group] || 0) + 1;
+    const protector = enemies.find((candidate) => candidate.id === enemy.shoalProtectorId);
+    if (protector) protectors[protector.type] = (protectors[protector.type] || 0) + 1;
+  });
+  for (let left = 0; left < shoal.length; left += 1) {
+    for (let right = left + 1; right < shoal.length; right += 1) {
+      const gap = distance(shoal[left].x, shoal[left].y, shoal[right].x, shoal[right].y)
+        - shoal[left].radius
+        - shoal[right].radius;
+      minimumGap = minimumGap === null ? gap : Math.min(minimumGap, gap);
+      if (gap < 0) overlappingPairs += 1;
+    }
+  }
+  return {
+    mission: mission?.level?.id || null,
+    count: shoal.length,
+    groups,
+    guarding: shoal.filter((enemy) => Number.isFinite(enemy.shoalProtectorId)).length,
+    protectors,
+    alarmed: shoal.filter((enemy) => enemy.shoalAlarmTimer > 0).length,
+    raging: shoal.filter((enemy) => enemy.shoalRageTimer > 0).length,
+    guardChanges: mission?.shoalGuardChanges || 0,
+    alarmEvents: mission?.shoalAlarmEvents || 0,
+    rageEvents: mission?.shoalRageEvents || 0,
+    minimumGap: minimumGap === null ? null : Math.round(minimumGap * 10) / 10,
+    overlappingPairs,
+  };
+}
+
+function updateShoalAudit(delta) {
+  if (mission?.level?.id !== "biological_shoal_lab") return;
+  mission.shoalAuditTimer = (mission.shoalAuditTimer || 0) - delta;
+  if (mission.shoalAuditTimer > 0) return;
+  mission.shoalAuditTimer = 0.35;
+  document.documentElement.dataset.shoalAudit = JSON.stringify(buildShoalAudit());
+}
+
 function buildFlockingAudit() {
   const flock = enemies.filter((enemy) => enemy.ai === "flock" && enemy.hull > 0);
   const groups = {};
@@ -15532,6 +15863,9 @@ function update(delta) {
     } else if (enemy.ai === "flock") {
       applyFlockMovement(enemy, delta, empFactor);
       return;
+    } else if (enemy.ai === "shoal") {
+      applyShoalMovement(enemy, delta, empFactor);
+      return;
     } else if (enemy.ai === "duelist") {
       applyDuelistMovement(enemy, delta, empFactor);
       return;
@@ -15544,6 +15878,7 @@ function update(delta) {
   });
 
   updateFlockingAudit(delta);
+  updateShoalAudit(delta);
 
   player.x = Math.max(40, Math.min(width - 40, player.x));
   player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
@@ -15920,6 +16255,7 @@ function render() {
       drawBullet(bullet, "#e0f2fe", { simplifiedPlasma });
     });
     enemyBullets.forEach((bullet) => drawBullet(bullet, "#38bdf8"));
+    drawShoalSignals();
     enemies.forEach(drawEnemy);
     drawTractorBeams();
     drawLockedShotTelegraphs();
@@ -16424,6 +16760,44 @@ function drawMissionAnnouncements(width, height) {
     ctx.strokeRect(width / 2 - 220, y - 18, 440, 36);
     ctx.fillStyle = line.color;
     ctx.fillText(line.text, width / 2, y);
+  });
+  ctx.restore();
+}
+
+function drawShoalSignals() {
+  if (!mission?.active) return;
+  const shoal = enemies.filter((enemy) => enemy.ai === "shoal" && enemy.hull > 0 && enemy.shoalProtectorId);
+  if (!shoal.length) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  shoal.forEach((enemy) => {
+    const protector = enemies.find((candidate) => candidate.id === enemy.shoalProtectorId && candidate.hull > 0);
+    if (!protector) return;
+    const d = distance(enemy.x, enemy.y, protector.x, protector.y);
+    if (d > 320) return;
+    const alarmed = enemy.shoalAlarmTimer > 0;
+    const alpha = alarmed ? 0.24 : 0.055;
+    const midX = (enemy.x + protector.x) * 0.5;
+    const midY = (enemy.y + protector.y) * 0.5;
+    const nx = d > 0 ? -(protector.y - enemy.y) / d : 0;
+    const ny = d > 0 ? (protector.x - enemy.x) / d : 0;
+    const bend = Math.sin((mission.elapsed || 0) * 1.9 + enemy.shoalPhase) * Math.min(22, d * 0.12);
+    ctx.strokeStyle = `rgba(134, 239, 172, ${alpha})`;
+    ctx.lineWidth = alarmed ? 1.7 : 0.8;
+    ctx.beginPath();
+    ctx.moveTo(enemy.x, enemy.y);
+    ctx.quadraticCurveTo(midX + nx * bend, midY + ny * bend, protector.x, protector.y);
+    ctx.stroke();
+    if (alarmed) {
+      const pulse = ((mission.elapsed || 0) * 1.35 + getStableFlockValue(enemy, 21)) % 1;
+      const inv = 1 - pulse;
+      const pulseX = inv * inv * enemy.x + 2 * inv * pulse * (midX + nx * bend) + pulse * pulse * protector.x;
+      const pulseY = inv * inv * enemy.y + 2 * inv * pulse * (midY + ny * bend) + pulse * pulse * protector.y;
+      ctx.fillStyle = `rgba(190, 242, 100, ${0.35 + pulse * 0.45})`;
+      ctx.beginPath();
+      ctx.arc(pulseX, pulseY, 1.8 + pulse * 1.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
   });
   ctx.restore();
 }
@@ -17713,5 +18087,6 @@ window.__campaignProgressionReport = () => ({
 });
 
 window.__flockingReport = () => buildFlockingAudit();
+window.__shoalReport = () => buildShoalAudit();
 
 void bootstrapGame();

@@ -2740,6 +2740,268 @@
         "bulletSpeed": 195,
         "spriteScale": 1.04
       }
+    },
+    "shard": {
+      "name": "Parallax Shard",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_shard.png",
+        "hull": 170,
+        "shield": 55,
+        "shieldRegen": 10,
+        "speed": 172,
+        "score": 190,
+        "baseCredit": 18,
+        "radius": 17,
+        "collisionDamage": 46,
+        "ai": "parallax",
+        "aiParams": { "parallaxGroup": "parallax_default", "formation": "arc" },
+        "fireRate": 1.9,
+        "spriteScale": 0.76
+      }
+    },
+    "mirror": {
+      "name": "Split Mirror",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_mirror.png",
+        "hull": 340,
+        "shield": 310,
+        "shieldRegen": 18,
+        "speed": 154,
+        "score": 440,
+        "baseCredit": 42,
+        "radius": 23,
+        "collisionDamage": 58,
+        "ai": "parallax",
+        "aiParams": { "parallaxGroup": "parallax_default", "formation": "arc" },
+        "fireRate": 1.3,
+        "spriteScale": 0.82
+      }
+    },
+    "guard": {
+      "name": "Aperture Guard",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_shard.png",
+        "hull": 230,
+        "shield": 120,
+        "shieldRegen": 12,
+        "speed": 180,
+        "score": 240,
+        "baseCredit": 22,
+        "radius": 18,
+        "collisionDamage": 52,
+        "ai": "parallax",
+        "aiParams": { "parallaxGroup": "parallax_guard", "formation": "orbit" },
+        "fireRate": 1.65,
+        "spriteScale": 0.78
+      }
+    },
+    "lens": {
+      "name": "Lens Sentinel",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_lens.png",
+        "hull": 620,
+        "shield": 980,
+        "shieldRegen": 28,
+        "speed": 92,
+        "score": 820,
+        "baseCredit": 92,
+        "radius": 32,
+        "collisionDamage": 72,
+        "ai": "sentinel",
+        "aiParams": { "holdY": 160, "slideSpeed": 0.74, "keepOut": 210 },
+        "fireRate": 1.4,
+        "spriteScale": 0.86
+      }
+    },
+    "spear": {
+      "name": "Null Spear",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_spear.png",
+        "hull": 280,
+        "shield": 80,
+        "speed": 215,
+        "score": 330,
+        "baseCredit": 28,
+        "radius": 18,
+        "collisionDamage": 105,
+        "ai": "rammer",
+        "aiParams": { "lockRange": 360, "telegraph": 0.42, "lungeSpeed": 470 },
+        "fireRate": 60,
+        "spriteScale": 0.82
+      }
+    },
+    "knot": {
+      "name": "Parallax Knot",
+      "boss": false,
+      "miniboss": true,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_knot.png",
+        "hull": 1950,
+        "shield": 1250,
+        "shieldRegen": 24,
+        "armor": 780,
+        "armorClass": 20,
+        "speed": 112,
+        "score": 2700,
+        "baseCredit": 360,
+        "radius": 50,
+        "collisionDamage": 92,
+        "ai": "sentinel",
+        "aiParams": { "holdY": 165, "slideSpeed": 0.88, "keepOut": 220 },
+        "fireRate": 1,
+        "spriteScale": 0.94
+      }
+    },
+    "echo": {
+      "name": "Position Echo",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_mirror.png",
+        "hull": 390,
+        "shield": 340,
+        "shieldRegen": 18,
+        "speed": 166,
+        "score": 470,
+        "baseCredit": 44,
+        "radius": 23,
+        "collisionDamage": 62,
+        "ai": "parallax",
+        "aiParams": { "parallaxGroup": "echo_default", "formation": "mirror", "mirrorDelay": 1.3 },
+        "fireRate": 1.2,
+        "spriteScale": 0.82
+      }
+    },
+    "counterecho": {
+      "name": "Counterposition Echo",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_mirror.png",
+        "hull": 390,
+        "shield": 340,
+        "shieldRegen": 18,
+        "speed": 166,
+        "score": 470,
+        "baseCredit": 44,
+        "radius": 23,
+        "collisionDamage": 62,
+        "ai": "parallax",
+        "aiParams": { "parallaxGroup": "counterecho_default", "formation": "mirror", "mirrorDelay": 1.3, "mirror": true },
+        "fireRate": 1.2,
+        "spriteScale": 0.82
+      }
+    },
+    "anchor": {
+      "name": "Prism Anchor",
+      "boss": false,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_anchor.png",
+        "hull": 900,
+        "shield": 700,
+        "armor": 980,
+        "armorClass": 24,
+        "speed": 76,
+        "score": 1250,
+        "baseCredit": 150,
+        "radius": 40,
+        "collisionDamage": 88,
+        "ai": "sentinel",
+        "aiParams": { "holdY": 175, "slideSpeed": 0.62, "keepOut": 230 },
+        "fireRate": 1.15,
+        "spriteScale": 0.9
+      }
+    },
+    "theorem": {
+      "name": "Moving Theorem",
+      "boss": false,
+      "miniboss": true,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/parallax_anchor.png",
+        "hull": 2600,
+        "shield": 1700,
+        "shieldRegen": 26,
+        "armor": 1200,
+        "armorClass": 26,
+        "speed": 108,
+        "score": 3600,
+        "baseCredit": 440,
+        "radius": 56,
+        "collisionDamage": 110,
+        "pattern": "bossOrbit",
+        "fireRate": 0.9,
+        "spriteScale": 0.98
+      }
+    },
+    "act3_strange_angle:boss": {
+      "name": "The Folded Aperture",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/boss_folded_aperture.png",
+        "hull": 2550,
+        "shield": 1750,
+        "shieldRegen": 28,
+        "armor": 520,
+        "armorClass": 22,
+        "speed": 112,
+        "score": 7600,
+        "baseCredit": 1800,
+        "radius": 86,
+        "collisionDamage": 132,
+        "pattern": "bossOrbit",
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.9,
+        "spriteScale": 1.04
+      }
+    },
+    "act3_false_position:boss": {
+      "name": "The Mirror Engine",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/boss_mirror_engine.png",
+        "hull": 2850,
+        "shield": 2100,
+        "shieldRegen": 32,
+        "armor": 650,
+        "armorClass": 23,
+        "speed": 134,
+        "score": 8800,
+        "baseCredit": 2050,
+        "radius": 88,
+        "collisionDamage": 144,
+        "ai": "mimic",
+        "aiParams": { "echoDelay": 0.9, "mirror": true, "holdY": 175, "standoff": 270 },
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.8,
+        "spriteScale": 1.04
+      }
+    },
+    "act3_proof_of_life:boss": {
+      "name": "The Axiom That Hunts",
+      "boss": true,
+      "template": {
+        "sprite": "assets/generated/parallax_v1/boss_axiom.png",
+        "hull": 3300,
+        "shield": 2250,
+        "shieldRegen": 34,
+        "armor": 1500,
+        "armorClass": 28,
+        "speed": 126,
+        "score": 10500,
+        "baseCredit": 2400,
+        "radius": 98,
+        "collisionDamage": 165,
+        "pattern": "bossAdvanceSweep",
+        "isBoss": true,
+        "empImmune": true,
+        "fireRate": 0.7,
+        "spriteScale": 1.08
+      }
     }
   }
 }

@@ -153,6 +153,7 @@ const ASSET_ROOT = "assets/SpaceShooterRedux/PNG";
 const BG_ROOT = "assets/SpaceShooterRedux/Backgrounds";
 const GENERATED_ROOT = "assets/generated";
 const GENERATED_BACKGROUND_ROOT = `${GENERATED_ROOT}/backgrounds_v1`;
+const GENERATED_PARALLAX_BACKGROUND_ROOT = `${GENERATED_ROOT}/parallax_backgrounds_v1`;
 const GENERATED_EFFECT_ROOT = `${GENERATED_ROOT}/effects_projectiles_v1`;
 const GENERATED_SPACE_PROJECTILE_ROOT = `${GENERATED_ROOT}/enemy_projectiles_space_v1`;
 const GENERATED_BIO_ROOT = `${GENERATED_ROOT}/bio_enemies_v1`;
@@ -196,6 +197,9 @@ const GENERATED_BACKGROUND_URLS = {
   generatedOriginHullLooped: `${GENERATED_BACKGROUND_ROOT}/origin_hull_looped_1024.png`,
   generatedHomeHull: `${GENERATED_BACKGROUND_ROOT}/home_hull_native_1024.png`,
   generatedHomeHullLooped: `${GENERATED_BACKGROUND_ROOT}/home_hull_looped_1024.png`,
+  generatedParallaxFault: `${GENERATED_PARALLAX_BACKGROUND_ROOT}/fault_native_1024.png`,
+  generatedParallaxInterference: `${GENERATED_PARALLAX_BACKGROUND_ROOT}/interference_native_1024.png`,
+  generatedParallaxAxiom: `${GENERATED_PARALLAX_BACKGROUND_ROOT}/axiom_native_1024.png`,
 };
 const overhaulKit = {
   hulls: {
@@ -311,6 +315,28 @@ const SHOAL_AI_PARAM_KEYS = new Set([
   "alarmTighten",
   "rageDuration",
   "rageSpeedMult",
+]);
+const PARALLAX_AI_PARAM_KEYS = new Set([
+  "parallaxGroup",
+  "formation",
+  "formations",
+  "formationEvery",
+  "holdY",
+  "span",
+  "depth",
+  "orbitRadius",
+  "orbitSpeed",
+  "phase",
+  "mirrorDelay",
+  "mirror",
+  "playerTrack",
+  "avoidanceWeight",
+  "lookAhead",
+  "avoidPadding",
+  "maxSpeedMult",
+  "acceleration",
+  "protects",
+  "departAfter",
 ]);
 const PROJECTILE_PROFILE_KEYS = new Set([
   "id",
@@ -4972,6 +4998,9 @@ const assets = {
     generatedOriginHullLooped: loadImage(GENERATED_BACKGROUND_URLS.generatedOriginHullLooped),
     generatedHomeHull: loadImage(GENERATED_BACKGROUND_URLS.generatedHomeHull),
     generatedHomeHullLooped: loadImage(GENERATED_BACKGROUND_URLS.generatedHomeHullLooped),
+    generatedParallaxFault: loadImage(GENERATED_BACKGROUND_URLS.generatedParallaxFault),
+    generatedParallaxInterference: loadImage(GENERATED_BACKGROUND_URLS.generatedParallaxInterference),
+    generatedParallaxAxiom: loadImage(GENERATED_BACKGROUND_URLS.generatedParallaxAxiom),
   },
   player: loadImage(`${ASSET_ROOT}/playerShip2_blue.png`),
   playerBullet: loadImage(`${ASSET_ROOT}/Lasers/laserBlue02.png`),
@@ -5081,6 +5110,17 @@ const assets = {
         loadImage(`${GENERATED_BIO_ROOT}/bio_explosion_02.png`),
       ],
     },
+    parallax_v1: {
+      enemyBullet: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_standard_bolt.png`),
+      enemyBulletWidth: 15,
+      enemyBulletHeight: 42,
+      enemyPurpleOrb: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_boss_core.png`),
+      enemyPurpleOrbSize: 42,
+      enemySpreadShard: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_cool_chip_needle.png`),
+      enemySpreadShardSize: 36,
+      enemyRadialEmber: loadImage(`${GENERATED_SPACE_PROJECTILE_ROOT}/enemy_space_warm_boss_ring.png`),
+      enemyRadialEmberSize: 46,
+    },
   },
 };
 
@@ -5145,6 +5185,27 @@ const activeCampaignLevels = [
     bossScaleIndex: 11.5,
   },
   { id: "act2_return_address", label: "Return Address", requires: [{ completed: "act2_green_signal" }] },
+  {
+    id: "act3_strange_angle",
+    label: "A Strange Angle",
+    requires: [{ completed: "act2_return_address" }],
+    candidate: true,
+    bossScaleIndex: 13,
+  },
+  {
+    id: "act3_false_position",
+    label: "False Position",
+    requires: [{ completed: "act3_strange_angle" }],
+    candidate: true,
+    bossScaleIndex: 14,
+  },
+  {
+    id: "act3_proof_of_life",
+    label: "Proof of Life",
+    requires: [{ completed: "act3_false_position" }],
+    candidate: true,
+    bossScaleIndex: 15,
+  },
 ];
 
 // Dual Fire is core combat vocabulary, so its base tiers are direct campaign
@@ -5942,6 +6003,62 @@ function validateShoalAiParams(config, errors, context) {
   }
 }
 
+function validateParallaxAiParams(config, errors, context) {
+  if (config.ai !== "parallax") return;
+  const params = config.aiParams;
+  if (!isPlainObject(params)) {
+    errors.push(`${context} parallax AI must declare aiParams.`);
+    return;
+  }
+  Object.keys(params).forEach((key) => {
+    if (!PARALLAX_AI_PARAM_KEYS.has(key)) {
+      errors.push(`${context} parallax AI uses unsupported aiParams field '${key}'.`);
+    }
+  });
+  if (typeof params.parallaxGroup !== "string" || !params.parallaxGroup.trim()) {
+    errors.push(`${context} parallax AI must declare a non-empty parallaxGroup.`);
+  }
+  const validFormations = new Set(["arc", "wall", "orbit", "braid", "spear", "mirror"]);
+  if (params.formation !== undefined && !validFormations.has(params.formation)) {
+    errors.push(`${context} parallax AI has invalid formation '${params.formation}'.`);
+  }
+  if (params.formations !== undefined) {
+    if (!Array.isArray(params.formations) || !params.formations.length || params.formations.some((entry) => !validFormations.has(entry))) {
+      errors.push(`${context} parallax AI formations must be a non-empty array of supported formation names.`);
+    }
+  }
+  [
+    "formationEvery",
+    "holdY",
+    "span",
+    "depth",
+    "orbitRadius",
+    "orbitSpeed",
+    "phase",
+    "mirrorDelay",
+    "playerTrack",
+    "avoidanceWeight",
+    "lookAhead",
+    "avoidPadding",
+    "maxSpeedMult",
+    "acceleration",
+    "departAfter",
+  ].forEach((key) => {
+    if (params[key] !== undefined && (!Number.isFinite(params[key]) || params[key] < 0)) {
+      errors.push(`${context} parallax AI field '${key}' must be a non-negative number.`);
+    }
+  });
+  if (params.mirror !== undefined && typeof params.mirror !== "boolean") {
+    errors.push(`${context} parallax AI field 'mirror' must be boolean.`);
+  }
+  if (params.protects !== undefined) {
+    const protectedTypes = Array.isArray(params.protects) ? params.protects : [params.protects];
+    if (!protectedTypes.length || protectedTypes.some((entry) => typeof entry !== "string" || !entry.trim())) {
+      errors.push(`${context} parallax AI protects must name one or more enemy types.`);
+    }
+  }
+}
+
 function validateLevelData(level) {
   const errors = [];
   if (!level || typeof level !== "object") {
@@ -5976,6 +6093,7 @@ function validateLevelData(level) {
     });
     validateFlockAiParams(config, errors, `Enemy '${typeId}'`);
     validateShoalAiParams(config, errors, `Enemy '${typeId}'`);
+    validateParallaxAiParams(config, errors, `Enemy '${typeId}'`);
     validateProjectileProfileRef(config.projectileProfile, projectileProfiles, errors, `Enemy '${typeId}' projectileProfile`);
     if (config.attackPatterns !== undefined) {
       if (!Array.isArray(config.attackPatterns)) {
@@ -9222,6 +9340,7 @@ function describeMovement(spec) {
   if (ai === "skitter") return "Nervous skirmisher that attempts to dodge incoming fire.";
   if (ai === "flock") return "Schools with nearby allies, keeps personal space, and bends around incoming firing lanes.";
   if (ai === "shoal") return "Reads nearby organisms, screens living producers under threat, and rushes the pilot when its ward dies.";
+  if (ai === "parallax") return "Recomputes an exact linked formation with its peers and collectively opens around incoming fire.";
   if (ai === "duelist") return "Keeps a standoff distance and slides into flanking angles.";
   return "Steady descent with light drift.";
 }
@@ -14860,6 +14979,267 @@ function applyShoalMovement(enemy, delta, empFactor = 1) {
   enemy.y += enemy.vy * empFactor * delta;
 }
 
+function getParallaxGroup(enemy) {
+  return enemy?.aiParams?.parallaxGroup || enemy?.type || "parallax";
+}
+
+function getParallaxProtector(enemy) {
+  const configured = enemy?.aiParams?.protects;
+  const types = Array.isArray(configured) ? configured : configured ? [configured] : [];
+  if (!types.length) return null;
+  for (const type of types) {
+    const candidates = enemies.filter((candidate) => candidate.hull > 0 && candidate.type === type);
+    if (!candidates.length) continue;
+    const retained = candidates.find((candidate) => candidate.id === enemy.parallaxProtectorId);
+    if (retained) return retained;
+    return candidates.reduce((best, candidate) => {
+      if (!best) return candidate;
+      return distance(enemy.x, enemy.y, candidate.x, candidate.y)
+        < distance(enemy.x, enemy.y, best.x, best.y)
+        ? candidate
+        : best;
+    }, null);
+  }
+  return null;
+}
+
+function senseParallaxGroupThreat(members, centerX, centerY, params) {
+  const lookAhead = Math.max(0.2, params.lookAhead ?? 1.05);
+  const padding = Math.max(0, params.avoidPadding ?? 42);
+  const span = Math.max(100, params.span ?? 430);
+  const maxCheck = Math.min(48, bullets.length);
+  let best = null;
+  for (let index = 0; index < maxCheck; index += 1) {
+    const bullet = bullets[bullets.length - 1 - index];
+    if (!bullet || bullet.orbiting || !(bullet.vy < -1)) continue;
+    const time = (centerY - bullet.y) / bullet.vy;
+    if (time < 0 || time > lookAhead) continue;
+    const predictedX = bullet.x + (bullet.vx || 0) * time;
+    const projectileRadius = Math.max(
+      3,
+      Number(bullet.radius) || 0,
+      bullet.explosive ? Math.min(44, (Number(bullet.explosiveRadius) || 0) * 0.16) : 0
+    );
+    const lane = span * 0.56 + padding + projectileRadius;
+    const offset = Math.abs(predictedX - centerX);
+    if (offset > lane) continue;
+    const score = (1 - offset / Math.max(1, lane)) * (1 - time / lookAhead * 0.35)
+      + projectileRadius / 180;
+    if (!best || score > best.score) {
+      best = { bullet, predictedX, radius: projectileRadius, score };
+    }
+  }
+  return best;
+}
+
+function getParallaxFormation(params) {
+  const cycle = Array.isArray(params.formations) && params.formations.length
+    ? params.formations
+    : [params.formation || "arc"];
+  const every = Math.max(1, params.formationEvery ?? 7);
+  const phase = Math.max(0, params.phase ?? 0);
+  return cycle[Math.floor(((mission?.elapsed || 0) + phase) / every) % cycle.length];
+}
+
+function applyParallaxMovement(enemy, delta, empFactor = 1) {
+  const params = enemy.aiParams || {};
+  const width = canvas.width / window.devicePixelRatio;
+  const height = canvas.height / window.devicePixelRatio;
+  const departAfter = Number(params.departAfter);
+  if (Number.isFinite(departAfter) && departAfter > 0 && mission.elapsed - enemy.spawnTime >= departAfter) {
+    enemy.parallaxDeparting = true;
+    enemy.parallaxProtectorId = null;
+    const side = enemy.x < width / 2 ? -1 : 1;
+    const targetVx = side * Math.max(55, enemy.speed * 0.46);
+    const targetVy = -Math.max(95, enemy.speed * 1.18);
+    const response = 1 - Math.exp(-5.2 * delta);
+    enemy.vx += (targetVx - enemy.vx) * response;
+    enemy.vy += (targetVy - enemy.vy) * response;
+    enemy.x += enemy.vx * empFactor * delta;
+    enemy.y += enemy.vy * empFactor * delta;
+    if (enemy.y < -Math.max(80, enemy.radius * 3)) enemy.escaped = true;
+    return;
+  }
+  const group = getParallaxGroup(enemy);
+  const members = enemies
+    .filter((candidate) => candidate.ai === "parallax" && !candidate.parallaxDeparting && candidate.hull > 0 && getParallaxGroup(candidate) === group)
+    .sort((left, right) => left.id - right.id);
+  const index = Math.max(0, members.indexOf(enemy));
+  const count = Math.max(1, members.length);
+  const span = Math.max(110, params.span ?? 430);
+  const columns = Math.max(3, Math.min(count, Math.floor(span / 56)));
+  const row = Math.floor(index / columns);
+  const column = index % columns;
+  const membersInRow = Math.min(columns, count - row * columns);
+  const slot = membersInRow <= 1 ? 0 : (column / (membersInRow - 1)) * 2 - 1;
+  if (!mission.parallaxGroups) mission.parallaxGroups = {};
+  const state = mission.parallaxGroups[group] || (mission.parallaxGroups[group] = {
+    dodgeX: 0,
+    dodgeTargetX: 0,
+    dodgeTimer: 0,
+    aperture: 0,
+    avoidanceEvents: 0,
+    lastElapsed: null,
+  });
+
+  const protector = getParallaxProtector(enemy);
+  enemy.parallaxProtectorId = protector?.id ?? null;
+  let centerX = protector?.x ?? width / 2;
+  let centerY = protector?.y ?? Math.max(70, Math.min(height * 0.5, params.holdY ?? 205));
+  const formation = getParallaxFormation(params);
+  if (formation === "mirror" || Number.isFinite(params.mirrorDelay)) {
+    const echo = getDelayedPlayerPosition(params.mirrorDelay ?? 1.4);
+    centerX = params.mirror ? width - echo.x : echo.x;
+    if (formation === "mirror") {
+      centerX += (params.mirror ? 1 : -1) * Math.min(width * 0.22, span * 0.55);
+    }
+    centerX = Math.max(width * 0.12, Math.min(width * 0.88, centerX));
+  } else if (!protector) {
+    const track = Math.max(0, Math.min(0.75, params.playerTrack ?? 0.08));
+    centerX += (player.x - width / 2) * track;
+  }
+
+  if (state.lastElapsed !== mission.elapsed) {
+    const frameDelta = Number.isFinite(state.lastElapsed)
+      ? Math.max(0, Math.min(0.1, mission.elapsed - state.lastElapsed))
+      : delta;
+    state.lastElapsed = mission.elapsed;
+    state.dodgeTimer = Math.max(0, (state.dodgeTimer || 0) - frameDelta);
+    state.threatCooldown = Math.max(0, (state.threatCooldown || 0) - frameDelta);
+    state.aperture = Math.max(0, (state.aperture || 0) - frameDelta * 1.35);
+    const threat = state.threatCooldown <= 0
+      ? senseParallaxGroupThreat(members, centerX, centerY, params)
+      : null;
+    if (threat && threat.bullet !== state.lastThreatBullet) {
+      const centered = Math.abs(threat.predictedX - centerX) < 16;
+      const fallbackSide = getStableFlockValue({ id: group.length * 97 + members[0]?.id }, 31) < 0.5 ? -1 : 1;
+      const side = centered ? fallbackSide : threat.predictedX < centerX ? 1 : -1;
+      const weight = Math.max(0, params.avoidanceWeight ?? 1);
+      state.dodgeTargetX = side * Math.min(185, (72 + threat.radius * 1.6) * weight);
+      state.dodgeTimer = 0.62;
+      state.aperture = Math.min(1, 0.45 + threat.radius / 58);
+      state.threatCooldown = 0.18;
+      state.lastThreatBullet = threat.bullet;
+      state.avoidanceEvents = (state.avoidanceEvents || 0) + 1;
+      mission.parallaxAvoidanceEvents = (mission.parallaxAvoidanceEvents || 0) + 1;
+    }
+    if (state.dodgeTimer <= 0) state.dodgeTargetX = 0;
+    const dodgeResponse = 1 - Math.exp(-7.5 * frameDelta);
+    state.dodgeX += ((state.dodgeTargetX || 0) - (state.dodgeX || 0)) * dodgeResponse;
+  }
+
+  const depth = Math.max(15, params.depth ?? 78);
+  const apertureSpread = 1 + (state.aperture || 0) * 0.55;
+  let targetX = centerX;
+  let targetY = centerY;
+  if (formation === "wall") {
+    targetX += slot * span * 0.5 * apertureSpread;
+    targetY += row * 58 + Math.abs(slot) * depth * 0.2;
+  } else if (formation === "orbit") {
+    const orbitCapacity = 10;
+    const ring = Math.floor(index / orbitCapacity);
+    const ringIndex = index % orbitCapacity;
+    const membersInRing = Math.min(orbitCapacity, count - ring * orbitCapacity);
+    const angle = (mission.elapsed || 0) * (params.orbitSpeed ?? 0.72) * (ring % 2 ? -1 : 1)
+      + (Math.PI * 2 * ringIndex) / Math.max(1, membersInRing)
+      + (params.phase ?? 0);
+    const radius = (Math.max(55, params.orbitRadius ?? span * 0.38) + ring * 58)
+      * (1 + (state.aperture || 0) * 0.28);
+    targetX += Math.cos(angle) * radius;
+    targetY += Math.sin(angle) * radius * 0.48;
+  } else if (formation === "braid" || formation === "mirror") {
+    targetX += slot * span * 0.46 * apertureSpread;
+    targetY += row * 58 + Math.sin((mission.elapsed || 0) * 1.35 + column * Math.PI) * depth * 0.42;
+  } else if (formation === "spear") {
+    targetX += slot * span * 0.42 * apertureSpread;
+    targetY += row * 58 + (1 - Math.abs(slot)) * depth * 1.15;
+  } else {
+    targetX += slot * span * 0.5 * apertureSpread;
+    targetY += row * 58 + (1 - slot * slot) * depth * 0.72;
+  }
+  targetX += state.dodgeX || 0;
+  const margin = Math.max(42, enemy.radius + 14);
+  targetX = Math.max(margin, Math.min(width - margin, targetX));
+  targetY = Math.max(48, Math.min(height * 0.64, targetY));
+
+  const baseSpeed = Math.max(45, enemy.speed || 100);
+  let targetVx = (targetX - enemy.x) * 2.8;
+  let targetVy = (targetY - enemy.y) * 2.8;
+  enemies.forEach((candidate) => {
+    if (candidate === enemy || candidate.ai !== "parallax" || candidate.hull <= 0) return;
+    let dx = enemy.x - candidate.x;
+    let dy = enemy.y - candidate.y;
+    let gap = Math.hypot(dx, dy);
+    const keepOut = enemy.radius + candidate.radius + 9;
+    if (gap >= keepOut) return;
+    if (gap < 0.5) {
+      const angle = getStableFlockValue({ id: Math.min(enemy.id, candidate.id) * 997 + Math.max(enemy.id, candidate.id) }, 37) * Math.PI * 2;
+      const side = enemy.id < candidate.id ? 1 : -1;
+      dx = Math.cos(angle) * side;
+      dy = Math.sin(angle) * side;
+      gap = 1;
+    }
+    const pressure = 1 - gap / keepOut;
+    targetVx += dx / gap * baseSpeed * pressure * 2.8;
+    targetVy += dy / gap * baseSpeed * pressure * 2.8;
+  });
+  const maxSpeed = baseSpeed * Math.max(1, params.maxSpeedMult ?? 2.15);
+  const targetSpeed = Math.hypot(targetVx, targetVy);
+  if (targetSpeed > maxSpeed) {
+    targetVx = targetVx / targetSpeed * maxSpeed;
+    targetVy = targetVy / targetSpeed * maxSpeed;
+  }
+  const response = 1 - Math.exp(-Math.max(1, params.acceleration ?? 6.2) * delta);
+  enemy.vx += (targetVx - enemy.vx) * response;
+  enemy.vy += (targetVy - enemy.vy) * response;
+  enemy.x += enemy.vx * empFactor * delta;
+  enemy.y += enemy.vy * empFactor * delta;
+  enemy.parallaxFormation = formation;
+  enemy.parallaxSlotIndex = index;
+  enemy.parallaxAperture = state.aperture || 0;
+}
+
+function buildParallaxAudit() {
+  const members = enemies.filter((enemy) => enemy.ai === "parallax" && !enemy.parallaxDeparting && enemy.hull > 0);
+  const groups = {};
+  const formations = {};
+  let minimumGap = null;
+  let overlappingPairs = 0;
+  members.forEach((enemy) => {
+    const group = getParallaxGroup(enemy);
+    groups[group] = (groups[group] || 0) + 1;
+    formations[enemy.parallaxFormation || "forming"] = (formations[enemy.parallaxFormation || "forming"] || 0) + 1;
+  });
+  for (let left = 0; left < members.length; left += 1) {
+    for (let right = left + 1; right < members.length; right += 1) {
+      const gap = distance(members[left].x, members[left].y, members[right].x, members[right].y)
+        - members[left].radius - members[right].radius;
+      minimumGap = minimumGap === null ? gap : Math.min(minimumGap, gap);
+      if (gap < 0) overlappingPairs += 1;
+    }
+  }
+  return {
+    mission: mission?.level?.id || null,
+    count: members.length,
+    groups,
+    formations,
+    protecting: members.filter((enemy) => Number.isFinite(enemy.parallaxProtectorId)).length,
+    departing: enemies.filter((enemy) => enemy.ai === "parallax" && enemy.parallaxDeparting && enemy.hull > 0).length,
+    apertureOpen: members.filter((enemy) => enemy.parallaxAperture > 0.1).length,
+    avoidanceEvents: mission?.parallaxAvoidanceEvents || 0,
+    minimumGap: minimumGap === null ? null : Math.round(minimumGap * 10) / 10,
+    overlappingPairs,
+  };
+}
+
+function updateParallaxAudit(delta) {
+  if (!String(mission?.level?.id || "").startsWith("act3_")) return;
+  mission.parallaxAuditTimer = (mission.parallaxAuditTimer || 0) - delta;
+  if (mission.parallaxAuditTimer > 0) return;
+  mission.parallaxAuditTimer = 0.35;
+  document.documentElement.dataset.parallaxAudit = JSON.stringify(buildParallaxAudit());
+}
+
 function buildShoalAudit() {
   const shoal = enemies.filter((enemy) => enemy.ai === "shoal" && enemy.hull > 0);
   const groups = {};
@@ -15388,6 +15768,7 @@ function update(delta) {
       if (!enemy.empImmune && (globalEmp || enemy.empHitTimer > 0)) return;
       if (enemy.bossPhaseTransitionTimer > 0) return;
       if (enemy.flockDeparting) return;
+      if (enemy.parallaxDeparting) return;
       enemy.fireCooldown -= delta;
       if (enemy.fireCooldown > 0) return;
       if (enemy.y < 40) return;
@@ -15882,6 +16263,9 @@ function update(delta) {
     } else if (enemy.ai === "shoal") {
       applyShoalMovement(enemy, delta, empFactor);
       return;
+    } else if (enemy.ai === "parallax") {
+      applyParallaxMovement(enemy, delta, empFactor);
+      return;
     } else if (enemy.ai === "duelist") {
       applyDuelistMovement(enemy, delta, empFactor);
       return;
@@ -15895,6 +16279,7 @@ function update(delta) {
 
   updateFlockingAudit(delta);
   updateShoalAudit(delta);
+  updateParallaxAudit(delta);
 
   player.x = Math.max(40, Math.min(width - 40, player.x));
   player.y = Math.max(height * 0.3, Math.min(height - 50, player.y));
@@ -16272,6 +16657,7 @@ function render() {
     });
     enemyBullets.forEach((bullet) => drawBullet(bullet, "#38bdf8"));
     drawShoalSignals();
+    drawParallaxLinks();
     enemies.forEach(drawEnemy);
     drawTractorBeams();
     drawLockedShotTelegraphs();
@@ -16776,6 +17162,59 @@ function drawMissionAnnouncements(width, height) {
     ctx.strokeRect(width / 2 - 220, y - 18, 440, 36);
     ctx.fillStyle = line.color;
     ctx.fillText(line.text, width / 2, y);
+  });
+  ctx.restore();
+}
+
+function drawParallaxLinks() {
+  if (!mission?.active) return;
+  const members = enemies.filter((enemy) => enemy.ai === "parallax" && !enemy.parallaxDeparting && enemy.hull > 0);
+  if (!members.length) return;
+  const grouped = new Map();
+  members.forEach((enemy) => {
+    const group = getParallaxGroup(enemy);
+    if (!grouped.has(group)) grouped.set(group, []);
+    grouped.get(group).push(enemy);
+  });
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  grouped.forEach((groupMembers) => {
+    groupMembers.sort((left, right) => (left.parallaxSlotIndex ?? left.id) - (right.parallaxSlotIndex ?? right.id));
+    const aperture = Math.max(0, ...groupMembers.map((enemy) => enemy.parallaxAperture || 0));
+    const formation = groupMembers[0]?.parallaxFormation || "arc";
+    const pairs = [];
+    for (let index = 1; index < groupMembers.length; index += 1) {
+      pairs.push([groupMembers[index - 1], groupMembers[index]]);
+    }
+    if (formation === "orbit" && groupMembers.length > 2) {
+      pairs.push([groupMembers[groupMembers.length - 1], groupMembers[0]]);
+    }
+    pairs.forEach(([left, right], pairIndex) => {
+      const alpha = 0.16 + aperture * 0.24;
+      ctx.strokeStyle = pairIndex % 2
+        ? `rgba(196, 181, 253, ${alpha})`
+        : `rgba(103, 232, 249, ${alpha})`;
+      ctx.lineWidth = 1 + aperture * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(left.x, left.y);
+      ctx.lineTo(right.x, right.y);
+      ctx.stroke();
+      const pulse = ((mission.elapsed || 0) * 0.7 + pairIndex / Math.max(1, pairs.length)) % 1;
+      ctx.fillStyle = `rgba(251, 191, 36, ${0.35 + aperture * 0.35})`;
+      ctx.beginPath();
+      ctx.arc(left.x + (right.x - left.x) * pulse, left.y + (right.y - left.y) * pulse, 1.4 + aperture * 1.1, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    groupMembers.forEach((enemy) => {
+      const protector = enemies.find((candidate) => candidate.id === enemy.parallaxProtectorId && candidate.hull > 0);
+      if (!protector) return;
+      ctx.strokeStyle = `rgba(251, 191, 36, ${0.05 + aperture * 0.1})`;
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(enemy.x, enemy.y);
+      ctx.lineTo(protector.x, protector.y);
+      ctx.stroke();
+    });
   });
   ctx.restore();
 }

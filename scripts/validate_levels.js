@@ -95,6 +95,28 @@ const SHOAL_AI_PARAM_KEYS = new Set([
   "rageDuration",
   "rageSpeedMult",
 ]);
+const PARALLAX_AI_PARAM_KEYS = new Set([
+  "parallaxGroup",
+  "formation",
+  "formations",
+  "formationEvery",
+  "holdY",
+  "span",
+  "depth",
+  "orbitRadius",
+  "orbitSpeed",
+  "phase",
+  "mirrorDelay",
+  "mirror",
+  "playerTrack",
+  "avoidanceWeight",
+  "lookAhead",
+  "avoidPadding",
+  "maxSpeedMult",
+  "acceleration",
+  "protects",
+  "departAfter",
+]);
 const PROJECTILE_PROFILE_KEYS = new Set([
   "id",
   "profile",
@@ -533,6 +555,62 @@ function validateShoalAiParams(config, errors, context) {
   }
 }
 
+function validateParallaxAiParams(config, errors, context) {
+  if (config.ai !== "parallax") return;
+  const params = config.aiParams;
+  if (!isPlainObject(params)) {
+    errors.push(`${context} parallax AI must declare aiParams.`);
+    return;
+  }
+  Object.keys(params).forEach((key) => {
+    if (!PARALLAX_AI_PARAM_KEYS.has(key)) {
+      errors.push(`${context} parallax AI uses unsupported aiParams field '${key}'.`);
+    }
+  });
+  if (typeof params.parallaxGroup !== "string" || !params.parallaxGroup.trim()) {
+    errors.push(`${context} parallax AI must declare a non-empty parallaxGroup.`);
+  }
+  const validFormations = new Set(["arc", "wall", "orbit", "braid", "spear", "mirror"]);
+  if (params.formation !== undefined && !validFormations.has(params.formation)) {
+    errors.push(`${context} parallax AI has invalid formation '${params.formation}'.`);
+  }
+  if (params.formations !== undefined) {
+    if (!Array.isArray(params.formations) || !params.formations.length || params.formations.some((entry) => !validFormations.has(entry))) {
+      errors.push(`${context} parallax AI formations must be a non-empty array of supported formation names.`);
+    }
+  }
+  [
+    "formationEvery",
+    "holdY",
+    "span",
+    "depth",
+    "orbitRadius",
+    "orbitSpeed",
+    "phase",
+    "mirrorDelay",
+    "playerTrack",
+    "avoidanceWeight",
+    "lookAhead",
+    "avoidPadding",
+    "maxSpeedMult",
+    "acceleration",
+    "departAfter",
+  ].forEach((key) => {
+    if (params[key] !== undefined && (!Number.isFinite(params[key]) || params[key] < 0)) {
+      errors.push(`${context} parallax AI field '${key}' must be a non-negative number.`);
+    }
+  });
+  if (params.mirror !== undefined && typeof params.mirror !== "boolean") {
+    errors.push(`${context} parallax AI field 'mirror' must be boolean.`);
+  }
+  if (params.protects !== undefined) {
+    const protectedTypes = Array.isArray(params.protects) ? params.protects : [params.protects];
+    if (!protectedTypes.length || protectedTypes.some((entry) => typeof entry !== "string" || !entry.trim())) {
+      errors.push(`${context} parallax AI protects must name one or more enemy types.`);
+    }
+  }
+}
+
 function validateLevel(level) {
   const errors = [];
   const levelId = level.id || "unknown";
@@ -564,6 +642,7 @@ function validateLevel(level) {
     }
     validateFlockAiParams(config, errors, `Enemy '${typeId}'`);
     validateShoalAiParams(config, errors, `Enemy '${typeId}'`);
+    validateParallaxAiParams(config, errors, `Enemy '${typeId}'`);
     validateProjectileProfileRef(config.projectileProfile, projectileProfiles, errors, `Enemy '${typeId}' projectileProfile`);
     if (config.attackPatterns !== undefined) {
       if (!Array.isArray(config.attackPatterns)) {

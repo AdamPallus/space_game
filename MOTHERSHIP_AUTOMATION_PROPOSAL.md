@@ -8,12 +8,13 @@ the ability to design and test higher-level arcs. Protected possibilities in
 this document should survive until that work can evaluate them in context.
 
 **Current gate:** Five distinct post-Last-Light missions and the fresh-save
-capability, consumable, and guaranteed-gear spine are player-validated. Two
-later instructions separately authorized the Collateral Choir and Living
-Current campaign candidates, each still gated by its own full-mission playtest.
-This proves the individual-mission and progression loops. Phase 8 remains
-brainstorm/spec territory; this proposal does not authorize a mission cluster,
-population system, offline automation, or autonomous story branch.
+capability, consumable, and guaranteed-gear spine are player-validated. Later
+instructions separately authorized Collateral Choir, Living Current, and then a
+three-mission experimental Parallax combat act after Return Address. Living
+Current's full encounter is player-approved; Collateral Choir and Parallax still
+need their human balance verdicts. Phase 8 remains brainstorm/spec territory;
+the Parallax instruction authorizes a combat candidate, not the population
+system, offline automation, or an autonomous story branch proposed here.
 
 This document extends `STORY-PREMISE.md` and
 `STORY-PREMISE-DEEP-HISTORY.md`. It gives the existing story-economy backlog a
@@ -535,9 +536,11 @@ changing objectives, allies, accounting interpretation, and consequences.
 
 - It is not authorization to implement population simulation or automation.
 - It originally authorized Return Address as one promoted Stage-A mission. The
-  later, separately approved Collateral Choir and Living Current candidates do
-  not authorize generation of a full act or automatic continuation after their
-  playtests.
+  later Collateral Choir and Living Current candidates did not themselves
+  authorize automatic continuation; Adam's subsequent explicit instruction to
+  create a three-mission experimental act is the separate authority for
+  Parallax. That combat pass does not authorize this proposal's population or
+  automation systems.
 - It does not turn the current build into a full city-construction game.
 - It does not require real-time offline accumulation in its first population
   pass.

@@ -1,0 +1,301 @@
+{
+  "id": "act3_strange_angle",
+  "name": "A Strange Angle",
+  "background": "generatedParallaxFault",
+  "visualTheme": "parallax_v1",
+  "music": "04_emergency_no_alarm.ogg",
+  "difficulty": "Parallax Contact",
+  "description": "Range finds a formation where the scopes find empty space. Every shot changes the angle of arrival, and every missing piece teaches the rest a cleaner shape.",
+  "completeOnBoss": true,
+  "debriefLore": [
+    "No drive signatures. No command traffic. The formation answered fire before light from the muzzle reached it.",
+    "Recovered surface: smoked glass, no seams, warmer on the side that faced away from the stars.",
+    "Ledger classification returned an empty field followed by a revised invoice for one new contact category."
+  ],
+  "projectileProfiles": {
+    "glassNeedle": {
+      "threatClass": "standard",
+      "damage": 42,
+      "speed": 430,
+      "radius": 4,
+      "image": "enemy_space_cool_chip_needle",
+      "width": 14,
+      "height": 44,
+      "animation": "bolt"
+    },
+    "amberVector": {
+      "threatClass": "standard",
+      "damage": 58,
+      "speed": 330,
+      "radius": 5,
+      "image": "enemy_space_warm_standard_bolt",
+      "width": 18,
+      "height": 42,
+      "animation": "bolt"
+    },
+    "prismCore": {
+      "threatClass": "heavy",
+      "damage": 86,
+      "speed": 172,
+      "radius": 11,
+      "image": "enemy_space_cool_heavy_core",
+      "width": 52,
+      "height": 52,
+      "animation": "orb",
+      "spinRate": 1.25
+    },
+    "nullRing": {
+      "threatClass": "bossHazard",
+      "damage": 122,
+      "speed": 146,
+      "radius": 14,
+      "image": "enemy_space_warm_boss_ring",
+      "width": 74,
+      "height": 74,
+      "animation": "orb",
+      "spinRate": 0.9
+    }
+  },
+  "enemyTypes": {
+    "shard": {
+      "name": "Parallax Shard",
+      "sprite": "assets/generated/parallax_v1/parallax_shard.png",
+      "hull": 170,
+      "shield": 55,
+      "shieldRegen": 10,
+      "speed": 172,
+      "score": 190,
+      "baseCredit": 18,
+      "radius": 17,
+      "collisionDamage": 46,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "fault_lattice",
+        "formations": ["arc", "wall"],
+        "formationEvery": 7,
+        "holdY": 205,
+        "span": 520,
+        "depth": 82,
+        "playerTrack": 0.12,
+        "avoidanceWeight": 1,
+        "lookAhead": 1.1,
+        "avoidPadding": 42,
+        "maxSpeedMult": 2.3,
+        "acceleration": 6.8,
+        "departAfter": 28
+      },
+      "attackPatterns": [
+        { "id": "shard_trace", "mode": "aim", "profile": "glassNeedle", "fireRate": 1.9, "weight": 1 }
+      ],
+      "spriteScale": 0.76
+    },
+    "mirror": {
+      "name": "Split Mirror",
+      "sprite": "assets/generated/parallax_v1/parallax_mirror.png",
+      "hull": 340,
+      "shield": 310,
+      "shieldRegen": 18,
+      "speed": 154,
+      "score": 440,
+      "baseCredit": 42,
+      "radius": 23,
+      "collisionDamage": 58,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "fault_lattice",
+        "formations": ["arc", "wall"],
+        "formationEvery": 7,
+        "holdY": 205,
+        "span": 520,
+        "depth": 82,
+        "playerTrack": 0.12,
+        "avoidanceWeight": 1,
+        "lookAhead": 1.1,
+        "avoidPadding": 44,
+        "maxSpeedMult": 2.25,
+        "acceleration": 6.6,
+        "departAfter": 30
+      },
+      "attackPatterns": [
+        { "id": "mirror_fan", "mode": "spread", "profile": "glassNeedle", "count": 3, "spreadDeg": 24, "fireRate": 1.28, "weight": 3 },
+        { "id": "mirror_vector", "mode": "aim", "profile": "amberVector", "fireRate": 1.62, "weight": 1 }
+      ],
+      "spriteScale": 0.82
+    },
+    "guard": {
+      "name": "Aperture Guard",
+      "sprite": "assets/generated/parallax_v1/parallax_shard.png",
+      "hull": 230,
+      "shield": 120,
+      "shieldRegen": 12,
+      "speed": 180,
+      "score": 240,
+      "baseCredit": 22,
+      "radius": 18,
+      "collisionDamage": 52,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "aperture_guard",
+        "formations": ["orbit", "arc"],
+        "formationEvery": 6,
+        "holdY": 175,
+        "span": 410,
+        "depth": 72,
+        "orbitRadius": 150,
+        "orbitSpeed": 0.9,
+        "avoidanceWeight": 0.85,
+        "lookAhead": 1,
+        "avoidPadding": 38,
+        "maxSpeedMult": 2.45,
+        "acceleration": 7.2,
+        "departAfter": 32,
+        "protects": ["boss", "knot"]
+      },
+      "attackPatterns": [
+        { "id": "guard_trace", "mode": "aim", "profile": "glassNeedle", "fireRate": 1.65, "weight": 1 }
+      ],
+      "spriteScale": 0.78
+    },
+    "lens": {
+      "name": "Lens Sentinel",
+      "sprite": "assets/generated/parallax_v1/parallax_lens.png",
+      "hull": 620,
+      "shield": 980,
+      "shieldRegen": 28,
+      "speed": 92,
+      "score": 820,
+      "baseCredit": 92,
+      "radius": 32,
+      "collisionDamage": 72,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "fault_lenses",
+        "formations": ["wall", "orbit"],
+        "formationEvery": 8,
+        "holdY": 150,
+        "span": 380,
+        "depth": 64,
+        "orbitRadius": 125,
+        "orbitSpeed": 0.62,
+        "avoidanceWeight": 0.55,
+        "lookAhead": 0.9,
+        "avoidPadding": 46,
+        "maxSpeedMult": 1.9,
+        "acceleration": 5.2
+      },
+      "attackPatterns": [
+        { "id": "lens_ring", "mode": "radial", "profile": "glassNeedle", "count": 12, "fireRate": 1.55, "weight": 3 },
+        { "id": "lens_core", "mode": "aim", "profile": "prismCore", "fireRate": 2.15, "weight": 1 }
+      ],
+      "spriteScale": 0.86
+    },
+    "spear": {
+      "name": "Null Spear",
+      "sprite": "assets/generated/parallax_v1/parallax_spear.png",
+      "hull": 280,
+      "shield": 80,
+      "speed": 215,
+      "score": 330,
+      "baseCredit": 28,
+      "radius": 18,
+      "collisionDamage": 105,
+      "ai": "rammer",
+      "aiParams": { "lockRange": 360, "telegraph": 0.42, "lungeSpeed": 470 },
+      "fireRate": 60,
+      "spriteScale": 0.82
+    },
+    "knot": {
+      "name": "The First Knot",
+      "sprite": "assets/generated/parallax_v1/parallax_knot.png",
+      "hull": 1950,
+      "shield": 1250,
+      "shieldRegen": 24,
+      "armor": 780,
+      "armorClass": 20,
+      "speed": 112,
+      "score": 2700,
+      "baseCredit": 360,
+      "radius": 50,
+      "collisionDamage": 92,
+      "miniboss": true,
+      "pattern": "bossOrbit",
+      "patternParams": { "radiusX": 270, "radiusY": 62, "orbitSpeed": 0.68, "warmupTime": 0.62, "wobble": 10 },
+      "attackPatterns": [
+        { "id": "knot_vectors", "mode": "spread", "profile": "amberVector", "count": 7, "spreadDeg": 68, "fireRate": 1.02, "weight": 3 },
+        { "id": "knot_core", "mode": "aim", "profile": "prismCore", "fireRate": 1.55, "weight": 2 }
+      ],
+      "spriteScale": 0.94
+    },
+    "boss": {
+      "template": "act3_strange_angle:boss",
+      "name": "The Folded Aperture",
+      "sprite": "assets/generated/parallax_v1/boss_folded_aperture.png",
+      "hull": 2550,
+      "shield": 1750,
+      "shieldRegen": 28,
+      "armor": 520,
+      "armorClass": 22,
+      "speed": 112,
+      "score": 7600,
+      "baseCredit": 1800,
+      "radius": 86,
+      "collisionDamage": 132,
+      "pattern": "bossOrbit",
+      "patternParams": { "radiusX": 310, "radiusY": 78, "orbitSpeed": 0.78, "warmupTime": 0.7, "wobble": 16 },
+      "isBoss": true,
+      "empImmune": true,
+      "attackPatterns": [
+        { "id": "aperture_rings", "mode": "radial", "profile": "glassNeedle", "count": 20, "fireRate": 0.92, "weight": 4, "speedJitter": 0.08 },
+        { "id": "aperture_cores", "mode": "spread", "profile": "prismCore", "count": 5, "spreadDeg": 72, "fireRate": 1.28, "weight": 2 }
+      ],
+      "phases": [
+        {
+          "label": "The Angle Narrows",
+          "hpFraction": 0.66,
+          "speedMult": 1.12,
+          "attackPatterns": [
+            { "id": "narrow_needles", "mode": "spread", "profile": "glassNeedle", "count": 11, "spreadDeg": 92, "fireRate": 0.72, "weight": 4 },
+            { "id": "narrow_core", "mode": "aim", "profile": "nullRing", "fireRate": 1.36, "weight": 2 }
+          ],
+          "summons": [{ "type": "guard", "count": 6, "radius": 175 }]
+        },
+        {
+          "label": "The Aperture Opens",
+          "hpFraction": 0.32,
+          "speedMult": 1.24,
+          "attackPatterns": [
+            { "id": "open_rings", "mode": "radial", "profile": "amberVector", "count": 28, "fireRate": 0.68, "weight": 4, "speedJitter": 0.1 },
+            { "id": "open_nulls", "mode": "spread", "profile": "nullRing", "count": 5, "spreadDeg": 100, "fireRate": 1.05, "weight": 3 }
+          ],
+          "summons": [{ "type": "spear", "count": 5, "radius": 210 }]
+        }
+      ],
+      "spriteScale": 1.04
+    }
+  },
+  "events": [
+    { "time": 1, "type": "shard", "count": 8, "interval": 0.32 },
+    { "time": 6, "type": "mirror", "count": 5, "interval": 0.48 },
+    { "time": 11, "type": "lens", "count": 2, "interval": 1.2 },
+    { "time": 14, "type": "shard", "count": 8, "interval": 0.3 },
+    { "time": 21, "type": "spear", "count": 4, "interval": 0.75 },
+    { "time": 25, "type": "mirror", "count": 6, "interval": 0.42 },
+    { "time": 31, "type": "guard", "count": 6, "interval": 0.3 },
+    { "time": 34, "type": "knot", "count": 1 },
+    { "time": 39, "type": "shard", "count": 10, "interval": 0.28 },
+    { "time": 46, "type": "lens", "count": 2, "interval": 1.1 },
+    { "time": 51, "type": "spear", "count": 5, "interval": 0.64 },
+    { "time": 56, "type": "mirror", "count": 8, "interval": 0.36 },
+    { "time": 64, "type": "shard", "count": 12, "interval": 0.25 },
+    { "time": 70, "type": "lens", "count": 2, "interval": 0.9 },
+    { "time": 78, "type": "boss", "count": 1 },
+    { "time": 80, "type": "guard", "count": 8, "interval": 0.28 },
+    { "time": 86, "type": "spear", "count": 5, "interval": 0.58 },
+    { "time": 94, "type": "mirror", "count": 8, "interval": 0.34 }
+  ],
+  "pickups": [
+    { "time": 27, "type": "salvage", "rarity": "prototype", "slotType": "primary", "x": 0.5 },
+    { "time": 48, "type": "shield_booster", "x": 0.22 },
+    { "time": 66, "type": "armor_patch", "x": 0.78 }
+  ]
+}

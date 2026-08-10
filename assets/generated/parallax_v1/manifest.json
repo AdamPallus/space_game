@@ -1,0 +1,21 @@
+{
+  "source": "source_sheet_keyed.png",
+  "keyColor": "#00ff00",
+  "grid": {
+    "columns": 3,
+    "rows": 3
+  },
+  "contactSheet": "contact_sheet.png",
+  "defaultPadding": 8,
+  "sprites": [
+    { "name": "parallax_shard", "cell": 0, "size": [96, 96], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "parallax_mirror", "cell": 1, "size": [112, 112], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "parallax_lens", "cell": 2, "size": [120, 120], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "parallax_knot", "cell": 3, "size": [128, 128], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "parallax_anchor", "cell": 4, "size": [144, 144], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "parallax_spear", "cell": 5, "size": [112, 144], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "boss_folded_aperture", "cell": 6, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "boss_mirror_engine", "cell": 7, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 },
+    { "name": "boss_axiom", "cell": 8, "size": [256, 256], "componentMode": "largest", "componentMinArea": 32 }
+  ]
+}

@@ -1,0 +1,310 @@
+{
+  "id": "act3_false_position",
+  "name": "False Position",
+  "background": "generatedParallaxInterference",
+  "visualTheme": "parallax_v1",
+  "music": "03_racing_through_asteroids_loop.ogg",
+  "difficulty": "Parallax Pursuit",
+  "description": "The glass remembers where you flew. One formation occupies your wake while its reflection takes the route you refused, turning every dodge into tomorrow's firing line.",
+  "completeOnBoss": true,
+  "debriefLore": [
+    "Navigation replay and hostile telemetry are identical to within eleven milliseconds.",
+    "The second formation did not follow the ship. It followed the choice the pilot did not make.",
+    "Recovered mirror returns the hangar from two angles. One angle has no ship in it."
+  ],
+  "projectileProfiles": {
+    "echoNeedle": {
+      "threatClass": "standard",
+      "damage": 48,
+      "speed": 455,
+      "radius": 4,
+      "image": "enemy_space_cool_chip_needle",
+      "width": 14,
+      "height": 46,
+      "animation": "bolt"
+    },
+    "amberTrace": {
+      "threatClass": "standard",
+      "damage": 64,
+      "speed": 350,
+      "radius": 5,
+      "image": "enemy_space_warm_standard_bolt",
+      "width": 18,
+      "height": 44,
+      "animation": "bolt"
+    },
+    "mirrorCore": {
+      "threatClass": "heavy",
+      "damage": 96,
+      "speed": 188,
+      "radius": 12,
+      "image": "enemy_space_cool_boss_core",
+      "width": 58,
+      "height": 58,
+      "animation": "orb",
+      "spinRate": 1.1
+    },
+    "contradictionRing": {
+      "threatClass": "bossHazard",
+      "damage": 136,
+      "speed": 158,
+      "radius": 15,
+      "image": "enemy_space_warm_boss_ring",
+      "width": 78,
+      "height": 78,
+      "animation": "orb",
+      "spinRate": 0.8
+    }
+  },
+  "enemyTypes": {
+    "echo": {
+      "name": "Position Echo",
+      "sprite": "assets/generated/parallax_v1/parallax_mirror.png",
+      "hull": 410,
+      "shield": 360,
+      "shieldRegen": 20,
+      "speed": 170,
+      "score": 500,
+      "baseCredit": 46,
+      "radius": 23,
+      "collisionDamage": 66,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "remembered_route",
+        "formation": "mirror",
+        "formationEvery": 6,
+        "holdY": 210,
+        "span": 390,
+        "depth": 78,
+        "mirrorDelay": 1.25,
+        "mirror": false,
+        "avoidanceWeight": 0.9,
+        "lookAhead": 0.95,
+        "avoidPadding": 38,
+        "maxSpeedMult": 2.45,
+        "acceleration": 7.2,
+        "departAfter": 26
+      },
+      "attackPatterns": [
+        { "id": "remembered_needles", "mode": "spread", "profile": "echoNeedle", "count": 3, "spreadDeg": 22, "fireRate": 1.15, "weight": 3 },
+        { "id": "remembered_trace", "mode": "aim", "profile": "amberTrace", "fireRate": 1.42, "weight": 1 }
+      ],
+      "spriteScale": 0.82
+    },
+    "counterecho": {
+      "name": "Counterposition Echo",
+      "sprite": "assets/generated/parallax_v1/parallax_mirror.png",
+      "hull": 410,
+      "shield": 360,
+      "shieldRegen": 20,
+      "speed": 170,
+      "score": 500,
+      "baseCredit": 46,
+      "radius": 23,
+      "collisionDamage": 66,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "refused_route",
+        "formation": "mirror",
+        "formationEvery": 6,
+        "holdY": 250,
+        "span": 390,
+        "depth": 78,
+        "mirrorDelay": 1.25,
+        "mirror": true,
+        "avoidanceWeight": 0.9,
+        "lookAhead": 0.95,
+        "avoidPadding": 38,
+        "maxSpeedMult": 2.45,
+        "acceleration": 7.2,
+        "departAfter": 26
+      },
+      "attackPatterns": [
+        { "id": "refused_needles", "mode": "spread", "profile": "echoNeedle", "count": 3, "spreadDeg": 22, "fireRate": 1.15, "weight": 3 },
+        { "id": "refused_trace", "mode": "aim", "profile": "amberTrace", "fireRate": 1.42, "weight": 1 }
+      ],
+      "spriteScale": 0.82
+    },
+    "lens": {
+      "name": "Retrospective Lens",
+      "sprite": "assets/generated/parallax_v1/parallax_lens.png",
+      "hull": 720,
+      "shield": 1080,
+      "shieldRegen": 30,
+      "speed": 104,
+      "score": 940,
+      "baseCredit": 108,
+      "radius": 32,
+      "collisionDamage": 78,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "retrospective_lenses",
+        "formations": ["orbit", "wall"],
+        "formationEvery": 7,
+        "holdY": 150,
+        "span": 410,
+        "depth": 68,
+        "orbitRadius": 135,
+        "orbitSpeed": 0.72,
+        "avoidanceWeight": 0.58,
+        "lookAhead": 0.9,
+        "avoidPadding": 48,
+        "maxSpeedMult": 2,
+        "acceleration": 5.6
+      },
+      "attackPatterns": [
+        { "id": "retrospective_ring", "mode": "radial", "profile": "echoNeedle", "count": 16, "fireRate": 1.28, "weight": 3 },
+        { "id": "retrospective_core", "mode": "aim", "profile": "mirrorCore", "fireRate": 1.8, "weight": 1 }
+      ],
+      "spriteScale": 0.88
+    },
+    "anchor": {
+      "name": "Fixed Proposition",
+      "sprite": "assets/generated/parallax_v1/parallax_anchor.png",
+      "hull": 980,
+      "shield": 760,
+      "shieldRegen": 20,
+      "armor": 1180,
+      "armorClass": 25,
+      "speed": 78,
+      "score": 1420,
+      "baseCredit": 170,
+      "radius": 42,
+      "collisionDamage": 96,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "fixed_propositions",
+        "formations": ["wall", "arc"],
+        "formationEvery": 8,
+        "holdY": 170,
+        "span": 390,
+        "depth": 70,
+        "avoidanceWeight": 0.45,
+        "lookAhead": 0.85,
+        "avoidPadding": 54,
+        "maxSpeedMult": 1.75,
+        "acceleration": 4.8
+      },
+      "attackPatterns": [
+        { "id": "fixed_vectors", "mode": "spread", "profile": "amberTrace", "count": 7, "spreadDeg": 78, "fireRate": 0.98, "weight": 3 },
+        { "id": "fixed_core", "mode": "aim", "profile": "mirrorCore", "fireRate": 1.46, "weight": 2 }
+      ],
+      "spriteScale": 0.92
+    },
+    "spear": {
+      "name": "Counterfactual Spear",
+      "sprite": "assets/generated/parallax_v1/parallax_spear.png",
+      "hull": 340,
+      "shield": 120,
+      "speed": 228,
+      "score": 390,
+      "baseCredit": 32,
+      "radius": 18,
+      "collisionDamage": 118,
+      "ai": "rammer",
+      "aiParams": { "lockRange": 390, "telegraph": 0.38, "lungeSpeed": 500 },
+      "fireRate": 60,
+      "spriteScale": 0.84
+    },
+    "knot": {
+      "name": "The Contradiction",
+      "sprite": "assets/generated/parallax_v1/parallax_knot.png",
+      "hull": 2350,
+      "shield": 1550,
+      "shieldRegen": 28,
+      "armor": 920,
+      "armorClass": 22,
+      "speed": 126,
+      "score": 3200,
+      "baseCredit": 410,
+      "radius": 52,
+      "collisionDamage": 106,
+      "miniboss": true,
+      "ai": "mimic",
+      "aiParams": { "echoDelay": 1.05, "mirror": false, "holdY": 180, "standoff": 260 },
+      "attackPatterns": [
+        { "id": "contradiction_fan", "mode": "spread", "profile": "echoNeedle", "count": 9, "spreadDeg": 86, "fireRate": 0.86, "weight": 3 },
+        { "id": "contradiction_core", "mode": "aim", "profile": "contradictionRing", "fireRate": 1.38, "weight": 2 }
+      ],
+      "spriteScale": 0.96
+    },
+    "boss": {
+      "template": "act3_false_position:boss",
+      "name": "The Mirror Engine",
+      "sprite": "assets/generated/parallax_v1/boss_mirror_engine.png",
+      "hull": 2850,
+      "shield": 2100,
+      "shieldRegen": 32,
+      "armor": 650,
+      "armorClass": 23,
+      "speed": 134,
+      "score": 8800,
+      "baseCredit": 2050,
+      "radius": 88,
+      "collisionDamage": 144,
+      "ai": "mimic",
+      "aiParams": { "echoDelay": 0.9, "mirror": true, "holdY": 175, "standoff": 270 },
+      "isBoss": true,
+      "empImmune": true,
+      "attackPatterns": [
+        { "id": "engine_trace", "mode": "spread", "profile": "echoNeedle", "count": 11, "spreadDeg": 105, "fireRate": 0.74, "weight": 4 },
+        { "id": "engine_core", "mode": "aim", "profile": "mirrorCore", "fireRate": 1.12, "weight": 2 }
+      ],
+      "phases": [
+        {
+          "label": "Your Previous Position",
+          "hpFraction": 0.7,
+          "speedMult": 1.14,
+          "aiParams": { "echoDelay": 1.4, "mirror": false },
+          "attackPatterns": [
+            { "id": "previous_fan", "mode": "spread", "profile": "amberTrace", "count": 13, "spreadDeg": 118, "fireRate": 0.68, "weight": 4 },
+            { "id": "previous_ring", "mode": "radial", "profile": "echoNeedle", "count": 22, "fireRate": 0.92, "weight": 2 }
+          ],
+          "summons": [
+            { "type": "echo", "count": 5, "radius": 190 },
+            { "type": "counterecho", "count": 5, "radius": 235 }
+          ]
+        },
+        {
+          "label": "The Choice You Refused",
+          "hpFraction": 0.34,
+          "speedMult": 1.28,
+          "aiParams": { "echoDelay": 0.55, "mirror": true },
+          "attackPatterns": [
+            { "id": "refusal_needles", "mode": "radial", "profile": "echoNeedle", "count": 30, "fireRate": 0.58, "weight": 4, "speedJitter": 0.08 },
+            { "id": "refusal_cores", "mode": "spread", "profile": "contradictionRing", "count": 5, "spreadDeg": 110, "fireRate": 0.96, "weight": 3 }
+          ],
+          "summons": [{ "type": "spear", "count": 6, "radius": 225 }]
+        }
+      ],
+      "spriteScale": 1.04
+    }
+  },
+  "events": [
+    { "time": 1, "type": "echo", "count": 5, "interval": 0.38 },
+    { "time": 3, "type": "counterecho", "count": 5, "interval": 0.38 },
+    { "time": 8, "type": "anchor", "count": 1 },
+    { "time": 11, "type": "spear", "count": 4, "interval": 0.68 },
+    { "time": 17, "type": "echo", "count": 6, "interval": 0.32 },
+    { "time": 18, "type": "counterecho", "count": 6, "interval": 0.32 },
+    { "time": 26, "type": "lens", "count": 2, "interval": 0.95 },
+    { "time": 32, "type": "anchor", "count": 2, "interval": 1.1 },
+    { "time": 39, "type": "knot", "count": 1 },
+    { "time": 43, "type": "echo", "count": 8, "interval": 0.28 },
+    { "time": 45, "type": "counterecho", "count": 8, "interval": 0.28 },
+    { "time": 54, "type": "spear", "count": 6, "interval": 0.58 },
+    { "time": 60, "type": "lens", "count": 3, "interval": 0.82 },
+    { "time": 67, "type": "echo", "count": 7, "interval": 0.3 },
+    { "time": 68, "type": "counterecho", "count": 7, "interval": 0.3 },
+    { "time": 76, "type": "anchor", "count": 2, "interval": 0.85 },
+    { "time": 84, "type": "boss", "count": 1 },
+    { "time": 86, "type": "echo", "count": 7, "interval": 0.28 },
+    { "time": 88, "type": "counterecho", "count": 7, "interval": 0.28 },
+    { "time": 96, "type": "spear", "count": 6, "interval": 0.52 }
+  ],
+  "pickups": [
+    { "time": 30, "type": "armor_patch", "x": 0.74 },
+    { "time": 50, "type": "salvage", "rarity": "prototype", "slotType": "defense", "x": 0.5 },
+    { "time": 72, "type": "shield_booster", "x": 0.26 }
+  ]
+}

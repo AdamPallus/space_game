@@ -17,7 +17,7 @@ That targeted correction now applies to the entire non-rapid paired kinetic
 pattern, with an additional gold reserve on Oathpair; it does not flatten
 plasma or rapid-fire roles.
 
-`outdated_docs/implemented_specs/CAMPAIGN_PROGRESSION_SPEC.md` is archived as implemented. Two bounded campaign candidates are now authorized. Collateral Choir turns the approved Flocking Lab behavior into a full Chorus/Tithe hybrid between Processional and Repossession. The Living Current turns the player-approved Broodwake shoal behavior into a short full Verdant mission between The Green Signal and Return Address. Each is visible in its intended position but does not gate the validated route or add a guaranteed commission while its first full-mission balance test is pending. Phase 8 — The Bill Arrives remains a separate creative problem: its economic skeleton is settled, but its player experience, characters, choice presentation, and emotional turn still need a dedicated session. Assessor lien readability remains an explicitly unverified but non-blocking observation.
+`outdated_docs/implemented_specs/CAMPAIGN_PROGRESSION_SPEC.md` is archived as implemented. Collateral Choir remains a bounded Chorus/Tithe campaign candidate awaiting its first full playtest. The Living Current turns the player-approved Broodwake shoal behavior into a short full Verdant mission between The Green Signal and Return Address; its full encounter is now player-approved, although whether it becomes required or stays optional remains undecided. Adam's later explicit creative-act instruction authorized a separate three-mission Parallax combat candidate after Return Address: A Strange Angle, False Position, and Proof of Life. This is permission to build and test a playful next-act encounter set, not a decision that its placeholder contact story is canon. Phase 8 — The Bill Arrives remains a separate creative problem: its economic skeleton is settled, but its player experience, characters, choice presentation, and emotional turn still need a dedicated session. Assessor lien readability remains an explicitly unverified but non-blocking observation.
 
 Fresh-player feedback also retired the three-slot cargo hold before the next
 economy phase. In-flight collection and between-run storage are now unlimited;
@@ -33,10 +33,17 @@ a deployed candidate awaiting Adam's playtest.
 The Broodwake Lab passed its behavior test: biological enemies feel materially
 more alive when they share local spacing, protect the most important living
 producer in a defensive crescent, propagate a visible wound alarm, and rush
-after the protected ecology collapses. That approval authorizes The Living
-Current as one full mission, not an open-ended Verdant act. The next gate is its
-full encounter playtest; Return Address remains independently unlocked until
-that result is accepted.
+after the protected ecology collapses. The resulting Living Current encounter
+is player-approved. Return Address remains independently unlocked until a later
+choice decides whether Living Current should be required or optional.
+
+The current implementation gate is the Parallax act's real-loadout playtest.
+Agent browser tests covered all three openings, the mirrored second mission,
+high-population formation spacing, and a deliberately underpowered starter-gun
+boss stress. The strongest open questions are whether its shared avoidance is
+fun with actual gold/Heirloom builds, whether giant plasma remains spectacular
+without erasing the chaff decisions, and whether Proof of Life's finale is dense
+but legible once the player can kill at the intended rate.
 
 ## Player-validated combat direction (2026-07-09)
 
@@ -237,16 +244,24 @@ technical id avoids inheriting completion state from the discarded Bloom test.
 The discarded mission cards remain available only under `?devActs=1` for
 regression access. Passing validation does not make them campaign content.
 
-## Probate toolbox status
+## Experimental Parallax act and Probate toolbox status
+
+The active Parallax candidate is a new combat invention rather than a revival of
+Probate. It unlocks after Return Address and consists of A Strange Angle, False
+Position, and Proof of Life. Its linked geometric formations, shared projectile
+avoidance, delayed/mirrored player tracking, bounded chaff departure, new
+black-glass/crystal fleet, three generated backgrounds, and varied placeholder
+music are implemented. Its story framing remains provisional pending the
+story-economy work below and Adam's playtest verdict.
 
 The old Act 3 encounters are also hidden experiments. Pressure telemetry,
 rammer/latch behaviors, breach integrity, lien caps, boss phases, Heirloom
 plumbing, invasion art, and the home-hull background remain reusable systems.
-No old Probate mission or music pass is currently authorized as campaign work.
-After The Bill Arrives, Planet Raids, and The Fork establish the story/economy
-setup, canonical Act 3 should be re-authored one mission at a time with the same
-human-playtest loop that produced the five accepted missions. The Fork may alter
-its framing or routes, but is not itself Act 3.
+No old Probate mission or generated-music pass is currently authorized as
+campaign work. The Parallax placeholder story may be retained, rewritten, or
+dropped after The Bill Arrives, Planet Raids, and The Fork establish the
+story/economy setup. The Fork may alter Act 3's framing or routes, but is not
+itself Act 3.
 
 ## Deferred
 

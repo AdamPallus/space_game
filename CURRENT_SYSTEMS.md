@@ -39,7 +39,7 @@ EMP support affects enemies and firing behavior, and now clears nearby hostile p
 
 ## Missions And Level Data
 
-Mission scripts live in `levels/*.json`. They define metadata, backgrounds, wave timing, enemy references, salvage drops, scripted pickups, objectives, boss events, projectile profiles, attack patterns, and variants. `scripts/validate_levels.js` verifies that level scripts reference known enemies, legal item data, valid pickup data, valid projectile profile references, valid attack-pattern structures, and valid wave structures. `scripts/validate_generated_assets.py` verifies campaign projectile keys and broadside boss sprite bounds.
+Mission scripts live in `levels/*.json`. They define metadata, backgrounds, wave timing, enemy references, salvage drops, scripted pickups, objectives, boss events, projectile profiles, attack patterns, and variants. `scripts/validate_levels.js` verifies that level scripts reference known enemies, legal item data, valid pickup data, valid projectile profile references, valid attack-pattern structures, and valid wave structures. `scripts/validate_generated_assets.py` verifies campaign projectile keys, broadside ship-boss bounds, and the separate radial-footprint contract used by Parallax geometric bosses.
 
 The player-facing Act 1 campaign has eight core missions ending at Mission 8, Last Light. Each has Standard, Swarm, and Armored carousel entries with profiled projectile damage and weighted attack patterns. Completing any variant of `levelX` unlocks the next base mission through Mission 8, while lab-style encounters remain separate test entries.
 
@@ -64,7 +64,7 @@ population pressure active during the boss. Verdant targets use hull and modest
 shields instead of contemporary armor, making explosive/burning plasma a natural
 role answer without applying weapon-specific scaling or immunity.
 
-Clearing The Green Signal also exposes `The Living Current`, a full-sized but deliberately short Verdant campaign candidate positioned before Return Address. It starts with loose Sporeling and Thornwing currents, then introduces Bloomcallers as local protection centers. Splitting Seedcarriers add new bodies that inherit the shoal behavior, a Prototype field pod rewards the mid-mission risk, and a Broodmother miniboss pulls every surviving layer into one defense before dropping Prototype-or-better Act 2 salvage. The Broodwake boss arrives at 1:20; its two phase transitions summon close and outer guard layers, while ordinary budding rebuilds the current around it. Shoal guards retain a still-living same-priority producer instead of oscillating between equivalent centers. The candidate uses normal Act 2 drops, has no guaranteed commission, and does not gate the already validated Return Address route while its full encounter is awaiting playtest.
+Clearing The Green Signal also exposes `The Living Current`, a full-sized but deliberately short Verdant campaign candidate positioned before Return Address. It starts with loose Sporeling and Thornwing currents, then introduces Bloomcallers as local protection centers. Splitting Seedcarriers add new bodies that inherit the shoal behavior, a Prototype field pod rewards the mid-mission risk, and a Broodmother miniboss pulls every surviving layer into one defense before dropping Prototype-or-better Act 2 salvage. The Broodwake boss arrives at 1:20; its two phase transitions summon close and outer guard layers, while ordinary budding rebuilds the current around it. Shoal guards retain a still-living same-priority producer instead of oscillating between equivalent centers. The full encounter and chaff strategy are player-approved. It uses normal Act 2 drops, has no guaranteed commission, and does not gate Return Address while required-versus-optional routing remains undecided.
 
 Clearing The Green Signal unlocks Return Address. This new technical id avoids
 inheriting stale completion from the discarded Bloom prototype. The mission uses
@@ -75,8 +75,32 @@ player, a Seedcrown buds paired Bursters, and the Verdant Matriarch spawns
 Seedcarriers throughout a phased boss fight. Its final Nuptial Flight transition
 immediately summons two carriers and five Bursters, then buds carrier pairs
 every 1.8 seconds. The two Rootwards overlap preceding active threat waves rather
-than arriving in isolated cleanup windows. The encounter concept is
-player-validated; this ramp revision is awaiting its next playtest.
+than arriving in isolated cleanup windows. The revised encounter is
+player-validated with a complementary gold Tier 2 Dual Fire build.
+
+Clearing Return Address unlocks `A Strange Angle`, the first mission in an
+experimental three-contract Parallax act. `False Position` and `Proof of Life`
+then unlock sequentially. The faction is rendered as smoked black glass,
+translucent crystal, and cyan/violet/amber internal light against three unique
+generated voids. Its `parallax` AI assigns exact slots in arc, wall, orbit,
+braid, spear, and mirror formations; can track delayed or reflected player
+positions; collectively opens around predicted player-projectile lanes; keeps
+local personal space across groups; and recomputes deterministically when
+members die. Some light geometry withdraws after an authored combat window,
+stops firing during departure, and remains a missed kill in mission rating so
+chaff pressure stays bounded without becoming free score. Visible links and
+pulses communicate the shared calculation, and a runtime audit reports group,
+formation, avoidance, protection, departure, spacing, and overlap state.
+
+The missions escalate from an evasive aperture lattice, through two paths that
+mirror different moments of player movement, to a high-density proof field
+combining wide spear wedges, orbiting lenses, anchors, and the Axiom That Hunts.
+Each uses a different existing placeholder track. The act is intentionally a
+combat candidate: its contact/debrief language is provisional and does not
+settle the later story-economy fork. Existing Act 3 drop plumbing supplies
+Heirloom boss rewards. Agent smoke and stress tests establish data validity,
+bounded population, and render responsiveness; real-loadout difficulty and
+boss-phase feel remain human playtest questions.
 
 Focused kinetic weapons now use their own larger single-shot damage multipliers instead of sharing plasma's focus curve. Base focused kinetics land around 344–372 direct DPS (with Demolition Bore lower at 231) and 94–135 damage per hit, versus Plasma Lance at 447 combined direct-plus-burn DPS and 72 direct damage per hit. This preserves plasma's burn/explosion advantage while making focused kinetic a credible armor answer. `balance_report.js` now feeds the focused-shot and build-damage multipliers into its TTK simulation, matching the Armory/runtime formula.
 
@@ -99,7 +123,7 @@ branch in Ledger Investments displays these earned milestones without charging
 credits. Broadside can boost earned Tier 1/2 by one tier, but cannot create Tier
 1 from zero or substitute for the completion-only Tier 4.
 
-The normal board hides Missions 9–11 and every remaining old Act 2/3 encounter card. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox. The five player-validated post-Last-Light slices plus the Collateral Choir and Living Current candidates are the only active continuation; no broader Act 2/3 campaign is currently active.
+The normal board hides Missions 9–11 and every remaining old Act 2/3 encounter card. `?devActs=1` restores and unlocks those discarded cards for agentic regression access only; their files and graph systems remain available as a toolbox. The validated/candidate post-Last-Light route and the three sequential Parallax contracts are the active continuation. Parallax is explicitly experimental rather than a declaration that the future story-canonical Act 3 is settled.
 
 ## Onboarding
 
@@ -137,7 +161,7 @@ Current gaps:
 
 ## Assets
 
-Generated art is now part of the live visual baseline. The current UI uses generated salvage chrome, generated item icons, promoted combat fleet art, generated mission backgrounds, the Act 3 invasion sprite pack, the original generated starter hull, and v2 generated unlockable hulls that match the starter hull scale/style. Kenney assets remain credited and may still appear as fallback, historical comparison, or utility sprites. Mini weapons, shield boosters, and armor patch caches use generated overhaul art, while the EMP clear pulse is rendered in canvas.
+Generated art is now part of the live visual baseline. The current UI uses generated salvage chrome, generated item icons, promoted combat fleet art, generated mission backgrounds, the Act 3 invasion sprite pack, the Parallax geometric fleet and three Parallax voids, the original generated starter hull, and v2 generated unlockable hulls that match the starter hull scale/style. Kenney assets remain credited and may still appear as fallback, historical comparison, or utility sprites. Mini weapons, shield boosters, and armor patch caches use generated overhaul art, while the EMP clear pulse is rendered in canvas.
 
 Asset manifests and generation notes live in `ASSET_GENERATION.md`.
 

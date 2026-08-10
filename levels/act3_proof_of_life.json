@@ -1,0 +1,328 @@
+{
+  "id": "act3_proof_of_life",
+  "name": "Proof of Life",
+  "background": "generatedParallaxAxiom",
+  "visualTheme": "parallax_v1",
+  "music": "space_boss_battle_bpm175.ogg",
+  "difficulty": "Parallax Axiom",
+  "description": "The empty center is not a destination. It is the part of the machine that notices you. Around it, the whole contact folds from wall to orbit to spear without ever breaking its luminous proof.",
+  "completeOnBoss": true,
+  "debriefLore": [
+    "The contact satisfied every automated test for intelligence except communication. It revised the tests.",
+    "When the central figure failed, the surrounding geometry did not scatter. It completed one final shape and went dark.",
+    "Archive title accepted: PROOF OF LIFE. Species field remains blank."
+  ],
+  "projectileProfiles": {
+    "proofNeedle": {
+      "threatClass": "standard",
+      "damage": 54,
+      "speed": 480,
+      "radius": 4,
+      "image": "enemy_space_cool_chip_needle",
+      "width": 14,
+      "height": 48,
+      "animation": "bolt"
+    },
+    "proofVector": {
+      "threatClass": "standard",
+      "damage": 74,
+      "speed": 370,
+      "radius": 5,
+      "image": "enemy_space_warm_standard_slug",
+      "width": 20,
+      "height": 46,
+      "animation": "bolt"
+    },
+    "proofCore": {
+      "threatClass": "heavy",
+      "damage": 110,
+      "speed": 198,
+      "radius": 13,
+      "image": "enemy_space_cool_boss_core",
+      "width": 62,
+      "height": 62,
+      "animation": "orb",
+      "spinRate": 1.05
+    },
+    "axiomRing": {
+      "threatClass": "bossHazard",
+      "damage": 150,
+      "speed": 168,
+      "radius": 16,
+      "image": "enemy_space_warm_boss_ring",
+      "width": 82,
+      "height": 82,
+      "animation": "orb",
+      "spinRate": 0.76
+    }
+  },
+  "enemyTypes": {
+    "shard": {
+      "name": "Proof Fragment",
+      "sprite": "assets/generated/parallax_v1/parallax_shard.png",
+      "hull": 250,
+      "shield": 105,
+      "shieldRegen": 14,
+      "speed": 188,
+      "score": 250,
+      "baseCredit": 24,
+      "radius": 18,
+      "collisionDamage": 60,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "proof_field",
+        "formations": ["wall", "orbit", "spear", "arc"],
+        "formationEvery": 5.5,
+        "holdY": 220,
+        "span": 560,
+        "depth": 96,
+        "orbitRadius": 205,
+        "orbitSpeed": 1.05,
+        "playerTrack": 0.1,
+        "avoidanceWeight": 0.95,
+        "lookAhead": 1.05,
+        "avoidPadding": 42,
+        "maxSpeedMult": 2.65,
+        "acceleration": 7.8,
+        "departAfter": 28,
+        "protects": ["boss", "theorem"]
+      },
+      "attackPatterns": [
+        { "id": "fragment_trace", "mode": "aim", "profile": "proofNeedle", "fireRate": 1.48, "weight": 1 }
+      ],
+      "spriteScale": 0.78
+    },
+    "mirror": {
+      "name": "Proof Reflection",
+      "sprite": "assets/generated/parallax_v1/parallax_mirror.png",
+      "hull": 490,
+      "shield": 450,
+      "shieldRegen": 22,
+      "speed": 172,
+      "score": 580,
+      "baseCredit": 54,
+      "radius": 24,
+      "collisionDamage": 76,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "proof_field",
+        "formations": ["wall", "orbit", "spear", "arc"],
+        "formationEvery": 5.5,
+        "holdY": 220,
+        "span": 560,
+        "depth": 96,
+        "orbitRadius": 205,
+        "orbitSpeed": 1.05,
+        "playerTrack": 0.1,
+        "avoidanceWeight": 0.95,
+        "lookAhead": 1.05,
+        "avoidPadding": 44,
+        "maxSpeedMult": 2.55,
+        "acceleration": 7.4,
+        "departAfter": 30,
+        "protects": ["boss", "theorem"]
+      },
+      "attackPatterns": [
+        { "id": "reflection_fan", "mode": "spread", "profile": "proofNeedle", "count": 5, "spreadDeg": 38, "fireRate": 0.98, "weight": 3 },
+        { "id": "reflection_vector", "mode": "aim", "profile": "proofVector", "fireRate": 1.24, "weight": 2 }
+      ],
+      "spriteScale": 0.84
+    },
+    "lens": {
+      "name": "Corollary Lens",
+      "sprite": "assets/generated/parallax_v1/parallax_lens.png",
+      "hull": 860,
+      "shield": 1250,
+      "shieldRegen": 34,
+      "speed": 112,
+      "score": 1100,
+      "baseCredit": 126,
+      "radius": 34,
+      "collisionDamage": 88,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "corollary_lenses",
+        "formations": ["orbit", "wall", "arc"],
+        "formationEvery": 6,
+        "holdY": 145,
+        "span": 430,
+        "depth": 74,
+        "orbitRadius": 145,
+        "orbitSpeed": 0.82,
+        "avoidanceWeight": 0.62,
+        "lookAhead": 0.95,
+        "avoidPadding": 50,
+        "maxSpeedMult": 2.1,
+        "acceleration": 6
+      },
+      "attackPatterns": [
+        { "id": "corollary_ring", "mode": "radial", "profile": "proofNeedle", "count": 18, "fireRate": 1.06, "weight": 3 },
+        { "id": "corollary_core", "mode": "aim", "profile": "proofCore", "fireRate": 1.52, "weight": 2 }
+      ],
+      "spriteScale": 0.9
+    },
+    "anchor": {
+      "name": "Irreducible Anchor",
+      "sprite": "assets/generated/parallax_v1/parallax_anchor.png",
+      "hull": 1180,
+      "shield": 940,
+      "shieldRegen": 22,
+      "armor": 1480,
+      "armorClass": 30,
+      "speed": 82,
+      "score": 1760,
+      "baseCredit": 205,
+      "radius": 44,
+      "collisionDamage": 108,
+      "ai": "parallax",
+      "aiParams": {
+        "parallaxGroup": "irreducible_anchors",
+        "formations": ["wall", "orbit"],
+        "formationEvery": 7,
+        "holdY": 170,
+        "span": 410,
+        "depth": 76,
+        "orbitRadius": 150,
+        "orbitSpeed": 0.54,
+        "avoidanceWeight": 0.42,
+        "lookAhead": 0.82,
+        "avoidPadding": 58,
+        "maxSpeedMult": 1.7,
+        "acceleration": 4.6
+      },
+      "attackPatterns": [
+        { "id": "anchor_vectors", "mode": "spread", "profile": "proofVector", "count": 9, "spreadDeg": 92, "fireRate": 0.82, "weight": 3 },
+        { "id": "anchor_core", "mode": "aim", "profile": "proofCore", "fireRate": 1.18, "weight": 2 }
+      ],
+      "spriteScale": 0.94
+    },
+    "spear": {
+      "name": "Axiom Spear",
+      "sprite": "assets/generated/parallax_v1/parallax_spear.png",
+      "hull": 430,
+      "shield": 170,
+      "speed": 242,
+      "score": 470,
+      "baseCredit": 38,
+      "radius": 19,
+      "collisionDamage": 138,
+      "ai": "rammer",
+      "aiParams": { "lockRange": 420, "telegraph": 0.34, "lungeSpeed": 535 },
+      "fireRate": 60,
+      "spriteScale": 0.86
+    },
+    "theorem": {
+      "name": "The Moving Theorem",
+      "sprite": "assets/generated/parallax_v1/parallax_anchor.png",
+      "hull": 2750,
+      "shield": 1850,
+      "shieldRegen": 30,
+      "armor": 1320,
+      "armorClass": 27,
+      "speed": 112,
+      "score": 3900,
+      "baseCredit": 480,
+      "radius": 58,
+      "collisionDamage": 118,
+      "miniboss": true,
+      "pattern": "bossOrbit",
+      "patternParams": { "radiusX": 280, "radiusY": 72, "orbitSpeed": 0.86, "warmupTime": 0.62, "wobble": 12 },
+      "attackPatterns": [
+        { "id": "theorem_ring", "mode": "radial", "profile": "proofVector", "count": 22, "fireRate": 0.78, "weight": 3, "speedJitter": 0.08 },
+        { "id": "theorem_cores", "mode": "spread", "profile": "proofCore", "count": 5, "spreadDeg": 76, "fireRate": 1.05, "weight": 2 }
+      ],
+      "spriteScale": 1
+    },
+    "boss": {
+      "template": "act3_proof_of_life:boss",
+      "name": "The Axiom That Hunts",
+      "sprite": "assets/generated/parallax_v1/boss_axiom.png",
+      "hull": 3350,
+      "shield": 2300,
+      "shieldRegen": 36,
+      "armor": 1550,
+      "armorClass": 29,
+      "speed": 126,
+      "score": 10800,
+      "baseCredit": 2450,
+      "radius": 98,
+      "collisionDamage": 168,
+      "pattern": "bossAdvanceSweep",
+      "patternParams": { "pause": 0.52, "advance": 82, "advanceTime": 0.5, "sweepDuration": 1.72, "retreatTime": 0.56, "depth": 108, "sweepAmp": 330 },
+      "isBoss": true,
+      "empImmune": true,
+      "attackPatterns": [
+        { "id": "axiom_needles", "mode": "radial", "profile": "proofNeedle", "count": 26, "fireRate": 0.64, "weight": 4, "speedJitter": 0.06 },
+        { "id": "axiom_cores", "mode": "spread", "profile": "proofCore", "count": 7, "spreadDeg": 108, "fireRate": 0.96, "weight": 3 }
+      ],
+      "phases": [
+        {
+          "label": "Lemma: The Wall",
+          "hpFraction": 0.74,
+          "speedMult": 1.1,
+          "attackPatterns": [
+            { "id": "wall_vectors", "mode": "spread", "profile": "proofVector", "count": 15, "spreadDeg": 132, "fireRate": 0.58, "weight": 4 },
+            { "id": "wall_cores", "mode": "radial", "profile": "proofCore", "count": 12, "fireRate": 0.9, "weight": 2 }
+          ],
+          "summons": [
+            { "type": "shard", "count": 8, "radius": 190 },
+            { "type": "mirror", "count": 4, "radius": 240 }
+          ]
+        },
+        {
+          "label": "Lemma: The Spear",
+          "hpFraction": 0.48,
+          "speedMult": 1.22,
+          "attackPatterns": [
+            { "id": "spear_needles", "mode": "spread", "profile": "proofNeedle", "count": 17, "spreadDeg": 104, "fireRate": 0.5, "weight": 4 },
+            { "id": "spear_ring", "mode": "aim", "profile": "axiomRing", "fireRate": 0.94, "weight": 3 }
+          ],
+          "summons": [{ "type": "spear", "count": 7, "radius": 230 }]
+        },
+        {
+          "label": "Therefore: You",
+          "hpFraction": 0.24,
+          "speedMult": 1.36,
+          "attackPatterns": [
+            { "id": "therefore_needles", "mode": "radial", "profile": "proofNeedle", "count": 36, "fireRate": 0.46, "weight": 4, "speedJitter": 0.09 },
+            { "id": "therefore_rings", "mode": "spread", "profile": "axiomRing", "count": 7, "spreadDeg": 128, "fireRate": 0.76, "weight": 3 }
+          ],
+          "summons": [
+            { "type": "mirror", "count": 6, "radius": 210 },
+            { "type": "spear", "count": 5, "radius": 255 }
+          ]
+        }
+      ],
+      "spriteScale": 1.08
+    }
+  },
+  "events": [
+    { "time": 1, "type": "shard", "count": 10, "interval": 0.26 },
+    { "time": 5, "type": "mirror", "count": 6, "interval": 0.38 },
+    { "time": 10, "type": "anchor", "count": 1 },
+    { "time": 13, "type": "spear", "count": 5, "interval": 0.58 },
+    { "time": 19, "type": "lens", "count": 2, "interval": 0.86 },
+    { "time": 23, "type": "shard", "count": 12, "interval": 0.24 },
+    { "time": 29, "type": "mirror", "count": 7, "interval": 0.34 },
+    { "time": 34, "type": "anchor", "count": 2, "interval": 0.92 },
+    { "time": 40, "type": "shard", "count": 8, "interval": 0.24 },
+    { "time": 44, "type": "theorem", "count": 1 },
+    { "time": 47, "type": "mirror", "count": 8, "interval": 0.3 },
+    { "time": 54, "type": "spear", "count": 7, "interval": 0.5 },
+    { "time": 59, "type": "lens", "count": 3, "interval": 0.74 },
+    { "time": 65, "type": "shard", "count": 14, "interval": 0.22 },
+    { "time": 71, "type": "anchor", "count": 2, "interval": 0.78 },
+    { "time": 76, "type": "mirror", "count": 10, "interval": 0.27 },
+    { "time": 83, "type": "spear", "count": 7, "interval": 0.46 },
+    { "time": 92, "type": "boss", "count": 1 },
+    { "time": 94, "type": "shard", "count": 12, "interval": 0.22 },
+    { "time": 99, "type": "mirror", "count": 8, "interval": 0.26 },
+    { "time": 106, "type": "spear", "count": 7, "interval": 0.42 },
+    { "time": 112, "type": "lens", "count": 2, "interval": 0.7 }
+  ],
+  "pickups": [
+    { "time": 26, "type": "shield_booster", "x": 0.24 },
+    { "time": 52, "type": "salvage", "rarity": "prototype", "slotType": "aux", "x": 0.5 },
+    { "time": 78, "type": "armor_patch", "x": 0.76 }
+  ]
+}

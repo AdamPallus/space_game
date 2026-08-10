@@ -3,11 +3,13 @@
 **Status:** Accepted direction. Slices 1–5 and the fresh-save capability,
 consumable, and guaranteed-gear spine are player-validated. Repossession's
 Assessor liens remain explicitly unverified. The progression spec is archived
-under `outdated_docs/implemented_specs/`. Collateral Choir and The Living Current
-are the two authorized campaign candidates. Each occupies its intended board
-position but deliberately does not gate the established route or add a
-guaranteed commission until its first full-mission playtest. Phase 8 remains
-brainstorm/spec territory.
+under `outdated_docs/implemented_specs/`. Collateral Choir remains an authorized
+campaign candidate awaiting playtest. The Living Current's full encounter is
+player-approved, with its required-versus-optional route status still undecided.
+Adam's later explicit instruction authorized the three-mission experimental
+Parallax act after Return Address. Its combat is implemented for playtest while
+its story remains deliberately noncanonical. Phase 8 remains brainstorm/spec
+territory.
 
 **Creative and playtest authority:** Adam.
 
@@ -417,7 +419,7 @@ AI parameters instead of losing them to the parent link.
 
 ## 9. Candidate — The Living Current
 
-**Status:** Underlying shoal behavior player-approved; full mission awaiting playtest.
+**Status:** Full encounter player-approved; route requirement still undecided.
 
 The Gatekeeper's death leaves a brood that does not scatter. Small organisms
 move as loose local currents until a living producer appears, then choose the
@@ -439,15 +441,8 @@ gating the latter. Its authored route is intentionally short:
 - one Prototype field pod plus ordinary Act 2 drops make the short sortie worth
   checking in the Armory even without a guaranteed first-clear commission.
 
-### The Living Current playtest questions
+### The Living Current routing questions
 
-- Does the progression from loose current to Bloomcaller, Broodmother, and boss
-  protection remain readable amid a real gold-tier encounter?
-- Is the dense boss defense exciting and destructible with intended gear, or
-  does it become visual soup before the player can express a build?
-- Do wide/plasma tools gain satisfying opportunities without making focused or
-  rapid complementary weapons irrelevant?
-- Does the 1:20 boss arrival produce the desired fast loot-refit-relaunch rhythm?
 - Should approval make this a required step before Return Address, or remain a
   rewarding optional contract in the Verdant route?
 
@@ -516,10 +511,52 @@ the mission's hardest problem.
 The revised Tier 2 gold Dual Fire playtest found the mission challenging and
 working well. This closed the original five-mission vertical-slice experiment
 and proves that the current author/revise/human-playtest method can produce
-campaign-worthy encounters. The Living Current extends that method with one
-additional candidate without reopening the discarded bulk Act 2 plan.
+campaign-worthy encounters. The Living Current then proved that the method could
+make an existing biological faction feel newly alive. Adam subsequently expanded
+creative authority from one-mission candidates to one experimental three-mission
+combat act, without declaring its story framing canonical.
 
-## 11. Accepted next execution order
+## 11. Experimental Act 3 Candidate — The Parallax
+
+**Status:** Implemented for human balance/feel playtest; provisional story.
+
+Return Address is followed by three sequential missions about a contact category
+that behaves like a shared spatial proof rather than a fleet. The art direction
+is angular smoked black glass and translucent crystal with cyan, violet, and
+amber light, deliberately distinct from ordinary spacecraft, the Divine Chorus,
+and the Verdant ecology. The levels use three generated void backgrounds and
+three varied tracks already downloaded into the project.
+
+- **A Strange Angle** introduces exact linked formations that collectively open
+  around predicted projectile lanes. Chaff that survives its authored window
+  withdraws, stops shooting, and still counts against the destruction rating.
+- **False Position** divides the field into two paths that follow delayed and
+  reflected versions of the player's movement, then asks the player to identify
+  which apparent opening is current.
+- **Proof of Life** combines wide spear wedges, orbiting lenses, durable anchors,
+  and recomputing proof fields before The Axiom That Hunts. It is deliberately
+  the densest and hardest of the three.
+
+All Parallax groups recompute deterministic slots after losses, share bounded
+projectile avoidance, and retain local personal space across group boundaries.
+Visible cyan/violet links and amber pulses explain the shared calculation. The
+runtime publishes formation, avoidance, departure, protection, spacing, and
+overlap telemetry for agent regression checks. Existing Act 3 first-clear boss
+logic supplies a Heirloom reward; no new story-specific economy is implied.
+
+### Parallax playtest questions
+
+- Does the formation movement feel interactive and alive rather than merely
+  decorative or evasive?
+- Does the chaff strategy create real weapon-role decisions while allowing giant
+  plasma explosions to remain spectacular?
+- Do False Position's delayed and mirrored paths read as meaningfully different?
+- With an intended gold/early-Heirloom loadout, is Proof of Life's boss field
+  difficult but legible rather than visual soup?
+- Do the three missions earn an official place in the campaign, and if so should
+  their placeholder story be reconciled with Phase 8–10 or replaced?
+
+## 12. Accepted next execution order
 
 1. **Campaign progression spine.** Implemented from the archived campaign progression spec:
    mission-earned capability milestones, Act 1 consumables, guaranteed gold
@@ -529,14 +566,15 @@ additional candidate without reopening the discarded bulk Act 2 plan.
    and address progression-run UI friction. Item creativity, mini output,
    single-primary payoff, cloak payoff, and mobile Armory density remain tuning
    candidates rather than blockers.
-3. **Story/economy setup.** Execute The Bill Arrives, Planet Raids, and The Fork
+3. **Parallax playtest.** Judge the three implemented experimental missions with
+   real gold/Heirloom builds; tune combat and visual density from those results.
+4. **Story/economy setup.** Execute The Bill Arrives, Planet Raids, and The Fork
    in that order. Their order is load-bearing.
-4. **Canonical Act 3.** Re-author missions one at a time using the successful
-   playtest method. Reuse Probate's pressure doctrine, invasion mechanics, art,
-   and Heirloom plumbing, but not its discarded mission scripts. The Fork may
-   shape Act 3; it is not Act 3 itself.
+5. **Canonical Act 3 framing.** Decide whether the successful parts of Parallax
+   become canon after the story/economy fork. Reuse any working mechanics and
+   art, but do not force placeholder lore to constrain the story.
 
-## 11. Documentation authority
+## 13. Documentation authority
 
 When documents conflict, use this order:
 

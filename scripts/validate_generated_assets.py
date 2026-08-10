@@ -15,6 +15,8 @@ LEVELS_DIR = ROOT / "levels"
 PROJECTILE_DIR = ROOT / "assets" / "generated" / "enemy_projectiles_space_v1"
 BOSS_DIR = ROOT / "assets" / "generated" / "bosses_broadside_v1"
 SUPPLY_ICON_DIR = ROOT / "assets" / "generated" / "overhaul_player_kit_v2"
+PARALLAX_DIR = ROOT / "assets" / "generated" / "parallax_v1"
+PARALLAX_BACKGROUND_DIR = ROOT / "assets" / "generated" / "parallax_backgrounds_v1"
 CATALOG_PATH = ROOT / "enemies" / "enemy_catalog.json"
 CAMPAIGN_MISSION_COUNT = 11
 MIN_BOSS_ASPECT = 1.55
@@ -68,6 +70,31 @@ ACT3_INVASION_CATALOG_IDS = (
     "grappler",
     "pressgang",
     "act3_death_duties:boss",
+)
+PARALLAX_CATALOG_IDS = (
+    "shard",
+    "mirror",
+    "guard",
+    "lens",
+    "spear",
+    "knot",
+    "echo",
+    "counterecho",
+    "anchor",
+    "theorem",
+    "act3_strange_angle:boss",
+    "act3_false_position:boss",
+    "act3_proof_of_life:boss",
+)
+PARALLAX_BOSS_SPRITES = (
+    "boss_folded_aperture.png",
+    "boss_mirror_engine.png",
+    "boss_axiom.png",
+)
+PARALLAX_BACKGROUNDS = (
+    "fault_native_1024.png",
+    "interference_native_1024.png",
+    "axiom_native_1024.png",
 )
 
 
@@ -258,12 +285,65 @@ def validate_act3_invasion_art(errors: list[str]) -> None:
         print("Act 3 invasion boss alpha aspects:", ", ".join(aspects))
 
 
+def validate_parallax_art(errors: list[str]) -> None:
+    """Validate the intentionally non-naval geometric Act 3 candidate pack."""
+    catalog = load_json(CATALOG_PATH).get("entries", {})
+    for entry_id in PARALLAX_CATALOG_IDS:
+        entry = catalog.get(entry_id)
+        sprite = ((entry or {}).get("template") or {}).get("sprite") or ""
+        if not sprite:
+            errors.append(f"{entry_id} is missing a Parallax sprite")
+            continue
+        if "/parallax_v1/" not in sprite:
+            errors.append(f"{entry_id} should use parallax_v1 art, got '{sprite}'")
+        path = ROOT / sprite
+        if not path.exists():
+            errors.append(f"{entry_id} sprite is missing: {sprite}")
+            continue
+        validate_transparent_corners(path, errors)
+
+    # Parallax bosses are apertures/axioms rather than spacecraft, so their
+    # contract is a large radial footprint instead of the campaign broadside
+    # aspect enforced for naval bosses above.
+    footprints: list[str] = []
+    for name in PARALLAX_BOSS_SPRITES:
+        path = PARALLAX_DIR / name
+        if not path.exists():
+            errors.append(f"Missing Parallax boss sprite {path.relative_to(ROOT)}")
+            continue
+        image = Image.open(path).convert("RGBA")
+        if image.size != (256, 256):
+            errors.append(f"{path.relative_to(ROOT)} must be 256x256, got {image.size}")
+        validate_transparent_corners(path, errors)
+        left, top, right, bottom = alpha_bbox(path)
+        width = right - left
+        height = bottom - top
+        footprints.append(f"{name}={width}x{height}")
+        if width < 200 or height < 140:
+            errors.append(
+                f"{path.relative_to(ROOT)} visible footprint {width}x{height} is too small for a Parallax boss"
+            )
+
+    for name in PARALLAX_BACKGROUNDS:
+        path = PARALLAX_BACKGROUND_DIR / name
+        if not path.exists():
+            errors.append(f"Missing Parallax background {path.relative_to(ROOT)}")
+            continue
+        image = Image.open(path)
+        if image.size != (1024, 1024):
+            errors.append(f"{path.relative_to(ROOT)} must be 1024x1024, got {image.size}")
+
+    if footprints:
+        print("Parallax boss alpha footprints:", ", ".join(footprints))
+
+
 def main() -> int:
     errors: list[str] = []
     validate_projectiles(errors)
     validate_bosses(errors)
     validate_act2_catalog_art(errors)
     validate_act3_invasion_art(errors)
+    validate_parallax_art(errors)
     validate_supply_icons(errors)
     if errors:
         for error in errors:

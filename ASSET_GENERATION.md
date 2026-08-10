@@ -114,6 +114,28 @@ Campaign level JSON files now reference generated backgrounds directly. The lab
 missions remain useful because they isolate art packs and URL flags for focused
 visual QA.
 
+The experimental Parallax act adds two built-in-imagegen packs:
+
+- `assets/generated/parallax_v1/` contains a processed 3x3 chroma-key sheet of
+  angular smoked-glass and crystal constructs: six field silhouettes and three
+  bosses. The field pieces are intentionally neither ships nor organisms. The
+  Folded Aperture, Mirror Engine, and Axiom That Hunts are radial/impossible
+  geometry, so their validation contract is a large visible footprint with
+  transparent corners rather than the naval broadside ratio used by ordinary
+  campaign bosses.
+- `assets/generated/parallax_backgrounds_v1/` contains cold crystal-fault,
+  amber interference, and deep proof-void backgrounds. Each source was passed
+  through `prepare_scrolling_background.py`; the visually cleaner native 1024
+  version is selected while looped and repeat-preview files remain QA evidence.
+
+The source prompt set asked for crisp top-down arcade sprites on a pure green
+key, angular black glass, translucent crystalline facets, cyan/violet/amber
+internal light, and no spacecraft, robots, plants, insects, text, or shadows.
+The three background prompts used the same material language but shifted from a
+cold fractured fault, through amber mirrored interference, into a sparse
+cyan/violet axiom void. All four sources were generated with Codex built-in
+imagegen and processed locally with the existing sprite/background scripts.
+
 To jump straight into the visual test mission:
 
 ```text

@@ -1,0 +1,591 @@
+{
+  "id": "act2_living_current",
+  "name": "The Living Current",
+  "background": "generatedBioNebulaLooped",
+  "visualTheme": "bio_v1",
+  "music": "05_building_a_colony_loop_1.ogg",
+  "difficulty": "Verdant Shoal",
+  "description": "The Gatekeeper's scattered brood does not flee. Wounds pass through it like instructions, drawing every loose organism into a living current around the bodies that can still grow.",
+  "completeOnBoss": true,
+  "projectileProfiles": {
+    "pollenMote": {
+      "threatClass": "chip",
+      "damage": 12,
+      "speed": 190,
+      "radius": 5,
+      "image": "enemy_bio_spore_puff",
+      "width": 26,
+      "height": 26,
+      "animation": "orb",
+      "spinRate": 1.1
+    },
+    "thornNeedle": {
+      "threatClass": "standard",
+      "damage": 36,
+      "speed": 355,
+      "radius": 4,
+      "image": "enemy_bio_thorn_shard",
+      "width": 16,
+      "height": 42,
+      "animation": "bolt"
+    },
+    "seedOrb": {
+      "threatClass": "heavy",
+      "damage": 64,
+      "speed": 150,
+      "radius": 10,
+      "image": "enemy_bio_spore_orb",
+      "width": 50,
+      "height": 50,
+      "animation": "orb",
+      "spinRate": 1.35
+    },
+    "wakeCore": {
+      "threatClass": "bossHazard",
+      "damage": 100,
+      "speed": 132,
+      "radius": 13,
+      "image": "enemy_bio_spore_orb",
+      "width": 76,
+      "height": 76,
+      "animation": "orb",
+      "spinRate": 1.15
+    }
+  },
+  "enemyTypes": {
+    "sporeling": {
+      "hull": 82,
+      "speed": 165,
+      "collisionDamage": 36,
+      "pattern": "drift",
+      "ai": "shoal",
+      "aiParams": {
+        "shoalGroup": "brood_current",
+        "neighborRadius": 250,
+        "separationRadius": 60,
+        "separationWeight": 2.3,
+        "cohesionWeight": 0.3,
+        "alignmentWeight": 0.18,
+        "holdY": 220,
+        "wander": 52,
+        "wanderRate": 0.94,
+        "playerTrack": 0.04,
+        "maxSpeedMult": 1.72,
+        "acceleration": 5.2,
+        "protects": [
+          "boss",
+          "broodmother",
+          "bloomcaller"
+        ],
+        "guardRadius": 102,
+        "guardArcDeg": 160,
+        "guardWeight": 2.6,
+        "alarmDuration": 1.85,
+        "alarmTighten": 0.7,
+        "rageDuration": 4.3,
+        "rageSpeedMult": 1.85
+      },
+      "attackPatterns": [
+        {
+          "id": "current_pollen",
+          "mode": "aim",
+          "profile": "pollenMote",
+          "fireRate": 2.15,
+          "weight": 1,
+          "speedJitter": 0.14
+        }
+      ]
+    },
+    "thornwing": {
+      "hull": 160,
+      "speed": 146,
+      "collisionDamage": 50,
+      "pattern": "drift",
+      "ai": "shoal",
+      "aiParams": {
+        "shoalGroup": "outer_current",
+        "neighborRadius": 280,
+        "separationRadius": 76,
+        "separationWeight": 2.2,
+        "cohesionWeight": 0.25,
+        "alignmentWeight": 0.16,
+        "holdY": 255,
+        "wander": 66,
+        "wanderRate": 1.08,
+        "playerTrack": 0.055,
+        "maxSpeedMult": 1.8,
+        "acceleration": 5.5,
+        "protects": [
+          "boss",
+          "broodmother",
+          "bloomcaller"
+        ],
+        "guardRadius": 164,
+        "guardArcDeg": 200,
+        "guardWeight": 2.2,
+        "alarmDuration": 1.7,
+        "alarmTighten": 0.74,
+        "rageDuration": 4.8,
+        "rageSpeedMult": 2
+      },
+      "attackPatterns": [
+        {
+          "id": "current_thorn_fan",
+          "mode": "spread",
+          "profile": "thornNeedle",
+          "count": 5,
+          "spreadDeg": 42,
+          "fireRate": 1.45,
+          "weight": 3
+        },
+        {
+          "id": "current_thorn_snap",
+          "mode": "aim",
+          "profile": "thornNeedle",
+          "fireRate": 1.12,
+          "weight": 1
+        }
+      ]
+    },
+    "bramble": {
+      "hull": 950,
+      "speed": 58,
+      "collisionDamage": 76,
+      "pattern": "drift",
+      "ai": "shoal",
+      "aiParams": {
+        "shoalGroup": "root_shell",
+        "neighborRadius": 310,
+        "separationRadius": 96,
+        "separationWeight": 2.4,
+        "cohesionWeight": 0.18,
+        "alignmentWeight": 0.08,
+        "holdY": 194,
+        "wander": 22,
+        "wanderRate": 0.5,
+        "playerTrack": 0.018,
+        "maxSpeedMult": 1.5,
+        "acceleration": 3.6,
+        "protects": [
+          "boss",
+          "broodmother",
+          "bloomcaller"
+        ],
+        "guardRadius": 218,
+        "guardArcDeg": 226,
+        "guardWeight": 1.85,
+        "alarmDuration": 2.2,
+        "alarmTighten": 0.8,
+        "rageDuration": 3.6,
+        "rageSpeedMult": 1.55
+      },
+      "attackPatterns": [
+        {
+          "id": "root_shell_pods",
+          "mode": "aim",
+          "fireRate": 2.35,
+          "weight": 2,
+          "shots": [
+            {
+              "profile": "seedOrb",
+              "angleOffsetDeg": -11
+            },
+            {
+              "profile": "seedOrb",
+              "angleOffsetDeg": 11
+            }
+          ]
+        },
+        {
+          "id": "root_shell_pollen",
+          "mode": "radial",
+          "profile": "pollenMote",
+          "count": 10,
+          "fireRate": 2.7,
+          "weight": 1
+        }
+      ]
+    },
+    "bloomcaller": {
+      "hull": 520,
+      "shield": 210,
+      "shieldRegen": 16,
+      "speed": 58,
+      "collisionDamage": 42,
+      "pattern": "drift",
+      "ai": "spawner",
+      "aiParams": {
+        "holdY": 158,
+        "slideSpeed": 0.68,
+        "keepOut": 190,
+        "spawnEvery": 5.4,
+        "spawnType": "sporeling",
+        "spawnCount": 2,
+        "maxAlive": 8
+      },
+      "attackPatterns": [
+        {
+          "id": "current_nursery",
+          "mode": "radial",
+          "profile": "pollenMote",
+          "count": 14,
+          "fireRate": 1.9,
+          "weight": 3,
+          "speedJitter": 0.14
+        },
+        {
+          "id": "current_seed",
+          "mode": "aim",
+          "profile": "seedOrb",
+          "fireRate": 2.55,
+          "weight": 1
+        }
+      ]
+    },
+    "seedcarrier": {
+      "hull": 680,
+      "speed": 62,
+      "collisionDamage": 60,
+      "pattern": "drift",
+      "ai": "splitter",
+      "aiParams": {
+        "splitCount": 5,
+        "splitType": "sporeling"
+      },
+      "attackPatterns": [
+        {
+          "id": "wake_seed_drip",
+          "mode": "aim",
+          "profile": "seedOrb",
+          "fireRate": 2.6,
+          "weight": 1
+        }
+      ]
+    },
+    "broodmother": {
+      "hull": 2100,
+      "shield": 760,
+      "shieldRegen": 18,
+      "speed": 86,
+      "collisionDamage": 84,
+      "pattern": "bossOrbit",
+      "patternParams": {
+        "radiusX": 250,
+        "radiusY": 70,
+        "orbitSpeed": 0.6,
+        "warmupTime": 0.75,
+        "wobble": 12
+      },
+      "ai": "spawner",
+      "aiParams": {
+        "spawnEvery": 4,
+        "spawnType": "sporeling",
+        "spawnCount": 2,
+        "maxAlive": 10
+      },
+      "miniboss": true,
+      "attackPatterns": [
+        {
+          "id": "broodmother_orbit",
+          "mode": "radial",
+          "profile": "seedOrb",
+          "count": 14,
+          "fireRate": 1.55,
+          "weight": 3,
+          "speedJitter": 0.12
+        },
+        {
+          "id": "broodmother_thorns",
+          "mode": "spread",
+          "profile": "thornNeedle",
+          "count": 8,
+          "spreadDeg": 68,
+          "fireRate": 1.22,
+          "weight": 2
+        }
+      ]
+    },
+    "boss": {
+      "template": "act2_green_signal:boss",
+      "name": "The Broodwake",
+      "hull": 3300,
+      "shield": 1100,
+      "shieldRegen": 20,
+      "armor": 0,
+      "speed": 82,
+      "collisionDamage": 100,
+      "pattern": "drift",
+      "ai": "spawner",
+      "aiParams": {
+        "holdY": 148,
+        "slideSpeed": 0.76,
+        "keepOut": 190,
+        "spawnEvery": 3.6,
+        "spawnType": "sporeling",
+        "spawnCount": 2,
+        "maxAlive": 14
+      },
+      "attackPatterns": [
+        {
+          "id": "broodwake_ring",
+          "mode": "radial",
+          "profile": "seedOrb",
+          "count": 18,
+          "fireRate": 1.38,
+          "weight": 4,
+          "speedJitter": 0.14
+        },
+        {
+          "id": "broodwake_pollen",
+          "mode": "radial",
+          "profile": "pollenMote",
+          "count": 28,
+          "fireRate": 1.18,
+          "weight": 3,
+          "speedJitter": 0.18
+        },
+        {
+          "id": "broodwake_core",
+          "mode": "aim",
+          "profile": "wakeCore",
+          "fireRate": 1.72,
+          "weight": 2
+        }
+      ],
+      "phases": [
+        {
+          "label": "Close The Wound",
+          "hpFraction": 0.68,
+          "speedMult": 1.1,
+          "aiParams": {
+            "spawnEvery": 2.55,
+            "spawnCount": 2,
+            "maxAlive": 16
+          },
+          "attackPatterns": [
+            {
+              "id": "wound_pollen",
+              "mode": "radial",
+              "profile": "pollenMote",
+              "count": 34,
+              "fireRate": 0.98,
+              "weight": 4,
+              "speedJitter": 0.2
+            },
+            {
+              "id": "wound_thorns",
+              "mode": "spread",
+              "profile": "thornNeedle",
+              "count": 11,
+              "spreadDeg": 86,
+              "fireRate": 1.02,
+              "weight": 3
+            },
+            {
+              "id": "wound_core",
+              "mode": "aim",
+              "profile": "wakeCore",
+              "fireRate": 1.42,
+              "weight": 2
+            }
+          ],
+          "summons": [
+            {
+              "type": "sporeling",
+              "count": 12,
+              "radius": 126
+            },
+            {
+              "type": "thornwing",
+              "count": 5,
+              "radius": 190
+            }
+          ]
+        },
+        {
+          "label": "The Current Turns",
+          "hpFraction": 0.32,
+          "speedMult": 1.2,
+          "aiParams": {
+            "spawnEvery": 2.05,
+            "spawnCount": 3,
+            "maxAlive": 20
+          },
+          "attackPatterns": [
+            {
+              "id": "turning_core",
+              "mode": "radial",
+              "profile": "wakeCore",
+              "count": 16,
+              "fireRate": 0.88,
+              "weight": 4,
+              "speedJitter": 0.14
+            },
+            {
+              "id": "turning_thorns",
+              "mode": "spread",
+              "profile": "thornNeedle",
+              "count": 13,
+              "spreadDeg": 96,
+              "fireRate": 0.86,
+              "weight": 3
+            },
+            {
+              "id": "turning_pollen",
+              "mode": "radial",
+              "profile": "pollenMote",
+              "count": 42,
+              "fireRate": 0.74,
+              "weight": 2,
+              "speedJitter": 0.22
+            }
+          ],
+          "summons": [
+            {
+              "type": "bramble",
+              "count": 4,
+              "radius": 220
+            },
+            {
+              "type": "thornwing",
+              "count": 8,
+              "radius": 176
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "time": 1,
+      "type": "sporeling",
+      "count": 12,
+      "interval": 0.2
+    },
+    {
+      "time": 4,
+      "type": "thornwing",
+      "count": 5,
+      "interval": 0.42
+    },
+    {
+      "time": 9,
+      "type": "bloomcaller",
+      "count": 1
+    },
+    {
+      "time": 11,
+      "type": "sporeling",
+      "count": 8,
+      "interval": 0.18
+    },
+    {
+      "time": 20,
+      "type": "bramble",
+      "count": 2,
+      "interval": 0.9
+    },
+    {
+      "time": 26,
+      "type": "bloomcaller",
+      "count": 2,
+      "interval": 1.6
+    },
+    {
+      "time": 29,
+      "type": "thornwing",
+      "count": 6,
+      "interval": 0.36
+    },
+    {
+      "time": 36,
+      "type": "seedcarrier",
+      "count": 2,
+      "interval": 1.2
+    },
+    {
+      "time": 42,
+      "type": "broodmother",
+      "count": 1
+    },
+    {
+      "time": 44,
+      "type": "sporeling",
+      "count": 10,
+      "interval": 0.16
+    },
+    {
+      "time": 52,
+      "type": "bramble",
+      "count": 3,
+      "interval": 0.75
+    },
+    {
+      "time": 58,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.3
+    },
+    {
+      "time": 64,
+      "type": "seedcarrier",
+      "count": 3,
+      "interval": 0.9
+    },
+    {
+      "time": 72,
+      "type": "bloomcaller",
+      "count": 2,
+      "interval": 1.3
+    },
+    {
+      "time": 80,
+      "type": "boss",
+      "count": 1
+    },
+    {
+      "time": 81,
+      "type": "sporeling",
+      "count": 12,
+      "interval": 0.14
+    },
+    {
+      "time": 86,
+      "type": "thornwing",
+      "count": 8,
+      "interval": 0.26
+    },
+    {
+      "time": 92,
+      "type": "bramble",
+      "count": 2,
+      "interval": 0.7
+    }
+  ],
+  "pickups": [
+    {
+      "time": 30,
+      "type": "salvage",
+      "rarity": "prototype",
+      "slotType": "primary",
+      "x": 0.5,
+      "y": -48
+    },
+    {
+      "time": 48,
+      "type": "shield_booster",
+      "x": 0.4
+    },
+    {
+      "time": 68,
+      "type": "armor_patch",
+      "x": 0.62
+    }
+  ],
+  "debriefLore": [
+    "No organism issued an order. Injury moved through the current faster than any command channel could have carried it.",
+    "Recovered tissue contains no conductor organ. The formation had no center until your fire gave it one.",
+    "The last bodies turned toward your wake before they died. The maintenance band now carries that direction home."
+  ]
+}

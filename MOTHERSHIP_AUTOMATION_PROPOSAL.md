@@ -8,7 +8,9 @@ the ability to design and test higher-level arcs. Protected possibilities in
 this document should survive until that work can evaluate them in context.
 
 **Current gate:** Five distinct post-Last-Light missions and the fresh-save
-capability, consumable, and guaranteed-gear spine are now player-validated.
+capability, consumable, and guaranteed-gear spine are player-validated. Two
+later instructions separately authorized the Collateral Choir and Living
+Current campaign candidates, each still gated by its own full-mission playtest.
 This proves the individual-mission and progression loops. Phase 8 remains
 brainstorm/spec territory; this proposal does not authorize a mission cluster,
 population system, offline automation, or autonomous story branch.
@@ -532,8 +534,10 @@ changing objectives, allies, accounting interpretation, and consequences.
 ## 14. Non-goals of this proposal
 
 - It is not authorization to implement population simulation or automation.
-- It authorizes Return Address as one promoted Stage-A mission, not generation of
-  a full act or automatic continuation after its playtest.
+- It originally authorized Return Address as one promoted Stage-A mission. The
+  later, separately approved Collateral Choir and Living Current candidates do
+  not authorize generation of a full act or automatic continuation after their
+  playtests.
 - It does not turn the current build into a full city-construction game.
 - It does not require real-time offline accumulation in its first population
   pass.

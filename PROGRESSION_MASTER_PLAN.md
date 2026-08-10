@@ -3,10 +3,11 @@
 **Status:** Accepted direction. Slices 1–5 and the fresh-save capability,
 consumable, and guaranteed-gear spine are player-validated. Repossession's
 Assessor liens remain explicitly unverified. The progression spec is archived
-under `outdated_docs/implemented_specs/`. Collateral Choir is the one authorized
-sixth-mission candidate: it is visible after Processional but deliberately does
-not gate the established route or add a guaranteed commission until its first
-human playtest. Phase 8 remains brainstorm/spec territory.
+under `outdated_docs/implemented_specs/`. Collateral Choir and The Living Current
+are the two authorized campaign candidates. Each occupies its intended board
+position but deliberately does not gate the established route or add a
+guaranteed commission until its first full-mission playtest. Phase 8 remains
+brainstorm/spec territory.
 
 **Creative and playtest authority:** Adam.
 
@@ -414,7 +415,43 @@ Bloomcallers and Thornwings, then produces paired Bloomcallers fast enough to
 rebuild an ecology around the boss. Spawned producers retain their own authored
 AI parameters instead of losing them to the parent link.
 
-## 9. Slice 5 — Return Address
+## 9. Candidate — The Living Current
+
+**Status:** Underlying shoal behavior player-approved; full mission awaiting playtest.
+
+The Gatekeeper's death leaves a brood that does not scatter. Small organisms
+move as loose local currents until a living producer appears, then choose the
+highest-priority center and place themselves between it and the pilot. Damage
+propagates as a visible alarm through the group. Destroying the protected body
+briefly inverts protection into a rush before the survivors find another center.
+
+The full candidate sits between The Green Signal and Return Address without yet
+gating the latter. Its authored route is intentionally short:
+
+- Bloomcallers turn loose opening currents into shifting defensive crescents;
+- multiple equivalent producers divide nearby groups without frame-to-frame
+  target oscillation;
+- Seedcarriers split into new Sporelings that immediately join the ecology;
+- a Broodmother miniboss takes priority over every Bloomcaller and supplies a
+  Prototype-or-better Act 2 drop;
+- The Broodwake arrives at 1:20, claims every surviving shoal, and adds inner,
+  outer, and heavy guard layers during two phase transitions;
+- one Prototype field pod plus ordinary Act 2 drops make the short sortie worth
+  checking in the Armory even without a guaranteed first-clear commission.
+
+### The Living Current playtest questions
+
+- Does the progression from loose current to Bloomcaller, Broodmother, and boss
+  protection remain readable amid a real gold-tier encounter?
+- Is the dense boss defense exciting and destructible with intended gear, or
+  does it become visual soup before the player can express a build?
+- Do wide/plasma tools gain satisfying opportunities without making focused or
+  rapid complementary weapons irrelevant?
+- Does the 1:20 boss arrival produce the desired fast loot-refit-relaunch rhythm?
+- Should approval make this a required step before Return Address, or remain a
+  rewarding optional contract in the Verdant route?
+
+## 10. Slice 5 — Return Address
 
 **Status:** Player-validated after the first ramp revision.
 
@@ -477,11 +514,12 @@ the mission's hardest problem.
   the encounter more interesting without prematurely declaring the Verdant good?
 
 The revised Tier 2 gold Dual Fire playtest found the mission challenging and
-working well. This closes the five-mission vertical-slice experiment and proves
-that the current author/revise/human-playtest method can produce campaign-worthy
-encounters.
+working well. This closed the original five-mission vertical-slice experiment
+and proves that the current author/revise/human-playtest method can produce
+campaign-worthy encounters. The Living Current extends that method with one
+additional candidate without reopening the discarded bulk Act 2 plan.
 
-## 10. Accepted next execution order
+## 11. Accepted next execution order
 
 1. **Campaign progression spine.** Implemented from the archived campaign progression spec:
    mission-earned capability milestones, Act 1 consumables, guaranteed gold

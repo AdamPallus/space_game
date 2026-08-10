@@ -17,7 +17,7 @@ That targeted correction now applies to the entire non-rapid paired kinetic
 pattern, with an additional gold reserve on Oathpair; it does not flatten
 plasma or rapid-fire roles.
 
-`outdated_docs/implemented_specs/CAMPAIGN_PROGRESSION_SPEC.md` is archived as implemented. One bounded campaign candidate is now authorized: Collateral Choir turns the approved Flocking Lab behavior into a full Chorus/Tithe hybrid between Processional and Repossession. It is visible after Processional but does not gate Repossession, The Green Signal, or later capability rewards while its first human balance test is pending. Phase 8 — The Bill Arrives remains a separate creative problem: its economic skeleton is settled, but its player experience, characters, choice presentation, and emotional turn still need a dedicated session. Assessor lien readability remains an explicitly unverified but non-blocking observation.
+`outdated_docs/implemented_specs/CAMPAIGN_PROGRESSION_SPEC.md` is archived as implemented. Two bounded campaign candidates are now authorized. Collateral Choir turns the approved Flocking Lab behavior into a full Chorus/Tithe hybrid between Processional and Repossession. The Living Current turns the player-approved Broodwake shoal behavior into a short full Verdant mission between The Green Signal and Return Address. Each is visible in its intended position but does not gate the validated route or add a guaranteed commission while its first full-mission balance test is pending. Phase 8 — The Bill Arrives remains a separate creative problem: its economic skeleton is settled, but its player experience, characters, choice presentation, and emotional turn still need a dedicated session. Assessor lien readability remains an explicitly unverified but non-blocking observation.
 
 Fresh-player feedback also retired the three-slot cargo hold before the next
 economy phase. In-flight collection and between-run storage are now unlimited;
@@ -27,16 +27,16 @@ decision reopens them.
 
 The Flocking Lab remains the small isolated regression surface. Its successful
 visual result now feeds Collateral Choir, where scored schools withdraw on a
-timer and create moving cover for armored Tithe anchors. This exception does not
-authorize Phase 8 or a broader autonomous campaign pass; Collateral Choir is the
-single deployed candidate awaiting Adam's playtest.
+timer and create moving cover for armored Tithe anchors. Collateral Choir remains
+a deployed candidate awaiting Adam's playtest.
 
-The new Broodwake Lab is an equally bounded Verdant experiment. It tests whether
-biological enemies feel more alive when they share local spacing, protect the
-most important living producer in a defensive crescent, propagate a visible
-wound alarm, and rush after the protected ecology collapses. It is not on the
-campaign route and does not authorize another full level. The next gate is a
-human playtest of readability, fun, and whether any behavior deserves promotion.
+The Broodwake Lab passed its behavior test: biological enemies feel materially
+more alive when they share local spacing, protect the most important living
+producer in a defensive crescent, propagate a visible wound alarm, and rush
+after the protected ecology collapses. That approval authorizes The Living
+Current as one full mission, not an open-ended Verdant act. The next gate is its
+full encounter playtest; Return Address remains independently unlocked until
+that result is accepted.
 
 ## Player-validated combat direction (2026-07-09)
 
@@ -56,6 +56,11 @@ This direction is folded into the current master plan and governs the active sli
   explosion may wipe a lower-tier swarm, and a sufficiently advanced kinetic
   stream may melt lower-tier armor. Outgearing content is intentional evidence
   that the loot hunt worked.
+- **Short sorties preserve the loot rhythm.** New missions should usually reach
+  their defining boss or objective in roughly one to two minutes. Frequent
+  returns to the hangar let the player inspect drops, refit, and immediately
+  launch again; encounter depth should come from distinct behaviors and many
+  concise missions rather than stretching every sortie into an endurance run.
 - **Gold clears Act 2; green outgears it.** Role-appropriate Pre-Founding gear is
   the Act 2 balance target. Heirlooms must not become required for Act 2 and
   should make its early missions materially easier. Orphan Signal is valid Act 2

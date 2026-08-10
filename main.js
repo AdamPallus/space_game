@@ -5137,6 +5137,13 @@ const activeCampaignLevels = [
     label: "The Green Signal",
     requires: [{ completed: "act2_processional" }, { completed: "act2_repossession" }],
   },
+  {
+    id: "act2_living_current",
+    label: "The Living Current",
+    requires: [{ completed: "act2_green_signal" }],
+    candidate: true,
+    bossScaleIndex: 11.5,
+  },
   { id: "act2_return_address", label: "Return Address", requires: [{ completed: "act2_green_signal" }] },
 ];
 
@@ -14643,17 +14650,26 @@ function getShoalProtectedTypes(enemy) {
 function findShoalProtector(enemy) {
   const protectedTypes = getShoalProtectedTypes(enemy);
   if (!protectedTypes.length) return null;
+  const viable = enemies.filter((candidate) => (
+    candidate !== enemy &&
+    candidate.hull > 0 &&
+    protectedTypes.includes(candidate.type)
+  ));
+  if (!viable.length) return null;
+  const bestPriority = Math.min(...viable.map((candidate) => protectedTypes.indexOf(candidate.type)));
+  const current = viable.find((candidate) => (
+    candidate.id === enemy.shoalProtectorId &&
+    protectedTypes.indexOf(candidate.type) === bestPriority
+  ));
+  if (current) return current;
   let best = null;
-  let bestPriority = Infinity;
   let bestDistance = Infinity;
-  enemies.forEach((candidate) => {
-    if (candidate === enemy || candidate.hull <= 0) return;
+  viable.forEach((candidate) => {
     const priority = protectedTypes.indexOf(candidate.type);
-    if (priority < 0) return;
+    if (priority !== bestPriority) return;
     const candidateDistance = distance(enemy.x, enemy.y, candidate.x, candidate.y);
-    if (priority > bestPriority || (priority === bestPriority && candidateDistance >= bestDistance)) return;
+    if (candidateDistance >= bestDistance) return;
     best = candidate;
-    bestPriority = priority;
     bestDistance = candidateDistance;
   });
   return best;
@@ -14882,7 +14898,7 @@ function buildShoalAudit() {
 }
 
 function updateShoalAudit(delta) {
-  if (mission?.level?.id !== "biological_shoal_lab") return;
+  if (!["biological_shoal_lab", "act2_living_current"].includes(mission?.level?.id)) return;
   mission.shoalAuditTimer = (mission.shoalAuditTimer || 0) - delta;
   if (mission.shoalAuditTimer > 0) return;
   mission.shoalAuditTimer = 0.35;
